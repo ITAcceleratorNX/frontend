@@ -2,19 +2,34 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
         primary: {
-          DEFAULT: '#4f46e5',
-          hover: '#4338ca',
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
         },
         secondary: {
-          DEFAULT: '#6b7280',
-          hover: '#4b5563',
+          DEFAULT: 'var(--secondary)',
+          hover: 'var(--secondary-hover)',
         },
+        border: 'var(--border)',
+        card: 'var(--card)',
+        'card-foreground': 'var(--card-foreground)',
+        popover: 'var(--popover)',
+        'popover-foreground': 'var(--popover-foreground)',
+        'primary-foreground': 'var(--primary-foreground)',
+        'secondary-foreground': 'var(--secondary-foreground)',
+        muted: 'var(--muted)',
+        'muted-foreground': 'var(--muted-foreground)',
+        accent: 'var(--accent)',
+        'accent-foreground': 'var(--accent-foreground)',
+        destructive: 'var(--destructive)',
+        ring: 'var(--ring)',
         indigo: {
           '50': '#eef2ff',
           '100': '#e0e7ff',
@@ -28,6 +43,15 @@ export default {
           '900': '#312e81',
           '950': '#1e1b4b',
         },
+      },
+      borderColor: {
+        DEFAULT: 'var(--border)',
+      },
+      backgroundColor: {
+        DEFAULT: 'var(--background)',
+      },
+      textColor: {
+        DEFAULT: 'var(--foreground)',
       },
       animation: {
         fadeIn: 'fadeIn 0.5s ease-in-out',
@@ -51,6 +75,12 @@ export default {
       boxShadow: {
         'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      },
+      borderRadius: {
+        'sm': 'var(--radius-sm)',
+        'md': 'var(--radius-md)',
+        'lg': 'var(--radius-lg)',
+        'xl': 'var(--radius-xl)',
       },
     },
   },
