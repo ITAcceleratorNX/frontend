@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from '../../widgets';
 import vectorImg from '../../assets/vector.png';
 import backgroundTextImg from '../../assets/background-text.png';
@@ -7,8 +7,18 @@ import good2 from '../../assets/good2.png';
 import procent2 from '../../assets/procent2.png';
 import key2 from '../../assets/key2.png';
 import chatgptImg from '../../assets/chatgpt.png';
+import warehouseImg from '../../assets/warehouse.png';
+import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
+import arrowDownIcon from '../../assets/arrow-down.svg';
+import textAlignIcon from '../../assets/textalign-justifycenter.svg';
+import FileCheckIcon from '../../assets/File_Check.png';
+import GroupIcon from '../../assets/group.png';
+import ShieldTickIcon from '../../assets/shield-tick.png';
+import BoxTickIcon from '../../assets/box-tick.png';
 
 const HomePage = () => {
+  const [area, setArea] = useState(50);
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Header />
@@ -56,8 +66,9 @@ const HomePage = () => {
       {/* Второй фрейм: преимущества */}
       <section className="w-full flex flex-col items-center justify-center mt-24 mb-24">
         <div className="w-full flex flex-col items-center">
-          <div className="w-full max-w-[1220px] pl-11 mb-6">
-            <span className="text-xs text-[#7A7A7A] font-medium">Почему Extra Space?</span>
+          <div className="w-full max-w-[1220px] pl-11 mb-6 flex items-center">
+            <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
+            <span className="text-xs text-[#A6A6A6] font-medium">Почему Extra Space?</span>
           </div>
           <div className="grid grid-cols-2 grid-rows-2 gap-x-6 gap-y-2" style={{width: 1144, height: 560}}>
             {/* Верхний левый — текстовый блок */}
@@ -109,7 +120,10 @@ const HomePage = () => {
           {/* Левая часть: текст и кнопки */}
           <div className="flex-1 flex flex-col justify-between py-8 pr-10 pl-8">
             {/* Заголовок */}
-            <div className="text-xs text-[#7A7A7A] font-medium mb-6">Наши склады</div>
+            <div className="flex items-center mb-6">
+              <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
+              <span className="text-xs text-[#A6A6A6] font-medium">Наши склады</span>
+            </div>
             {/* Кнопки выбора объёма */}
             <div className="flex gap-4 mb-8">
               <button className="px-8 py-3 rounded-full bg-[#273655] text-white text-[22px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none">3 м³</button>
@@ -136,6 +150,174 @@ const HomePage = () => {
           {/* Правая часть: картинка с мебелью и размерами */}
           <div className="flex-1 flex items-center justify-center">
             <img src={chatgptImg} alt="Склад с мебелью" className="w-[420px] h-[420px] object-contain rounded-2xl mt-10" />
+          </div>
+        </div>
+      </section>
+      {/* Четвертый фрейм: калькулятор стоимости и warehouse.png */}
+      <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
+        <div className="w-full max-w-[1100px] mx-auto flex flex-row items-start gap-[60px] bg-transparent px-4">
+          {/* Левая колонка: калькулятор */}
+          <div className="flex flex-col flex-[0_0_440px] items-start font-['Montserrat']">
+            <div className="flex items-center mb-8">
+              <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
+              <span className="text-xs text-[#A6A6A6]">Быстро и удобно</span>
+            </div>
+            <label className="text-[22px] text-[#6B6B6B] font-bold mb-4 font-['Montserrat']" htmlFor="area">Площадь:</label>
+            <div className="w-full flex flex-col mb-8">
+              <div className="relative w-full h-[56px] flex items-center bg-white" style={{borderRadius:'8px 8px 8px 0', boxShadow:'4px 4px 8px 0 #B0B0B0'}}>
+                <span className="absolute left-4 flex items-center h-full">
+                  <img src={housePlanIcon} alt="house plan" className="w-6 h-6" />
+                </span>
+                <span className="ml-12 text-[#C7C7C7] text-[18px] font-['Montserrat']">— {area} кв.м</span>
+              </div>
+              <div className="w-full relative" style={{marginTop:'-22px'}}>
+                {/* Синий прогресс-бар до ползунка */}
+                <div className="absolute left-0 bottom-0 h-[2px] bg-[#0062D3] rounded-full" style={{width: `${area}%`, zIndex:1}}></div>
+                {/* Прозрачная часть */}
+                <div className="absolute right-0 bottom-0 h-[2px] bg-transparent" style={{left: `${area}%`, zIndex:1}}></div>
+                <input id="area" type="range" min="1" max="100" value={area} onChange={e => setArea(Number(e.target.value))} className="w-full h-[2px] bg-transparent appearance-none relative z-10" style={{WebkitAppearance:'none'}} />
+                <style>{`
+                  input[type='range']::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: #F86812;
+                    border: 2px solid #fff;
+                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+                    cursor: pointer;
+                  }
+                  input[type='range']::-webkit-slider-runnable-track {
+                    height: 2px;
+                    background: transparent;
+                  }
+                  input[type='range']:focus {
+                    outline: none;
+                  }
+                  input[type='range']::-moz-range-thumb {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: #EA9938;
+                    border: 2px solid #fff;
+                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+                    cursor: pointer;
+                  }
+                  input[type='range']::-ms-thumb {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: #EA9938;
+                    border: 2px solid #fff;
+                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+                    cursor: pointer;
+                  }
+                  input[type='range']::-ms-fill-lower {
+                    background: transparent;
+                  }
+                  input[type='range']::-ms-fill-upper {
+                    background: transparent;
+                  }
+                `}</style>
+              </div>
+            </div>
+            <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (дни/месяцы):</label>
+            <div className="flex gap-4 mb-8 w-full">
+              <div className="relative flex-1">
+                <select className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#C7C7C7] font-normal focus:outline-none appearance-none font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>
+                  <option>— месяц</option>
+                </select>
+                <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+              <div className="relative flex-1">
+                <select className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#C7C7C7] font-normal focus:outline-none appearance-none font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>
+                  <option>— день</option>
+                </select>
+                <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+            <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']">Тип услуги:</label>
+            <div className="flex flex-row gap-4 mb-4 w-full">
+              <div className="flex flex-col gap-4 w-1/2">
+                <button className="h-[56px] rounded-lg bg-[#273655] text-white text-[16px] font-bold w-full font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}>Обычное хранение</button>
+                <button className="h-[56px] rounded-lg bg-white text-[#273655] text-[16px] font-bold w-full font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}>Мувинг</button>
+              </div>
+              <div className="flex flex-col gap-4 w-1/2">
+                <button className="h-[56px] rounded-lg bg-white text-[#273655] text-[16px] font-bold w-full font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}>Облачное хранение</button>
+                <div className="h-[56px] w-full"></div>
+              </div>
+            </div>
+            <button className="w-full h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors mt-4 font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>РАССЧИТАТЬ</button>
+          </div>
+          {/* Правая колонка: заголовок и картинка */}
+          <div className="flex flex-col items-start flex-1 pt-16 pl-20">
+            <h2 className="text-[28px] md:text-[32px] font-bold text-[#273655] mb-4 ml-40 mt-4 text-left tracking-tight leading-tight">
+              КАЛЬКУЛЯТОР<br />
+              <span style={{marginLeft: '40px', display: 'inline-block'}}>СТОИМОСТИ</span>
+            </h2>
+            <img src={warehouseImg} alt="Склад warehouse" className="w-full max-w-[500px] object-contain" style={{transform:'scaleX(-1)'}} />
+          </div>
+        </div>
+      </section>
+      {/* Пятый фрейм: как работает облачное хранение */}
+      <section className="w-full flex flex-col items-center justify-center mt-1 mb-10 font-['Montserrat']">
+        <div className="w-full max-w-[1100px] mx-auto">
+          {/* Верхняя строка с иконкой и надписью */}
+          <div className="flex items-center mb-4">
+            <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
+            <span className="text-xs text-[#A6A6A6] font-medium">Что такое "Облачное хранение"?</span>
+          </div>
+          {/* Заголовок */}
+          <h2 className="text-[32px] md:text-[35px] font-bold text-[#273655] text-center mb-10">Как работает облачное хранение?</h2>
+          {/* Видео */}
+          <div className="w-full flex justify-center mb-7">
+            <video controls className="w-full max-w-[900px] shadow-lg">
+              <source src="https://www.freeloops.tv/download/?download_id=2150&collection_id=2658" type="video/mp4" />
+              Ваш браузер не поддерживает видео.
+            </video>
+          </div>
+          {/* Подпись жирная */}
+          <div className="text-[24px] md:text-[24px] font-bold text-[#273655] text-center mb-10">Платите только за объем ваших вещей, а не за весь склад</div>
+          {/* Блок шагов */}
+          <div className="relative flex flex-row items-end justify-center gap-x-16 w-full max-w-[900px] mx-auto mt-4 pb-2">
+            {/* Одна соединяющая линия под всеми шагами */}
+            <div className="absolute left-[130px] right-[130px] top-[60%] h-[2px] bg-[#273655] z-0" style={{transform: 'translateY(-50%)'}} />
+            {/* Шаг 1: Заявка */}
+            <div className="flex flex-col items-center z-10">
+              <span className="text-[#000000] text-[18px] font-little mb-1">Заявка</span>
+              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
+                <img src={FileCheckIcon} alt="Заявка" className="w-[36px] h-[36px]" />
+              </div>
+            </div>
+            {/* Шаг 2: Упаковка */}
+            <div className="flex flex-col items-center z-10">
+              <span className="text-[#000000] text-[18px] font-little mb-1">Упаковка</span>
+              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
+                <img src={BoxTickIcon} alt="Упаковка" className="w-[36px] h-[36px]" />
+              </div>
+            </div>
+            {/* Шаг 3: Доставка */}
+            <div className="flex flex-col items-center z-10">
+              <span className="text-[#000000] text-[18px] font-little mb-1">Доставка</span>
+              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
+                <img src={GroupIcon} alt="Доставка" className="w-[36px] h-[36px]" />
+              </div>
+            </div>
+            {/* Шаг 4: Хранение */}
+            <div className="flex flex-col items-center z-10">
+              <span className="text-[#000000] text-[18px] font-little mb-1">Хранение</span>
+              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
+                <img src={ShieldTickIcon} alt="Хранение" className="w-[36px] h-[36px]" />
+              </div>
+            </div>
+            {/* Шаг 5: Возврат */}
+            <div className="flex flex-col items-center z-10">
+              <span className="text-[#000000] text-[18px] font-little mb-1">Возврат</span>
+              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
+                <img src={GroupIcon} alt="Возврат" className="w-[36px] h-[36px]" style={{transform:'scaleX(-1)'}} />
+              </div>
+            </div>
           </div>
         </div>
       </section>
