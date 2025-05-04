@@ -15,9 +15,14 @@ import FileCheckIcon from '../../assets/File_Check.png';
 import GroupIcon from '../../assets/group.png';
 import ShieldTickIcon from '../../assets/shield-tick.png';
 import BoxTickIcon from '../../assets/box-tick.png';
+import beigeCircle from '../../assets/beige_circle.svg';
+import houseOnBeigeCircle from '../../assets/house_on_beige_circle.svg';
+import extraOldLogo from '../../assets/extra_old_logo.jpg';
 
 const HomePage = () => {
   const [area, setArea] = useState(50);
+
+  const mapSrc = "https://2gis.kz/almaty?m=76.9167%2C43.25%2F11";
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -318,6 +323,98 @@ const HomePage = () => {
                 <img src={GroupIcon} alt="Возврат" className="w-[36px] h-[36px]" style={{transform:'scaleX(-1)'}} />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+      {/* Шестой фрейм: филиалы Extra Space */}
+      <section className="w-full flex flex-col items-center justify-center mt-28 mb-24 font-['Montserrat']">
+        <div className="w-full max-w-[1300px] flex flex-col items-start mx-auto mb-10 px-20 md:px-24">
+          <div className="flex items-center mb-2 mt-2">
+            <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
+            <span className="text-xs text-[#A6A6A6] font-medium">Наши адреса</span>
+          </div>
+          <h2 className="text-[48px] md:text-[56px] font-bold text-[#273655] ml-2 mt-0">ФИЛИАЛЫ</h2>
+        </div>
+        <div className="w-full max-w-[1300px] flex flex-row gap-12 items-start mx-auto px-20 md:px-24">
+          {/* Левая часть: квадратная карта 2ГИС */}
+          <div className="rounded-3xl overflow-hidden bg-[#f3f3f3] flex items-center justify-center" style={{width: 480, height: 480, boxShadow: '4px 4px 8px 0 #B0B0B0'}}>
+            <div className="flex flex-col items-center justify-center w-full h-full p-8">
+              <svg width="100" height="100" fill="none" viewBox="0 0 100 100" className="mb-6 opacity-40">
+                <rect width="100" height="100" rx="24" fill="#E5E7EB"/>
+                <path d="M30 70V40a10 10 0 0 1 10-10h20a10 10 0 0 1 10 10v30" stroke="#A6A6A6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="50" cy="55" r="8" stroke="#A6A6A6" strokeWidth="4"/>
+              </svg>
+              <div className="text-[#A6A6A6] text-xl md:text-2xl font-semibold text-center max-w-xs">Здесь будет карта 2ГИС</div>
+            </div>
+          </div>
+          {/* Правая часть: прямоугольная карточка филиала */}
+          <div className="bg-white rounded-lg flex flex-row items-center justify-start pr- py-8 self-center" style={{minWidth: 540, minHeight: 300, height: 300, maxHeight: 320, maxWidth: 600, width: 560, boxShadow: '4px 4px 8px 0 #B0B0B0'}}>
+            {/* Левая часть: только крупный логотип */}
+            <div className="flex items-center justify-center w-[270px] h-[270px] p-2">
+              <img src={extraOldLogo} alt="logo" className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]" />
+            </div>
+            {/* Правая часть: все надписи и кнопка */}
+            <div className="flex flex-col items-start justify-center flex-1 h-full gap-y-2 ml-6">
+              <div className="text-[#3E4958] text-[20px] font-medium leading-tight" style={{lineHeight: 1.1}}>Название филиала (например, "Склад на Сайна")</div>
+              <div className="text-[#3E4958] text-[15px] font-normal leading-tight">Телефон</div>
+              <div className="text-[#3E4958] text-[15px] font-normal">Время работы (по желанию)</div>
+              <div className="flex items-center mt-1 mb-2">
+                <span className="relative inline-block" style={{width: 24, height: 24}}>
+                  <img src={beigeCircle} alt="beige circle" className="absolute left-0 top-0 w-full h-full" />
+                  <img src={houseOnBeigeCircle} alt="house on beige" className="absolute left-1/2 top-1/2" style={{width: '15px', height: '15px', transform: 'translate(-50%, -50%)'}} />
+                </span>
+                <span className="text-[#273655] text-[15px] font-normal ml-2">Полный адрес</span>
+              </div>
+              <button className="px-2 py-3 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full max-w-[240px] mt-0">
+                Выбрать этот склад
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Седьмой фрейм: FAQ */}
+      <section className="w-full flex flex-col items-center justify-center mb-24 font-['Montserrat']">
+        <h2 className="text-4xl md:text-5xl font-medium text-[#273655] text-center mb-10">Часто задаваемые вопросы:</h2>
+        <div className="w-full max-w-[820px] flex flex-col gap-7">
+          {/* Вопрос 1 */}
+          <div className="flex items-center justify-between bg-white border border-[#3E4958] rounded-3xl px-8 py-5">
+            <div className="flex items-center min-w-[100px]">
+              <span className="text-4xl text-[#000000] mr-4" style={{fontFamily: 'Space Grotesk', fontWeight: 400, lineHeight: '100%', letterSpacing: 0}}>01</span>
+              <span className="text-xl text-[#222] font-normal font-['Space_Grotesk']">Какие вещи нельзя хранить?</span>
+            </div>
+            <button className="flex items-center justify-center w-11 h-11 border border-[#3E4958] rounded-full text-[#3E4958] text-3xl font-bold transition bg-[#F3F3F3] hover:bg-[#E0E0E0]">
+              <span className="mt-[-2px] font-extrabold" style={{color:'#191A23', fontWeight:900}}>+</span>
+            </button>
+          </div>
+          {/* Вопрос 2 */}
+          <div className="flex items-center justify-between bg-white border border-[#3E4958] rounded-3xl px-8 py-5">
+            <div className="flex items-center min-w-[100px]">
+              <span className="text-4xl text-[#000000] mr-4" style={{fontFamily: 'Space Grotesk', fontWeight: 400, lineHeight: '100%', letterSpacing: 0}}>02</span>
+              <span className="text-xl text-[#222] font-normal font-['Space_Grotesk']">Где посмотреть тарифы?</span>
+            </div>
+            <button className="flex items-center justify-center w-11 h-11 border border-[#3E4958] rounded-full text-[#3E4958] text-3xl font-bold transition bg-[#F3F3F3] hover:bg-[#E0E0E0]">
+              <span className="mt-[-2px] font-extrabold" style={{color:'#191A23', fontWeight:900}}>+</span>
+            </button>
+          </div>
+          {/* Вопрос 3 */}
+          <div className="flex items-center justify-between bg-white border border-[#3E4958] rounded-3xl px-8 py-5">
+            <div className="flex items-center min-w-[100px]">
+              <span className="text-4xl text-[#000000] mr-4" style={{fontFamily: 'Space Grotesk', fontWeight: 400, lineHeight: '100%', letterSpacing: 0}}>03</span>
+              <span className="text-xl text-[#222] font-normal font-['Space_Grotesk']">Как обеспечивается безопасность?</span>
+            </div>
+            <button className="flex items-center justify-center w-11 h-11 border border-[#3E4958] rounded-full text-[#3E4958] text-3xl font-bold transition bg-[#F3F3F3] hover:bg-[#E0E0E0]">
+              <span className="mt-[-2px] font-extrabold" style={{color:'#191A23', fontWeight:900}}>+</span>
+            </button>
+          </div>
+          {/* Вопрос 4 */}
+          <div className="flex items-center justify-between bg-white border border-[#3E4958] rounded-3xl px-8 py-5">
+            <div className="flex items-center min-w-[100px]">
+              <span className="text-4xl text-[#000000] mr-4" style={{fontFamily: 'Space Grotesk', fontWeight: 400, lineHeight: '100%', letterSpacing: 0}}>04</span>
+              <span className="text-xl text-[#222] font-normal font-['Space_Grotesk']">Какие условия хранения?</span>
+            </div>
+            <button className="flex items-center justify-center w-11 h-11 border border-[#3E4958] rounded-full text-[#3E4958] text-3xl font-bold transition bg-[#F3F3F3] hover:bg-[#E0E0E0]">
+              <span className="mt-[-2px] font-extrabold" style={{color:'#191A23', fontWeight:900}}>+</span>
+            </button>
           </div>
         </div>
       </section>
