@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Используем прокси URL для локальной разработки
 const isDevelopment = import.meta.env.DEV;
-const API_URL = isDevelopment ? '/api' : 'https://backend-8jwk.onrender.com';
+const API_URL = isDevelopment ? '/api' : 'https://extraspace-backend.onrender.com';
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -22,7 +22,8 @@ api.interceptors.request.use(
     console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
     
     // Проверяем наличие токена и добавляем его в заголовки
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

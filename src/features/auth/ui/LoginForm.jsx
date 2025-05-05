@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authApi } from '../../../shared/api/auth';
+import { authApi } from '../../../shared/api/authApi';
 import { useSessionStore } from '../../../entities/session';
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { useAuth } from '../../../shared/lib/hooks/use-auth';
 import { toast } from 'react-toastify';
+import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight } from 'lucide-react';
+import '../styles/auth-forms.css';
 
 export const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const login = useSessionStore((state) => state.login);
+  const { login: authLogin } = useAuth();
+  const { login: sessionLogin } = useSessionStore();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -47,22 +50,19 @@ export const LoginForm = () => {
     setServerError(null);
     
     try {
-      console.log('Отправка запроса на логин:', data.email);
-      const response = await authApi.login(data.email, data.password);
+      console.log('LoginForm: Отправка запроса на логин:', data.email);
+      const response = await login(data.email, data.password);
       
-      if (response.success && response.token) {
-        // Сохраняем токен в хранилище сессии
-        login(response.token);
-        
-        console.log('Успешный вход, перенаправляем на главную');
+      if (response.success) {
+        console.log('LoginForm: Успешный вход, перенаправляем на главную');
         toast.success('Вход выполнен успешно!');
         navigate('/', { replace: true });
       } else {
-        setServerError('Не удалось войти. Пожалуйста, проверьте введенные данные.');
-        toast.error('Не удалось войти. Пожалуйста, проверьте введенные данные.');
+        setServerError(response.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
+        toast.error(response.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
       }
     } catch (error) {
-      console.error('Ошибка при входе:', error);
+      console.error('LoginForm: Ошибка при входе:', error);
       
       if (error.response?.data?.message) {
         if (typeof error.response.data.message === 'object') {
@@ -82,6 +82,88 @@ export const LoginForm = () => {
     }
   };
   
+  // Функция для логина, использующая оба хука
+  const login = async (email, password) => {
+    try {
+      // Пробуем выполнить запрос через API
+      const response = await authApi.login(email, password);
+      
+      console.log('LoginForm: Получен ответ от сервера:', response);
+      
+      // Проверяем ответ от сервера - поддерживаем разные форматы ответа
+      if (response && response.data) {
+        // Случай 1: Ответ содержит токен
+        if (response.data.token) {
+          // Получаем токен из ответа
+          const token = response.data.token;
+          
+          // Сохраняем в объект пользователя email для отображения в личном кабинете
+          const userData = response.data.user || { 
+            email,
+            name: email.split('@')[0], // Простое имя пользователя из email
+            id: response.data.userId || 'user-id'
+          };
+          
+          // Используем оба хука для авторизации
+          await authLogin(email, password);
+          sessionLogin(token, userData);
+          
+          // Проверяем значение токена в sessionStorage
+          console.log('LoginForm: Токен в sessionStorage после логина:', sessionStorage.getItem('token'));
+          console.log('LoginForm: Данные пользователя после логина:', sessionStorage.getItem('user'));
+          
+          return { success: true };
+        }
+        // Случай 2: Ответ содержит success: true, но без токена
+        else if (response.data.success === true) {
+          // Создаем временный токен на основе email для локальной авторизации
+          const tempToken = `temp_${btoa(email)}`;
+          const userData = { 
+            email,
+            name: email.split('@')[0],
+            id: 'temp-user'
+          };
+          
+          // Используем оба хука для авторизации
+          sessionLogin(tempToken, userData);
+          
+          console.log('LoginForm: Используем временный токен для авторизации:', tempToken);
+          console.log('LoginForm: Данные пользователя:', userData);
+          
+          return { success: true };
+        }
+      }
+      
+      // Если не удалось обработать ответ
+      return { 
+        success: false, 
+        error: 'Неверные данные для входа. Пожалуйста, проверьте email и пароль.' 
+      };
+    } catch (error) {
+      console.error('LoginForm: Ошибка при авторизации через API:', error);
+      
+      if (error.response && error.response.status === 401) {
+        return {
+          success: false,
+          error: 'Неверный email или пароль. Пожалуйста, попробуйте снова.'
+        };
+      }
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        return {
+          success: false,
+          error: error.response.data.message
+        };
+      }
+      
+      // В случае ошибки не создаем временную авторизацию, а возвращаем ошибку
+      return { 
+        success: false, 
+        error: 'Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.' 
+      };
+    }
+  };
+  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -93,105 +175,150 @@ export const LoginForm = () => {
   };
   
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f0f4ff] p-4">
-      <div className="auth-card w-full max-w-[450px] bg-white rounded-xl shadow-lg p-10 mx-auto">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">Вход в систему</h1>
-        <p className="text-center text-gray-600 mb-8">Введите свои данные для входа в систему</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+      <div className="w-full max-w-[450px] mx-auto">
+        {/* Блок с логотипом компании */}
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-[#273655]">ExtraSpace</h2>
+          <div className="h-1 w-20 bg-[#273655] mx-auto mt-2 rounded-full"></div>
+        </div>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
+        {/* Карточка формы входа */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Заголовок формы */}
+          <div className="p-8 pb-0">
+            <h1 className="text-2xl font-semibold mb-1 text-slate-800">Добро пожаловать</h1>
+            <p className="text-slate-500 mb-6">Введите данные для входа в систему</p>
+          </div>
+          
+          {/* Форма входа */}
+          <form onSubmit={handleSubmit(onSubmit)} className="p-8 pt-4 space-y-5">
+            {/* Email поле */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                <Mail className="h-4 w-4" />
+                Email
               </label>
-              <input
-                type="email"
-                className={`form-input ${errors.email ? 'border-red-500' : 'border-gray-200'} ${isLoading ? 'bg-amber-50' : 'bg-white'}`}
-                placeholder="Введите свой адрес email"
-                disabled={isLoading}
-                {...register('email', {
-                  required: 'Email обязателен',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Неверный формат email',
-                  },
-                })}
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
+                    errors.email ? 'border-red-400 bg-red-50' : 'border-slate-200'
+                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
+                  placeholder="example@email.com"
+                  disabled={isLoading}
+                  {...register('email', {
+                    required: 'Email обязателен',
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: 'Неверный формат email',
+                    },
+                  })}
+                />
+              </div>
               {errors.email && (
-                <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                  {errors.email.message}
+                </p>
               )}
             </div>
             
-            <div>
-              <label className="block text-gray-700 mb-1">
-                Password <span className="text-red-500">*</span>
+            {/* Password поле */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
+                <Lock className="h-4 w-4" />
+                Пароль
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  className={`form-input pr-10 ${errors.password ? 'border-red-500' : 'border-gray-200'} ${isLoading ? 'bg-amber-50' : 'bg-white'}`}
-                  placeholder="Введите свой пароль"
+                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
+                    errors.password ? 'border-red-400 bg-red-50' : 'border-slate-200'
+                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
+                  placeholder="Введите пароль"
                   disabled={isLoading}
                   {...register('password', {
                     required: 'Пароль обязателен',
                     minLength: {
                       value: 6,
-                      message: 'Пароль должен содержать не менее 6 символов',
+                      message: 'Минимум 6 символов',
                     },
                   })}
                 />
                 <button 
                   type="button"
-                  className="absolute inset-y-0 right-0 px-2 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   onClick={togglePasswordVisibility}
                   disabled={isLoading}
                 >
-                  {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                  {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                  {errors.password.message}
+                </p>
               )}
             </div>
-          
+            
+            {/* Запомнить меня и Забыли пароль */}
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="remember" 
+                  className="h-4 w-4 rounded border-slate-300 text-[#273655] focus:ring-[#273655]"
+                />
+                <label htmlFor="remember" className="text-slate-600">Запомнить меня</label>
+              </div>
+              <a href="#" className="text-[#273655] hover:underline">Забыли пароль?</a>
+            </div>
+            
+            {/* Сообщение об ошибке */}
             {serverError && (
-              <div className="rounded-md bg-red-50 p-3 border border-red-200">
-                <p className="text-sm text-red-600">{serverError}</p>
+              <div className="rounded-lg bg-red-50 p-3 border border-red-200 text-sm text-red-600">
+                {serverError}
               </div>
             )}
-          </div>
-        
-          <div className="flex justify-center mt-6">
+            
+            {/* Кнопка входа */}
             <button 
               type="submit" 
               disabled={isLoading}
-              className={`btn-primary ${isLoading ? 'bg-blue-400' : ''} transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]`}
+              className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[#273655] text-white rounded-lg font-medium shadow-lg shadow-[#273655]/20 hover:bg-[#324569] transition-all duration-200 disabled:opacity-70"
             >
               {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="loader-container">
-                    <div className="loader-ring"></div>
-                    <div className="loader-text">Вход в систему...</div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Выполняется вход...</span>
                 </div>
               ) : (
-                'Вход в систему'
+                <>
+                  <span>Войти</span>
+                  <ArrowRight size={18} />
+                </>
               )}
             </button>
-          </div>
-          
-          <div className="divider">
-            <span>Или продолжить с</span>
-          </div>
-          
-          <div className="flex justify-center">
+            
+            {/* Разделитель */}
+            <div className="relative flex items-center justify-center mt-8 mb-4">
+              <span className="absolute inset-x-0 h-px bg-slate-200"></span>
+              <span className="relative bg-white px-4 text-sm text-slate-500">или продолжить с</span>
+            </div>
+            
+            {/* Кнопка Google */}
             <button 
               type="button" 
               onClick={handleGoogleLogin}
-              className="btn-google"
               disabled={isLoading}
+              className="w-full py-3 px-4 flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg font-medium text-slate-700 hover:bg-slate-50 transition-all duration-200"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -199,22 +326,28 @@ export const LoginForm = () => {
               </svg>
               Google
             </button>
-          </div>
-          
-          <div className="text-center mt-4">
-            <p className="text-gray-600">
-              Нет аккаунта?{" "}
-              <button 
-                type="button" 
-                className="text-blue-600 hover:underline font-medium"
-                onClick={() => navigate('/register')}
-                disabled={isLoading}
-              >
-                Зарегистрироваться
-              </button>
-            </p>
-          </div>
-        </form>
+            
+            {/* Ссылка на регистрацию */}
+            <div className="text-center mt-6">
+              <p className="text-slate-600">
+                Нет аккаунта?{" "}
+                <button 
+                  type="button" 
+                  className="text-[#273655] font-medium hover:underline"
+                  onClick={() => navigate('/register')}
+                  disabled={isLoading}
+                >
+                  Зарегистрироваться
+                </button>
+              </p>
+            </div>
+          </form>
+        </div>
+        
+        {/* Футер */}
+        <div className="text-center mt-6 text-sm text-slate-500">
+          &copy; 2025 ExtraSpace. Все права защищены.
+        </div>
       </div>
     </div>
   );

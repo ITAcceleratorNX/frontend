@@ -1,30 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../shared/lib/hooks/use-auth';
+import { useSessionStore } from '../../entities/session';
 import { Phone, Mail, Lock, User } from 'lucide-react';
 import { clsx } from 'clsx';
+import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 
 export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout } = useAuth();
+  const { logout, isAuthenticated: authIsAuthenticated } = useAuth();
+  const { isAuthenticated: sessionIsAuthenticated, token, user } = useSessionStore();
+  
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isEmailFormOpen, setIsEmailFormOpen] = useState(false);
+
+  // Определяем состояние авторизации на основе обоих хранилищ
+  const isAuthenticated = authIsAuthenticated || sessionIsAuthenticated;
 
   useEffect(() => {
+    console.log('Header: Состояние авторизации обновлено:', {
+      authIsAuthenticated, 
+      sessionIsAuthenticated, 
+      combined: isAuthenticated,
+      token,
+      user
+    });
+    
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [authIsAuthenticated, sessionIsAuthenticated, isAuthenticated, token, user]);
 
   const handleLogout = () => {
+    console.log('Header: Инициирован выход из системы');
     logout();
-    navigate('/email-verification');
+    navigate('/');
   };
 
   const handleStartAuth = () => {
-    navigate('/email-verification');
+    console.log('Header: Открытие формы входа');
+    setIsEmailFormOpen(true);
+  };
+
+  const handleCabinetClick = () => {
+    console.log('Header: Переход в личный кабинет');
+    navigate('/cabinet');
   };
 
   // Стили для NavLink с использованием относительных единиц для лучшей адаптивности
@@ -72,11 +95,11 @@ export const Header = () => {
           <div className="flex items-center ml-3 sm:ml-4 lg:ml-6 mr-0 space-x-2 flex-shrink-0">
             {isAuthenticated ? (
               <button
-                onClick={handleLogout}
+                onClick={handleCabinetClick}
                 className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
               >
                 <User size={16} className="mr-2" />
-                <span className="hidden sm:inline">ВЫЙТИ</span>
+                <span className="hidden sm:inline">ЛИЧНЫЙ КАБИНЕТ</span>
               </button>
             ) : (
               <button
@@ -102,24 +125,11 @@ export const Header = () => {
       {/* Отступ для контента под фиксированным хедером */}
       <div className="pt-16"></div>
 
-      {/* Стили для скрытия скроллбара и общих эффектов */}
-      <style jsx global>{`
-        /* Скрыть скроллбар для Chrome, Safari и Opera */
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        
-        /* Скрыть скроллбар для IE, Edge и Firefox */
-        .hide-scrollbar {
-          -ms-overflow-style: none;  /* IE и Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
-        
-        /* Плавные переходы для всех интерактивных элементов */
-        button, a {
-          transition: all 0.3s ease;
-        }
-      `}</style>
+      {/* Компонент проверки email */}
+      <ToggleableEmailForm 
+        isOpen={isEmailFormOpen} 
+        onClose={() => setIsEmailFormOpen(false)} 
+      />
     </>
   );
 };

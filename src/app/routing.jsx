@@ -1,20 +1,22 @@
 import { useEffect } from 'react';
 import { Navigate, useLocation, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../shared/lib/hooks/use-auth';
+import { useSessionStore } from '../entities/session';
 
 import HomePage from '../pages/home';
 import EmailVerificationPage from '../pages/email-verification';
 import LoginPage from '../pages/login';
 import RegisterPage from '../pages/register';
+import CabinetPage from '../pages/cabinet';
 
 // Компонент для логирования изменений маршрута (для отладки)
 const RouteLogger = ({ children }) => {
   const location = useLocation();
   
   useEffect(() => {
-    console.log('Текущий маршрут:', location.pathname);
-    console.log('State данные:', location.state);
-    console.log('Query параметры:', new URLSearchParams(location.search).toString());
+    console.log('Routing: Текущий маршрут:', location.pathname);
+    console.log('Routing: State данные:', location.state);
+    console.log('Routing: Query параметры:', new URLSearchParams(location.search).toString());
   }, [location]);
   
   return <>{children}</>;
@@ -22,7 +24,21 @@ const RouteLogger = ({ children }) => {
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated: authIsAuthenticated, isLoading: authIsLoading } = useAuth();
+  const { isAuthenticated: sessionIsAuthenticated } = useSessionStore();
+  
+  // Проверяем авторизацию в обоих хранилищах
+  const isAuthenticated = authIsAuthenticated || sessionIsAuthenticated;
+  const isLoading = authIsLoading;
+  
+  useEffect(() => {
+    console.log('ProtectedRoute: Проверка авторизации:', {
+      authIsAuthenticated,
+      sessionIsAuthenticated,
+      combined: isAuthenticated,
+      isLoading
+    });
+  }, [authIsAuthenticated, sessionIsAuthenticated, isAuthenticated, isLoading]);
   
   // Показываем загрузку, пока проверяем статус аутентификации
   if (isLoading) {
@@ -31,10 +47,10 @@ const ProtectedRoute = ({ children }) => {
     </div>;
   }
   
-  // Если пользователь не авторизован, перенаправляем на проверку email
+  // Если пользователь не авторизован, перенаправляем на страницу входа
   if (!isAuthenticated) {
-    console.log('Пользователь не авторизован, перенаправляем на /email-verification');
-    return <Navigate to="/email-verification" replace />;
+    console.log('ProtectedRoute: Пользователь не авторизован, перенаправляем на /login');
+    return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
@@ -57,9 +73,10 @@ const Routing = () => {
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
         
-        {/* Защищенные маршруты (могут быть добавлены позже) */}
+        {/* Защищенные маршруты */}
         <Route path="/profile" element={<ProtectedRoute><div>Профиль пользователя</div></ProtectedRoute>} />
         <Route path="/my-storage" element={<ProtectedRoute><div>Мои хранилища</div></ProtectedRoute>} />
+        <Route path="/cabinet" element={<ProtectedRoute><CabinetPage /></ProtectedRoute>} />
         
         {/* Редирект для несуществующих маршрутов */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { authApi } from '../../api/auth';
+import { useSessionStore } from '../../../entities/session';
 
-// Создаем хранилище Zustand с персистентностью в localStorage
+// Создаем хранилище Zustand с персистентностью в sessionStorage
 export const useAuthStore = create(
   persist(
     (set) => ({
@@ -13,26 +14,48 @@ export const useAuthStore = create(
       
       setToken: (token) => set({ token, isAuthenticated: !!token }),
       setUser: (user) => set({ user }),
-      logout: () => set({ token: null, isAuthenticated: false, user: null }),
+      logout: () => {
+        // Удаляем все токены и cookie при выходе
+        set({ token: null, isAuthenticated: false, user: null });
+        // Удаляем любые связанные с токенами cookie
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      },
     }),
     {
-      name: 'auth-storage', // Название хранилища в localStorage
+      name: 'auth-storage', // Название хранилища в sessionStorage
+      storage: createJSONStorage(() => sessionStorage), // Использование sessionStorage вместо localStorage
     }
   )
 );
 
 // Хук для работы с авторизацией в компонентах
 export const useAuth = () => {
-  const { token, isAuthenticated, user, setToken, setUser, logout } = useAuthStore();
+  const { token, isAuthenticated, user, setToken, setUser, logout: authLogout } = useAuthStore();
+  const sessionLogout = useSessionStore(state => state.logout);
+  const sessionLogin = useSessionStore(state => state.login);
   const [isLoading, setIsLoading] = useState(true);
 
   // Проверка токена при инициализации
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Здесь можно добавить проверку валидности токена через API
-        // Например, запрос к /auth/verify-token
+        // Синхронизация с useSessionStore
+        const sessionToken = sessionStorage.getItem('token');
+        if (sessionToken && !token) {
+          setToken(sessionToken);
+          try {
+            const userData = JSON.parse(sessionStorage.getItem('user'));
+            if (userData) {
+              setUser(userData);
+            }
+          } catch (e) {
+            console.error('Ошибка при получении данных пользователя из sessionStorage:', e);
+          }
+        }
+        
         setIsLoading(false);
+        console.log('useAuth: Проверка авторизации завершена, isAuthenticated:', !!token);
       } catch (error) {
         console.error('Ошибка при проверке авторизации:', error);
         logout();
@@ -41,7 +64,7 @@ export const useAuth = () => {
     };
     
     checkAuth();
-  }, [logout]);
+  }, [token, setToken, setUser]);
   
   // Функция для логина пользователя
   const login = async (email, password) => {
@@ -49,9 +72,23 @@ export const useAuth = () => {
       const response = await authApi.login(email, password);
       
       if (response.success && response.token) {
+        // Обновляем оба хранилища
         setToken(response.token);
-        // Здесь можно добавить запрос информации о пользователе
-        setUser({ email, id: 'user-id' }); // Замените на реальные данные
+        
+        // Получаем информацию о пользователе из ответа или создаем базовую
+        const userData = response.user || { 
+          email, 
+          name: email.split('@')[0],
+          id: response.userId || 'user-id'
+        };
+        
+        setUser(userData);
+        
+        // Синхронизируем с SessionStore
+        sessionLogin(response.token, userData);
+        
+        console.log('useAuth: Пользователь успешно авторизован', { token: response.token, user: userData });
+        
         return { success: true };
       } else {
         throw new Error('Не удалось получить токен');
@@ -65,14 +102,33 @@ export const useAuth = () => {
     }
   };
   
+  // Улучшенная функция выхода из системы
+  const logout = () => {
+    console.log('useAuth: Выход из системы');
+    authLogout();
+    sessionLogout();
+  };
+  
   // Функция для регистрации пользователя
   const register = async (email, password, uniqueCode) => {
     try {
       const response = await authApi.register(email, uniqueCode, password);
       
       if (response.success && response.token) {
+        const userData = response.user || { 
+          email, 
+          name: email.split('@')[0],
+          id: response.userId || 'user-id'
+        };
+        
         setToken(response.token);
-        setUser({ email, id: 'user-id' }); // Замените на реальные данные
+        setUser(userData);
+        
+        // Синхронизируем с SessionStore
+        sessionLogin(response.token, userData);
+        
+        console.log('useAuth: Пользователь успешно зарегистрирован', { token: response.token, user: userData });
+        
         return { success: true };
       } else {
         throw new Error('Не удалось завершить регистрацию');
@@ -106,7 +162,7 @@ export const useAuth = () => {
   };
 
   return {
-    isAuthenticated,
+    isAuthenticated: !!token,
     isLoading,
     token,
     user,
