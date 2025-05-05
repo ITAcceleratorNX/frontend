@@ -1,0 +1,77 @@
+/* Стили для форм авторизации и регистрации */
+
+/* Контейнер формы */
+.auth-form-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Анимация появления форм */
+.auth-form-appear {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Стили для полей ввода при фокусе */
+.auth-input:focus {
+  box-shadow: 0 0 0 2px rgba(39, 54, 85, 0.2);
+  border-color: #273655;
+}
+
+/* Стили для кнопок */
+.auth-button {
+  transition: all 0.2s ease;
+}
+
+.auth-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(39, 54, 85, 0.25);
+}
+
+.auth-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(39, 54, 85, 0.2);
+}
+
+/* Стили для ошибок валидации */
+.error-message {
+  color: #e53e3e;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Индикатор загрузки */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Стили для переключателя показа пароля */
+.password-toggle {
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #475569;
+} 
