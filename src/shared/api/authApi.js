@@ -26,10 +26,10 @@ export const authApi = {
   register: async (email, unique_code, password) => {
     try {
       const response = await axios.post(`${API_URL}/auth/register`, { 
-        email, 
-        unique_code, 
-        password 
-      });
+      email, 
+      unique_code, 
+      password 
+    });
       return response;
     } catch (error) {
       console.error('Ошибка при регистрации:', error);
