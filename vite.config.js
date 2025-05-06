@@ -7,15 +7,9 @@ import autoprefixer from 'autoprefixer'
 export default defineConfig({
   plugins: [react()],
   base: process.env.VITE_BASE_PATH || "/frontend",
-  css: {
-    postcss: {
-      plugins: [
-        tailwindcss,
-        autoprefixer,
-      ],
-    },
-  },
   server: {
+    host: '0.0.0.0',
+    port: parseInt(process.env.PORT || '5173'),
     proxy: {
       '/api': {
         target: 'https://extraspace-backend.onrender.com',
@@ -24,6 +18,14 @@ export default defineConfig({
         secure: false
       }
     }
+  },
+  css: {
+    postcss: {
+      plugins: [
+        tailwindcss,
+        autoprefixer,
+      ],
+    },
   },
   build: {
     chunkSizeWarningLimit: 1000,
