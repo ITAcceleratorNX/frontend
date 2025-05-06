@@ -2,11 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: process.env.VITE_BASE_PATH || "/frontend",
+  base: '/',
   server: {
     host: '0.0.0.0',
     port: parseInt(process.env.PORT || '5173'),
@@ -19,6 +20,10 @@ export default defineConfig({
       }
     }
   },
+  preview: {
+    host: '0.0.0.0',
+    port: parseInt(process.env.PORT || '5173')
+  },
   css: {
     postcss: {
       plugins: [
@@ -29,6 +34,7 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1000,
+    outDir: 'dist',
     rollupOptions: {
       output: {
         manualChunks: (id) => {

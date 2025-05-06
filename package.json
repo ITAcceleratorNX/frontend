@@ -9,7 +9,8 @@
     "lint": "echo 'Linting temporarily disabled'",
     "preview": "vite preview",
     "serve": "vite preview --port 3000",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "start": "vite preview --host 0.0.0.0 --port $PORT"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
