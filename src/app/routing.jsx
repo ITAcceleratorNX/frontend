@@ -6,6 +6,7 @@ import HomePage from '../pages/home';
 import EmailVerificationPage from '../pages/email-verification';
 import LoginPage from '../pages/login';
 import RegisterPage from '../pages/register';
+import MovingPage from '../pages/moving';
 
 // Компонент для логирования изменений маршрута (для отладки)
 const RouteLogger = ({ children }) => {
@@ -56,6 +57,7 @@ const Routing = () => {
         <Route path="/email-verification" element={<PublicRoute><EmailVerificationPage /></PublicRoute>} />
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="/moving" element={<PublicRoute><MovingPage /></PublicRoute>} />
         
         {/* Защищенные маршруты (могут быть добавлены позже) */}
         <Route path="/profile" element={<ProtectedRoute><div>Профиль пользователя</div></ProtectedRoute>} />
