@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi } from '../../api/auth';
+import { useSessionStore } from '../../../entities/session';
 
 // Создаем хранилище Zustand с персистентностью в localStorage
 export const useAuthStore = create(
@@ -24,24 +25,19 @@ export const useAuthStore = create(
 // Хук для работы с авторизацией в компонентах
 export const useAuth = () => {
   const { token, isAuthenticated, user, setToken, setUser, logout } = useAuthStore();
+  const sessionToken = useSessionStore(state => state.token);
+  const sessionUser = useSessionStore(state => state.user);
+
   const [isLoading, setIsLoading] = useState(true);
 
-  // Проверка токена при инициализации
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Здесь можно добавить проверку валидности токена через API
-        // Например, запрос к /auth/verify-token
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Ошибка при проверке авторизации:', error);
-        logout();
-        setIsLoading(false);
-      }
-    };
-    
-    checkAuth();
-  }, [logout]);
+    // Синхронизируем сторы: если в session есть токен, то и тут isAuthenticated
+    if (sessionToken) {
+      setToken(sessionToken);
+      setUser(sessionUser || { email: 'user@email.com' });
+    }
+    setIsLoading(false);
+  }, [sessionToken, sessionUser, setToken, setUser]);
   
   // Функция для логина пользователя
   const login = async (email, password) => {

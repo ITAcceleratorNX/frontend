@@ -3,6 +3,9 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../shared/lib/hooks/use-auth';
 import { Phone, Mail, Lock, User } from 'lucide-react';
 import { clsx } from 'clsx';
+import personalImg from '../../assets/personal_account_image.png';
+import shadowImg from '../../assets/personal_account_shadow.png';
+import cameraIcon from '../../assets/personal_camera.svg';
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -52,7 +55,7 @@ export const Header = () => {
             className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 mr-3 sm:mr-4 lg:mr-6" 
             onClick={() => navigate('/')}
           >
-            <div className="text-[#273551] font-['Orbitron'] text-[27px] leading-[100%] tracking-[0.05em] capitalize">
+            <div className="text-[#273551] font-['Audiowide'] text-[27px] leading-[100%] tracking-[0.05em] capitalize">
               ExtraSpace
             </div>
           </div>
@@ -72,11 +75,15 @@ export const Header = () => {
           <div className="flex items-center ml-3 sm:ml-4 lg:ml-6 mr-0 space-x-2 flex-shrink-0">
             {isAuthenticated ? (
               <button
-                onClick={handleLogout}
-                className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
+                onClick={() => navigate('/personal-account')}
+                className="relative w-[44px] h-[44px] rounded-full overflow-hidden border-2 border-[#E6E9F5] shadow-md hover:scale-105 transition-all bg-white flex items-center justify-center"
+                style={{padding:0}}
               >
-                <User size={16} className="mr-2" />
-                <span className="hidden sm:inline">ВЫЙТИ</span>
+                <img
+                  src={personalImg}
+                  alt="Аватар"
+                  className="w-[40px] h-[40px] rounded-full object-cover scale-125"
+                />
               </button>
             ) : (
               <button
