@@ -8,6 +8,9 @@ import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
 import arrowDownIcon from '../../assets/arrow-down.svg';
 import textAlignIcon from '../../assets/textalign-justifycenter.svg';
 import warehouseImg from '../../assets/warehouse.png';
+import tariffs1 from '../../assets/tariffs_1.png';
+import tariffs2 from '../../assets/tariffs_2.png';
+import tariffs3 from '../../assets/tariffs_3.png';
 
 const tariffs = [
   { no: '01.', loan: '$100,000', left: '$40,500', duration: '8 Months', rate: '12%', installment: '$2,000 / month', repay: true },
@@ -31,7 +34,7 @@ const TariffsPage = () => {
         {/* Верхний белый вектор */}
         <img src={topVector} alt="top vector" className="absolute top-[-1px] left-0 w-full h-[180px] z-20" />
         {/* Нижний белый вектор */}
-        <img src={bottomVector} alt="bottom vector" className="absolute bottom-0 left-0 w-full h-[180px] z-20" />
+        <img src={bottomVector} alt="bottom vector" className="absolute bottom-[-11px] left-0 w-full h-[200px] z-20" />
         {/* Контент */}
         <div className="relative z-30 w-full flex flex-col items-center pt-[30px] pb-[30px]">
           <div className="flex items-center justify-center mb-80 mt-[-230px]">
@@ -42,7 +45,7 @@ const TariffsPage = () => {
         </div>
       </div>
       {/* Таблица на белом фоне, вне блока с фоном */}
-      <div className="relative w-full flex justify-center" style={{background: 'white'}}>
+      <div className="relative w-full flex justify-center" style={{marginTop: '-290px', zIndex: 40}}>
         <div className="w-full max-w-[1100px] bg-white rounded-sm shadow-2xl overflow-x-auto border border-[#E6E9F5] mt-[40px]" style={{boxShadow:'0 8px 32px 0 rgba(40,40,80,0.10)', borderRadius:'32px', paddingTop:'32px', paddingBottom:'16px', position:'relative', zIndex:30}}>
           <table className="w-full text-[#222] text-[15px] font-normal border-collapse">
             <thead>
@@ -178,7 +181,7 @@ const TariffsPage = () => {
                 <div className="h-[56px] w-full"></div>
               </div>
             </div>
-            <button className="w-full h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors mt-4 font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>РАССЧИТАТЬ</button>
+            <button className="w-full h-[56px] bg-[#32BA16] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors mt-4 font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>РАССЧИТАТЬ</button>
           </div>
           {/* Правая колонка: заголовок и картинка */}
           <div className="flex flex-col items-start flex-1 pt-16 pl-20">
@@ -189,6 +192,29 @@ const TariffsPage = () => {
             <img src={warehouseImg} alt="Склад warehouse" className="w-full max-w-[500px] object-contain" style={{transform:'scaleX(-1)'}} />
           </div>
         </div>
+      </section>
+      {/* Третий фрейм: изображения тарифов */}
+      <section className="w-full flex flex-col items-center mt-10 mb-24 font-['Montserrat']">
+        <div className="w-full max-w-4xl mb-0">
+          <ul className="list-disc pl-6 text-[20px] font-bold md:text-[18px] text-[#222] font-['Montserrat']">
+            <li>
+              Страница "Тарифы"
+              <ul className="list-disc pl-8 mt-0 text-[18px] md:text-[19px] space-y-1 font-bold">
+                <li>
+                  Содержание:
+                  <ul className="list-disc pl-8 mt-0 space-y-1">
+                    <li>Таблица с карточками и картинками - тарифами на все виды услуг.</li>
+                    <li>Сравнительная таблица цен по услугам: аренда складов, облачное хранение, мувинг.</li>
+                    <li>Калькулятор для расчета стоимости.</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <img src={tariffs1} alt="Тарифы 1" className="w-full max-w-3xl object-contain mb-32" />
+        <img src={tariffs2} alt="Тарифы 2" className="w-full max-w-4xl object-contain mb-32" />
+        <img src={tariffs3} alt="Тарифы 3" className="w-full max-w-4xl object-contain mb-80" />
       </section>
     </div>
   );
