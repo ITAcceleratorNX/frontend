@@ -5,6 +5,9 @@ import autoprefixer from 'autoprefixer'
 import { resolve } from 'path'
 import { writeFileSync } from 'fs'
 
+// Определение порта с учетом переменной окружения
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -21,7 +24,7 @@ export default defineConfig({
   base: '/',
   server: {
     host: '0.0.0.0',
-    port: parseInt(process.env.PORT || '5173'),
+    port: PORT,
     proxy: {
       '/api': {
         target: 'https://extraspace-backend.onrender.com',
@@ -34,7 +37,7 @@ export default defineConfig({
   },
   preview: {
     host: '0.0.0.0',
-    port: parseInt(process.env.PORT || '5173'),
+    port: PORT,
     allowedHosts: ['frontend-19x7.onrender.com', '.onrender.com', 'localhost']
   },
   css: {
