@@ -1,15 +1,18 @@
-// Этот файл создан для того, чтобы сборка на Render.com работала корректно
-// Он будет автоматически перенаправлять на корректную версию проекта
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './app/index'
+import './app/styles/global.css'
 
-// Редирект на основную страницу
-window.location.href = "https://frontend-19x7.onrender.com";
+// Находим корневой элемент
+const rootElement = document.getElementById('root');
 
-// Запасной вариант на случай, если редирект не сработает
-document.addEventListener('DOMContentLoaded', () => {
-  document.body.innerHTML = `
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: sans-serif;">
-      <h1>Перенаправление...</h1>
-      <p>Если вы не были автоматически перенаправлены, <a href="https://frontend-19x7.onrender.com">нажмите здесь</a>.</p>
-    </div>
-  `;
-}); 
+if (!rootElement) {
+  throw new Error('Не найден корневой элемент с id "root"');
+}
+
+// Создаем корень React и рендерим приложение
+createRoot(rootElement).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+) 
