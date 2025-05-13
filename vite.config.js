@@ -8,9 +8,6 @@ import { writeFileSync } from 'fs'
 // Определение порта с учетом переменной окружения
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
 
-// Генерация версии для кэша
-const BUILD_VERSION = Date.now();
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -29,22 +26,6 @@ export default defineConfig({
         writeFileSync('dist/_redirects', '/* /index.html 200\n');
         console.log('✓ _redirects file has been created');
       }
-    },
-    {
-      name: 'html-transform',
-      transformIndexHtml(html) {
-        // Добавляем генерацию уникального timestamp для предотвращения кэширования
-        const timestamp = Date.now();
-        // Добавляем дополнительные meta-теги для предотвращения кэширования
-        return html.replace(
-          '</head>',
-          `<meta name="build-timestamp" content="${timestamp}" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
-</head>`
-        );
-      }
     }
   ],
   base: '/',
@@ -59,13 +40,13 @@ export default defineConfig({
         secure: false
       }
     },
-    allowedHosts: ['frontend-6j9m.onrender.com', '.onrender.com', 'localhost'],
+    allowedHosts: ['frontend-nu-sepia-48.vercel.app', '.vercel.app', 'localhost'],
     historyApiFallback: true
   },
   preview: {
     host: '0.0.0.0',
     port: PORT,
-    allowedHosts: ['frontend-6j9m.onrender.com', '.onrender.com', 'localhost']
+    allowedHosts: ['frontend-nu-sepia-48.vercel.app', '.vercel.app', 'localhost']
   },
   css: {
     postcss: {
@@ -76,12 +57,10 @@ export default defineConfig({
     },
   },
   build: {
-    // Добавляем уникальный суффикс для всех файлов бандла, чтобы принудительно обновить кэш
+    chunkSizeWarningLimit: 1500,
+    outDir: 'dist',
     rollupOptions: {
       output: {
-        entryFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.js`,
-        chunkFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.js`,
-        assetFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.[ext]`,
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
             if (id.includes('lucide-react') || id.includes('@radix-ui')) {
@@ -106,28 +85,17 @@ export default defineConfig({
           }
         }
       }
-    },
-    chunkSizeWarningLimit: 1500,
-    outDir: 'dist',
-    // Обеспечиваем, что React будет включен в бандл
-    commonjsOptions: {
-      include: [/node_modules/],
-      transformMixedEsModules: true
-    },
+    }
   },
   define: {
     // Для улучшения совместимости с кодом (имитация наличия process.env)
-    'process.env': {},
-    // Добавляем глобальный React
-    'global.React': 'React',
-    '__BUILD_VERSION__': JSON.stringify(BUILD_VERSION)
+    'process.env': {}
   },
   // Определяем поддерживаемые расширения файлов
   resolve: {
     extensions: ['.js', '.jsx', '.json'],
     alias: {
       '@': resolve(__dirname, 'src'),
-      'src': resolve(__dirname, 'src'),
       'react': resolve(__dirname, 'node_modules/react'),
       'react-dom': resolve(__dirname, 'node_modules/react-dom')
     }
