@@ -1,19 +1,19 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import * as React from 'react';
 import Cookies from 'js-cookie';
 import { authApi } from '../api/auth';
 
 // Создаем контекст
-export const AuthContext = createContext(null);
+export const AuthContext = React.createContext(null);
 
 // Провайдер контекста
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [user, setUser] = React.useState(null);
+  const [token, setToken] = React.useState(null);
 
   // Проверяем наличие токена в cookie при загрузке
-  useEffect(() => {
+  React.useEffect(() => {
     const checkAuth = async () => {
       try {
         const storedToken = Cookies.get('token');
@@ -222,7 +222,7 @@ export const AuthProvider = ({ children }) => {
 
 // Хук для использования контекста
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth должен использоваться внутри AuthProvider');
   }
