@@ -88,9 +88,7 @@ export default defineConfig({
   },
   define: {
     // Для улучшения совместимости с кодом (имитация наличия process.env)
-    'process.env': {},
-    // Настройка глобальных переменных для React
-    __REACT_DEVTOOLS_GLOBAL_HOOK__: '({ isDisabled: true })'
+    'process.env': {}
   },
   // Определяем поддерживаемые расширения файлов
   resolve: {
