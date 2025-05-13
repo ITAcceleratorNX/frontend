@@ -3,7 +3,7 @@ services:
     name: frontend
     runtime: static
     rootDir: frontend
-    buildCommand: cd .. && npm install && npm run build && cp -r dist frontend/dist
+    buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     envVars:
       - key: NODE_VERSION
