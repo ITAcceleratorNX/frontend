@@ -60,6 +60,9 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     outDir: 'dist',
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      },
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
@@ -89,7 +92,9 @@ export default defineConfig({
   },
   define: {
     // Для улучшения совместимости с кодом (имитация наличия process.env)
-    'process.env': {}
+    'process.env': {},
+    // Добавляем глобальный React
+    'global.React': 'React'
   },
   // Определяем поддерживаемые расширения файлов
   resolve: {
