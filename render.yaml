@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: frontend
+    runtime: static
+    rootDir: .
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
