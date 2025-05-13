@@ -2,7 +2,7 @@ services:
   - type: web
     name: frontend
     runtime: static
-    rootDir: .
+    rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     envVars:
