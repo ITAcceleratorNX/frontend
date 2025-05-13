@@ -30,12 +30,12 @@ export default defineConfig({
         secure: false
       }
     },
-    allowedHosts: ['frontend-19x7.onrender.com', 'localhost']
+    allowedHosts: ['frontend-19x7.onrender.com', '.onrender.com', 'localhost']
   },
   preview: {
     host: '0.0.0.0',
     port: parseInt(process.env.PORT || '5173'),
-    allowedHosts: ['frontend-19x7.onrender.com', 'localhost']
+    allowedHosts: ['frontend-19x7.onrender.com', '.onrender.com', 'localhost']
   },
   css: {
     postcss: {
