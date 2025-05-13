@@ -40,7 +40,8 @@ export default defineConfig({
         secure: false
       }
     },
-    allowedHosts: ['frontend-6j9m.onrender.com', '.onrender.com', 'localhost']
+    allowedHosts: ['frontend-6j9m.onrender.com', '.onrender.com', 'localhost'],
+    historyApiFallback: true
   },
   preview: {
     host: '0.0.0.0',
