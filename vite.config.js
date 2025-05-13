@@ -11,7 +11,14 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      // Использование React в production режиме
+      jsx: 'react',
+      // Включение быстрого обновления
+      fastRefresh: true,
+      // Указание React как зависимости
+      include: ['**/*.jsx', '**/*.js']
+    }),
     {
       name: 'generate-redirects',
       closeBundle() {
@@ -81,13 +88,21 @@ export default defineConfig({
   },
   define: {
     // Для улучшения совместимости с кодом (имитация наличия process.env)
-    'process.env': {}
+    'process.env': {},
+    // Настройка глобальных переменных для React
+    __REACT_DEVTOOLS_GLOBAL_HOOK__: '({ isDisabled: true })'
   },
   // Определяем поддерживаемые расширения файлов
   resolve: {
     extensions: ['.js', '.jsx', '.json'],
     alias: {
-      '@': resolve(__dirname, 'src')
+      '@': resolve(__dirname, 'src'),
+      'react': resolve(__dirname, 'node_modules/react'),
+      'react-dom': resolve(__dirname, 'node_modules/react-dom')
     }
+  },
+  // Оптимизация импортов
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query']
   }
 })
