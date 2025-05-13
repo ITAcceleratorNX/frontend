@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [
     react({
       // Использование React в production режиме
-      jsx: 'react',
+      jsxRuntime: 'automatic', 
       // Включение быстрого обновления
       fastRefresh: true,
       // Указание React как зависимости
@@ -101,6 +101,10 @@ export default defineConfig({
   },
   // Оптимизация импортов
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query']
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    esbuildOptions: {
+      // Необходимо для предотвращения проблем с JSX
+      jsx: 'automatic'
+    }
   }
 })
