@@ -8,6 +8,9 @@ import { writeFileSync } from 'fs'
 // Определение порта с учетом переменной окружения
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
 
+// Генерация версии для кэша
+const BUILD_VERSION = Date.now();
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -32,9 +35,14 @@ export default defineConfig({
       transformIndexHtml(html) {
         // Добавляем генерацию уникального timestamp для предотвращения кэширования
         const timestamp = Date.now();
+        // Добавляем дополнительные meta-теги для предотвращения кэширования
         return html.replace(
           '</head>',
-          `<meta name="build-timestamp" content="${timestamp}" />\n</head>`
+          `<meta name="build-timestamp" content="${timestamp}" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+</head>`
         );
       }
     }
@@ -68,13 +76,12 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 1500,
-    outDir: 'dist',
+    // Добавляем уникальный суффикс для всех файлов бандла, чтобы принудительно обновить кэш
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html')
-      },
       output: {
+        entryFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.js`,
+        assetFileNames: `assets/[name]-[hash]-${BUILD_VERSION}.[ext]`,
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
             if (id.includes('lucide-react') || id.includes('@radix-ui')) {
@@ -99,13 +106,21 @@ export default defineConfig({
           }
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 1500,
+    outDir: 'dist',
+    // Обеспечиваем, что React будет включен в бандл
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    },
   },
   define: {
     // Для улучшения совместимости с кодом (имитация наличия process.env)
     'process.env': {},
     // Добавляем глобальный React
-    'global.React': 'React'
+    'global.React': 'React',
+    '__BUILD_VERSION__': JSON.stringify(BUILD_VERSION)
   },
   // Определяем поддерживаемые расширения файлов
   resolve: {
