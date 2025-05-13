@@ -26,6 +26,17 @@ export default defineConfig({
         writeFileSync('dist/_redirects', '/* /index.html 200\n');
         console.log('✓ _redirects file has been created');
       }
+    },
+    {
+      name: 'html-transform',
+      transformIndexHtml(html) {
+        // Добавляем генерацию уникального timestamp для предотвращения кэширования
+        const timestamp = Date.now();
+        return html.replace(
+          '</head>',
+          `<meta name="build-timestamp" content="${timestamp}" />\n</head>`
+        );
+      }
     }
   ],
   base: '/',
