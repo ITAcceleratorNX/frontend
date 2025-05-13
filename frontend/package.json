@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp -f public/_redirects dist/",
+    "build": "vite build",
     "lint": "echo 'Linting temporarily disabled'",
     "preview": "vite preview",
     "serve": "vite preview --port 3000",
