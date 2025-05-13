@@ -49,20 +49,29 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
     outDir: 'dist',
     rollupOptions: {
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('lucide-react')) {
-              return 'icons'
+            if (id.includes('lucide-react') || id.includes('@radix-ui')) {
+              return 'vendor-ui'
             }
             if (id.includes('react') || id.includes('scheduler')) {
               return 'vendor-react'
             }
             if (id.includes('zustand') || id.includes('tanstack')) {
               return 'vendor-state'
+            }
+            if (id.includes('react-router')) {
+              return 'vendor-router'
+            }
+            if (id.includes('react-toastify') || id.includes('react-hot-toast')) {
+              return 'vendor-notifications'
+            }
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return 'vendor-maps'
             }
             return 'vendor'
           }
