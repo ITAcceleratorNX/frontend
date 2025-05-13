@@ -2,7 +2,9 @@ services:
   - type: web
     name: frontend
     buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm run start
+    startCommand: cd frontend && npm run dev
     envVars:
       - key: NODE_VERSION
         value: 22.14.0
+      - key: PORT
+        value: 10000
