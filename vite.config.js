@@ -12,11 +12,8 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
 export default defineConfig({
   plugins: [
     react({
-      // Использование React в production режиме
-      jsxRuntime: 'automatic', 
-      // Включение быстрого обновления
+      jsxRuntime: 'automatic',
       fastRefresh: true,
-      // Указание React как зависимости
       include: ['**/*.jsx', '**/*.js']
     }),
     {
@@ -39,14 +36,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
         secure: false
       }
-    },
-    allowedHosts: ['frontend-nu-sepia-48.vercel.app', '.vercel.app', 'localhost'],
-    historyApiFallback: true
+    }
   },
   preview: {
     host: '0.0.0.0',
-    port: PORT,
-    allowedHosts: ['frontend-nu-sepia-48.vercel.app', '.vercel.app', 'localhost']
+    port: PORT
   },
   css: {
     postcss: {
@@ -61,51 +55,27 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('lucide-react') || id.includes('@radix-ui')) {
-              return 'vendor-ui'
-            }
-            if (id.includes('react') || id.includes('scheduler')) {
-              return 'vendor-react'
-            }
-            if (id.includes('zustand') || id.includes('tanstack')) {
-              return 'vendor-state'
-            }
-            if (id.includes('react-router')) {
-              return 'vendor-router'
-            }
-            if (id.includes('react-toastify') || id.includes('react-hot-toast')) {
-              return 'vendor-notifications'
-            }
-            if (id.includes('leaflet') || id.includes('react-leaflet')) {
-              return 'vendor-maps'
-            }
-            return 'vendor'
-          }
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'scheduler'],
+          'vendor-router': ['react-router-dom'],
+          'vendor-state': ['zustand', '@tanstack/react-query'],
+          'vendor-ui': ['lucide-react', '@radix-ui/react-accordion', '@radix-ui/react-dialog', '@radix-ui/react-label', '@radix-ui/react-slot'],
+          'vendor-notifications': ['react-toastify', 'react-hot-toast'],
+          'vendor-maps': ['leaflet', 'react-leaflet']
         }
       }
     }
   },
   define: {
-    // Для улучшения совместимости с кодом (имитация наличия process.env)
     'process.env': {}
   },
-  // Определяем поддерживаемые расширения файлов
   resolve: {
     extensions: ['.js', '.jsx', '.json'],
     alias: {
-      '@': resolve(__dirname, 'src'),
-      'react': resolve(__dirname, 'node_modules/react'),
-      'react-dom': resolve(__dirname, 'node_modules/react-dom')
+      '@': resolve(__dirname, 'src')
     }
   },
-  // Оптимизация импортов
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-    esbuildOptions: {
-      // Необходимо для предотвращения проблем с JSX
-      jsx: 'automatic'
-    }
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'zustand']
   }
 })
