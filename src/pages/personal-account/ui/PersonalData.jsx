@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useForm } from 'react-hook-form';
@@ -11,66 +10,82 @@ import cameraIcon from '../../../assets/personal_camera.svg';
 import Input from '../../../shared/ui/Input';
 import Button from '../../../shared/ui/Button';
 import api from '../../../shared/api/axios';
+import { useQueryClient } from '@tanstack/react-query';
+import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
+import { isEqual } from 'lodash-es';
 
-const PersonalData = () => {
-  const [loading, setLoading] = useState(true);
+// Мемоизированный компонент личных данных с дополнительной оптимизацией
+const PersonalData = memo(() => {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading, refetchUser } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Используем мемоизацию для defaultValues, чтобы предотвратить повторное создание объекта
+  const defaultValues = useMemo(() => ({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    iin: user?.iin || ''
+  }), [user]);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      iin: ''
-    }
+    defaultValues
   });
 
-  // Проверка аутентификации и получение данных пользователя
+  // Заполняем форму данными пользователя, когда они доступны, используя зависимость от объекта user
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (user && !isEqual(defaultValues, {
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      iin: user.iin || ''
+    })) {
+      setValue('name', user.name || '');
+      setValue('email', user.email || '');
+      setValue('phone', user.phone || '');
+      setValue('iin', user.iin || '');
+    }
+  }, [user, setValue, defaultValues]);
+
+  // Перенаправляем на страницу логина, если пользователь не авторизован
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  // Мемоизируем функцию обработки обновления данных пользователя
+  const onSubmit = async (formData) => {
+    // Проверяем, изменились ли данные, чтобы избежать ненужных запросов
+    const hasChanges = !isEqual(formData, {
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      iin: user?.iin || ''
+    });
+    
+    if (!hasChanges) {
+      toast.info('Данные не изменились');
+      setIsEditing(false);
       return;
     }
-
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get('/users/me');
-        
-        if (response.status === 200) {
-          const userData = response.data;
-          setValue('name', userData.name || '');
-          setValue('email', userData.email || '');
-          setValue('phone', userData.phone || '');
-          setValue('iin', userData.iin || '');
-        }
-      } catch (error) {
-        console.error('Ошибка при получении данных пользователя:', error);
-        
-        if (error.response && (error.response.status === 401 || error.response.status === 404)) {
-          toast.error('Сессия истекла. Пожалуйста, войдите снова.');
-          navigate('/login');
-        } else {
-          toast.error('Не удалось загрузить данные профиля');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [isAuthenticated, navigate, setValue]);
-
-  // Обработка обновления данных пользователя
-  const onSubmit = async (formData) => {
+    
     try {
       setSaving(true);
       const response = await api.put('/users/me', formData);
       
       if (response.status === 200) {
+        // Инвалидируем кеш пользователя, чтобы запросить свежие данные
+        queryClient.invalidateQueries({ queryKey: [USER_QUERY_KEY] });
+        
+        // Обновляем локальные данные пользователя через кеш
+        queryClient.setQueryData([USER_QUERY_KEY], {
+          ...user,
+          ...formData
+        });
+        
         toast.success('Данные успешно обновлены');
         setIsEditing(false);
       }
@@ -90,12 +105,19 @@ const PersonalData = () => {
     }
   };
 
+  // Мемоизируем функцию переключения режима редактирования
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
 
-  if (loading) {
+  // Отображение состояния загрузки
+  if (isLoading) {
     return <div className="w-full text-center py-10">Загрузка данных...</div>;
+  }
+
+  // Если нет пользователя и загрузка завершена, показываем сообщение об ошибке
+  if (!user && !isLoading) {
+    return <div className="w-full text-center py-10">Не удалось загрузить данные пользователя</div>;
   }
 
   return (
@@ -218,6 +240,8 @@ const PersonalData = () => {
       )}
     </div>
   );
-};
+});
+
+PersonalData.displayName = 'PersonalData';
 
 export default PersonalData; 

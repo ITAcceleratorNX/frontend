@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../widgets';
 import Sidebar from './ui/Sidebar';
@@ -10,18 +10,25 @@ import Footer from '../../widgets/Footer';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const PersonalAccountPage = () => {
+// Мемоизированный компонент страницы личного кабинета
+const PersonalAccountPage = memo(() => {
   const [activeNav, setActiveNav] = useState('personal');
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Отслеживаем изменение статуса аутентификации для перенаправления
   useEffect(() => {
     // После завершения загрузки, проверяем аутентификацию
     if (!isLoading && !isAuthenticated) {
+      if (import.meta.env.DEV) {
+        console.log('PersonalAccountPage: Пользователь не аутентифицирован, перенаправление на /login');
+      }
       navigate('/login');
     }
   }, [isAuthenticated, isLoading, navigate]);
 
+  // Мемоизируем контент страницы для предотвращения ререндеров
+  const pageContent = useMemo(() => {
   // Пока идет проверка аутентификации, показываем загрузку
   if (isLoading) {
     return (
@@ -34,6 +41,7 @@ const PersonalAccountPage = () => {
     );
   }
 
+    // Если не загрузка и пользователь аутентифицирован, показываем контент
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -49,6 +57,16 @@ const PersonalAccountPage = () => {
       <Footer />
     </div>
   );
-};
+  }, [activeNav, isLoading, isAuthenticated]);
+
+  if (import.meta.env.DEV) {
+    console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 
+      { isAuthenticated, isLoading, activeNav });
+  }
+
+  return pageContent;
+});
+
+PersonalAccountPage.displayName = 'PersonalAccountPage';
 
 export default PersonalAccountPage; 

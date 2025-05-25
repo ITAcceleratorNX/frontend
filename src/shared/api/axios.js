@@ -1,5 +1,4 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 // Используем прокси URL для локальной разработки
 const isDevelopment = import.meta.env.DEV;
@@ -21,14 +20,7 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
-    
-    // Проверяем наличие токена в cookie и добавляем его в заголовки
-    const token = Cookies.get('token');
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
+    // Убрана логика добавления токена в заголовки, т.к. используется HttpOnly cookie
     return config;
   },
   (error) => {

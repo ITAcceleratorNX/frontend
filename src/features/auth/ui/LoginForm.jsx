@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authApi } from '../../../shared/api/authApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { toast } from 'react-toastify';
 import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight } from 'lucide-react';
@@ -11,7 +10,7 @@ import api from '../../../shared/api/axios';
 export const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +56,10 @@ export const LoginForm = () => {
       if (result.success) {
         console.log('LoginForm: Успешный вход, перенаправляем на главную');
         toast.success('Вход выполнен успешно!');
-        navigate('/', { replace: true });
+        
+        // Перенаправляем на запрошенную страницу или на главную
+        const redirectTo = location.state?.from?.pathname || '/';
+        navigate(redirectTo, { replace: true });
       } else {
         setServerError(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
         toast.error(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
@@ -91,15 +93,7 @@ export const LoginForm = () => {
     try {
       console.log('Начинаем авторизацию через Google');
       
-      // Опция 1: Использовать axios для получения URL редиректа (работает, если сервер возвращает URL в ответе)
-      // Чтобы не обрабатывать редирект автоматически, отключаем redirects в axios
-      // const response = await api.get('/auth/google', { maxRedirects: 0 });
-      // if (response.headers && response.headers.location) {
-      //   window.location.href = response.headers.location;
-      // }
-      
-      // Опция 2: Просто перенаправляем пользователя на URL, который обрабатывает бэкенд
-      // Это самый простой и надежный способ обработки OAuth редиректов
+      // Перенаправляем пользователя на URL, который обрабатывает бэкенд
       window.location.href = `${api.defaults.baseURL}/auth/google`;
       
     } catch (error) {
@@ -114,6 +108,9 @@ export const LoginForm = () => {
       }
     }
   };
+  
+  // Общее состояние загрузки, учитывая как локальное состояние формы, так и состояние авторизации
+  const isSubmitting = isLoading || authLoading;
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
@@ -145,9 +142,9 @@ export const LoginForm = () => {
                   type="email"
                   className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
                     errors.email ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
+                  } ${isSubmitting ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
                   placeholder="example@email.com"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   {...register('email', {
                     required: 'Email обязателен',
                     pattern: {
@@ -176,9 +173,9 @@ export const LoginForm = () => {
                   type={showPassword ? "text" : "password"}
                   className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
                     errors.password ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
+                  } ${isSubmitting ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
                   placeholder="Введите пароль"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   {...register('password', {
                     required: 'Пароль обязателен',
                     minLength: {
@@ -191,7 +188,7 @@ export const LoginForm = () => {
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   onClick={togglePasswordVisibility}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                 </button>
@@ -227,10 +224,10 @@ export const LoginForm = () => {
             {/* Кнопка входа */}
             <button 
               type="submit" 
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[#273655] text-white rounded-lg font-medium shadow-lg shadow-[#273655]/20 hover:bg-[#324569] transition-all duration-200 disabled:opacity-70"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -256,7 +253,7 @@ export const LoginForm = () => {
             <button 
               type="button" 
               onClick={handleGoogleLogin}
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="w-full py-3 px-4 flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg font-medium text-slate-700 hover:bg-slate-50 transition-all duration-200"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
@@ -276,7 +273,7 @@ export const LoginForm = () => {
                   type="button" 
                   className="text-[#273655] font-medium hover:underline"
                   onClick={() => navigate('/register')}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   Зарегистрироваться
                 </button>

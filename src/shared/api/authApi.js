@@ -15,13 +15,14 @@ export const authApi = {
   
   login: async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const response = await axios.post(`${API_URL}/auth/login`, { email, password }, );
       return response;
     } catch (error) {
       console.error('Ошибка при авторизации:', error);
       throw error;
     }
   },
+  //  {withCredentials: true
   
   register: async (email, unique_code, password) => {
     try {

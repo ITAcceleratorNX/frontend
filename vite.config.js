@@ -12,7 +12,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
 export default defineConfig({
   plugins: [
     react({
-      jsxRuntime: 'automatic',
+      jsxRuntime: 'automatic', 
       fastRefresh: true,
       include: ['**/*.jsx', '**/*.js']
     }),

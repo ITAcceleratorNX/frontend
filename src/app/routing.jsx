@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, memo, useMemo } from 'react';
 import { Navigate, useLocation, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../shared/context/AuthContext';
 
@@ -11,75 +11,132 @@ import TariffsPage from '../pages/tariffs';
 
 import PersonalAccountPage from '../pages/personal-account';
 
-
-// Компонент для логирования изменений маршрута (для отладки)
-const RouteLogger = ({ children }) => {
+// Мемоизированный компонент для логирования маршрутов - только в режиме разработки
+const RouteLogger = memo(({ children }) => {
   const location = useLocation();
   
   useEffect(() => {
-    console.log('Routing: Текущий маршрут:', location.pathname);
-    console.log('Routing: State данные:', location.state);
-    console.log('Routing: Query параметры:', new URLSearchParams(location.search).toString());
-  }, [location]);
+    if (import.meta.env.DEV) {
+      console.log('Routing: Текущий маршрут:', location.pathname);
+    }
+  }, [location.pathname]);
   
-  return <>{children}</>;
-};
+  return children;
+});
 
-// Компонент для защищенных маршрутов
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+RouteLogger.displayName = 'RouteLogger';
+
+// Мемоизированный компонент загрузки
+const LoadingSpinner = memo(() => (
+  <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1e2c4f]"></div>
+  </div>
+));
+
+LoadingSpinner.displayName = 'LoadingSpinner';
+
+// Мемоизированный компонент для защищенных маршрутов с оптимизацией проверок
+const ProtectedRoute = memo(({ children }) => {
+  const location = useLocation();
+  const { isAuthenticated, isLoading, user } = useAuth();
   
-  useEffect(() => {
-    console.log('ProtectedRoute: Проверка авторизации:', {
-      isAuthenticated,
-      isLoading
-    });
-  }, [isAuthenticated, isLoading]);
+  // Мемоизируем результат редиректа для предотвращения повторных вычислений
+  const authResult = useMemo(() => {
+    // Оптимизированная проверка авторизации - логирование только в режиме разработки
+    if (import.meta.env.DEV) {
+      console.log('ProtectedRoute: Проверка авторизации:', {
+        path: location.pathname,
+        isAuthenticated,
+        isLoading,
+        hasUser: !!user
+      });
+    }
+    
+    // Показываем загрузку, пока проверяем статус аутентификации
+    if (isLoading) {
+      return <LoadingSpinner />;
+    }
+    
+    // Если пользователь не авторизован, перенаправляем на страницу входа
+    // с сохранением информации о запрошенном маршруте
+    if (!isAuthenticated) {
+      if (import.meta.env.DEV) {
+        console.log('ProtectedRoute: Пользователь не авторизован, перенаправляем на /login');
+      }
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    
+    // Если авторизован, отображаем защищенный контент
+    return children;
+  }, [isAuthenticated, isLoading, location, user, children]);
   
-  // Показываем загрузку, пока проверяем статус аутентификации
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1e2c4f]"></div>
-    </div>;
+  return authResult;
+});
+
+ProtectedRoute.displayName = 'ProtectedRoute';
+
+// Мемоизированный компонент для публичных маршрутов
+const PublicRoute = memo(({ children }) => {
+  return useMemo(() => children, [children]);
+});
+
+PublicRoute.displayName = 'PublicRoute';
+
+// Мемоизированный компонент маршрутизации
+const Routing = memo(() => {
+  if (import.meta.env.DEV) {
+    console.log('Рендеринг компонента Routing');
   }
   
-  // Если пользователь не авторизован, перенаправляем на страницу входа
-  if (!isAuthenticated) {
-    console.log('ProtectedRoute: Пользователь не авторизован, перенаправляем на /login');
-    return <Navigate to="/login" replace />;
-  }
+  // Мемоизируем роуты для предотвращения лишних перерисовок
+  const publicRoutes = useMemo(() => [
+    { path: "/", element: <HomePage /> },
+    { path: "/email-verification", element: <EmailVerificationPage /> },
+    { path: "/login", element: <LoginPage /> },
+    { path: "/register", element: <RegisterPage /> },
+    { path: "/moving", element: <MovingPage /> },
+    { path: "/tariffs", element: <TariffsPage /> }
+  ], []);
   
-  return <>{children}</>;
-};
+  const protectedRoutes = useMemo(() => [
+    { path: "/personal-account", element: <PersonalAccountPage /> }
+  ], []);
 
-// Компонент для публичных маршрутов (гарантирует, что публичные маршруты всегда доступны)
-const PublicRoute = ({ children }) => {
-  return <>{children}</>;
-};
-
-const Routing = () => {
-  console.log('Рендеринг компонента Routing');
+  // Мемоизируем маппинг маршрутов для предотвращения повторного создания элементов
+  const publicRouteElements = useMemo(() => 
+    publicRoutes.map(route => (
+      <Route
+        key={route.path}
+        path={route.path}
+        element={<PublicRoute>{route.element}</PublicRoute>}
+      />
+    )), [publicRoutes]);
+    
+  const protectedRouteElements = useMemo(() => 
+    protectedRoutes.map(route => (
+      <Route
+        key={route.path}
+        path={route.path}
+        element={<ProtectedRoute>{route.element}</ProtectedRoute>}
+      />
+    )), [protectedRoutes]);
   
   return (
     <RouteLogger>
       <Routes>
         {/* Публичные маршруты */}
-        <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
-        <Route path="/email-verification" element={<PublicRoute><EmailVerificationPage /></PublicRoute>} />
-        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-        <Route path="/moving" element={<PublicRoute><MovingPage /></PublicRoute>} />
-        <Route path="/tariffs" element={<PublicRoute><TariffsPage /></PublicRoute>} />
-        {/* Защищенные маршруты */}
-      
-        <Route path="/personal-account" element={<ProtectedRoute><PersonalAccountPage /></ProtectedRoute>} />
+        {publicRouteElements}
         
+        {/* Защищенные маршруты */}
+        {protectedRouteElements}
         
         {/* Редирект для несуществующих маршрутов */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </RouteLogger>
   );
-};
+});
+
+Routing.displayName = 'Routing';
 
 export default Routing; 

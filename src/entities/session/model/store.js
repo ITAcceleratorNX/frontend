@@ -1,106 +1,156 @@
 import { create } from 'zustand';
+import { shallow } from 'zustand/shallow';
+import { authApi } from '../../../shared/api/auth';
+import { isEqual } from 'lodash-es';
 
-export const useSessionStore = create((set, get) => {
-  // Инициализация из sessionStorage
-  const initialToken = sessionStorage.getItem('token');
-  let initialUser = null;
-  
-  try {
-    const userData = sessionStorage.getItem('user');
-    if (userData) {
-      initialUser = JSON.parse(userData);
-    }
-  } catch (e) {
-    console.error('Ошибка при получении данных пользователя из sessionStorage:', e);
-  }
-  
-  return {
-    user: initialUser,
-    token: initialToken,
-    isAuthenticated: !!initialToken,
+// Функция для глубокого сравнения объектов
+const deepCompare = (a, b) => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return isEqual(a, b);
+};
+
+// Хранилище Zustand для управления сессией с оптимизированными обновлениями
+export const useSessionStore = create((set, get) => ({
+  // Состояние
+  user: null,
+  isAuthenticated: false,
   isLoading: false,
   error: null,
+  loadRequestInProgress: false, // Флаг для отслеживания текущего запроса
   
   // Actions
-    setUser: (user) => {
+  setUser: (user) => {
+    // Устанавливаем пользователя только если он изменился
+    const currentUser = get().user;
+    if (!deepCompare(user, currentUser)) {
+      set({ 
+        user, 
+        isAuthenticated: !!user,
+        // Если пользователь установлен, загрузка завершена
+        ...(user ? { isLoading: false } : {})
+      });
+      
+      if (import.meta.env.DEV) {
+        console.log('SessionStore: Данные пользователя обновлены');
+      }
+    }
+  },
+  
+  setAuthenticated: (isAuthenticated) => {
+    if (isAuthenticated !== get().isAuthenticated) {
+      set({ isAuthenticated });
+      
+      if (import.meta.env.DEV) {
+        console.log('SessionStore: Статус аутентификации обновлен:', isAuthenticated);
+      }
+    }
+  },
+  
+  setIsLoading: (isLoading) => {
+    if (isLoading !== get().isLoading) {
+      set({ isLoading });
+    }
+  },
+  
+  setError: (error) => {
+    if (!deepCompare(error, get().error)) {
+      set({ error });
+    }
+  },
+  
+  // Загрузка данных пользователя с сервера с защитой от параллельных запросов
+  loadUser: async () => {
+    // Если уже загружается или пользователь уже есть, или запрос в процессе - не делаем повторный запрос
+    if (get().isLoading || get().loadRequestInProgress) return get().user;
+    
+    try {
+      set({ isLoading: true, error: null, loadRequestInProgress: true });
+      const user = await authApi.getCurrentUser();
+      
+      // Проверяем, изменились ли данные пользователя перед обновлением
+      if (!deepCompare(user, get().user)) {
+        set({ 
+          user, 
+          isAuthenticated: !!user, 
+          isLoading: false 
+        });
+      } else {
+        // Если данные не изменились, только сбрасываем флаг загрузки
+        set({ isLoading: false });
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('SessionStore: Ошибка загрузки пользователя:', error);
+      set({ 
+        isAuthenticated: false, 
+        user: null, 
+        error, 
+        isLoading: false 
+      });
+      return null;
+    } finally {
+      set({ loadRequestInProgress: false });
+    }
+  },
+  
+  // Обновление пользователя из кеша без повторного запроса
+  updateUserFromCache: (user) => {
+    const currentUser = get().user;
+    if (!deepCompare(user, currentUser)) {
       if (user) {
-        sessionStorage.setItem('user', JSON.stringify(user));
-        console.log('SessionStore: Данные пользователя обновлены:', user);
-      } else {
-        sessionStorage.removeItem('user');
-        console.log('SessionStore: Данные пользователя удалены');
+        set({ user, isAuthenticated: true, isLoading: false });
+      } else if (get().isAuthenticated) {
+        set({ user: null, isAuthenticated: false, isLoading: false });
       }
-      set({ user });
-    },
-    
-    setToken: (token) => {
-      if (token) {
-        sessionStorage.setItem('token', token);
-        console.log('SessionStore: Токен установлен:', token);
-      } else {
-        sessionStorage.removeItem('token');
-        console.log('SessionStore: Токен удален');
-      }
-      set({ token, isAuthenticated: !!token });
-    },
-    
-  setIsLoading: (isLoading) => set({ isLoading }),
-  setError: (error) => set({ error }),
-  
-    login: (token, userData = null) => {
-      console.log('SessionStore: Вход в систему', { token, userData });
-      
-      if (!token) {
-        console.error('SessionStore: Попытка входа без токена');
-        return;
-      }
-      
-      // Сохраняем токен
-      sessionStorage.setItem('token', token);
-      
-      // Сохраняем данные пользователя
-      if (userData) {
-        sessionStorage.setItem('user', JSON.stringify(userData));
-        set({ user: userData });
-        console.log('SessionStore: Сохранены данные пользователя:', userData);
-      } else {
-        // Пытаемся извлечь email из токена если формат temp_base64email
-        const tokenParts = token.split('_');
-        if (tokenParts[0] === 'temp' && tokenParts.length >= 2) {
-          try {
-            const email = atob(tokenParts[1]);
-            const user = {
-              email,
-              name: email.split('@')[0]
-            };
-            sessionStorage.setItem('user', JSON.stringify(user));
-            set({ user });
-            console.log('SessionStore: Извлечены данные из токена:', user);
-          } catch (e) {
-            console.error('SessionStore: Не удалось извлечь данные пользователя из токена:', e);
-          }
-        }
-      }
-      
-      set({ token, isAuthenticated: true, error: null });
-      console.log('SessionStore: Состояние после входа:', { token, isAuthenticated: true, user: get().user });
+    }
   },
   
-  logout: () => {
-      console.log('SessionStore: Выход из системы');
+  // Войти в систему
+  login: async (email, password) => {
+    // Проверка наличия текущего запроса
+    if (get().isLoading) return { success: false, error: 'Запрос уже выполняется' };
+    
+    try {
+      set({ isLoading: true, error: null });
+      const response = await authApi.login(email, password);
       
-      // Очищаем sessionStorage
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
+      // Если успешно, пользователь будет получен через React Query
+      set({ isLoading: false });
       
-      // Очищаем куки
-      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      if (import.meta.env.DEV) {
+        console.log('SessionStore: Запрос на вход выполнен успешно');
+      }
       
-      // Обновляем состояние
-      set({ user: null, token: null, isAuthenticated: false });
-      console.log('SessionStore: Состояние после выхода:', { token: null, isAuthenticated: false, user: null });
+      return { success: true };
+    } catch (error) {
+      console.error('SessionStore: Ошибка входа:', error);
+      set({ error, isLoading: false });
+      return { success: false, error };
+    }
   },
-  };
-}); 
+  
+  // Выйти из системы
+  logout: async () => {
+    // Проверка наличия текущего запроса
+    if (get().isLoading) return { success: false, error: 'Запрос уже выполняется' };
+    
+    try {
+      set({ isLoading: true });
+      await authApi.logout();
+      set({ user: null, isAuthenticated: false, isLoading: false });
+      
+      if (import.meta.env.DEV) {
+        console.log('SessionStore: Выход выполнен успешно');
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('SessionStore: Ошибка при выходе:', error);
+      // Даже при ошибке сбрасываем состояние
+      set({ user: null, isAuthenticated: false, isLoading: false });
+      return { success: false, error };
+    }
+  },
+})); 

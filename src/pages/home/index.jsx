@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { Header } from '../../widgets';
 import vectorImg from '../../assets/vector.png';
 import backgroundTextImg from '../../assets/background-text.png';
@@ -21,8 +21,64 @@ import extraOldLogo from '../../assets/extra_old_logo.jpg';
 import Footer from '../../widgets/Footer';
 import FAQ from '../../components/FAQ';
 
-const HomePage =  () => {
+// Мемоизируем компонент HomePage для предотвращения лишних ререндеров
+const HomePage = memo(() => {
   const [area, setArea] = useState(50);
+
+  // Мемоизация для предотвращения пересоздания стилей
+  const rangeStyles = useMemo(() => ({
+    WebkitAppearance: 'none'
+  }), []);
+
+  // Мемоизация CSS для встроенных стилей
+  const rangeTrackStyles = useMemo(() => `
+    input[type='range']::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #F86812;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+      cursor: pointer;
+    }
+    input[type='range']::-webkit-slider-runnable-track {
+      height: 2px;
+      background: transparent;
+    }
+    input[type='range']:focus {
+      outline: none;
+    }
+    input[type='range']::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #EA9938;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+      cursor: pointer;
+    }
+    input[type='range']::-ms-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #EA9938;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+      cursor: pointer;
+    }
+    input[type='range']::-ms-fill-lower {
+      background: transparent;
+    }
+    input[type='range']::-ms-fill-upper {
+      background: transparent;
+    }
+  `, []);
+
+  if (import.meta.env.DEV) {
+    console.log('Рендеринг компонента HomePage');
+  }
 
   const mapSrc = "https://2gis.kz/almaty?m=76.9167%2C43.25%2F11";
 
@@ -182,51 +238,8 @@ const HomePage =  () => {
                 <div className="absolute left-0 bottom-0 h-[2px] bg-[#0062D3] rounded-full" style={{width: `${area}%`, zIndex:1}}></div>
                 {/* Прозрачная часть */}
                 <div className="absolute right-0 bottom-0 h-[2px] bg-transparent" style={{left: `${area}%`, zIndex:1}}></div>
-                <input id="area" type="range" min="1" max="100" value={area} onChange={e => setArea(Number(e.target.value))} className="w-full h-[2px] bg-transparent appearance-none relative z-10" style={{WebkitAppearance:'none'}} />
-                <style>{`
-                  input[type='range']::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: #F86812;
-                    border: 2px solid #fff;
-                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
-                    cursor: pointer;
-                  }
-                  input[type='range']::-webkit-slider-runnable-track {
-                    height: 2px;
-                    background: transparent;
-                  }
-                  input[type='range']:focus {
-                    outline: none;
-                  }
-                  input[type='range']::-moz-range-thumb {
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: #EA9938;
-                    border: 2px solid #fff;
-                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
-                    cursor: pointer;
-                  }
-                  input[type='range']::-ms-thumb {
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: #EA9938;
-                    border: 2px solid #fff;
-                    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
-                    cursor: pointer;
-                  }
-                  input[type='range']::-ms-fill-lower {
-                    background: transparent;
-                  }
-                  input[type='range']::-ms-fill-upper {
-                    background: transparent;
-                  }
-                `}</style>
+                <input id="area" type="range" min="1" max="100" value={area} onChange={e => setArea(Number(e.target.value))} className="w-full h-[2px] bg-transparent appearance-none relative z-10" style={rangeStyles} />
+                <style>{rangeTrackStyles}</style>
               </div>
             </div>
             <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (дни/месяцы):</label>
@@ -380,6 +393,8 @@ const HomePage =  () => {
       <Footer />
     </div>
   );
-};
+});
+
+HomePage.displayName = 'HomePage';
 
 export default HomePage; 

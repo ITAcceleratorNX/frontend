@@ -85,7 +85,7 @@ src/
 ```
 
 ## Деплой
-Проект развернут на Vercel.com  
-https://frontend-nu-sepia-48.vercel.app
+Проект настроен для автоматического деплоя на Render.com
+https://frontend-19x7.onrender.com
 
 

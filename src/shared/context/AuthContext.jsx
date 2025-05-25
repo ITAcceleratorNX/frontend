@@ -1,194 +1,156 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import Cookies from 'js-cookie';
+import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
+import { useSessionStore } from '../../entities/session';
+import { USER_QUERY_KEY, useUserQuery } from '../lib/hooks/use-user-query';
+import { isEqual } from 'lodash-es'; // Для глубокого сравнения объектов
 
 // Создаем контекст
 export const AuthContext = createContext(null);
 
 // Провайдер контекста
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  // Используем React Query для получения данных пользователя с оптимизированными настройками
+  const { 
+    data: user, 
+    isLoading, 
+    error, 
+    refetch,
+    isSuccess,
+    isError,
+    isFetching,
+  } = useUserQuery({
+    suspense: false, // Не использовать React Suspense
+    useErrorBoundary: false, // Не использовать Error Boundary
+    // Для основного запроса пользователя разрешаем загрузку при монтировании
+    refetchOnMount: true,
+    retry: 1, // Одна попытка повторного запроса
+  });
 
-  // Проверяем наличие токена в cookie при загрузке
+  // Доступ к кешу React Query
+  const queryClient = useQueryClient();
+  
+  // Доступ к хранилищу сессий
+  const sessionStore = useSessionStore();
+
+  // При изменении данных пользователя обновляем state в Zustand
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const storedToken = Cookies.get('token');
-        console.log('AuthContext: Проверка токена в cookies:', !!storedToken);
-        
-        if (storedToken) {
-          setToken(storedToken);
-          setIsAuthenticated(true);
-          
-          // Пытаемся получить информацию о пользователе из cookie
-          const userCookie = Cookies.get('user');
-          if (userCookie) {
-            try {
-              const userData = JSON.parse(userCookie);
-              setUser(userData);
-              console.log('AuthContext: Пользовательские данные загружены из cookie:', userData);
-            } catch (e) {
-              console.error('AuthContext: Ошибка при парсинге данных пользователя из cookie:', e);
-            }
-          } else {
-            // Если в токене закодирован email (формат temp_base64email)
-            const tokenParts = storedToken.split('_');
-            if (tokenParts[0] === 'temp' && tokenParts.length >= 2) {
-              try {
-                const email = atob(tokenParts[1]);
-                const userInfo = {
-                  email,
-                  name: email.split('@')[0],
-                  id: 'temp-user'
-                };
-                setUser(userInfo);
-                console.log('AuthContext: Данные пользователя получены из токена:', userInfo);
-              } catch (e) {
-                console.error('AuthContext: Ошибка при извлечении email из токена:', e);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('AuthContext: Ошибка при проверке авторизации:', error);
-        logout(); // Сбрасываем данные при ошибке
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkAuth();
-  }, []);
+    if (isSuccess) {
+      const cachedUser = queryClient.getQueryData([USER_QUERY_KEY]);
+      const storeUser = sessionStore.user;
 
-  // Функция для входа пользователя
-  const login = async (email, password) => {
+      // Используем глубокое сравнение для предотвращения лишних обновлений
+      if (!isEqual(cachedUser, storeUser)) {
+        if (import.meta.env.DEV) {
+          console.log('AuthContext: Синхронизация данных пользователя с хранилищем');
+        }
+        sessionStore.updateUserFromCache(user);
+      }
+    } else if (isError) {
+      // Только если действительно произошла ошибка
+      if (sessionStore.user !== null) {
+        sessionStore.updateUserFromCache(null);
+      }
+    }
+  }, [isSuccess, isError, user, sessionStore, queryClient]);
+
+  // Логирование только в режиме разработки
+  useEffect(() => {
+    if (import.meta.env.DEV && (!isLoading || !isFetching)) {
+      console.log('AuthContext: Статус авторизации:', { 
+        isAuthenticated: !!user, 
+        isLoading, 
+        isFetching,
+        hasUser: !!user
+      });
+    }
+  }, [user, isLoading, isFetching]);
+  
+  // Мемоизированная функция для входа
+  const login = useCallback(async (email, password) => {
     try {
-      setIsLoading(true);
-      console.log('AuthContext: Попытка входа:', email);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка входа:', email);
       
+      // Выполняем запрос на авторизацию
       const response = await authApi.login(email, password);
-      console.log('AuthContext: Ответ от входа:', response);
       
-      if (response && response.token) {
-        // Сохраняем токен в cookie (срок действия 7 дней)
-        Cookies.set('token', response.token, { expires: 7, path: '/' });
+      if (response.success) {
+        // Инвалидируем кеш пользователя, чтобы запросить свежие данные
+        queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
         
-        // Получаем информацию о пользователе из ответа или создаем базовую
-        const userData = response.user || { 
-          email, 
-          name: email.split('@')[0],
-          id: response.userId || 'user-id'
-        };
+        // Перезапускаем запрос для получения данных пользователя
+        await refetch();
         
-        // Сохраняем данные пользователя в cookie
-        Cookies.set('user', JSON.stringify(userData), { expires: 7, path: '/' });
-        
-        // Обновляем состояние
-        setToken(response.token);
-        setUser(userData);
-        setIsAuthenticated(true);
-        
-        console.log('AuthContext: Пользователь успешно авторизован', { token: response.token, user: userData });
-        
-        return { success: true };
-      } else if (response && response.success === true) {
-        // Случай, когда ответ успешный, но без токена 
-        const tempToken = `temp_${btoa(email)}`;
-        const userData = { 
-          email,
-          name: email.split('@')[0],
-          id: 'temp-user'
-        };
-        
-        // Сохраняем временный токен в cookie
-        Cookies.set('token', tempToken, { expires: 7, path: '/' });
-        Cookies.set('user', JSON.stringify(userData), { expires: 7, path: '/' });
-        
-        // Обновляем состояние
-        setToken(tempToken);
-        setUser(userData);
-        setIsAuthenticated(true);
-        
-        console.log('AuthContext: Создан временный токен:', tempToken);
+        if (import.meta.env.DEV) console.log('AuthContext: Пользователь успешно авторизован');
         
         return { success: true };
       } else {
-        throw new Error('Не удалось получить токен');
+        throw new Error(response.message || 'Ошибка авторизации');
       }
     } catch (error) {
       console.error('AuthContext: Ошибка при авторизации:', error);
+      
       return { 
         success: false, 
         error: error.response?.data?.message || error.message || 'Неизвестная ошибка'
       };
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [queryClient, refetch]);
 
-  // Функция для регистрации пользователя
-  const register = async (email, uniqueCode, password) => {
+  // Мемоизированная функция для регистрации
+  const register = useCallback(async (email, uniqueCode, password) => {
     try {
-      setIsLoading(true);
-      console.log('AuthContext: Попытка регистрации:', email);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации:', email);
       
       const response = await authApi.register(email, uniqueCode, password);
-      console.log('AuthContext: Ответ от регистрации:', response);
       
-      if (response && response.success) {
-        // Если регистрация успешна, но не выполняем автоматический вход
+      if (response.success) {
+        if (import.meta.env.DEV) console.log('AuthContext: Регистрация успешна');
         return { success: true };
       } else {
         throw new Error('Не удалось завершить регистрацию');
       }
     } catch (error) {
       console.error('AuthContext: Ошибка при регистрации:', error);
+      
       return { 
         success: false, 
         error: error.response?.data?.message || error.message || 'Неизвестная ошибка'
       };
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Функция для выхода пользователя
-  const logout = async () => {
+  // Мемоизированная функция для выхода
+  const logout = useCallback(async () => {
     try {
-      console.log('AuthContext: Выход из системы');
+      if (import.meta.env.DEV) console.log('AuthContext: Выход из системы');
       
       // Пытаемся выполнить запрос на logout
-      try {
-        await authApi.logout();
-        console.log('AuthContext: Успешное выполнение запроса logout на сервере');
-      } catch (error) {
-        console.error('AuthContext: Ошибка при запросе logout на сервер:', error);
-        // Продолжаем локальный logout даже при ошибке запроса
-      }
+      await authApi.logout();
       
-      // Удаляем все связанные cookie
-      Cookies.remove('token', { path: '/' });
-      Cookies.remove('user', { path: '/' });
-      Cookies.remove('connect.sid', { path: '/' });
+      // Очищаем кеш пользователя
+      queryClient.setQueryData([USER_QUERY_KEY], null);
       
-      // Очищаем состояние
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
+      // Обновляем состояние в хранилище
+      sessionStore.updateUserFromCache(null);
       
-      console.log('AuthContext: Пользователь вышел из системы');
+      if (import.meta.env.DEV) console.log('AuthContext: Пользователь вышел из системы');
+      return { success: true };
     } catch (error) {
       console.error('AuthContext: Ошибка при выходе из системы:', error);
+      
+      // Даже при ошибке сбрасываем состояние
+      queryClient.setQueryData([USER_QUERY_KEY], null);
+      sessionStore.updateUserFromCache(null);
+      
+      return { success: false, error: error.message || 'Ошибка при выходе из системы' };
     }
-  };
+  }, [queryClient, sessionStore]);
 
   // Функция для проверки email
-  const checkEmail = async (email) => {
+  const checkEmail = useCallback(async (email) => {
     try {
-      console.log('AuthContext: Проверка email:', email);
+      if (import.meta.env.DEV) console.log('AuthContext: Проверка email:', email);
       const response = await authApi.checkEmail(email);
       
       return { 
@@ -203,19 +165,30 @@ export const AuthProvider = ({ children }) => {
         error: error.response?.data?.message || error.message || 'Неизвестная ошибка'
       };
     }
-  };
+  }, []);
 
-  // Экспортируем значение контекста
-  const value = {
-    isAuthenticated,
-    isLoading,
+  // Мемоизируем значение контекста для предотвращения лишних ререндеров
+  const value = useMemo(() => ({
+    isAuthenticated: !!user,
+    isLoading: isLoading || isFetching,
     user,
-    token,
+    error,
     login,
     logout,
     register,
-    checkEmail
-  };
+    checkEmail,
+    refetchUser: refetch
+  }), [
+    user, 
+    isLoading, 
+    isFetching, 
+    error, 
+    login, 
+    logout, 
+    register, 
+    checkEmail, 
+    refetch
+  ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
