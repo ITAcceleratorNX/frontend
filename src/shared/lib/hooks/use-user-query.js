@@ -20,27 +20,39 @@ export const useUserQuery = (options = {}) => {
         const userData = await authApi.getCurrentUser();
         return userData;
       } catch (error) {
-        // Если ошибка 401 или 403, считаем что пользователь не авторизован
-        if (error?.response?.status === 401 || error?.response?.status === 403) {
+        // Если ошибка 401 или 403, значит пользователь не авторизован
+        if (error.response?.status === 401 || error.response?.status === 403) {
           if (import.meta.env.DEV) {
             console.log('useUserQuery: Пользователь не авторизован (401/403)');
           }
+          // Возвращаем null вместо ошибки для продолжения работы приложения
           return null;
         }
-        if (import.meta.env.DEV) {
-          console.error('useUserQuery: Ошибка при получении данных пользователя:', error);
-        }
+        // Для других ошибок бросаем исключение
         throw error;
       }
     },
-    // Усиленные настройки кеширования для минимизации запросов
-    retry: false, // Не повторять запрос при ошибке
-    staleTime: 30 * 60 * 1000, // Данные считаются свежими в течение 30 минут
-    cacheTime: 60 * 60 * 1000, // Кеш хранится 60 минут
-    refetchOnMount: false,  // Не запрашивать данные повторно при монтировании, если они уже в кеше
-    refetchOnWindowFocus: false, // Не запрашивать при фокусе окна
-    refetchOnReconnect: false, // Не запрашивать при восстановлении соединения
-    refetchInterval: false, // Отключаем периодический опрос
-    ...options, // Возможность переопределить настройки
+    // Повторные попытки только для ошибок, кроме 401/403
+    retry: (failureCount, error) => {
+      // Для 401/403 ошибок не делаем повторных попыток
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      // Для других ошибок делаем максимум 1 повторную попытку
+      return failureCount < 1;
+    },
+    // Оптимизированные настройки кеширования и обновления
+    staleTime: 5 * 60 * 1000, // Данные считаются свежими 5 минут
+    cacheTime: 10 * 60 * 1000, // Кеш хранится 10 минут
+    refetchOnWindowFocus: false, // Отключаем автоматическое обновление при фокусе окна
+    refetchOnReconnect: false, // Отключаем обновление при восстановлении соединения
+    refetchOnMount: true, // Разрешаем обновление при монтировании для первоначальной загрузки
+    
+    // Обработка ошибок с использованием отдельного колбека
+    useErrorBoundary: false, // Не используем Error Boundary
+    
+    // Объединяем с пользовательскими настройками
+    ...options
   });
+}; 
 }; 

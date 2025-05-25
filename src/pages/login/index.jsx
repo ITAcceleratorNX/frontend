@@ -13,6 +13,7 @@ const LoginPage = memo(() => {
   const { refetchUser, isAuthenticated, isLoading } = useAuth();
   const queryClient = useQueryClient();
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(false);
+  const [isLoginComplete, setIsLoginComplete] = useState(false);
 
   // Мемоизированная функция для обработки Google OAuth
   const completeGoogleAuth = useCallback(async (code) => {
@@ -29,11 +30,14 @@ const LoginPage = memo(() => {
       // Запрос к серверу для завершения аутентификации
       await api.get(`/auth/google/callback?code=${code}`);
       
-      // Инвалидируем кеш пользователя
+      // Инвалидируем кеш пользователя и отмечаем логин как завершенный
       queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
+      setIsLoginComplete(true);
       
-      // Запрашиваем данные пользователя заново
-      await refetchUser();
+      // Запрашиваем данные пользователя заново - но не сразу
+      setTimeout(() => {
+        refetchUser();
+      }, 500);
       
       if (import.meta.env.DEV) {
         console.log('Успешная авторизация через Google');
@@ -51,14 +55,14 @@ const LoginPage = memo(() => {
 
   // Перенаправление если пользователь уже авторизован
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (!isLoading && isAuthenticated && !isLoginComplete) {
       if (import.meta.env.DEV) {
         console.log('LoginPage: Пользователь уже авторизован, перенаправляем');
       }
       const redirectTo = location.state?.from?.pathname || '/';
       navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, isLoading, location.state, navigate]);
+  }, [isAuthenticated, isLoading, location.state, navigate, isLoginComplete]);
   
   // Обработка авторизации через Google и других данных в URL
   useEffect(() => {
@@ -74,6 +78,19 @@ const LoginPage = memo(() => {
     }
   }, [location.search, isAuthenticated, isLoading, completeGoogleAuth, isOAuthProcessing]);
   
+  // Функция для обработки успешного логина
+  const handleLoginSuccess = useCallback(() => {
+    setIsLoginComplete(true);
+    // Инвалидируем кеш пользователя
+    queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
+    
+    // Небольшая задержка перед редиректом, чтобы успел обновиться стейт авторизации
+    setTimeout(() => {
+      const redirectTo = location.state?.from?.pathname || '/';
+      navigate(redirectTo, { replace: true });
+    }, 300);
+  }, [location.state, navigate, queryClient]);
+  
   // Не показываем форму пока идет проверка авторизации
   if (isLoading || isOAuthProcessing) {
     return (
@@ -83,7 +100,7 @@ const LoginPage = memo(() => {
     );
   }
   
-  return <LoginForm />;
+  return <LoginForm onLoginSuccess={handleLoginSuccess} />;
 });
 
 LoginPage.displayName = 'LoginPage';
