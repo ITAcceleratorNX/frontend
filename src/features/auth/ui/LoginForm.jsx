@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight } from 'lucide-react';
 import '../styles/auth-forms.css';
 import api from '../../../shared/api/axios';
+import { useQueryClient } from '@tanstack/react-query';
+import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 
 export const LoginForm = () => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const queryClient = useQueryClient();
   
   const {
     register,
@@ -57,9 +60,21 @@ export const LoginForm = () => {
         console.log('LoginForm: Успешный вход, перенаправляем на главную');
         toast.success('Вход выполнен успешно!');
         
-        // Перенаправляем на запрошенную страницу или на главную
+        // Инвалидируем кеш пользователя для принудительного обновления после входа
+        queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
+        
+        // Получаем целевой маршрут для перенаправления
         const redirectTo = location.state?.from?.pathname || '/';
-        navigate(redirectTo, { replace: true });
+        
+        // Небольшая задержка перед перенаправлением
+        setTimeout(() => {
+          // Предотвращаем перенаправление на внешний URL
+          if (redirectTo.startsWith('http')) {
+            navigate('/', { replace: true });
+          } else {
+            navigate(redirectTo, { replace: true });
+          }
+        }, 100);
       } else {
         setServerError(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
         toast.error(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');

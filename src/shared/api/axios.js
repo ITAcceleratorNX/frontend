@@ -13,12 +13,15 @@ export const api = axios.create({
   // CORS настройки - включаем передачу cookies
   withCredentials: true,
   // Устанавливаем таймаут для запросов
-  timeout: 10000,
+  timeout: 15000, // Увеличиваем таймаут для более надежной работы
 });
 
 // Глобальная переменная для хранения ссылки на функцию перенаправления
 // Будет инициализирована в ResponseInterceptor компоненте
 let navigateToLogin = null;
+
+// Флаг для отслеживания текущего состояния перенаправления
+let redirectInProgress = false;
 
 // Метод для установки функции перенаправления
 export const setAuthNavigator = (navigateFunction) => {
@@ -28,7 +31,10 @@ export const setAuthNavigator = (navigateFunction) => {
 // Логирование запросов
 api.interceptors.request.use(
   (config) => {
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+    // В продакшене логируем только ошибки
+    if (isDevelopment) {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+    }
     return config;
   },
   (error) => {
@@ -40,34 +46,53 @@ api.interceptors.request.use(
 // Логирование и обработка ответов
 api.interceptors.response.use(
   (response) => {
-    console.log(`[API Response] ${response.status} от ${response.config.url}:`, response.data);
+    // В продакшене логируем только ошибки
+    if (isDevelopment) {
+      console.log(`[API Response] ${response.status} от ${response.config.url}:`, response.data);
+    }
     return response;
   },
   (error) => {
+    // Всегда логируем ошибки
     console.error('[API Response Error]', error);
     
     // Обработка 401 ошибки (Unauthorized)
     if (error.response && error.response.status === 401) {
-      // Логирование 401 ошибки
-      console.log(`[API Error] Статус ${error.response.status}:`, {
-        data: error.response.data,
-        headers: error.response.headers,
-      });
+      // Проверяем, не связан ли запрос с авторизацией
+      const isAuthEndpoint = error.config.url && (
+        error.config.url.includes('/auth/login') ||
+        error.config.url.includes('/auth/register') ||
+        error.config.url.includes('/auth/google')
+      );
       
-      // Если есть функция перенаправления, используем её
-      if (navigateToLogin && !window.location.pathname.includes('/login')) {
-        console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
+      // Не перенаправляем, если это запрос на авторизацию
+      if (!isAuthEndpoint && !redirectInProgress) {
+        // Проверяем, находимся ли мы уже на странице логина
+        const isLoginPage = window.location.pathname.includes('/login');
         
-        // Очистка куки и состояния авторизации
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        
-        // Перенаправление на страницу входа
-        navigateToLogin();
-        
-        // Возвращаем новый rejected promise для предотвращения дальнейшего выполнения
-        return Promise.reject(new Error('Session expired'));
+        // Если у нас есть функция перенаправления и мы не на странице входа
+        if (navigateToLogin && !isLoginPage) {
+          console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
+          
+          // Устанавливаем флаг, чтобы избежать множественных перенаправлений
+          redirectInProgress = true;
+          
+          // Очистка куки и состояния авторизации
+          document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          
+          // Перенаправление на страницу входа
+          navigateToLogin();
+          
+          // Сбрасываем флаг перенаправления через задержку
+          setTimeout(() => {
+            redirectInProgress = false;
+          }, 500);
+          
+          // Возвращаем новый rejected promise для предотвращения дальнейшего выполнения
+          return Promise.reject(new Error('Session expired'));
+        }
       }
     } 
     else if (error.response) {
