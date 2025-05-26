@@ -48,13 +48,6 @@ NotificationContainer.displayName = 'NotificationContainer';
 
 // Основной компонент приложения с мемоизацией
 const App = memo(() => {
-  // Отключаем повторное подключение обработчиков focusManager при каждом рендере
-  useEffect(() => {
-    // Явно отключаем рефетчинг при фокусе для всего приложения
-    focusManager.setFocused(false);
-    return () => {};
-  }, []);
-  
   if (import.meta.env.DEV) {
     console.log('Рендеринг корневого компонента App');
   }
