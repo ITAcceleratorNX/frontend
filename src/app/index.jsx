@@ -7,7 +7,7 @@ import './styles/global.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '../shared/context/AuthContext';
-import AuthInterceptor from '../shared/components/AuthInterceptor';
+import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 
 // Полностью отключаем рефетчинг при фокусе окна
 focusManager.setEventListener(() => {
@@ -61,13 +61,13 @@ const App = memo(() => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AuthInterceptor />
+      <AuthProvider>
+        <BrowserRouter>
+          <ResponseInterceptor />
           <Routing />
           <NotificationContainer />
-        </AuthProvider>
-      </BrowserRouter>
+        </BrowserRouter>
+      </AuthProvider>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />}
     </QueryClientProvider>
   );

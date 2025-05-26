@@ -1,5 +1,4 @@
 import api from './axios';
-import Cookies from 'js-cookie';
 
 export const authApi = {
   // Проверка существования email в системе
@@ -21,16 +20,6 @@ export const authApi = {
     try {
       console.log(`Отправка запроса на вход пользователя: ${email}`);
       const response = await api.post('/auth/login', { email, password });
-      
-      // Если в ответе есть токен, сохраняем его в cookies
-      if (response.data.token) {
-        Cookies.set('token', response.data.token, { 
-          expires: 7, // Срок действия cookie - 7 дней
-          secure: !import.meta.env.DEV, // Secure cookie только в production
-          sameSite: 'Lax' 
-        });
-      }
-      
       console.log('Успешный вход в систему');
       return response.data;
     } catch (error) {
@@ -57,21 +46,21 @@ export const authApi = {
     try {
       console.log('Отправка запроса на выход из системы');
       const response = await api.get('/logout');
-      
-      // При выходе из системы удаляем все связанные cookie
-      Cookies.remove('token');
-      Cookies.remove('connect.sid');
-      Cookies.remove('XSRF-TOKEN');
-      
       console.log('Успешный выход из системы');
+
+      // Явно очищаем куки при выходе
+      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      
       return response.data;
     } catch (error) {
       console.error('Ошибка при выходе из системы:', error.response?.data || error.message);
       
-      // Даже при ошибке удаляем cookies
-      Cookies.remove('token');
-      Cookies.remove('connect.sid');
-      Cookies.remove('XSRF-TOKEN');
+      // Даже при ошибке очищаем куки
+      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       
       throw error;
     }
@@ -90,6 +79,23 @@ export const authApi = {
         console.error('Ошибка при получении данных пользователя:', error.response?.data || error.message);
       }
       throw error;
+    }
+  },
+  
+  // Проверка статуса аутентификации (более легкий вызов)
+  checkAuth: async () => {
+    try {
+      const response = await api.get('/auth/check');
+      return { 
+        isAuthenticated: true,
+        user: response.data
+      };
+    } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        return { isAuthenticated: false, user: null };
+      }
+      console.error('Ошибка при проверке авторизации:', error.response?.data || error.message);
+      return { isAuthenticated: false, error: error.message };
     }
   }
 }; 

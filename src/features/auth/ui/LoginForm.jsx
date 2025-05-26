@@ -7,7 +7,7 @@ import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight } from 'lucide-react';
 import '../styles/auth-forms.css';
 import api from '../../../shared/api/axios';
 
-export const LoginForm = ({ onLoginSuccess }) => {
+export const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isLoading: authLoading } = useAuth();
@@ -57,14 +57,9 @@ export const LoginForm = ({ onLoginSuccess }) => {
         console.log('LoginForm: Успешный вход, перенаправляем на главную');
         toast.success('Вход выполнен успешно!');
         
-        // Используем колбэк для обработки успешного логина, если он предоставлен
-        if (typeof onLoginSuccess === 'function') {
-          onLoginSuccess();
-        } else {
-          // Перенаправляем на запрошенную страницу или на главную, если колбэк не предоставлен
-          const redirectTo = location.state?.from?.pathname || '/';
-          navigate(redirectTo, { replace: true });
-        }
+        // Перенаправляем на запрошенную страницу или на главную
+        const redirectTo = location.state?.from?.pathname || '/';
+        navigate(redirectTo, { replace: true });
       } else {
         setServerError(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
         toast.error(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');

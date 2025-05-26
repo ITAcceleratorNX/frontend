@@ -1,27 +1,8 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 // Используем прокси URL для локальной разработки
 const isDevelopment = import.meta.env.DEV;
 const API_URL = isDevelopment ? '/api' : 'https://extraspace-backend.onrender.com';
-
-// Флаг для отслеживания запроса на обновление токена
-let isRefreshing = false;
-// Очередь запросов, ожидающих обновления токена
-let failedQueue = [];
-
-// Функция для обработки очереди запросов
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  
-  failedQueue = [];
-};
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -32,20 +13,22 @@ export const api = axios.create({
   // CORS настройки - включаем передачу cookies
   withCredentials: true,
   // Устанавливаем таймаут для запросов
-  timeout: 15000,
+  timeout: 10000,
 });
+
+// Глобальная переменная для хранения ссылки на функцию перенаправления
+// Будет инициализирована в ResponseInterceptor компоненте
+let navigateToLogin = null;
+
+// Метод для установки функции перенаправления
+export const setAuthNavigator = (navigateFunction) => {
+  navigateToLogin = navigateFunction;
+};
 
 // Логирование запросов
 api.interceptors.request.use(
   (config) => {
     console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
-    
-    // Добавляем XSRF-TOKEN если он есть в cookies
-    const xsrfToken = Cookies.get('XSRF-TOKEN');
-    if (xsrfToken) {
-      config.headers['X-XSRF-TOKEN'] = xsrfToken;
-    }
-    
     return config;
   },
   (error) => {
@@ -60,61 +43,34 @@ api.interceptors.response.use(
     console.log(`[API Response] ${response.status} от ${response.config.url}:`, response.data);
     return response;
   },
-  async (error) => {
-    const originalRequest = error.config;
-    
+  (error) => {
     console.error('[API Response Error]', error);
     
-    // Проверяем, является ли ошибка 401 (Unauthorized)
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    // Обработка 401 ошибки (Unauthorized)
+    if (error.response && error.response.status === 401) {
+      // Логирование 401 ошибки
       console.log(`[API Error] Статус ${error.response.status}:`, {
         data: error.response.data,
         headers: error.response.headers,
       });
       
-      // Если уже идет запрос на обновление токена, добавляем текущий запрос в очередь
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => {
-            return api(originalRequest);
-          })
-          .catch(err => {
-            return Promise.reject(err);
-          });
-      }
-      
-      originalRequest._retry = true;
-      isRefreshing = true;
-      
-      // Если пользователь не авторизован для API с 401, логируем это
-      if (error.response?.status === 401) {
-        console.log('Пользователь не авторизован:', error.response.status);
+      // Если есть функция перенаправления, используем её
+      if (navigateToLogin && !window.location.pathname.includes('/login')) {
+        console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
         
-        try {
-          // Попытка получить новый токен или выполнить повторную авторизацию
-          // Например, можно попробовать запрос на refresh token
-          // const response = await api.post('/auth/refresh-token');
-          
-          // Если нет механизма обновления токена - не делаем ничего,
-          // AuthInterceptor компонент уже обработает 401 ошибку
-          
-          // Обработка очереди запросов
-          processQueue(null, null);
-          return Promise.reject(error);
-        } catch (refreshError) {
-          // В случае ошибки при обновлении токена
-          // AuthInterceptor компонент обработает 401 ошибку
-          
-          // Обработка очереди запросов с ошибкой
-          processQueue(refreshError, null);
-          return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
-        }
+        // Очистка куки и состояния авторизации
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // Перенаправление на страницу входа
+        navigateToLogin();
+        
+        // Возвращаем новый rejected promise для предотвращения дальнейшего выполнения
+        return Promise.reject(new Error('Session expired'));
       }
-    } else if (error.response) {
+    } 
+    else if (error.response) {
       // Сервер вернул ответ со статус-кодом, отличным от 2xx
       console.log(`[API Error] Статус ${error.response.status}:`, {
         data: error.response.data,
