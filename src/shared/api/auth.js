@@ -45,7 +45,7 @@ export const authApi = {
   logout: async () => {
     try {
       console.log('Отправка запроса на выход из системы');
-      const response = await api.get('/logout');
+      const response = await api.get('/auth/logout');
       console.log('Успешный выход из системы');
 
       // Явно очищаем куки при выходе
