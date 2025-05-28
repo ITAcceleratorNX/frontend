@@ -17,7 +17,7 @@ const RouteLogger = memo(({ children }) => {
   
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('Routing: Текущий маршрут:', location.pathname);
+    console.log('Routing: Текущий маршрут:', location.pathname);
     }
   }, [location.pathname]);
   
@@ -44,28 +44,28 @@ const ProtectedRoute = memo(({ children }) => {
   const authResult = useMemo(() => {
     // Оптимизированная проверка авторизации - логирование только в режиме разработки
     if (import.meta.env.DEV) {
-      console.log('ProtectedRoute: Проверка авторизации:', {
+    console.log('ProtectedRoute: Проверка авторизации:', {
         path: location.pathname,
-        isAuthenticated,
+      isAuthenticated,
         isLoading,
         hasUser: !!user
-      });
+    });
     }
-    
-    // Показываем загрузку, пока проверяем статус аутентификации
-    if (isLoading) {
+  
+  // Показываем загрузку, пока проверяем статус аутентификации
+  if (isLoading) {
       return <LoadingSpinner />;
-    }
-    
-    // Если пользователь не авторизован, перенаправляем на страницу входа
+  }
+  
+  // Если пользователь не авторизован, перенаправляем на страницу входа
     // с сохранением информации о запрошенном маршруте
-    if (!isAuthenticated) {
+  if (!isAuthenticated) {
       if (import.meta.env.DEV) {
-        console.log('ProtectedRoute: Пользователь не авторизован, перенаправляем на /login');
+    console.log('ProtectedRoute: Пользователь не авторизован, перенаправляем на /login');
       }
       return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-    
+  }
+  
     // Если авторизован, отображаем защищенный контент
     return children;
   }, [isAuthenticated, isLoading, location, user, children]);
@@ -97,7 +97,7 @@ const Routing = memo(() => {
     { path: "/moving", element: <MovingPage /> },
     { path: "/tariffs", element: <TariffsPage /> }
   ], []);
-  
+
   const protectedRoutes = useMemo(() => [
     { path: "/personal-account", element: <PersonalAccountPage /> }
   ], []);

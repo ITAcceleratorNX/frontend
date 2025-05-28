@@ -20,7 +20,7 @@ export const useSessionStore = create((set, get) => ({
   loadRequestInProgress: false, // Флаг для отслеживания текущего запроса
   
   // Actions
-  setUser: (user) => {
+    setUser: (user) => {
     // Устанавливаем пользователя только если он изменился
     const currentUser = get().user;
     if (!deepCompare(user, currentUser)) {
@@ -35,8 +35,8 @@ export const useSessionStore = create((set, get) => ({
         console.log('SessionStore: Данные пользователя обновлены');
       }
     }
-  },
-  
+    },
+    
   setAuthenticated: (isAuthenticated) => {
     if (isAuthenticated !== get().isAuthenticated) {
       set({ isAuthenticated });
@@ -45,8 +45,8 @@ export const useSessionStore = create((set, get) => ({
         console.log('SessionStore: Статус аутентификации обновлен:', isAuthenticated);
       }
     }
-  },
-  
+    },
+    
   setIsLoading: (isLoading) => {
     if (isLoading !== get().isLoading) {
       set({ isLoading });

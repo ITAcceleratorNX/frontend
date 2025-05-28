@@ -17,6 +17,31 @@ export const ResponseInterceptor = () => {
   const isMountedRef = useRef(false);
   const redirectInProgressRef = useRef(false);
 
+  // Проверка работоспособности cookie в браузере
+  const checkBrowserCompatibility = useCallback(() => {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    if (isSafari && import.meta.env.DEV) {
+      console.log("[Safari] Обнаружен Safari браузер, проверяем совместимость с cookies");
+      
+      // Проверяем, разрешены ли cookies в Safari
+      try {
+        const testValue = "test" + new Date().getTime();
+        document.cookie = `safari_cookie_test=${testValue}; path=/`;
+        const cookieEnabled = document.cookie.indexOf("safari_cookie_test") !== -1;
+        
+        // Очищаем тестовый cookie
+        document.cookie = "safari_cookie_test=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        
+        if (!cookieEnabled && import.meta.env.DEV) {
+          console.warn("[Safari] Cookies могут быть заблокированы в Safari! Авторизация не будет работать.");
+        }
+      } catch (e) {
+        console.error("[Safari] Ошибка при проверке cookies:", e);
+      }
+    }
+  }, []);
+
   // Мемоизированная функция для перенаправления
   const redirectToLogin = useCallback(() => {
     // Предотвращаем множественные редиректы
@@ -36,6 +61,11 @@ export const ResponseInterceptor = () => {
     // Сбрасываем данные пользователя в Zustand хранилище
     sessionStore.updateUserFromCache(null);
     
+    // Явно очищаем cookie перед перенаправлением, важно для Safari
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+    
     // Перенаправляем на страницу входа с сохранением пути, откуда пришел пользователь
     navigate("/login", { 
       replace: true,
@@ -48,10 +78,13 @@ export const ResponseInterceptor = () => {
     }, 300);
   }, [navigate, queryClient, sessionStore, location]);
 
-  // При монтировании устанавливаем функцию перенаправления
+  // При монтировании устанавливаем функцию перенаправления и проверяем совместимость браузера
   useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
+      
+      // Проверяем совместимость браузера с cookies
+      checkBrowserCompatibility();
       
       // Устанавливаем нашу функцию редиректа в модуле axios
       setAuthNavigator(() => redirectToLogin);
@@ -68,7 +101,7 @@ export const ResponseInterceptor = () => {
       }
       setAuthNavigator(null);
     };
-  }, [redirectToLogin]);
+  }, [redirectToLogin, checkBrowserCompatibility]);
 
   // Компонент не рендерит ничего в DOM
   return null;

@@ -71,7 +71,7 @@ const PersonalData = memo(() => {
       setIsEditing(false);
       return;
     }
-    
+
     try {
       setSaving(true);
       const response = await api.put('/users/me', formData);

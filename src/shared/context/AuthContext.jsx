@@ -38,14 +38,14 @@ export const AuthProvider = ({ children }) => {
     if (isSuccess) {
       const cachedUser = queryClient.getQueryData([USER_QUERY_KEY]);
       const storeUser = sessionStore.user;
-
+          
       // Используем глубокое сравнение для предотвращения лишних обновлений
       if (!isEqual(cachedUser, storeUser)) {
         if (import.meta.env.DEV) {
           console.log('AuthContext: Синхронизация данных пользователя с хранилищем');
         }
         sessionStore.updateUserFromCache(user);
-      }
+            }
     } else if (isError) {
       // Только если действительно произошла ошибка
       if (sessionStore.user !== null) {
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       });
     }
   }, [user, isLoading, isFetching]);
-  
+
   // Мемоизированная функция для входа
   const login = useCallback(async (email, password) => {
     try {
@@ -126,7 +126,7 @@ export const AuthProvider = ({ children }) => {
       if (import.meta.env.DEV) console.log('AuthContext: Выход из системы');
       
       // Пытаемся выполнить запрос на logout
-      await authApi.logout();
+        await authApi.logout();
       
       // Очищаем кеш пользователя
       queryClient.setQueryData([USER_QUERY_KEY], null);

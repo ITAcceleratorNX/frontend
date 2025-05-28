@@ -5,6 +5,15 @@ import { authApi } from '../../api/auth';
 export const USER_QUERY_KEY = 'currentUser';
 
 /**
+ * Функция для проверки наличия авторизационных cookies
+ * @returns {boolean} Результат проверки
+ */
+const hasAuthCookies = () => {
+  const cookies = document.cookie;
+  return cookies.includes('token') || cookies.includes('connect.sid') || cookies.includes('jwt');
+};
+
+/**
  * Хук для получения данных текущего пользователя с использованием React Query
  * с оптимизированными настройками для предотвращения лишних запросов
  * 
@@ -15,10 +24,23 @@ export const useUserQuery = (options = {}) => {
   // Функция для запроса данных пользователя
   const queryFn = async () => {
     try {
+      // Проверяем наличие авторизационных cookies перед запросом
+      // Это особенно важно для Safari, который может строго обрабатывать cookies
+      const hasCookies = hasAuthCookies();
+      
+      if (!hasCookies) {
+        if (import.meta.env.DEV) {
+          console.log('useUserQuery: Авторизационные cookies не обнаружены, пропускаем запрос');
+        }
+        // Если нет cookies, сразу возвращаем null без запроса к API
+        return null;
+      }
+      
       if (import.meta.env.DEV) {
         console.log('useUserQuery: Запрос данных пользователя');
       }
       
+      // Safari требует явного указания withCredentials
       const userData = await authApi.getCurrentUser();
       
       if (import.meta.env.DEV) {
@@ -27,10 +49,10 @@ export const useUserQuery = (options = {}) => {
       
       return userData;
     } catch (error) {
-      if (error.response?.status === 401) {
-        // Для 401 ошибки возвращаем null, не выбрасывая исключение
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Для 401/403 ошибок возвращаем null, не выбрасывая исключение
         if (import.meta.env.DEV) {
-          console.log('useUserQuery: Пользователь не авторизован (401)');
+          console.log(`useUserQuery: Пользователь не авторизован (${error.response?.status})`);
         }
         return null;
       }
@@ -44,6 +66,7 @@ export const useUserQuery = (options = {}) => {
   const queryOptions = {
     queryKey: [USER_QUERY_KEY],
     queryFn,
+    // Оптимизируем для Safari - увеличиваем время кеширования
     // Кешировать данные на 30 минут
     staleTime: 30 * 60 * 1000,
     // Хранить данные в кеше 60 минут
@@ -56,6 +79,8 @@ export const useUserQuery = (options = {}) => {
     refetchOnMount: false,
     // Одна повторная попытка при ошибке
     retry: 1,
+    // Добавляем задержку между повторными запросами
+    retryDelay: 1000,
     // Данные пользователя могут быть null (когда не авторизован)
     // Это нормальное состояние, не ошибка
     useErrorBoundary: false,
