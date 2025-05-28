@@ -34,13 +34,31 @@ export default defineConfig({
         target: 'https://extraspace-backend.onrender.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-        secure: false
+        secure: false,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
       }
     }
   },
   preview: {
     host: '0.0.0.0',
-    port: PORT
+    port: PORT,
+    proxy: {
+      '/api': {
+        target: 'https://extraspace-backend.onrender.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: false,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      }
+    }
   },
   css: {
     postcss: {

@@ -11,6 +11,7 @@ import icon6 from '../../../assets/6.svg';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
+import api from '../../../shared/api/axios';
 
 const navItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
@@ -33,10 +34,9 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         // Показываем уведомление о начале процесса выхода
         const logoutToast = toast.loading("Выполняется выход из системы...");
         
-        // Прямой запрос на сервер для выхода
-        const response = await axios.get('https://extraspace-backend.onrender.com/auth/logout', {
-          withCredentials: true // Важно для отправки и удаления cookies
-        });
+        // Используем настроенный экземпляр axios из api.js с корректными CORS-настройками
+        // и относительным URL вместо абсолютного
+        await api.get('/auth/logout');
         
         // Очищаем куки после успешного выхода
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -55,9 +55,9 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
           autoClose: 2000
         });
         
-        // Перенаправляем пользователя на главную страницу
+        // Перенаправляем пользователя на страницу входа
         setTimeout(() => {
-          navigate('/');
+          navigate('/login');
         }, 300);
       } catch (error) {
         console.error('Ошибка при выходе из системы:', error);
@@ -73,9 +73,9 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         // Показываем уведомление об ошибке
         toast.error("Произошла ошибка при выходе, но вы были успешно разлогинены");
         
-        // При неожиданной ошибке также перенаправляем на главную
+        // При неожиданной ошибке также перенаправляем на страницу входа
         setTimeout(() => {
-          navigate('/');
+          navigate('/login');
         }, 300);
       }
     }
