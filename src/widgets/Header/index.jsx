@@ -1,7 +1,7 @@
 import React, { useEffect, useState, memo, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
-import { Phone, Mail, Lock, User } from 'lucide-react';
+import { Phone, Mail, User } from 'lucide-react';
 import { clsx } from 'clsx';
 import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 
@@ -9,7 +9,7 @@ import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 export const Header = memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [isEmailFormOpen, setIsEmailFormOpen] = useState(false);
@@ -38,14 +38,6 @@ export const Header = memo(() => {
   }, [isScrolled]);
 
   // Мемоизированные обработчики событий
-  const handleLogout = useCallback(() => {
-    if (import.meta.env.DEV) {
-    console.log('Header: Инициирован выход из системы');
-    }
-    logout();
-    navigate('/');
-  }, [logout, navigate]);
-
   const handleStartAuth = useCallback(() => {
     if (import.meta.env.DEV) {
     console.log('Header: Открытие формы входа');
@@ -78,36 +70,27 @@ export const Header = memo(() => {
   // Мемоизируем пользовательские кнопки
   const authButtons = useMemo(() => {
     if (isAuthenticated) {
-  return (
-              <div className="flex space-x-2">
-              <button
-                onClick={handleCabinetClick}
-                  className="flex items-center justify-center bg-[#273551] hover:bg-[#1e2c4f] text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
-              >
-                <User size={16} className="mr-2" />
-                <span className="hidden sm:inline">ЛИЧНЫЙ КАБИНЕТ</span>
-              </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
-                >
-                  <Lock size={16} className="mr-2" />
-                  <span className="hidden sm:inline">ВЫХОД</span>
-                </button>
-              </div>
+      return (
+        <button
+          onClick={handleCabinetClick}
+          className="flex items-center justify-center bg-[#273551] hover:bg-[#1e2c4f] text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
+        >
+          <User size={16} className="mr-2" />
+          <span className="hidden sm:inline">ЛИЧНЫЙ КАБИНЕТ</span>
+        </button>
       );
     } else {
       return (
-              <button
-                onClick={handleStartAuth}
-                className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
-              >
-                <User size={16} className="mr-2" />
-                <span className="hidden sm:inline">ВОЙТИ</span>
-              </button>
+        <button
+          onClick={handleStartAuth}
+          className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
+        >
+          <User size={16} className="mr-2" />
+          <span className="hidden sm:inline">ВОЙТИ</span>
+        </button>
       );
     }
-  }, [isAuthenticated, handleCabinetClick, handleLogout, handleStartAuth]);
+  }, [isAuthenticated, handleCabinetClick, handleStartAuth]);
 
   // Класс для хедера, зависящий от прокрутки
   const headerClass = useMemo(() => 

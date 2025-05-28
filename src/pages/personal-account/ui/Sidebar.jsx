@@ -1,13 +1,16 @@
 import React from 'react';
 import clsx from 'clsx';
-import { useAuth } from '../../../shared/lib/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import icon1 from '../../../assets/1.svg';
 import icon2 from '../../../assets/2.svg';
 import icon3 from '../../../assets/3.svg';
 import icon4 from '../../../assets/4.svg';
 import icon5 from '../../../assets/5.svg';
 import icon6 from '../../../assets/6.svg';
+import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
+import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 
 const navItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
@@ -20,28 +23,60 @@ const navItems = [
 ];
 
 const Sidebar = ({ activeNav, setActiveNav }) => {
-  const { logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleNavClick = async (key) => {
     setActiveNav(key);
     if (key === 'logout') {
       try {
-        // Вызываем асинхронный метод logout
-        const result = await logout();
+        // Показываем уведомление о начале процесса выхода
+        const logoutToast = toast.loading("Выполняется выход из системы...");
         
-        if (result.success) {
-          // Перенаправляем пользователя на главную страницу
+        // Прямой запрос на сервер для выхода
+        const response = await axios.get('https://extraspace-backend.onrender.com/auth/logout', {
+          withCredentials: true // Важно для отправки и удаления cookies
+        });
+        
+        // Очищаем куки после успешного выхода
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // Инвалидируем кеш данных пользователя
+        queryClient.setQueryData([USER_QUERY_KEY], null);
+        queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
+        
+        // Обновляем уведомление
+        toast.update(logoutToast, {
+          render: "Выход выполнен успешно!", 
+          type: "success", 
+          isLoading: false,
+          autoClose: 2000
+        });
+        
+        // Перенаправляем пользователя на главную страницу
+        setTimeout(() => {
           navigate('/');
-        } else {
-          console.error('Ошибка при выходе:', result.error);
-          // Всё равно перенаправляем пользователя, даже если был сбой на сервере
-          navigate('/');
-        }
+        }, 300);
       } catch (error) {
         console.error('Ошибка при выходе из системы:', error);
+        
+        // Даже при ошибке очищаем куки и кеш
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        queryClient.setQueryData([USER_QUERY_KEY], null);
+        queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
+        
+        // Показываем уведомление об ошибке
+        toast.error("Произошла ошибка при выходе, но вы были успешно разлогинены");
+        
         // При неожиданной ошибке также перенаправляем на главную
-        navigate('/');
+        setTimeout(() => {
+          navigate('/');
+        }, 300);
       }
     }
     // Здесь можно добавить переходы для других пунктов
