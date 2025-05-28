@@ -16,10 +16,6 @@ export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [browserInfo, setBrowserInfo] = useState({
-    isSafari: false,
-    cookiesEnabled: true
-  });
   const queryClient = useQueryClient();
   
   const {
@@ -33,43 +29,6 @@ export const LoginForm = () => {
       password: '',
     },
   });
-  
-  // Определяем браузер и проверяем поддержку cookies при монтировании
-  useEffect(() => {
-    // Определение Safari
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    
-    // Проверка поддержки cookies
-    const checkCookies = () => {
-      try {
-        // Проверяем поддержку cookies
-        document.cookie = "cookietest=1";
-        const cookiesEnabled = document.cookie.indexOf("cookietest=") !== -1;
-        document.cookie = "cookietest=1; expires=Thu, 01-Jan-1970 00:00:01 GMT";
-        
-        return cookiesEnabled;
-      } catch (e) {
-        return false;
-      }
-    };
-    
-    const cookiesEnabled = checkCookies();
-    
-    setBrowserInfo({
-      isSafari,
-      cookiesEnabled
-    });
-    
-    if (isSafari && import.meta.env.DEV) {
-      console.log("Обнаружен Safari браузер. Cookies " + (cookiesEnabled ? "включены" : "отключены"));
-    }
-    
-    if (!cookiesEnabled) {
-      toast.warning("Для работы авторизации необходимо разрешить использование cookies в настройках браузера", {
-        autoClose: 6000
-      });
-    }
-  }, []);
   
   // Заполняем email, если он пришёл из проверки email
   useEffect(() => {
@@ -99,37 +58,23 @@ export const LoginForm = () => {
       
       if (result.success) {
         console.log('LoginForm: Успешный вход, перенаправляем на главную');
+        toast.success('Вход выполнен успешно!');
         
-        // Проверяем установку cookies, особенно в Safari
+        // Инвалидируем кеш пользователя для принудительного обновления после входа
+        queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
+        
+        // Получаем целевой маршрут для перенаправления
+        const redirectTo = location.state?.from?.pathname || '/';
+        
+        // Небольшая задержка перед перенаправлением
         setTimeout(() => {
-          const hasAuthCookie = document.cookie.includes('token') || 
-                              document.cookie.includes('connect.sid');
-          
-          // Инвалидируем кеш пользователя для принудительного обновления после входа
-          queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
-          
-          if (hasAuthCookie) {
-            toast.success('Вход выполнен успешно!');
-          } else if (browserInfo.isSafari) {
-            // Специальное сообщение для Safari
-            toast.success('Вход выполнен. Если возникнут проблемы, проверьте настройки cookies в Safari.');
+          // Предотвращаем перенаправление на внешний URL
+          if (redirectTo.startsWith('http')) {
+        navigate('/', { replace: true });
           } else {
-            toast.success('Вход выполнен успешно!');
+            navigate(redirectTo, { replace: true });
           }
-          
-          // Получаем целевой маршрут для перенаправления
-          const redirectTo = location.state?.from?.pathname || '/';
-          
-          // Небольшая задержка перед перенаправлением
-          setTimeout(() => {
-            // Предотвращаем перенаправление на внешний URL
-            if (redirectTo.startsWith('http')) {
-              navigate('/', { replace: true });
-            } else {
-              navigate(redirectTo, { replace: true });
-            }
-          }, 100);
-        }, 300); // Увеличиваем задержку для Safari
+        }, 100);
       } else {
         setServerError(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
         toast.error(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
@@ -163,14 +108,8 @@ export const LoginForm = () => {
     try {
       console.log('Начинаем авторизацию через Google');
       
-      // Для Safari используем немного другой подход
-      if (browserInfo.isSafari) {
-        // Открываем в том же окне с явным указанием целевого домена
-        window.location.href = `${api.defaults.baseURL}/auth/google?redirect_uri=${encodeURIComponent(window.location.origin)}`;
-      } else {
-        // Стандартный подход для других браузеров
-        window.location.href = `${api.defaults.baseURL}/auth/google`;
-      }
+      // Перенаправляем пользователя на URL, который обрабатывает бэкенд
+      window.location.href = `${api.defaults.baseURL}/auth/google`;
       
     } catch (error) {
       // Если сервер возвращает 302, axios может воспринять это как ошибку
@@ -203,13 +142,6 @@ export const LoginForm = () => {
           <div className="p-8 pb-0">
             <h1 className="text-2xl font-semibold mb-1 text-slate-800">Добро пожаловать</h1>
             <p className="text-slate-500 mb-6">Введите данные для входа в систему</p>
-            
-            {/* Предупреждение для Safari */}
-            {browserInfo.isSafari && !browserInfo.cookiesEnabled && (
-              <div className="rounded-lg bg-yellow-50 p-3 mb-6 border border-yellow-200 text-sm text-yellow-800">
-                Для работы авторизации в Safari необходимо разрешить использование cookies в настройках браузера.
-              </div>
-            )}
           </div>
           
           {/* Форма входа */}

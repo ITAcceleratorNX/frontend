@@ -34,31 +34,7 @@ export default defineConfig({
         target: 'https://extraspace-backend.onrender.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-        secure: false,
-        // Добавляем CORS заголовки для Safari
-        configure: (proxy, _options) => {
-          proxy.on('proxyRes', function(proxyRes, req, res) {
-            // Добавляем заголовки для корректной работы cookies
-            proxyRes.headers['Access-Control-Allow-Origin'] = req.headers.origin || '*';
-            proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
-            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET,HEAD,PUT,PATCH,POST,DELETE';
-            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-            
-            // Принимаем все типы куки-настроек для совместимости с Safari
-            if (proxyRes.headers['set-cookie']) {
-              const cookies = proxyRes.headers['set-cookie'].map(cookie => {
-                // Для разработки - убеждаемся, что домен и SameSite настроены правильно
-                if (!cookie.includes('SameSite=None')) {
-                  return cookie
-                    .replace(/SameSite=(Lax|Strict)/i, 'SameSite=None')
-                    .replace(/secure/i, 'Secure');
-                }
-                return cookie;
-              });
-              proxyRes.headers['set-cookie'] = cookies;
-            }
-          });
-        }
+        secure: false
       }
     }
   },

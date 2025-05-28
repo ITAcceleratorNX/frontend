@@ -14,9 +14,6 @@ export const api = axios.create({
   withCredentials: true,
   // Устанавливаем таймаут для запросов
   timeout: 15000, // Увеличиваем таймаут для более надежной работы
-  // Принудительно устанавливаем режим реагирования на cookie-политики в разных браузерах
-  xsrfCookieName: 'XSRF-TOKEN',
-  xsrfHeaderName: 'X-XSRF-TOKEN',
 });
 
 // Глобальная переменная для хранения ссылки на функцию перенаправления
@@ -25,32 +22,6 @@ let navigateToLogin = null;
 
 // Флаг для отслеживания текущего состояния перенаправления
 let redirectInProgress = false;
-
-// Проверка поддержки cookies в браузере
-const checkCookieSupport = () => {
-  try {
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isSafari && import.meta.env.DEV) {
-      console.log('[Safari Detected] Используется Safari - применяются специальные настройки cookie');
-    }
-    
-    // Проверяем доступ к cookies
-    document.cookie = "cookietest=1";
-    const cookieSupport = document.cookie.indexOf("cookietest=") !== -1;
-    document.cookie = "cookietest=1; expires=Thu, 01-Jan-1970 00:00:01 GMT";
-    
-    return cookieSupport;
-  } catch (e) {
-    console.warn('[Cookie Check] Ошибка при проверке поддержки cookies:', e);
-    return false;
-  }
-};
-
-// Выполняем проверку при инициализации
-const cookiesSupported = checkCookieSupport();
-if (!cookiesSupported && import.meta.env.DEV) {
-  console.warn('[Cookie Warning] Браузер блокирует или не поддерживает cookies! Авторизация может не работать.');
-}
 
 // Метод для установки функции перенаправления
 export const setAuthNavigator = (navigateFunction) => {
@@ -62,16 +33,8 @@ api.interceptors.request.use(
   (config) => {
     // В продакшене логируем только ошибки
     if (isDevelopment) {
-      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
     }
-    
-    // Специальная обработка для Safari
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isSafari) {
-      // Safari требует явного указания credentials и может иметь проблемы с некоторыми заголовками
-      config.withCredentials = true;
-    }
-    
     return config;
   },
   (error) => {
@@ -85,15 +48,7 @@ api.interceptors.response.use(
   (response) => {
     // В продакшене логируем только ошибки
     if (isDevelopment) {
-      console.log(`[API Response] ${response.status} от ${response.config.url}:`, response.data);
-      
-      // Проверяем наличие cookie после ответа
-      const hasCookies = document.cookie.length > 0;
-      const hasAuthCookie = document.cookie.includes('token') || document.cookie.includes('connect.sid');
-      
-      if (response.config.url.includes('/auth/login') && !hasAuthCookie) {
-        console.warn('[Auth Warning] Cookie авторизации не установлены после логина!');
-      }
+    console.log(`[API Response] ${response.status} от ${response.config.url}:`, response.data);
     }
     return response;
   },
