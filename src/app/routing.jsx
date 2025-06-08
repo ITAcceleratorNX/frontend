@@ -6,6 +6,7 @@ import HomePage from '../pages/home';
 import EmailVerificationPage from '../pages/email-verification';
 import LoginPage from '../pages/login';
 import RegisterPage from '../pages/register';
+import RestorePasswordPage from '../pages/restore-password';
 import MovingPage from '../pages/moving';
 import TariffsPage from '../pages/tariffs';
 
@@ -94,6 +95,7 @@ const Routing = memo(() => {
     { path: "/email-verification", element: <EmailVerificationPage /> },
     { path: "/login", element: <LoginPage /> },
     { path: "/register", element: <RegisterPage /> },
+    { path: "/restore-password", element: <RestorePasswordPage /> },
     { path: "/moving", element: <MovingPage /> },
     { path: "/tariffs", element: <TariffsPage /> }
   ], []);

@@ -44,6 +44,11 @@ export const LoginForm = () => {
         setValue('email', emailParam);
       }
     }
+    
+    // Показываем сообщение о восстановлении пароля, если оно есть
+    if (location.state?.message) {
+      toast.success(location.state.message);
+    }
   }, [location, setValue]);
   
   const onSubmit = async (data) => {
@@ -226,7 +231,14 @@ export const LoginForm = () => {
                 />
                 <label htmlFor="remember" className="text-slate-600">Запомнить меня</label>
               </div>
-              <a href="#" className="text-[#273655] hover:underline">Забыли пароль?</a>
+              <button 
+                type="button" 
+                onClick={() => navigate('/restore-password')}
+                className="text-[#273655] hover:underline"
+                disabled={isSubmitting}
+              >
+                Забыли пароль?
+              </button>
             </div>
             
             {/* Сообщение об ошибке */}

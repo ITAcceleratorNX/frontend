@@ -97,5 +97,35 @@ export const authApi = {
       console.error('Ошибка при проверке авторизации:', error.response?.data || error.message);
       return { isAuthenticated: false, error: error.message };
     }
+  },
+
+  // Проверка существования email для восстановления пароля
+  checkEmailForRestore: async (email) => {
+    try {
+      console.log(`Отправка запроса на проверку email для восстановления: ${email}`);
+      const response = await api.post('/auth/check-email', { email });
+      console.log('Ответ сервера при проверке email:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при проверке email для восстановления:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Восстановление пароля
+  restorePassword: async (email, unique_code, password) => {
+    try {
+      console.log(`Отправка запроса на восстановление пароля для: ${email}`);
+      const response = await api.post('/auth/restore-password', { 
+        email, 
+        unique_code, 
+        password 
+      });
+      console.log('Пароль успешно восстановлен');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при восстановлении пароля:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

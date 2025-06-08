@@ -45,5 +45,31 @@ export const authApi = {
       console.error('Ошибка при регистрации:', error);
       throw error;
     }
+  },
+
+  // Проверка существования email для восстановления пароля
+  checkEmailForRestore: async (email) => {
+    try {
+      const response = await axiosApi.post(`/auth/check-email`, { email });
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при проверке email для восстановления:', error);
+      throw error;
+    }
+  },
+
+  // Восстановление пароля
+  restorePassword: async (email, unique_code, password) => {
+    try {
+      const response = await axiosApi.post(`/auth/restore-password`, { 
+        email, 
+        unique_code, 
+        password 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при восстановлении пароля:', error);
+      throw error;
+    }
   }
 };
