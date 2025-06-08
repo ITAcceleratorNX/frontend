@@ -1,4 +1,4 @@
-import React, { useState, memo, useMemo } from 'react';
+import React, { useState, memo, useMemo, useEffect } from 'react';
 import { Header } from '../../widgets';
 import vectorImg from '../../assets/vector.png';
 import backgroundTextImg from '../../assets/background-text.png';
@@ -20,10 +20,79 @@ import houseOnBeigeCircle from '../../assets/house_on_beige_circle.svg';
 import extraOldLogo from '../../assets/extra_old_logo.jpg';
 import Footer from '../../widgets/Footer';
 import FAQ from '../../components/FAQ';
+import api from '../../shared/api/axios';
 
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
   const [area, setArea] = useState(50);
+  
+  // Новые состояния для калькулятора
+  const [month, setMonth] = useState(1);
+  const [day, setDay] = useState(0);
+  const [type, setType] = useState('INDIVIDUAL');
+  const [prices, setPrices] = useState([]);
+  const [totalCost, setTotalCost] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Загрузка цен при монтировании компонента
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await api.get('/prices');
+        setPrices(response.data);
+        if (import.meta.env.DEV) {
+          console.log('Цены загружены:', response.data);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке цен:', error);
+        setError('Не удалось загрузить цены. Попробуйте позже.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPrices();
+  }, []);
+
+  // Функция расчета стоимости
+  const calculateCost = () => {
+    const selectedPrice = prices.find(price => price.type === type);
+    
+    if (!selectedPrice) {
+      setError('Цена для выбранного типа услуги не найдена');
+      return;
+    }
+
+    const amount = parseFloat(selectedPrice.amount);
+    const monthlyCost = amount * area * month;
+    const dailyCost = (amount * area / 30) * day;
+    const total = monthlyCost + dailyCost;
+    
+    setTotalCost(Math.round(total));
+    setError(null);
+    
+    if (import.meta.env.DEV) {
+      console.log('Расчет стоимости:', {
+        area,
+        month,
+        day,
+        type,
+        amount,
+        monthlyCost,
+        dailyCost,
+        total
+      });
+    }
+  };
+
+  // Обработчики для кнопок типа услуги
+  const handleServiceTypeClick = (serviceType) => {
+    setType(serviceType);
+    setTotalCost(null); // Сбрасываем результат при смене типа
+  };
 
   // Мемоизация для предотвращения пересоздания стилей
   const rangeStyles = useMemo(() => ({
@@ -129,10 +198,7 @@ const HomePage = memo(() => {
       {/* Второй фрейм: преимущества */}
       <section className="w-full flex flex-col items-center justify-center mt-24 mb-24">
         <div className="w-full flex flex-col items-center">
-          <div className="w-full max-w-[1220px] pl-11 mb-6 flex items-center">
-            <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
-            <span className="text-xs text-[#A6A6A6] font-medium">Почему Extra Space?</span>
-          </div>
+        
           <div className="grid grid-cols-2 grid-rows-2 gap-x-6 gap-y-2" style={{width: 1144, height: 560}}>
             {/* Верхний левый — текстовый блок */}
             <div className="flex flex-col h-[255px] w-[560px] pl-2 pt-6">
@@ -183,10 +249,7 @@ const HomePage = memo(() => {
           {/* Левая часть: текст и кнопки */}
           <div className="flex-1 flex flex-col justify-between py-8 pr-10 pl-8">
             {/* Заголовок */}
-            <div className="flex items-center mb-6">
-              <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
-              <span className="text-xs text-[#A6A6A6] font-medium">Наши склады</span>
-            </div>
+           
             {/* Кнопки выбора объёма */}
             <div className="flex gap-4 mb-8">
               <button className="px-8 py-3 rounded-full bg-[#273655] text-white text-[22px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none">3 м³</button>
@@ -221,10 +284,7 @@ const HomePage = memo(() => {
         <div className="w-full max-w-[1100px] mx-auto flex flex-row items-start gap-[60px] bg-transparent px-4">
           {/* Левая колонка: калькулятор */}
           <div className="flex flex-col flex-[0_0_440px] items-start font-['Montserrat']">
-            <div className="flex items-center mb-8">
-              <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
-              <span className="text-xs text-[#A6A6A6]">Быстро и удобно</span>
-            </div>
+          
             <label className="text-[22px] text-[#6B6B6B] font-bold mb-4 font-['Montserrat']" htmlFor="area">Площадь:</label>
             <div className="w-full flex flex-col mb-8">
               <div className="relative w-full h-[56px] flex items-center bg-white" style={{borderRadius:'8px 8px 8px 0', boxShadow:'4px 4px 8px 0 #B0B0B0'}}>
@@ -238,21 +298,59 @@ const HomePage = memo(() => {
                 <div className="absolute left-0 bottom-0 h-[2px] bg-[#0062D3] rounded-full" style={{width: `${area}%`, zIndex:1}}></div>
                 {/* Прозрачная часть */}
                 <div className="absolute right-0 bottom-0 h-[2px] bg-transparent" style={{left: `${area}%`, zIndex:1}}></div>
-                <input id="area" type="range" min="1" max="100" value={area} onChange={e => setArea(Number(e.target.value))} className="w-full h-[2px] bg-transparent appearance-none relative z-10" style={rangeStyles} />
+                <input 
+                  id="area" 
+                  type="range" 
+                  min="1" 
+                  max="100" 
+                  value={area} 
+                  onChange={e => {
+                    setArea(Number(e.target.value));
+                    setTotalCost(null); // Сбрасываем результат при изменении площади
+                  }} 
+                  className="w-full h-[2px] bg-transparent appearance-none relative z-10" 
+                  style={rangeStyles} 
+                />
                 <style>{rangeTrackStyles}</style>
               </div>
             </div>
             <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (дни/месяцы):</label>
             <div className="flex gap-4 mb-8 w-full">
               <div className="relative flex-1">
-                <select className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#C7C7C7] font-normal focus:outline-none appearance-none font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>
-                  <option>— месяц</option>
+                <select 
+                  value={month}
+                  onChange={(e) => {
+                    setMonth(Number(e.target.value));
+                    setTotalCost(null); // Сбрасываем результат при изменении
+                  }}
+                  className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
+                  style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
+                >
+                  <option value={0}>0 месяцев</option>
+                  <option value={1}>1 месяц</option>
+                  <option value={2}>2 месяца</option>
+                  <option value={3}>3 месяца</option>
+                  <option value={6}>6 месяцев</option>
+                  <option value={12}>12 месяцев</option>
                 </select>
                 <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
               <div className="relative flex-1">
-                <select className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#C7C7C7] font-normal focus:outline-none appearance-none font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>
-                  <option>— день</option>
+                <select 
+                  value={day}
+                  onChange={(e) => {
+                    setDay(Number(e.target.value));
+                    setTotalCost(null); // Сбрасываем результат при изменении
+                  }}
+                  className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
+                  style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
+                >
+                  <option value={0}>0 дней</option>
+                  <option value={1}>1 день</option>
+                  <option value={7}>7 дней</option>
+                  <option value={14}>14 дней</option>
+                  <option value={21}>21 день</option>
+                  <option value={30}>30 дней</option>
                 </select>
                 <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -260,15 +358,71 @@ const HomePage = memo(() => {
             <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']">Тип услуги:</label>
             <div className="flex flex-row gap-4 mb-4 w-full">
               <div className="flex flex-col gap-4 w-1/2">
-                <button className="h-[56px] rounded-lg bg-[#273655] text-white text-[16px] font-bold w-full font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}>Обычное хранение</button>
-                <button className="h-[56px] rounded-lg bg-white text-[#273655] text-[16px] font-bold w-full font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}>Мувинг</button>
+                <button 
+                  onClick={() => handleServiceTypeClick('INDIVIDUAL')}
+                  className={`h-[56px] rounded-lg text-[16px] font-bold w-full font-['Montserrat'] transition-colors ${
+                    type === 'INDIVIDUAL' 
+                      ? 'bg-[#273655] text-white' 
+                      : 'bg-white text-[#273655]'
+                  }`} 
+                  style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
+                >
+                  Индивидуальное хранение
+                </button>
+                <button 
+                  onClick={() => handleServiceTypeClick('CLOUD')}
+                  className={`h-[56px] rounded-lg text-[16px] font-bold w-full font-['Montserrat'] transition-colors ${
+                    type === 'CLOUD' 
+                      ? 'bg-[#273655] text-white' 
+                      : 'bg-white text-[#273655]'
+                  }`} 
+                  style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
+                >
+                  Облачное хранилище
+                </button>
               </div>
               <div className="flex flex-col gap-4 w-1/2">
-                <button className="h-[56px] rounded-lg bg-white text-[#273655] text-[16px] font-bold w-full font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}>Облачное хранение</button>
+                <button 
+                  onClick={() => handleServiceTypeClick('RACK')}
+                  className={`h-[56px] rounded-lg text-[16px] font-bold w-full font-['Montserrat'] transition-colors ${
+                    type === 'RACK' 
+                      ? 'bg-[#273655] text-white' 
+                      : 'bg-white text-[#273655]'
+                  }`} 
+                  style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
+                >
+                  Стеллажное хранение
+                </button>
                 <div className="h-[56px] w-full"></div>
               </div>
             </div>
-            <button className="w-full h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors mt-4 font-['Montserrat']" style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}>РАССЧИТАТЬ</button>
+            
+            {/* Блок с результатом расчета */}
+            {totalCost !== null && (
+              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div className="text-[20px] font-bold text-[#273655] text-center">
+                  Итого: {totalCost.toLocaleString()} ₸
+                </div>
+              </div>
+            )}
+            
+            {/* Блок с ошибкой */}
+            {error && (
+              <div className="w-full bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <div className="text-[16px] text-red-600 text-center">
+                  {error}
+                </div>
+              </div>
+            )}
+            
+            <button 
+              onClick={calculateCost}
+              disabled={isLoading || prices.length === 0}
+              className="w-full h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors mt-4 font-['Montserrat'] disabled:opacity-50 disabled:cursor-not-allowed" 
+              style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
+            >
+              {isLoading ? 'ЗАГРУЗКА...' : 'РАССЧИТАТЬ'}
+            </button>
           </div>
           {/* Правая колонка: заголовок и картинка */}
           <div className="flex flex-col items-start flex-1 pt-16 pl-20">
@@ -284,10 +438,7 @@ const HomePage = memo(() => {
       <section className="w-full flex flex-col items-center justify-center mt-1 mb-10 font-['Montserrat']">
         <div className="w-full max-w-[1100px] mx-auto">
           {/* Верхняя строка с иконкой и надписью */}
-          <div className="flex items-center mb-4">
-            <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
-            <span className="text-xs text-[#A6A6A6] font-medium">Что такое "Облачное хранение"?</span>
-          </div>
+          
           {/* Заголовок */}
           <h2 className="text-[32px] md:text-[35px] font-bold text-[#273655] text-center mb-10">Как работает облачное хранение?</h2>
           {/* Видео */}
@@ -344,10 +495,7 @@ const HomePage = memo(() => {
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full flex flex-col items-center justify-center mt-28 mb-24 font-['Montserrat']">
         <div className="w-full max-w-[1300px] flex flex-col items-start mx-auto mb-10 px-20 md:px-24">
-          <div className="flex items-center mb-2 mt-2">
-            <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
-            <span className="text-xs text-[#A6A6A6] font-medium">Наши адреса</span>
-          </div>
+         
           <h2 className="text-[48px] md:text-[56px] font-bold text-[#273655] ml-2 mt-0">ФИЛИАЛЫ</h2>
         </div>
         <div className="w-full max-w-[1300px] flex flex-row gap-12 items-start mx-auto px-20 md:px-24">

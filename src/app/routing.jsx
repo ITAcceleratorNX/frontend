@@ -86,7 +86,7 @@ PublicRoute.displayName = 'PublicRoute';
 // Мемоизированный компонент маршрутизации
 const Routing = memo(() => {
   if (import.meta.env.DEV) {
-    console.log('Рендеринг компонента Routing');
+  console.log('Рендеринг компонента Routing');
   }
   
   // Мемоизируем роуты для предотвращения лишних перерисовок

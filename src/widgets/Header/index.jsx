@@ -80,7 +80,7 @@ export const Header = memo(() => {
         </button>
       );
     } else {
-      return (
+  return (
         <button
           onClick={handleStartAuth}
           className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
@@ -95,10 +95,10 @@ export const Header = memo(() => {
   // Класс для хедера, зависящий от прокрутки
   const headerClass = useMemo(() => 
     clsx(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full",
-      isScrolled 
-        ? "bg-white shadow-md" 
-        : "bg-white" 
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full",
+          isScrolled 
+            ? "bg-white shadow-md" 
+            : "bg-white" 
     )
   , [isScrolled]);
 

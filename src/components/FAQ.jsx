@@ -85,10 +85,7 @@ const FAQ = memo(() => {
   return (
     <section className="w-full flex flex-col items-center justify-center mb-24 font-['Montserrat']">
       {/* Заголовок секции */}
-      <div className="flex items-center mb-4">
-        <img src={textAlignIcon} alt="icon" className="w-[18px] h-[18px] mr-[6px]" />
-        <span className="text-xs text-[#A6A6A6] font-medium">Информация</span>
-      </div>
+     
       <h2 className="text-4xl md:text-5xl font-medium text-[#273655] text-center mb-10">Часто задаваемые вопросы:</h2>
       
       {faqContent}

@@ -84,7 +84,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
           
           // Перенаправляем пользователя на главную страницу
           setTimeout(() => {
-            navigate('/');
+          navigate('/');
           }, 300);
         }
       } catch (error) {
@@ -103,7 +103,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         
         // При неожиданной ошибке также перенаправляем на главную
         setTimeout(() => {
-          navigate('/');
+        navigate('/');
         }, 300);
       }
     }
