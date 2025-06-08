@@ -326,7 +326,7 @@ const HomePage = memo(() => {
                   className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
                   style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
                 >
-                  <option value={0}>0 месяцев</option>
+                
                   <option value={1}>1 месяц</option>
                   <option value={2}>2 месяца</option>
                   <option value={3}>3 месяца</option>
