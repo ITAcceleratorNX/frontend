@@ -18,8 +18,10 @@ import BoxTickIcon from '../../assets/box-tick.png';
 import beigeCircle from '../../assets/beige_circle.svg';
 import houseOnBeigeCircle from '../../assets/house_on_beige_circle.svg';
 import extraOldLogo from '../../assets/extra_old_logo.jpg';
+import extraspaceLogo from '../../assets/extraspace_logo.png';
 import Footer from '../../widgets/Footer';
 import FAQ from '../../components/FAQ';
+import WarehouseMap from '../../components/WarehouseMap';
 import api from '../../shared/api/axios';
 
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
@@ -34,6 +36,30 @@ const HomePage = memo(() => {
   const [totalCost, setTotalCost] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Данные для складов на карте
+  const warehouses = useMemo(() => [
+    {
+      id: 1,
+      name: "EXTRA SPACE Главный склад",
+      address: "Касымова улица, 32, Алматы",
+      phone: "+7 727 123 4567",
+      workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
+      coordinates: [76.930495, 43.225893],
+      available: true,
+      image: extraspaceLogo
+    },
+    {
+      id: 2,
+      name: "EXTRA SPACE Мега",
+      address: "Абиша Кекилбайулы, 270 блок 4, Алматы",
+      phone: "+7 727 987 6543",
+      workingHours: "Ежедневно: 08:00-22:00",
+      coordinates: [76.890647, 43.201397],
+      available: true,
+      image: extraspaceLogo
+    }
+  ], []);
 
   // Загрузка цен при монтировании компонента
   useEffect(() => {
@@ -499,36 +525,37 @@ const HomePage = memo(() => {
           <h2 className="text-[48px] md:text-[56px] font-bold text-[#273655] ml-2 mt-0">ФИЛИАЛЫ</h2>
         </div>
         <div className="w-full max-w-[1300px] flex flex-row gap-12 items-start mx-auto px-20 md:px-24">
-          {/* Левая часть: квадратная карта 2ГИС */}
-          <div className="rounded-3xl overflow-hidden bg-[#f3f3f3] flex items-center justify-center" style={{width: 480, height: 480, boxShadow: '4px 4px 8px 0 #B0B0B0'}}>
-            <div className="flex flex-col items-center justify-center w-full h-full p-8">
-              <svg width="100" height="100" fill="none" viewBox="0 0 100 100" className="mb-6 opacity-40">
-                <rect width="100" height="100" rx="24" fill="#E5E7EB"/>
-                <path d="M30 70V40a10 10 0 0 1 10-10h20a10 10 0 0 1 10 10v30" stroke="#A6A6A6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="50" cy="55" r="8" stroke="#A6A6A6" strokeWidth="4"/>
-              </svg>
-              <div className="text-[#A6A6A6] text-xl md:text-2xl font-semibold text-center max-w-xs">Здесь будет карта 2ГИС</div>
-            </div>
+          {/* Левая часть: интерактивная карта 2ГИС */}
+          <div className="rounded-3xl overflow-hidden bg-[#f3f3f3]" style={{width: 480, height: 480, boxShadow: '4px 4px 8px 0 #B0B0B0'}}>
+            <WarehouseMap warehouses={warehouses} />
           </div>
           {/* Правая часть: прямоугольная карточка филиала */}
           <div className="bg-white rounded-lg flex flex-row items-center justify-start pr- py-8 self-center" style={{minWidth: 540, minHeight: 300, height: 300, maxHeight: 320, maxWidth: 600, width: 560, boxShadow: '4px 4px 8px 0 #B0B0B0'}}>
             {/* Левая часть: только крупный логотип */}
             <div className="flex items-center justify-center w-[270px] h-[270px] p-2">
-              <img src={extraOldLogo} alt="logo" className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]" />
+              <img src={warehouses[0]?.image || extraOldLogo} alt="logo" className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]" />
             </div>
             {/* Правая часть: все надписи и кнопка */}
             <div className="flex flex-col items-start justify-center flex-1 h-full gap-y-2 ml-6">
-              <div className="text-[#3E4958] text-[20px] font-medium leading-tight" style={{lineHeight: 1.1}}>Название филиала (например, "Склад на Сайна")</div>
-              <div className="text-[#3E4958] text-[15px] font-normal leading-tight">Телефон</div>
-              <div className="text-[#3E4958] text-[15px] font-normal">Время работы (по желанию)</div>
+              <div className="text-[#3E4958] text-[20px] font-medium leading-tight" style={{lineHeight: 1.1}}>{warehouses[0]?.name || "EXTRA SPACE Главный склад"}</div>
+              <div className="text-[#3E4958] text-[15px] font-normal leading-tight">{warehouses[0]?.phone || "+7 727 123 4567"}</div>
+              <div className="text-[#3E4958] text-[15px] font-normal">{warehouses[0]?.workingHours || "Пн-Пт: 09:00-18:00"}</div>
               <div className="flex items-center mt-1 mb-2">
                 <span className="relative inline-block" style={{width: 24, height: 24}}>
                   <img src={beigeCircle} alt="beige circle" className="absolute left-0 top-0 w-full h-full" />
                   <img src={houseOnBeigeCircle} alt="house on beige" className="absolute left-1/2 top-1/2" style={{width: '15px', height: '15px', transform: 'translate(-50%, -50%)'}} />
                 </span>
-                <span className="text-[#273655] text-[15px] font-normal ml-2">Полный адрес</span>
+                <span className="text-[#273655] text-[15px] font-normal ml-2">{warehouses[0]?.address || "Касымова улица, 32, Алматы"}</span>
               </div>
-              <button className="px-2 py-3 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full max-w-[240px] mt-0">
+              <button 
+                className="px-2 py-3 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full max-w-[240px] mt-0"
+                onClick={() => {
+                  // Здесь можно добавить логику перехода к странице склада или бронирования
+                  if (import.meta.env.DEV) {
+                    console.log('Выбран склад:', warehouses[0]);
+                  }
+                }}
+              >
                 Выбрать этот склад
               </button>
             </div>
