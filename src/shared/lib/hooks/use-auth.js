@@ -1,64 +1,11 @@
-import { useEffect, useState } from 'react';
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { authApi } from '../../api/auth';
-import { useSessionStore } from '../../../entities/session';
-
-// Создаем хранилище Zustand с персистентностью в sessionStorage
-export const useAuthStore = create(
-  persist(
-    (set) => ({
-      token: null,
-      isAuthenticated: false,
-      user: null,
-      
-      setToken: (token) => set({ token, isAuthenticated: !!token }),
-      setUser: (user) => set({ user }),
-      logout: () => {
-        // Удаляем все токены и cookie при выходе
-        set({ token: null, isAuthenticated: false, user: null });
-        // Удаляем любые связанные с токенами cookie
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      },
-    }),
-    {
-      name: 'auth-storage', // Название хранилища в sessionStorage
-      storage: createJSONStorage(() => sessionStorage), // Использование sessionStorage вместо localStorage
-    }
-  )
-);
 
 // Хук для работы с авторизацией в компонентах
 export const useAuth = () => {
-  const { 
-    user, 
-    isAuthenticated, 
-    isLoading, 
-    error, 
-    login: sessionLogin, 
-    logout: sessionLogout,
-    loadUser
-  } = useSessionStore();
-
-  // Загрузка пользователя при инициализации
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        await loadUser();
-      } catch (error) {
-        console.error('useAuth: Ошибка при проверке авторизации:', error);
-      }
-    };
-    
-    checkAuth();
-  }, [loadUser]);
-  
   // Функция для логина пользователя
   const login = async (email, password) => {
     try {
-      const result = await sessionLogin(email, password);
+      const result = await authApi.login(email, password);
       return result;
     } catch (error) {
       console.error('useAuth: Ошибка при авторизации:', error);
@@ -72,7 +19,7 @@ export const useAuth = () => {
   // Функция выхода из системы
   const logout = async () => {
     try {
-      const result = await sessionLogout();
+      const result = await authApi.logout();
       return result;
     } catch (error) {
       console.error('useAuth: Ошибка при выходе из системы:', error);
@@ -123,10 +70,6 @@ export const useAuth = () => {
   };
 
   return {
-    isAuthenticated,
-    isLoading,
-    user,
-    error,
     login,
     logout,
     register,

@@ -1,9 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
-import { useSessionStore } from '../../entities/session';
 import { USER_QUERY_KEY, useUserQuery } from '../lib/hooks/use-user-query';
-import { isEqual } from 'lodash-es'; // Для глубокого сравнения объектов
 
 // Создаем контекст
 export const AuthContext = createContext(null);
@@ -29,30 +27,6 @@ export const AuthProvider = ({ children }) => {
 
   // Доступ к кешу React Query
   const queryClient = useQueryClient();
-  
-  // Доступ к хранилищу сессий
-  const sessionStore = useSessionStore();
-
-  // При изменении данных пользователя обновляем state в Zustand
-  useEffect(() => {
-    if (isSuccess) {
-      const cachedUser = queryClient.getQueryData([USER_QUERY_KEY]);
-      const storeUser = sessionStore.user;
-          
-      // Используем глубокое сравнение для предотвращения лишних обновлений
-      if (!isEqual(cachedUser, storeUser)) {
-        if (import.meta.env.DEV) {
-          console.log('AuthContext: Синхронизация данных пользователя с хранилищем');
-        }
-        sessionStore.updateUserFromCache(user);
-            }
-    } else if (isError) {
-      // Только если действительно произошла ошибка
-      if (sessionStore.user !== null) {
-        sessionStore.updateUserFromCache(null);
-      }
-    }
-  }, [isSuccess, isError, user, sessionStore, queryClient]);
 
   // Логирование только в режиме разработки
   useEffect(() => {
@@ -131,9 +105,6 @@ export const AuthProvider = ({ children }) => {
       // Очищаем кеш пользователя
       queryClient.setQueryData([USER_QUERY_KEY], null);
       
-      // Обновляем состояние в хранилище
-      sessionStore.updateUserFromCache(null);
-      
       if (import.meta.env.DEV) console.log('AuthContext: Пользователь вышел из системы');
       return { success: true };
     } catch (error) {
@@ -141,11 +112,10 @@ export const AuthProvider = ({ children }) => {
       
       // Даже при ошибке сбрасываем состояние
       queryClient.setQueryData([USER_QUERY_KEY], null);
-      sessionStore.updateUserFromCache(null);
       
       return { success: false, error: error.message || 'Ошибка при выходе из системы' };
     }
-  }, [queryClient, sessionStore]);
+  }, [queryClient]);
 
   // Функция для проверки email
   const checkEmail = useCallback(async (email) => {

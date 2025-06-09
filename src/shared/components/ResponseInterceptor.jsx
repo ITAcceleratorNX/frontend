@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { setAuthNavigator } from "../api/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { USER_QUERY_KEY } from "../lib/hooks/use-user-query";
-import { useSessionStore } from "../../entities/session";
 
 /**
  * Компонент для глобальной обработки 401 ошибок и автоматического перенаправления
@@ -13,7 +12,6 @@ export const ResponseInterceptor = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const sessionStore = useSessionStore();
   const isMountedRef = useRef(false);
   const redirectInProgressRef = useRef(false);
 
@@ -33,9 +31,6 @@ export const ResponseInterceptor = () => {
     // Сбрасываем данные пользователя в кеше React Query
     queryClient.setQueryData([USER_QUERY_KEY], null);
     
-    // Сбрасываем данные пользователя в Zustand хранилище
-    sessionStore.updateUserFromCache(null);
-    
     // Перенаправляем на страницу входа с сохранением пути, откуда пришел пользователь
     navigate("/login", { 
       replace: true,
@@ -46,7 +41,7 @@ export const ResponseInterceptor = () => {
     setTimeout(() => {
       redirectInProgressRef.current = false;
     }, 300);
-  }, [navigate, queryClient, sessionStore, location]);
+  }, [navigate, queryClient, location]);
 
   // При монтировании устанавливаем функцию перенаправления
   useEffect(() => {
