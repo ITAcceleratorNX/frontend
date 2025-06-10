@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { toast } from 'react-toastify';
 import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight, Shield, UserPlus, RefreshCw } from 'lucide-react';
@@ -9,6 +9,7 @@ import { authApi } from '../../../shared/api/auth';
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register: registerUser, checkEmail } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +26,7 @@ export const RegisterForm = () => {
     handleSubmit,
     watch,
     getValues,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -36,6 +38,25 @@ export const RegisterForm = () => {
   });
   
   const password = watch('password', '');
+
+  // Автоматическое заполнение email из location.state
+  useEffect(() => {
+    if (location.state?.email) {
+      console.log('RegisterForm: Автоматическое заполнение email из state:', location.state.email);
+      setValue('email', location.state.email);
+      // Если email уже пришел, то можно показать что код можно отправить повторно
+      setCodeSent(true);
+    } else {
+      // Проверяем URL параметры как fallback
+      const params = new URLSearchParams(location.search);
+      const emailParam = params.get('email');
+      if (emailParam) {
+        console.log('RegisterForm: Автоматическое заполнение email из URL параметров:', emailParam);
+        setValue('email', emailParam);
+        setCodeSent(true);
+      }
+    }
+  }, [location.state, location.search, setValue]);
 
   // Таймер для повторной отправки кода
   useEffect(() => {
