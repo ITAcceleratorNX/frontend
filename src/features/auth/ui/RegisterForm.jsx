@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { toast } from 'react-toastify';
-import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight, Shield, UserPlus } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight, Shield, UserPlus, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
+import { authApi } from '../../../shared/api/auth';
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, checkEmail } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState(null);
   
+  // Состояния для функциональности повторной отправки кода
+  const [codeSent, setCodeSent] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [isResendingCode, setIsResendingCode] = useState(false);
+  
   const {
     register,
     handleSubmit,
     watch,
+    getValues,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -29,6 +36,54 @@ export const RegisterForm = () => {
   });
   
   const password = watch('password', '');
+
+  // Таймер для повторной отправки кода
+  useEffect(() => {
+    let interval = null;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer(timer => timer - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  // Функция для отправки кода на email
+  const sendCodeAgain = async () => {
+    const email = getValues('email');
+    
+    if (!email) {
+      toast.error('Введите email для отправки кода');
+      return;
+    }
+
+    // Простая валидация email
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    if (!emailRegex.test(email)) {
+      toast.error('Введите корректный email');
+      return;
+    }
+
+    setIsResendingCode(true);
+    try {
+      const result = await checkEmail(email);
+      
+      if (result.success) {
+        setCodeSent(true);
+        setTimer(60); // 60 секунд до повторной отправки
+        toast.success('Код отправлен на вашу почту');
+      } else {
+        toast.error(result.error || 'Ошибка при отправке кода');
+      }
+    } catch (error) {
+      console.error('Ошибка при отправке кода:', error);
+      toast.error('Произошла ошибка при отправке кода');
+    } finally {
+      setIsResendingCode(false);
+    }
+  };
   
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -125,7 +180,7 @@ export const RegisterForm = () => {
               <UserPlus size={26} />
               <h1 className="text-2xl font-semibold">Создание аккаунта</h1>
             </div>
-            <p className="text-blue-100 text-center">Заполните форму для регистрации в системе</p>
+            <p className="text-blue-100 text-center">Введите код из email и заполните остальные поля</p>
           </div>
           
           {/* Форма регистрации */}
@@ -167,18 +222,35 @@ export const RegisterForm = () => {
                 <Shield className="h-4 w-4 text-[#273655]" />
                 Проверочный код
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
-                    errors.unique_code ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
-                  placeholder="Введите проверочный код"
-                  disabled={isLoading}
-                  {...register('unique_code', {
-                    required: 'Проверочный код обязателен',
-                  })}
-                />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
+                      errors.unique_code ? 'border-red-400 bg-red-50' : 'border-slate-200'
+                    } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
+                    placeholder="Введите проверочный код"
+                    disabled={isLoading}
+                    {...register('unique_code', {
+                      required: 'Проверочный код обязателен',
+                    })}
+                  />
+                </div>
+                
+                {/* Кнопка отправки/переотправки кода */}
+                <button
+                  type="button"
+                  onClick={sendCodeAgain}
+                  disabled={timer > 0 || isResendingCode || isLoading}
+                  className="px-4 py-3 bg-[#273655] text-white rounded-lg font-medium hover:bg-[#324569] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                >
+                  {isResendingCode ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  {timer > 0 ? `${timer}с` : codeSent ? 'Отправить повторно' : 'Отправить код'}
+                </button>
               </div>
               {errors.unique_code && (
                 <p className="text-sm text-red-500 mt-1 flex items-center gap-1">

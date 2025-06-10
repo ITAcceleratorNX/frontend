@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
         isFetching,
         hasUser: !!user
       });
-    }
+              }
   }, [user, isLoading, isFetching]);
 
   // Мемоизированная функция для входа
