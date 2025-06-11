@@ -31,7 +31,6 @@ const HomePage = memo(() => {
   
   // Новые состояния для калькулятора
   const [month, setMonth] = useState(1);
-  const [day, setDay] = useState(0);
   const [type, setType] = useState('INDIVIDUAL');
   const [prices, setPrices] = useState([]);
   const [totalCost, setTotalCost] = useState(null);
@@ -93,10 +92,8 @@ const HomePage = memo(() => {
       return;
     }
 
-    const amount = parseFloat(selectedPrice.amount);
-    const monthlyCost = amount * area * month;
-    const dailyCost = (amount * area / 30) * day;
-    const total = monthlyCost + dailyCost;
+    const price = parseFloat(selectedPrice.price);
+    const total = price * area * month;
     
     setTotalCost(Math.round(total));
     setError(null);
@@ -105,11 +102,8 @@ const HomePage = memo(() => {
       console.log('Расчет стоимости:', {
         area,
         month,
-        day,
         type,
-        amount,
-        monthlyCost,
-        dailyCost,
+        price,
         total
       });
     }
@@ -341,9 +335,9 @@ const HomePage = memo(() => {
                 <style>{rangeTrackStyles}</style>
               </div>
             </div>
-            <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (дни/месяцы):</label>
+            <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (месяцы):</label>
             <div className="flex gap-4 mb-8 w-full">
-              <div className="relative flex-1">
+              <div className="relative w-full">
                 <select 
                   value={month}
                   onChange={(e) => {
@@ -353,31 +347,11 @@ const HomePage = memo(() => {
                   className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
                   style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
                 >
-                
                   <option value={1}>1 месяц</option>
                   <option value={2}>2 месяца</option>
                   <option value={3}>3 месяца</option>
                   <option value={6}>6 месяцев</option>
                   <option value={12}>12 месяцев</option>
-                </select>
-                <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-              <div className="relative flex-1">
-                <select 
-                  value={day}
-                  onChange={(e) => {
-                    setDay(Number(e.target.value));
-                    setTotalCost(null); // Сбрасываем результат при изменении
-                  }}
-                  className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
-                  style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
-                >
-                  <option value={0}>0 дней</option>
-                  <option value={1}>1 день</option>
-                  <option value={7}>7 дней</option>
-                  <option value={14}>14 дней</option>
-                  <option value={21}>21 день</option>
-                  <option value={30}>30 дней</option>
                 </select>
                 <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
