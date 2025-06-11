@@ -31,13 +31,31 @@ const managerNavItems = [
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
+// Разделы для администраторов
+const adminNavItems = [
+  { label: 'Личные данные', icon: icon1, key: 'personal' },
+  { label: 'Настройки', icon: icon5, key: 'settings' },
+  { label: 'Выйти', icon: icon6, key: 'logout' },
+];
+
 const Sidebar = ({ activeNav, setActiveNav }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   // Определяем, какие разделы показать в зависимости от роли
-  const navItems = user?.role === 'MANAGER' ? managerNavItems : userNavItems;
+  const getNavItemsByRole = (role) => {
+    switch (role) {
+      case 'ADMIN':
+        return adminNavItems;
+      case 'MANAGER':
+        return managerNavItems;
+      default:
+        return userNavItems;
+    }
+  };
+
+  const navItems = getNavItemsByRole(user?.role);
 
   const handleNavClick = async (key) => {
     setActiveNav(key);
