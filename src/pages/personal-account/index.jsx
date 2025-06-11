@@ -1,10 +1,11 @@
 import React, { useState, useEffect, memo, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Header } from '../../widgets';
 import Sidebar from './ui/Sidebar';
 import PersonalData from './ui/PersonalData';
 import Contracts from './ui/Contracts';
 import Settings from './ui/Settings';
+import ChatSection from './ui/ChatSection';
 import { useAuth } from '../../shared/context/AuthContext';
 import Footer from '../../widgets/Footer';
 import { ToastContainer } from 'react-toastify';
@@ -12,9 +13,19 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Мемоизированный компонент страницы личного кабинета
 const PersonalAccountPage = memo(() => {
+  const location = useLocation();
   const [activeNav, setActiveNav] = useState('personal');
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
+
+  // Проверяем состояние навигации при загрузке компонента
+  useEffect(() => {
+    if (location.state?.activeSection) {
+      setActiveNav(location.state.activeSection);
+      // Очищаем состояние после использования
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   // Отслеживаем изменение статуса аутентификации для перенаправления
   useEffect(() => {
@@ -51,6 +62,13 @@ const PersonalAccountPage = memo(() => {
         <main className="flex-1 flex flex-col items-start justify-center py-12 px-10 bg-white">
           {activeNav === 'personal' && <PersonalData />}
           {activeNav === 'contracts' && <Contracts />}
+          {activeNav === 'chat' && <ChatSection />}
+          {activeNav === 'payments' && (
+            <div className="w-full max-w-4xl mx-auto p-8">
+              <h1 className="text-2xl font-bold text-[#273655] mb-4">Платежи</h1>
+              <p className="text-gray-600">Раздел платежей в разработке...</p>
+            </div>
+          )}
           {activeNav === 'settings' && <Settings />}
         </main>
       </div>
@@ -61,7 +79,7 @@ const PersonalAccountPage = memo(() => {
 
   if (import.meta.env.DEV) {
     console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 
-      { isAuthenticated, isLoading, activeNav });
+      { isAuthenticated, isLoading, activeNav, userRole: user?.role });
   }
 
   return pageContent;

@@ -10,8 +10,10 @@ import icon6 from '../../../assets/6.svg';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
+import { useAuth } from '../../../shared/context/AuthContext';
 
-const navItems = [
+// Разделы для обычных пользователей
+const userNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Договоры', icon: icon2, key: 'contracts' },
   { label: 'Чат', icon: icon3, key: 'chat' },
@@ -21,9 +23,21 @@ const navItems = [
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
+// Разделы для менеджеров
+const managerNavItems = [
+  { label: 'Личные данные', icon: icon1, key: 'personal' },
+  { label: 'Чат', icon: icon3, key: 'chat' },
+  { label: 'Настройки', icon: icon5, key: 'settings' },
+  { label: 'Выйти', icon: icon6, key: 'logout' },
+];
+
 const Sidebar = ({ activeNav, setActiveNav }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Определяем, какие разделы показать в зависимости от роли
+  const navItems = user?.role === 'MANAGER' ? managerNavItems : userNavItems;
 
   const handleNavClick = async (key) => {
     setActiveNav(key);

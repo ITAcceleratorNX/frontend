@@ -1,0 +1,126 @@
+/* Стили для ChatWidget в соответствии с designchat.txt */
+
+.chat-widget {
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.chat-widget .header-title {
+  font-family: 'Orbitron', monospace;
+}
+
+.chat-widget .quick-action-btn {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.chat-widget .send-btn {
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+/* Анимация для загрузки */
+.chat-widget .loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Стили для скроллбара */
+.chat-widget .messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-widget .messages-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.chat-widget .messages-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.chat-widget .messages-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Анимация для сообщений */
+.chat-widget .message-item {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Эффекты наведения */
+.chat-widget .hover-effect {
+  transition: all 0.2s ease-in-out;
+}
+
+.chat-widget .hover-effect:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для иконок */
+.chat-widget .icon-btn {
+  transition: color 0.2s ease-in-out;
+}
+
+.chat-widget .icon-btn:hover {
+  color: #263554;
+}
+
+/* Стили для статуса соединения */
+.chat-widget .status-indicator {
+  position: relative;
+}
+
+.chat-widget .status-indicator::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  top: -2px;
+  right: -2px;
+  animation: pulse 2s infinite;
+}
+
+.chat-widget .status-indicator.online::after {
+  background-color: #4ade80;
+}
+
+.chat-widget .status-indicator.offline::after {
+  background-color: #ef4444;
+}
+
+.chat-widget .status-indicator.reconnecting::after {
+  background-color: #f59e0b;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+} 

@@ -245,17 +245,17 @@ export const RegisterForm = () => {
               </label>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <input
-                    type="text"
-                    className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
-                      errors.unique_code ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                    } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
-                    placeholder="Введите проверочный код"
-                    disabled={isLoading}
-                    {...register('unique_code', {
-                      required: 'Проверочный код обязателен',
-                    })}
-                  />
+                <input
+                  type="text"
+                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
+                    errors.unique_code ? 'border-red-400 bg-red-50' : 'border-slate-200'
+                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
+                  placeholder="Введите проверочный код"
+                  disabled={isLoading}
+                  {...register('unique_code', {
+                    required: 'Проверочный код обязателен',
+                  })}
+                />
                 </div>
                 
                 {/* Кнопка отправки/переотправки кода */}

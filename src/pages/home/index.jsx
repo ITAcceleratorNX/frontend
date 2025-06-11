@@ -22,6 +22,7 @@ import extraspaceLogo from '../../assets/extraspace_logo.png';
 import Footer from '../../widgets/Footer';
 import FAQ from '../../components/FAQ';
 import WarehouseMap from '../../components/WarehouseMap';
+import ChatButton from '../../shared/components/ChatButton';
 import api from '../../shared/api/axios';
 
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
@@ -564,6 +565,9 @@ const HomePage = memo(() => {
       </section>
       {/* Секция FAQ */}
       <FAQ />
+      
+      {/* Плавающая кнопка чата */}
+      <ChatButton />
       
       <Footer />
     </div>

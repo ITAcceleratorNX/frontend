@@ -128,6 +128,7 @@ export const Header = memo(() => {
               <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
               <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
               <NavLink to="/tariffs" className={getNavLinkClass}>ТАРИФЫ</NavLink>
+              <NavLink to="/chat" className={getNavLinkClass}>ЧАТ</NavLink>
             </div>
           </nav>
 
