@@ -124,7 +124,7 @@ export const Header = memo(() => {
           <nav className="flex-1 overflow-x-auto hide-scrollbar">
             <div className="flex justify-center items-center gap-3 min-w-max">
               <NavLink to="/" end className={getNavLinkClass}>ГЛАВНАЯ</NavLink>
-              <NavLink to="/warehouses" className={getNavLinkClass}>ОБ АРЕНДЕ СКЛАДОВ</NavLink>
+              <NavLink to="/about-warehouse-rental" className={getNavLinkClass}>ОБ АРЕНДЕ СКЛАДОВ</NavLink>
               <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
               <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
               <NavLink to="/tariffs" className={getNavLinkClass}>ТАРИФЫ</NavLink>

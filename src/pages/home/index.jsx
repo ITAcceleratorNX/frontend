@@ -19,15 +19,19 @@ import beigeCircle from '../../assets/beige_circle.svg';
 import houseOnBeigeCircle from '../../assets/house_on_beige_circle.svg';
 import extraOldLogo from '../../assets/extra_old_logo.jpg';
 import extraspaceLogo from '../../assets/extraspace_logo.png';
+import image85 from '../../assets/image 85.png';
+import group1010 from '../../assets/Group 1010.png';
 import Footer from '../../widgets/Footer';
 import FAQ from '../../components/FAQ';
 import WarehouseMap from '../../components/WarehouseMap';
 import ChatButton from '../../shared/components/ChatButton';
 import api from '../../shared/api/axios';
+import { useNavigate } from 'react-router-dom';
 
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
   const [area, setArea] = useState(50);
+  const navigate = useNavigate();
   
   // Новые состояния для калькулятора
   const [month, setMonth] = useState(1);
@@ -226,7 +230,7 @@ const HomePage = memo(() => {
       <section className="w-full flex flex-col items-center justify-center mt-24 mb-24">
         <div className="w-full flex flex-col items-center">
         
-          <div className="grid grid-cols-2 grid-rows-2 gap-x-6 gap-y-2" style={{width: 1144, height: 560}}>
+          <div className="grid grid-cols-2 grid-rows-3 gap-x-6 gap-y-2" style={{width: 1144}}>
             {/* Верхний левый — текстовый блок */}
             <div className="flex flex-col h-[255px] w-[560px] pl-2 pt-6">
               <div className="text-[28px] font-bold text-[#273655] leading-tight mb-6" style={{maxWidth: 560}}>
@@ -241,33 +245,58 @@ const HomePage = memo(() => {
             <div className="relative rounded-3xl bg-[#F3EEDD] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] overflow-hidden">
               <div className="z-10 relative">
                 <div className="text-[24px] font-bold text-[#273655] mb-3">Безопасность и надежность</div>
-                <div className="text-[#7A7A7A] text-[16px] leading-snug max-w-[340px]">
+                <div className="text-[#717171] text-[16px] leading-snug max-w-[340px]">
                   Наши склады оборудованы современными системами безопасности, включая видеонаблюдение, охрану и контроль доступа.
                 </div>
               </div>
               <img src={key2} alt="key" className="absolute right-[-40px] bottom-[-120px] w-[320px] rotate-[20deg] select-none pointer-events-none z-0" />
             </div>
-            {/* Нижний левый — зеленый с процентами */}
-            <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-between items-end p-8 w-[560px] h-[255px] overflow-hidden">
+            {/* Посередине левый — зеленый с процентами */}
+            <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-between items-end p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
               <div className="z-10 relative text-right">
                 <div className="text-[24px] font-bold text-white mb-3">Конкурентные цены</div>
-                <div className="text-white text-[16px] leading-snug max-w-[340px]">
+                <div className="text-[#313131B2] text-[16px] leading-snug max-w-[340px]">
                   Мы предлагаем конкурентоспособные цены на аренду, чтобы помочь вам сэкономить на затратах и улучшить вашу рентабельность.
                 </div>
               </div>
               <img src={procent2} alt="procent" className="absolute left-[-80px] bottom-[-120px] w-[320px] rotate-[-1deg] select-none pointer-events-none z-0" />
             </div>
-            {/* Нижний правый — оранжевый с рукой */}
-            <div className="relative rounded-3xl bg-[#EA9938] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] overflow-hidden">
+            {/* Посередине правый — оранжевый с рукой */}
+            <div className="relative rounded-3xl bg-[#EA9938] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
               <div className="z-10 relative">
                 <div className="text-[24px] font-bold text-white mb-3">Репутация</div>
-                <div className="text-white text-[16px] leading-snug max-w-[340px]">
+                <div className="text-[#423131B2] text-[16px] leading-snug max-w-[340px]">
                   Мы имеем прочную репутацию, основанную на долгосрочных отношениях с нашими клиентами и их полной удовлетворенности нашими услугами.
                 </div>
               </div>
               <img src={good2} alt="good" className="absolute right-[-80px] bottom-[-120px] w-[320px] rotate-[-20deg] select-none pointer-events-none z-0" />
             </div>
+            {/* Нижний левый — Оплата банковской картой онлайн */}
+            <div className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
+              <div className="z-10 relative text-right max-w-[310px]">
+                <div className="text-[24px] font-bold text-white mb-3">Оплата банковской картой онлайн</div>
+                <div className="text-[#00000094] text-[16px] leading-snug max-w-[410px]">
+                  Наш сайт подключен к интернет-эквайрингу, и Вы можете оплатить услугу банковской картой Visa или Mastercard, а также с помощью Apple Pay и Google Pay.
+                </div>
+              </div>
+              <img src={image85} alt="bank card" className="absolute right-[360px] bottom-[-10px] w-[220px] select-none pointer-events-none z-0" />
+            </div>
+            {/* Нижний правый — Гарантии безопасности */}
+            <div className="relative rounded-3xl bg-[#0181D3] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
+              <div className="z-10 relative">
+                <div className="text-[24px] font-bold text-white mb-3">Гарантии безопасности</div>
+                <div className="text-[#00000073] text-[16px] leading-snug max-w-[340px]">
+                  OneVision не передает данные Вашей карты третьим лицам. Ввод данных осуществляется в защищенном окне на платежной странице OneVision.
+                </div>
+              </div>
+              <img src={group1010} alt="security" className="absolute right-[40px] bottom-[20px] w-[150px] select-none pointer-events-none z-0" />
+            </div>
           </div>
+          <button className="mt-10 px-8 py-1 bg-[#9F9259] text-white rounded-full text-lg font-medium hover:bg-[#2a3c64] transition-colors"
+            onClick={() => navigate('/online-payment')}
+          >
+            Подробнее
+          </button>
         </div>
       </section>
       {/* Третий фрейм: карточка склада */}

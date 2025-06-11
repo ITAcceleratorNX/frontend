@@ -10,6 +10,9 @@ import RestorePasswordPage from '../pages/restore-password';
 import MovingPage from '../pages/moving';
 import TariffsPage from '../pages/tariffs';
 import ChatPage from '../pages/chat';
+import AboutWarehouseRentalPage from '../pages/about-warehouse-rental';
+import CloudStoragePage from '../pages/CloudStorage';
+import OnlinePaymentPage from '../pages/online-payment';
 
 import PersonalAccountPage from '../pages/personal-account';
 
@@ -99,7 +102,10 @@ const Routing = memo(() => {
     { path: "/restore-password", element: <RestorePasswordPage /> },
     { path: "/moving", element: <MovingPage /> },
     { path: "/tariffs", element: <TariffsPage /> },
-    { path: "/chat", element: <ChatPage /> }
+    { path: "/chat", element: <ChatPage /> },
+    { path: "/about-warehouse-rental", element: <AboutWarehouseRentalPage /> },
+    { path: "/cloud-storage", element: <CloudStoragePage /> },
+    { path: "/online-payment", element: <OnlinePaymentPage /> }
   ], []);
 
   const protectedRoutes = useMemo(() => [
