@@ -6,7 +6,6 @@ import bottomVector from '../../assets/Vector_10.png';
 import leafIcon from '../../assets/Vector_038 (Illustrator Vectors) svg-01 2 (1).png';
 import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
 import arrowDownIcon from '../../assets/arrow-down.svg';
-import textAlignIcon from '../../assets/textalign-justifycenter.svg';
 import warehouseImg from '../../assets/warehouse.png';
 import tariffs1 from '../../assets/tariffs_1.png';
 import tariffs2 from '../../assets/tariffs_2.png';
@@ -334,7 +333,7 @@ const TariffsPage = () => {
         <div className="w-full max-w-4xl mb-0">
           <ul className="list-disc pl-6 text-[20px] font-bold md:text-[18px] text-[#222] font-['Montserrat']">
             <li>
-              Страница "Тарифы"
+              Страница &quot;Тарифы&quot;
               <ul className="list-disc pl-8 mt-0 text-[18px] md:text-[19px] space-y-1 font-bold">
                 <li>
                   Содержание:

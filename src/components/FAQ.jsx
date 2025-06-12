@@ -1,7 +1,6 @@
 import React, { useState, memo, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../shared/api/axios';
-import textAlignIcon from '../assets/textalign-justifycenter.svg';
 
 // Ключ для запроса FAQ
 const FAQ_QUERY_KEY = 'faq';
