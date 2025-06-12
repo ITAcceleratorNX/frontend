@@ -6,7 +6,7 @@ import ShieldEye from '../../assets/Shield Eye@2x.png';
 import eyeScan from '../../assets/Eye Scan.svg';
 import hand from '../../assets/hand.png';
 import fingerprint from '../../assets/fingerprint.png';
-import group1010 from '../../assets/group 1010.png';
+import group1010 from '../../assets/Group 1010.png';
 
 const OnlinePaymentPage = () => {
   useEffect(() => {
