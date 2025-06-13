@@ -42,7 +42,18 @@ export const useManagerChats = () => {
       return true;
     } catch (error) {
       console.error('ManagerChats: Ошибка при загрузке чатов:', error);
-      toast.error('Не удалось загрузить чаты');
+      
+      // Более детальная обработка ошибок
+      let errorMessage = 'Не удалось загрузить чаты';
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Сервер не отвечает. Попробуйте позже.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Ошибка сервера. Попробуйте обновить страницу.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Нет доступа. Войдите в систему заново.';
+      }
+      
+      toast.error(errorMessage);
       return false;
     } finally {
       setIsLoadingChats(false);

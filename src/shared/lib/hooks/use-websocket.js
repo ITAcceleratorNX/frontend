@@ -7,7 +7,6 @@ export const useWebSocket = () => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState(null);
   
   const socketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
@@ -34,29 +33,18 @@ export const useWebSocket = () => {
     try {
       const socketUrl = `wss://extraspace-backend.onrender.com?userId=${user.id}`;
       if (import.meta.env.DEV) {
-        console.log('WebSocket: Попытка подключения к', socketUrl);
+        console.log('WebSocket: Подключение к', socketUrl);
       }
       
       // Создаем новое WebSocket соединение
       const newSocket = new WebSocket(socketUrl);
       
-      // Устанавливаем таймаут для подключения
-      const connectionTimeout = setTimeout(() => {
-        if (newSocket.readyState === WebSocket.CONNECTING) {
-          newSocket.close();
-          console.error('WebSocket: Таймаут подключения');
-          setConnectionError('Таймаут подключения к серверу');
-        }
-      }, 10000); // 10 секунд на подключение
-      
       newSocket.onopen = () => {
-        clearTimeout(connectionTimeout);
         if (import.meta.env.DEV) {
           console.log('WebSocket: Соединение установлено');
         }
         setIsConnected(true);
         setIsReconnecting(false);
-        setConnectionError(null);
         reconnectAttempts.current = 0;
         socketRef.current = newSocket;
         setSocket(newSocket);
@@ -67,33 +55,19 @@ export const useWebSocket = () => {
       };
       
       newSocket.onclose = (event) => {
-        clearTimeout(connectionTimeout);
         if (import.meta.env.DEV) {
-          console.log('WebSocket: Соединение закрыто', {
-            code: event.code,
-            reason: event.reason,
-            wasClean: event.wasClean
-          });
+          console.log('WebSocket: Соединение закрыто', event.code, event.reason);
         }
         setIsConnected(false);
         socketRef.current = null;
         setSocket(null);
         
-        // Определяем причину закрытия
-        let errorMessage = 'Соединение с чатом потеряно';
-        if (event.code === 1006) {
-          errorMessage = 'Сервер чата недоступен';
-          setConnectionError('Сервер недоступен');
-        } else if (event.code === 1011) {
-          errorMessage = 'Ошибка сервера чата';
-          setConnectionError('Ошибка сервера');
-        } else if (event.code === 1012) {
-          errorMessage = 'Сервер чата перезагружается';
-          setConnectionError('Сервер перезагружается');
-        }
+        // Проверяем код закрытия для определения стратегии переподключения
+        const shouldAttemptReconnect = event.code !== 1000 && // не ручное закрытие
+                                     event.code !== 1006 && // не ошибка сервера
+                                     reconnectAttempts.current < maxReconnectAttempts;
         
-        // Автоматическое переподключение, если не было ручного закрытия
-        if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
+        if (shouldAttemptReconnect) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
           reconnectAttempts.current++;
           
@@ -102,37 +76,30 @@ export const useWebSocket = () => {
           }
           
           setIsReconnecting(true);
-          setConnectionError(`Переподключение... (попытка ${reconnectAttempts.current})`);
-          
           reconnectTimeoutRef.current = setTimeout(() => {
             connectWebSocket();
           }, delay);
-        } else if (reconnectAttempts.current >= maxReconnectAttempts) {
-          toast.error('Не удалось восстановить соединение с чатом. Проверьте подключение к интернету.');
+        } else if (event.code === 1006) {
+          // Сервер недоступен (код 520 от Cloudflare преобразуется в 1006)
+          console.log('WebSocket: Сервер временно недоступен');
+          toast.error('Сервер чата временно недоступен. Попробуйте позже.');
           setIsReconnecting(false);
-          setConnectionError('Не удалось подключиться к серверу');
+        } else if (reconnectAttempts.current >= maxReconnectAttempts) {
+          toast.error('Не удалось восстановить соединение с чатом');
+          setIsReconnecting(false);
         }
       };
       
       newSocket.onerror = (error) => {
-        clearTimeout(connectionTimeout);
         console.error('WebSocket: Ошибка соединения', error);
-        
-        // Более детальная обработка ошибок
         if (reconnectAttempts.current === 0) {
-          // Первая попытка подключения
-          toast.error('Не удалось подключиться к чату. Сервер может быть недоступен.');
-          setConnectionError('Сервер чата недоступен');
-        } else {
-          // Повторные попытки
-          setConnectionError(`Ошибка подключения (попытка ${reconnectAttempts.current})`);
+          toast.error('Ошибка подключения к чату. Проверьте соединение с интернетом.');
         }
       };
       
     } catch (error) {
       console.error('WebSocket: Ошибка создания соединения', error);
       toast.error('Не удалось создать соединение с чатом');
-      setConnectionError('Ошибка создания соединения');
     }
   }, [isAuthenticated, user?.id]);
 
@@ -155,18 +122,10 @@ export const useWebSocket = () => {
       if (import.meta.env.DEV) {
         console.log('WebSocket: Соединение не готово для отправки сообщений');
       }
-      
-      // Показываем разные сообщения в зависимости от состояния
-      if (isReconnecting) {
-        toast.warning('Переподключение к серверу...');
-      } else if (connectionError) {
-        toast.error(`Нет соединения: ${connectionError}`);
-      } else {
-        toast.error('Нет соединения с сервером');
-      }
+      toast.error('Нет соединения с сервером');
       return false;
     }
-  }, [isReconnecting, connectionError]);
+  }, []);
 
   // Закрытие соединения
   const disconnectWebSocket = useCallback(() => {
@@ -181,7 +140,6 @@ export const useWebSocket = () => {
       setSocket(null);
       setIsConnected(false);
       setIsReconnecting(false);
-      setConnectionError(null);
     }
   }, []);
 
@@ -210,19 +168,6 @@ export const useWebSocket = () => {
     }
   }, []);
 
-  // Принудительное переподключение
-  const forceReconnect = useCallback(() => {
-    if (import.meta.env.DEV) {
-      console.log('WebSocket: Принудительное переподключение');
-    }
-    disconnectWebSocket();
-    reconnectAttempts.current = 0;
-    setConnectionError(null);
-    setTimeout(() => {
-      connectWebSocket();
-    }, 1000);
-  }, [disconnectWebSocket, connectWebSocket]);
-
   // Подключение при монтировании и изменении аутентификации
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -249,11 +194,9 @@ export const useWebSocket = () => {
     socket,
     isConnected,
     isReconnecting,
-    connectionError,
     sendMessage: sendWebSocketMessage,
     disconnect: disconnectWebSocket,
     reconnect: connectWebSocket,
-    forceReconnect,
     addMessageHandler,
     removeMessageHandler
   };

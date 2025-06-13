@@ -1,127 +1,88 @@
-import React, { memo, useState, useEffect } from 'react';
-import { Wifi, WifiOff, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
-import { getServerStatus, resetServerStatus } from '../api/axios';
+import React, { useState, useEffect, memo } from 'react';
+import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
+import api from '../api/axios';
 
-const ServerStatus = memo(({ className = '' }) => {
-  const [status, setStatus] = useState({
-    isOnline: true,
-    isChecking: false,
-    lastError: null,
-    lastCheck: null
-  });
+const ServerStatus = memo(() => {
+  const [status, setStatus] = useState('checking'); // 'online', 'offline', 'checking'
+  const [lastCheck, setLastCheck] = useState(null);
 
-  // Проверка статуса сервера
   const checkServerStatus = async () => {
-    setStatus(prev => ({ ...prev, isChecking: true }));
-    
     try {
-      const serverStatus = getServerStatus();
-      
-      if (serverStatus.isUnavailable) {
-        setStatus({
-          isOnline: false,
-          isChecking: false,
-          lastError: 'Сервер недоступен',
-          lastCheck: new Date()
-        });
-      } else {
-        setStatus({
-          isOnline: true,
-          isChecking: false,
-          lastError: null,
-          lastCheck: new Date()
-        });
-      }
+      setStatus('checking');
+      // Простой запрос для проверки доступности сервера
+      await api.get('/health', { timeout: 10000 });
+      setStatus('online');
+      setLastCheck(new Date());
     } catch (error) {
-      setStatus({
-        isOnline: false,
-        isChecking: false,
-        lastError: error.message,
-        lastCheck: new Date()
-      });
+      console.log('Сервер недоступен:', error.message);
+      setStatus('offline');
+      setLastCheck(new Date());
     }
   };
 
-  // Сброс статуса и повторная проверка
-  const handleRetry = () => {
-    resetServerStatus();
-    checkServerStatus();
-  };
-
-  // Периодическая проверка статуса
   useEffect(() => {
+    // Проверяем статус при монтировании
     checkServerStatus();
     
-    const interval = setInterval(checkServerStatus, 30000); // Каждые 30 секунд
+    // Периодическая проверка каждые 30 секунд
+    const interval = setInterval(checkServerStatus, 30000);
     
     return () => clearInterval(interval);
   }, []);
 
-  // Определяем конфигурацию отображения
   const getStatusConfig = () => {
-    if (status.isChecking) {
-      return {
-        icon: RefreshCw,
-        text: 'Проверка...',
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200',
-        animate: true
-      };
+    switch (status) {
+      case 'online':
+        return {
+          icon: Wifi,
+          color: 'text-green-500',
+          bgColor: 'bg-green-50',
+          text: 'Сервер доступен',
+          pulse: false
+        };
+      case 'offline':
+        return {
+          icon: WifiOff,
+          color: 'text-red-500',
+          bgColor: 'bg-red-50',
+          text: 'Сервер недоступен',
+          pulse: false
+        };
+      case 'checking':
+        return {
+          icon: AlertCircle,
+          color: 'text-yellow-500',
+          bgColor: 'bg-yellow-50',
+          text: 'Проверка соединения...',
+          pulse: true
+        };
+      default:
+        return {
+          icon: AlertCircle,
+          color: 'text-gray-500',
+          bgColor: 'bg-gray-50',
+          text: 'Неизвестно',
+          pulse: false
+        };
     }
-    
-    if (status.isOnline) {
-      return {
-        icon: CheckCircle,
-        text: 'Сервер доступен',
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200'
-      };
-    }
-    
-    return {
-      icon: AlertTriangle,
-      text: status.lastError || 'Сервер недоступен',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200'
-    };
   };
 
   const config = getStatusConfig();
   const Icon = config.icon;
 
-  // Не показываем компонент, если все в порядке
-  if (status.isOnline && !status.isChecking) {
-    return null;
-  }
-
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border ${config.bgColor} ${config.borderColor} ${className}`}>
+    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs ${config.bgColor}`}>
       <Icon 
-        size={20} 
-        className={`${config.color} ${config.animate ? 'animate-spin' : ''}`} 
+        size={12} 
+        className={`${config.color} ${config.pulse ? 'animate-pulse' : ''}`} 
       />
-      
-      <div className="flex-1">
-        <div className={`font-medium ${config.color}`}>
-          {config.text}
-        </div>
-        {status.lastCheck && (
-          <div className="text-xs text-gray-500">
-            Последняя проверка: {status.lastCheck.toLocaleTimeString('ru-RU')}
-          </div>
-        )}
-      </div>
-      
-      {!status.isOnline && !status.isChecking && (
-        <button
-          onClick={handleRetry}
-          className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-        >
-          Повторить
-        </button>
+      <span className={config.color}>
+        {config.text}
+      </span>
+      {lastCheck && status !== 'checking' && (
+        <span className="text-gray-400 text-xs">
+          {lastCheck.toLocaleTimeString()}
+        </span>
       )}
     </div>
   );
