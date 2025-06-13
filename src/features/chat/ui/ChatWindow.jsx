@@ -7,6 +7,7 @@ import { useWebSocket } from '../../../shared/lib/hooks/use-websocket';
 import { ChatStatus } from '../../../entities/chat/ui';
 import { CHAT_STATUS, USER_ROLES } from '../../../entities/chat/model';
 import ServerStatus from '../../../shared/components/ServerStatus';
+import WebSocketStatus from '../../../shared/components/WebSocketStatus';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { QuickActions } from './QuickActions';
@@ -75,6 +76,10 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
               isConnected={isConnected} 
               isReconnecting={isReconnecting} 
             />
+            <WebSocketStatus 
+              isConnected={isConnected} 
+              isReconnecting={isReconnecting} 
+            />
             <ServerStatus />
           </div>
           {onClose && (
@@ -129,6 +134,10 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
         <div className="flex items-center gap-3">
           <ChatStatus 
             status={chatStatus} 
+            isConnected={isConnected} 
+            isReconnecting={isReconnecting} 
+          />
+          <WebSocketStatus 
             isConnected={isConnected} 
             isReconnecting={isReconnecting} 
           />

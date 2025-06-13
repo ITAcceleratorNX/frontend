@@ -9,9 +9,33 @@ const ServerStatus = memo(() => {
   const checkServerStatus = async () => {
     try {
       setStatus('checking');
-      // Простой запрос для проверки доступности сервера
-      await api.get('/health', { timeout: 10000 });
-      setStatus('online');
+      
+      // Пробуем разные эндпоинты для проверки доступности сервера
+      const endpoints = ['/users/me', '/auth/check'];
+      let serverOnline = false;
+      
+      for (const endpoint of endpoints) {
+        try {
+          await api.get(endpoint, { timeout: 8000 });
+          serverOnline = true;
+          break;
+        } catch (error) {
+          // Если получили ответ от сервера (даже ошибку) - сервер работает
+          if (error.response && error.response.status) {
+            serverOnline = true;
+            break;
+          }
+          // Продолжаем проверку следующего эндпоинта
+          continue;
+        }
+      }
+      
+      if (serverOnline) {
+        setStatus('online');
+      } else {
+        setStatus('offline');
+      }
+      
       setLastCheck(new Date());
     } catch (error) {
       console.log('Сервер недоступен:', error.message);

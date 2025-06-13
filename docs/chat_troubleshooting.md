@@ -102,9 +102,15 @@ window.chatDebug = {
 ### 9. Контакты поддержки
 
 При критических проблемах:
-- **Backend статус:** https://extraspace-backend.onrender.com/health
-- **WebSocket тест:** wss://extraspace-backend.onrender.com
+- **Backend API:** https://extraspace-backend.onrender.com/users/me
+- **WebSocket тест:** wss://extraspace-backend.onrender.com?userId=YOUR_ID
 - **Логи:** Сохраните консоль браузера для анализа
+
+#### Проблема: `GET /health 404 (Not Found)`
+
+**Причина:** Эндпоинт `/health` не существует на сервере.
+
+**Решение:** Компонент ServerStatus теперь использует существующие эндпоинты `/users/me` и `/auth/check` для проверки доступности сервера.
 
 ## Профилактика
 
