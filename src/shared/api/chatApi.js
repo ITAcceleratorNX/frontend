@@ -2,11 +2,10 @@ import api from './axios';
 
 export const chatApi = {
   // Получить сообщения чата с пагинацией
-  getMessages: async (chatId, beforeId = null, limit = 50) => {
+  getMessages: async (chatId, { beforeId, limit = 20 } = {}) => {
     try {
-      const params = new URLSearchParams();
-      if (beforeId) params.append('beforeId', beforeId);
-      params.append('limit', limit.toString());
+      const params = new URLSearchParams({ limit: limit.toString() });
+      if (beforeId) params.append('beforeId', beforeId.toString());
       
       const response = await api.get(`/chats/${chatId}/messages?${params}`);
       return response.data;
@@ -16,37 +15,35 @@ export const chatApi = {
     }
   },
 
-  // Удалить все сообщения чата
+  // Получить чаты менеджера
+  getManagerChats: async () => {
+    try {
+      const response = await api.get('/chats/manager');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при получении чатов менеджера:', error);
+      throw error;
+    }
+  },
+
+  // Очистить сообщения чата
   clearMessages: async (chatId) => {
     try {
       const response = await api.delete(`/chats/${chatId}/messages`);
       return response.data;
     } catch (error) {
-      console.error('Ошибка при удалении сообщений чата:', error);
+      console.error('Ошибка при очистке сообщений чата:', error);
       throw error;
     }
   },
 
-  // Назначить менеджера для чата
-  assignManager: async (chatId, newManagerId) => {
+  // Сменить менеджера чата
+  changeManager: async (chatId, newManagerId) => {
     try {
-      const response = await api.put(`/chats/${chatId}/manager`, {
-        newManagerId
-      });
+      const response = await api.put(`/chats/${chatId}/manager`, { newManagerId });
       return response.data;
     } catch (error) {
-      console.error('Ошибка при назначении менеджера:', error);
-      throw error;
-    }
-  },
-
-  // Получить список активных чатов (для менеджеров)
-  getActiveChats: async () => {
-    try {
-      const response = await api.get('/chats/active');
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при получении списка чатов:', error);
+      console.error('Ошибка при смене менеджера чата:', error);
       throw error;
     }
   },

@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Header } from '../../widgets';
-import ChatWidget from '../../widgets/ChatWidget';
+import { ChatWidget } from '../../widgets';
 import Footer from '../../widgets/Footer';
 
 const ChatPage = memo(() => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatWidget } from '../../../widgets';
+import { ChatWindow } from '../../../features/chat';
 import { useAuth } from '../../../shared/context/AuthContext';
 
 const ChatSection = () => {
@@ -38,7 +38,7 @@ const ChatSection = () => {
       </div>
       
       <div className="h-[600px]">
-        <ChatWidget />
+        <ChatWindow />
       </div>
     </div>
   );
