@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
+import ServerStatus from '../shared/components/ServerStatus';
 
 // Полностью отключаем рефетчинг при фокусе окна
 focusManager.setEventListener(() => {
@@ -57,6 +58,12 @@ const App = memo(() => {
       <AuthProvider>
         <BrowserRouter>
           <ResponseInterceptor />
+          
+          {/* Индикатор состояния сервера */}
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+            <ServerStatus />
+          </div>
+          
           <Routing />
           <NotificationContainer />
         </BrowserRouter>
