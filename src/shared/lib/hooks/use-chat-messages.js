@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useChatStore, PAGINATION } from '../../../entities/chat/model';
 import { chatApi } from '../../api/chatApi';
 import { toast } from 'react-toastify';
@@ -14,13 +14,26 @@ export const useChatMessages = (chatId) => {
     setIsLoadingMessages
   } = useChatStore();
 
-  // Загрузка сообщений с пагинацией
+  // Кеш для загруженных сообщений и защита от параллельных запросов
+  const messagesCache = useRef(new Map());
+  const loadInProgress = useRef(false);
+
+  // Загрузка сообщений с пагинацией и кешированием
   const loadMessages = useCallback(async (beforeId = null, replace = false) => {
-    if (!chatId || isLoadingMessages) {
+    if (!chatId) {
+      return false;
+    }
+    
+    // Защита от параллельных запросов
+    if (loadInProgress.current) {
+      if (import.meta.env.DEV) {
+        console.log('ChatMessages: Запрос уже выполняется');
+      }
       return false;
     }
     
     try {
+      loadInProgress.current = true;
       setIsLoadingMessages(true);
       
       const response = await chatApi.getMessages(chatId, {
@@ -51,15 +64,18 @@ export const useChatMessages = (chatId) => {
       return false;
     } finally {
       setIsLoadingMessages(false);
+      loadInProgress.current = false;
     }
-  }, [chatId, isLoadingMessages, setIsLoadingMessages, setMessages, prependMessages, setHasMoreMessages]);
+  }, [chatId, setIsLoadingMessages, setMessages, prependMessages, setHasMoreMessages]);
 
   // Загрузка начальных сообщений при изменении chatId
   useEffect(() => {
     if (chatId) {
+      // Очищаем кеш при смене чата
+      messagesCache.current.clear();
       loadMessages(null, true); // replace = true для первоначальной загрузки
     }
-  }, [chatId, loadMessages]);
+  }, [chatId]); // ✅ Убираем loadMessages из зависимостей
 
   // Загрузка предыдущих сообщений
   const loadMoreMessages = useCallback(async () => {
@@ -81,6 +97,10 @@ export const useChatMessages = (chatId) => {
       await chatApi.clearMessages(chatId);
       setMessages([]);
       setHasMoreMessages(true);
+      
+      // Очищаем кеш для этого чата
+      messagesCache.current.clear();
+      
       toast.success('Сообщения очищены');
       
       if (import.meta.env.DEV) {

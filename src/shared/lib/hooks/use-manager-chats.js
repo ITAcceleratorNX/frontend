@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useChatStore, USER_ROLES } from '../../../entities/chat/model';
 import { chatApi } from '../../api/chatApi';
@@ -18,22 +18,49 @@ export const useManagerChats = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingChats, setIsLoadingChats] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+  
+  // Защита от параллельных запросов
+  const fetchInProgress = useRef(false);
+  
+  // Кеш для предотвращения повторных запросов
+  const CACHE_DURATION = 30 * 1000; // 30 секунд
 
   // Проверка прав доступа
   const isManager = useMemo(() => {
     return user?.role === USER_ROLES.MANAGER || user?.role === USER_ROLES.ADMIN;
   }, [user?.role]);
 
-  // Загрузка чатов менеджера
-  const loadChats = useCallback(async () => {
-    if (!isManager || isLoadingChats) {
+  // Оптимизированная загрузка чатов с кешированием
+  const loadChats = useCallback(async (forceRefresh = false) => {
+    if (!isManager) {
+      return false;
+    }
+    
+    // Проверяем кеш
+    const now = Date.now();
+    if (!forceRefresh && (now - lastFetchTime) < CACHE_DURATION && chats.length > 0) {
+      if (import.meta.env.DEV) {
+        console.log('ManagerChats: Используем кешированные данные');
+      }
+      return true;
+    }
+    
+    // Защита от параллельных запросов
+    if (fetchInProgress.current) {
+      if (import.meta.env.DEV) {
+        console.log('ManagerChats: Запрос уже выполняется');
+      }
       return false;
     }
     
     try {
+      fetchInProgress.current = true;
       setIsLoadingChats(true);
+      
       const response = await chatApi.getManagerChats();
       setChats(response);
+      setLastFetchTime(now);
       
       if (import.meta.env.DEV) {
         console.log('ManagerChats: Загружено чатов:', response.length);
@@ -57,8 +84,26 @@ export const useManagerChats = () => {
       return false;
     } finally {
       setIsLoadingChats(false);
+      fetchInProgress.current = false;
     }
-  }, [isManager, isLoadingChats, setChats]);
+  }, [isManager, lastFetchTime, chats.length, setChats]);
+
+  // Автоматическая загрузка чатов при монтировании и каждые 2 минуты
+  useEffect(() => {
+    if (!isManager) return;
+
+    // Загружаем чаты при первом рендере
+    loadChats();
+
+    // Устанавливаем интервал для автоматического обновления
+    const interval = setInterval(() => {
+      loadChats(true); // forceRefresh = true
+    }, 2 * 60 * 1000); // каждые 2 минуты
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isManager]); // ✅ Убираем loadChats из зависимостей
 
   // Принятие чата
   const acceptChat = useCallback(async (chatId) => {
@@ -106,8 +151,8 @@ export const useManagerChats = () => {
         setActiveChat(null);
       }
       
-      // Перезагружаем список чатов
-      await loadChats();
+      // Перезагружаем список чатов с принудительным обновлением
+      await loadChats(true);
       
       toast.success('Чат закрыт');
       
@@ -136,8 +181,8 @@ export const useManagerChats = () => {
       setIsLoading(true);
       await chatApi.changeManager(chatId, newManagerId);
       
-      // Перезагружаем список чатов
-      await loadChats();
+      // Перезагружаем список чатов с принудительным обновлением
+      await loadChats(true);
       
       toast.success('Менеджер изменен');
       
@@ -186,13 +231,6 @@ export const useManagerChats = () => {
   const clearNotifications = useCallback(() => {
     clearNewChatNotifications();
   }, [clearNewChatNotifications]);
-
-  // Автоматическая загрузка чатов при монтировании
-  useEffect(() => {
-    if (isManager) {
-      loadChats();
-    }
-  }, [isManager, loadChats]);
 
   // Фильтрация и сортировка чатов
   const sortedChats = useMemo(() => {
