@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const DUMMY_USERS = [
   {
@@ -77,6 +78,7 @@ const DUMMY_USERS = [
 
 
 const AdminUsers = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPermissions, setSelectedPermissions] = useState('All');
   const [selectedJoinedTime, setSelectedJoinedTime] = useState('Anytime');
@@ -205,19 +207,19 @@ const AdminUsers = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
                 <input type="checkbox" className="w-5 h-5" />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
+              <th className="px-1 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
                 Full Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
+              <th className="px-1 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
                 Email Address
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
+              <th className="px-1 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
                 Номер телефона
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
+              <th className="px-1 py-3 text-left text-xs font-medium text-[#000000] uppercase tracking-wider border-0">
                 Joined
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#FF8B37] uppercase tracking-wider flex items-center border-0">
+              <th className="px-1 py-3 text-left text-xs font-medium text-[#FF8B37] uppercase tracking-wider flex items-center border-0">
                 Permissions
                 <div className="ml-1 flex flex-col">
                   <svg className="w-3 h-3 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +230,7 @@ const AdminUsers = () => {
                   </svg>
                 </div>
               </th>
-              <th className="relative px-6 py-3 border-0">
+              <th className="relative px-1 py-3 border-0">
                 <span className="sr-only">Edit</span>
               </th>
             </tr>
@@ -239,14 +241,14 @@ const AdminUsers = () => {
                 <td className="px-6 py-4 whitespace-nowrap border-0">
                   <input type="checkbox" className="w-5 h-5" />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center border-0">
+                <td className="px-1 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center border-0">
                   <img src="https://via.placeholder.com/24" alt="avatar" className="h-6 w-6 rounded-full mr-2" />
                   {user.fullName}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000] border-0">{user.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000] border-0">{user.phone}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#000000] border-0">{user.joined}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-0">
+                <td className="px-1 py-4 whitespace-nowrap text-sm text-[#000000] border-0">{user.email}</td>
+                <td className="px-1 py-4 whitespace-nowrap text-sm text-[#000000] border-0">{user.phone}</td>
+                <td className="px-1 py-4 whitespace-nowrap text-sm text-[#000000] border-0">{user.joined}</td>
+                <td className="px-1 py-4 whitespace-nowrap text-sm text-gray-500 border-0">
                   <span className={`inline-flex text-xs leading-5 font-semibold ${
                     user.permissions === 'Admin' ? 'bg-[#273655] text-[#FFFFFF] px-4 py-0.5 rounded-sm' :
                     user.permissions === 'Manager' ? 'bg-[#025E8652] text-[#000000] px-4 py-0.5 rounded-sm' :
@@ -255,13 +257,39 @@ const AdminUsers = () => {
                     {user.permissions}
                   </span>
                 </td>
-                <td className="px-8 py-4 whitespace-nowrap text-right text-sm font-medium border-0">
-                  <div className="relative inline-block">
+                <td className="px-1 py-4 whitespace-nowrap text-right text-sm font-medium border-0">
+                  <div className="relative inline-block" style={{ width: '85px', height: '20px' }}>
                     <select 
-                      className="appearance-none bg-transparent border-none cursor-pointer"
-                      onChange={() => console.log('Edit clicked')}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => {
+                        if (e.target.value === 'profile') {
+                          console.log('Selected user data:', user);
+                          const userData = {
+                            fullName: user.fullName,
+                            email: user.email,
+                            phone: user.phone,
+                            joined: user.joined,
+                            permissions: user.permissions
+                          };
+                          console.log('Navigating with user data:', userData);
+                          navigate(`/admin/users/${user.id}/profile`, {
+                            state: { userData }
+                          });
+                        } else if (e.target.value === 'delete') {
+                          console.log('Delete clicked');
+                        }
+                      }}
+                      style={{ 
+                        width: '150px', 
+                        left: '-5px',
+                        boxShadow: '40px 40px 0px rgba(0, 0, 0, 0.9)',
+                        borderRadius: '4px',
+                        backgroundColor: 'white'
+                      }}
                     >
                       <option value="" className="hidden"></option>
+                      <option value="profile" className="text-[#000000] hover:bg-gray-100 px-4 py-2">Профиль пользователя</option>
+                      <option value="delete" className="text-[#AD2E2E] hover:bg-gray-100 px-4 py-2">Удалить</option>
                     </select>
                     <div className="absolute inset-0 pointer-events-none">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">

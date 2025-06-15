@@ -13,8 +13,8 @@ import ChatPage from '../pages/chat';
 import AboutWarehouseRentalPage from '../pages/about-warehouse-rental';
 import CloudStoragePage from '../pages/CloudStorage';
 import OnlinePaymentPage from '../pages/online-payment';
-
 import PersonalAccountPage from '../pages/personal-account';
+import AdminUsersProfile from '../pages/personal-account/ui/AdminUsersProfile';
 
 // Мемоизированный компонент для логирования маршрутов - только в режиме разработки
 const RouteLogger = memo(({ children }) => {
@@ -109,7 +109,8 @@ const Routing = memo(() => {
   ], []);
 
   const protectedRoutes = useMemo(() => [
-    { path: "/personal-account", element: <PersonalAccountPage /> }
+    { path: "/personal-account", element: <PersonalAccountPage /> },
+    { path: "/admin/users/:userId/profile", element: <AdminUsersProfile /> }
   ], []);
 
   // Мемоизируем маппинг маршрутов для предотвращения повторного создания элементов
