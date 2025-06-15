@@ -86,8 +86,7 @@ const AdminUsers = () => {
     const matchesSearchTerm = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                               user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPermissions = selectedPermissions === 'All' || user.permissions === selectedPermissions;
-    // Добавить логику для фильтрации по joinedTime, если потребуется более сложная фильтрация
-
+    
     return matchesSearchTerm && matchesPermissions;
   });
 
@@ -96,7 +95,7 @@ const AdminUsers = () => {
       <h1 className="text-2xl font-bold mb-6">Пользователи платформы</h1>
 
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           <input
             type="text"
             placeholder="Поиск пользователя..."
@@ -124,23 +123,71 @@ const AdminUsers = () => {
           </div>
 
           {/* Dropdown for Joined */}
-          <div className="relative font-['Abhaya Libre SemiBold']">
-            <select
-              className="p-2 border border-[#70707087] rounded-md appearance-none text-left w-48 pr-8"
-              value={selectedJoinedTime}
-              onChange={(e) => setSelectedJoinedTime(e.target.value)}
-            >
-              <option value="Anytime">Joined Anytime</option>
+          <div className="relative font-['Abhaya Libre SemiBold'] flex items-center">
+            <div className="relative">
+              <select
+                className="p-2 border border-[#70707087] rounded-md appearance-none text-left w-48 pr-8"
+                value={selectedJoinedTime}
+                onChange={(e) => setSelectedJoinedTime(e.target.value)}
+              >
+                <option value="Anytime">Joined Anytime</option>
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9l4.243 4.243z"/>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9l4.243 4.243z"/>
+                </svg>
+              </div>
+            </div>
+            <div className="relative inline-block ml-[6px]">
+            <select 
+              className="appearance-none bg-transparent border-none p-2 mr-7 cursor-pointer"
+              onChange={() => console.log('More Square clicked')}
+            >
+              <option value="" className="hidden"></option>
+            </select>
+            <div className="absolute inset-0 pointer-events-none">
+              <svg width="46" height="42" viewBox="0 0 46 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g filter="url(#filter0_d_991_4207)">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M27.2067 10.043H30.4733C31.8248 10.043 32.9212 11.1489 32.9212 12.5132V15.8071C32.9212 17.1703 31.8248 18.2773 30.4733 18.2773H27.2067C25.8542 18.2773 24.7578 17.1703 24.7578 15.8071V12.5132C24.7578 11.1489 25.8542 10.043 27.2067 10.043Z" stroke="#050505" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M15.3708 10.043H18.6364C19.9889 10.043 21.0853 11.1489 21.0853 12.5132V15.8071C21.0853 17.1703 19.9889 18.2773 18.6364 18.2773H15.3708C14.0183 18.2773 12.9219 17.1703 12.9219 15.8071V12.5132C12.9219 11.1489 14.0183 10.043 15.3708 10.043Z" stroke="#050505" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M15.3708 21.8086H18.6364C19.9889 21.8086 21.0853 22.9145 21.0853 24.2798V27.5727C21.0853 28.937 19.9889 30.0429 18.6364 30.0429H15.3708C14.0183 30.0429 12.9219 28.937 12.9219 27.5727V24.2798C12.9219 22.9145 14.0183 21.8086 15.3708 21.8086Z" stroke="#050505" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M27.2067 21.8086H30.4733C31.8248 21.8086 32.9212 22.9145 32.9212 24.2798V27.5727C32.9212 28.937 31.8248 30.0429 30.4733 30.0429H27.2067C25.8542 30.0429 24.7578 28.937 24.7578 27.5727V24.2798C24.7578 22.9145 25.8542 21.8086 27.2067 21.8086Z" stroke="#050505" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M32.833 1.03125H12.6101C5.56281 1.03125 1.14453 5.57545 1.14453 12.0062V29.3587C1.14453 35.7894 5.53948 40.3336 12.6101 40.3336H32.8306C39.9013 40.3336 44.3009 35.7894 44.3009 29.3587V12.0062C44.3009 5.57545 39.9013 1.03125 32.833 1.03125Z" stroke="#6B6B6B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                  <filter id="filter0_d_991_4207" x="8.17188" y="9.29297" width="29.5" height="29.5" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                    <feOffset dy="4"/>
+                    <feGaussianBlur stdDeviation="2"/>
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_991_4207"/>
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_991_4207" result="shape"/>
+                  </filter>
+                </defs>
               </svg>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center space-x-4 font-['Abhaya Libre SemiBold']">
+        <div className="flex items-center space-x-3 font-['Abhaya Libre SemiBold']">
+          <div className="relative inline-block">
+            <select 
+              className="appearance-none bg-transparent border-none p-1.5 mr-7 cursor-pointer"
+              onChange={() => console.log('More Square clicked')}
+            >
+              <option value="" className="hidden"></option>
+            </select>
+            <div className="absolute inset-0 pointer-events-none">
+              <svg width="45" height="40" viewBox="0 0 45 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M39.2458 27.0841L39.3819 12.8883C39.4293 7.94133 35.6128 4.80928 30.1699 4.76602L15.4829 4.64929C10.0401 4.60604 6.16433 7.66058 6.11676 12.6239L5.98075 26.8181C5.93319 31.7815 9.74976 34.9004 15.1926 34.9437L29.8796 35.0604C35.3225 35.1037 39.1983 32.0458 39.2458 27.0841Z" stroke="#6B6B6B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M20.6005 12.5018C20.6109 11.4193 21.5849 10.5477 22.7716 10.5571C23.9584 10.5665 24.9174 11.4536 24.907 12.536C24.8966 13.6184 23.9208 14.4901 22.734 14.4806C21.5473 14.4712 20.5901 13.5842 20.6005 12.5018Z" fill="black"/>
+                <path d="M20.5302 19.8377C20.5406 18.7553 21.5146 17.8836 22.7013 17.893C23.8881 17.9025 24.847 18.7895 24.8367 19.8719C24.8263 20.9543 23.8505 21.826 22.6637 21.8166C21.477 21.8071 20.5198 20.9201 20.5302 19.8377Z" fill="black"/>
+                <path d="M20.4599 27.1736C20.4703 26.0912 21.4443 25.2195 22.631 25.229C23.8178 25.2384 24.7767 26.1254 24.7664 27.2079C24.756 28.2903 23.7802 29.1619 22.5934 29.1525C21.4067 29.1431 20.4495 28.256 20.4599 27.1736Z" fill="black"/>
+              </svg>
+            </div>
+          </div>
           <button className="bg-[#FEE2B2] font-['Abhaya Libre SemiBold'] border border-[#70707087] text-[#273655] px-4 py-2.5 rounded-sm flex items-center space-x-2">
             <span>Export</span>
           </button>
@@ -208,12 +255,20 @@ const AdminUsers = () => {
                     {user.permissions}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium border-0">
-                  <button className="text-gray-500 hover:text-gray-900">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                    </svg>
-                  </button>
+                <td className="px-8 py-4 whitespace-nowrap text-right text-sm font-medium border-0">
+                  <div className="relative inline-block">
+                    <select 
+                      className="appearance-none bg-transparent border-none cursor-pointer"
+                      onChange={() => console.log('Edit clicked')}
+                    >
+                      <option value="" className="hidden"></option>
+                    </select>
+                    <div className="absolute inset-0 pointer-events-none">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                      </svg>
+                    </div>
+                  </div>
                 </td>
               </tr>
             ))}

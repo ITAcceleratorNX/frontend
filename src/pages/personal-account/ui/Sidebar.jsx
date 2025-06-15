@@ -28,7 +28,10 @@ const userNavItems = [
 // Разделы для менеджеров
 const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
+  { label: 'Пользователи', icon: icon8, key: 'users' },
+  { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Чат', icon: icon3, key: 'chat' },
+  { divider: true },
   { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
