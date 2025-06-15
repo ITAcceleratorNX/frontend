@@ -60,6 +60,39 @@ export const chatApi = {
     }
   },
 
+  // Получить все ожидающие чаты (только для MANAGER/ADMIN)
+  getPendingChats: async () => {
+    const cacheKey = '/chats/pending-chats';
+    
+    // Проверяем кеш (короткий кеш для pending чатов - 10 секунд)
+    const cached = requestCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < 10000) {
+      if (import.meta.env.DEV) {
+        console.log('ChatAPI: Используем кешированные ожидающие чаты');
+      }
+      return cached.data;
+    }
+    
+    try {
+      const response = await api.get('/chats/pending-chats');
+      
+      // Кешируем результат на короткое время
+      requestCache.set(cacheKey, {
+        data: response.data,
+        timestamp: Date.now()
+      });
+      
+      if (import.meta.env.DEV) {
+        console.log('ChatAPI: Получены ожидающие чаты:', response.data);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при получении ожидающих чатов:', error);
+      throw error;
+    }
+  },
+
   // Очистить сообщения чата
   clearMessages: async (chatId) => {
     try {
@@ -127,6 +160,14 @@ export const chatApi = {
     requestCache.delete('/chats/manager');
     if (import.meta.env.DEV) {
       console.log('ChatAPI: Кеш чатов менеджера инвалидирован');
+    }
+  },
+
+  // Инвалидировать кеш ожидающих чатов
+  invalidatePendingChats: () => {
+    requestCache.delete('/chats/pending-chats');
+    if (import.meta.env.DEV) {
+      console.log('ChatAPI: Кеш ожидающих чатов инвалидирован');
     }
   },
 

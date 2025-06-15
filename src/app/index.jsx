@@ -8,7 +8,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
-import WebSocketTester from '../shared/components/WebSocketTester';
 
 // Полностью отключаем рефетчинг при фокусе окна
 focusManager.setEventListener(() => {
@@ -60,7 +59,6 @@ const App = memo(() => {
           <ResponseInterceptor />
           <Routing />
           <NotificationContainer />
-          {import.meta.env.DEV && <WebSocketTester userId={4} />}
         </BrowserRouter>
       </AuthProvider>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />}

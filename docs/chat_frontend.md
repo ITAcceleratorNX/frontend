@@ -44,6 +44,7 @@ CREATE TABLE messages (
 
 ```
 GET    /chats/manager              # Получить чаты менеджера
+GET    /chats/pending-chats        # Получить все ожидающие чаты (PENDING)
 GET    /chats/:chatId/messages     # Получить сообщения чата (с пагинацией)
 DELETE /chats/:chatId/messages     # Очистить сообщения чата
 PUT    /chats/:chatId/manager      # Сменить менеджера чата
@@ -299,6 +300,12 @@ export const chatApi = {
   // Получить чаты менеджера
   getManagerChats: async () => {
     const response = await api.get('/chats/manager');
+    return response.data;
+  },
+  
+  // Получить все ожидающие чаты (только для MANAGER/ADMIN)
+  getPendingChats: async () => {
+    const response = await api.get('/chats/pending-chats');
     return response.data;
   },
   

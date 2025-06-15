@@ -181,25 +181,40 @@ export const useChat = () => {
   }, [resetChat]);
 
   // Мемоизируем результат
-  const chatData = useMemo(() => ({
-    // Состояние
-    chatStatus,
-    isConnected,
-    isReconnecting,
-    activeChat,
-    messages,
+  const chatData = useMemo(() => {
+    const canSendMessage = isAuthenticated && isConnected && activeChat && chatStatus === CHAT_STATUS.ACTIVE;
     
-    // Методы
-    startChat,
-    sendMessage,
-    acceptChat,
-    resetChatState,
+    if (import.meta.env.DEV && activeChat) {
+      console.log('useChat: Проверка canSendMessage:', {
+        isAuthenticated,
+        isConnected,
+        hasActiveChat: !!activeChat,
+        chatStatus,
+        expectedStatus: CHAT_STATUS.ACTIVE,
+        canSendMessage
+      });
+    }
     
-    // Проверки
-    canStartChat: isAuthenticated && isConnected && chatStatus === CHAT_STATUS.IDLE,
-    canSendMessage: isAuthenticated && isConnected && activeChat && chatStatus === CHAT_STATUS.ACTIVE,
-    isManager: user?.role === USER_ROLES.MANAGER
-  }), [
+    return {
+      // Состояние
+      chatStatus,
+      isConnected,
+      isReconnecting,
+      activeChat,
+      messages,
+      
+      // Методы
+      startChat,
+      sendMessage,
+      acceptChat,
+      resetChatState,
+      
+      // Проверки
+      canStartChat: isAuthenticated && isConnected && chatStatus === CHAT_STATUS.IDLE,
+      canSendMessage,
+      isManager: user?.role === USER_ROLES.MANAGER
+    };
+  }, [
     chatStatus,
     isConnected, 
     isReconnecting,

@@ -13,6 +13,7 @@ import { MessageInput } from './MessageInput';
 import { QuickActions } from './QuickActions';
 import { ManagerChatList } from './ManagerChatList';
 import { ConnectionError } from './ConnectionError';
+import { ChatDebugInfo } from './ChatDebugInfo';
 
 const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
   const { user, isAuthenticated } = useAuth();
@@ -122,6 +123,9 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
             )}
           </div>
         </div>
+        
+        {/* Компонент отладки */}
+        <ChatDebugInfo />
       </div>
     );
   }
@@ -221,6 +225,9 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
           placeholder="Write message"
         />
       )}
+      
+      {/* Компонент отладки */}
+      <ChatDebugInfo />
     </div>
   );
 });

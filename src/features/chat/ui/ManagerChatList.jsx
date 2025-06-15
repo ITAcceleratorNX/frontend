@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Clock, MessageSquare, User, X } from 'lucide-react';
 import { useManagerChats } from '../../../shared/lib/hooks/use-manager-chats';
 import { useChat } from '../../../shared/lib/hooks/use-chat';
+import { useChatStore, CHAT_STATUS } from '../../../entities/chat/model';
 
 const ChatItem = memo(({ chat, isActive, onAccept, onSelect }) => {
   const getStatusColor = (status) => {
@@ -91,6 +92,9 @@ const ManagerChatList = memo(() => {
   } = useManagerChats();
   
   const { activeChat, acceptChat: acceptChatFromWebSocket } = useChat();
+  
+  // Импортируем store напрямую для установки активного чата
+  const { setActiveChat, setChatStatus } = useChatStore();
 
   // Обработка принятия чата
   const handleAcceptChat = async (chatId) => {
@@ -103,11 +107,16 @@ const ManagerChatList = memo(() => {
   // Обработка выбора чата
   const handleSelectChat = (chat) => {
     if (chat.status === 'ACCEPTED') {
-      // Активируем чат для отображения сообщений
-      // TODO: Добавить логику переключения активного чата
+      // Устанавливаем активный чат
+      setActiveChat({ id: chat.id, user_id: chat.user_id, manager_id: chat.manager_id });
+      setChatStatus(CHAT_STATUS.ACTIVE);
+      
       if (import.meta.env.DEV) {
-        console.log('ManagerChatList: Выбран чат:', chat.id);
+        console.log('ManagerChatList: Активирован чат:', chat.id, 'статус:', CHAT_STATUS.ACTIVE);
       }
+    } else if (chat.status === 'PENDING') {
+      // Для ожидающих чатов предлагаем принять
+      handleAcceptChat(chat.id);
     }
   };
 

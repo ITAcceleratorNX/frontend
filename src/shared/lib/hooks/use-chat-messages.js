@@ -71,9 +71,17 @@ export const useChatMessages = (chatId) => {
   // Загрузка начальных сообщений при изменении chatId
   useEffect(() => {
     if (chatId) {
+      if (import.meta.env.DEV) {
+        console.log('ChatMessages: Загружаем сообщения для чата:', chatId);
+      }
       // Очищаем кеш при смене чата
       messagesCache.current.clear();
       loadMessages(null, true); // replace = true для первоначальной загрузки
+    } else {
+      if (import.meta.env.DEV) {
+        console.log('ChatMessages: chatId не определен, очищаем сообщения');
+      }
+      setMessages([]);
     }
   }, [chatId]); // ✅ Убираем loadMessages из зависимостей
 
