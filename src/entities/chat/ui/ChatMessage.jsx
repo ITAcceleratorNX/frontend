@@ -1,12 +1,55 @@
 import React, { memo } from 'react';
+import { MoreHorizontal } from 'lucide-react';
 
 const ChatMessage = memo(({ message, isFromUser, showAvatar = true }) => {
   const formatTime = (timestamp) => {
-    return new Date(timestamp || Date.now()).toLocaleTimeString('ru-RU', {
+    if (!timestamp) return '';
+    
+    const messageDate = new Date(timestamp);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    
+    // Если сообщение сегодня - показываем только время
+    if (messageDay.getTime() === today.getTime()) {
+      return messageDate.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Если вчера
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (messageDay.getTime() === yesterday.getTime()) {
+      return `вчера ${messageDate.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })}`;
+    }
+    
+    // Если в этом году - показываем дату без года
+    if (messageDate.getFullYear() === now.getFullYear()) {
+      return messageDate.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Полная дата
+    return messageDate.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
+
+  // Используем created_at из API, fallback на createdAt или текущее время
+  const messageTime = message.created_at || message.createdAt || Date.now();
 
   if (isFromUser) {
     return (
@@ -15,10 +58,11 @@ const ChatMessage = memo(({ message, isFromUser, showAvatar = true }) => {
           <p className="text-[14px] font-normal leading-[20px] text-[#333131] whitespace-pre-line">
             {message.text}
           </p>
-          <div className="mt-2 text-right">
+          <div className="flex justify-between items-center mt-2">
             <span className="text-[12px] font-normal leading-[17px] text-[#202224]">
-              {formatTime(message.createdAt)}
+              {formatTime(messageTime)}
             </span>
+            <MoreHorizontal className="w-[15px] h-[3px] text-[#757575]" />
           </div>
         </div>
       </div>
@@ -27,13 +71,18 @@ const ChatMessage = memo(({ message, isFromUser, showAvatar = true }) => {
 
   return (
     <div className="flex items-start space-x-3">
+      {showAvatar && (
+        <div className="w-[40px] h-[40px] bg-[#273655] rounded-[15px] flex items-center justify-center mt-2">
+          <span className="text-white text-sm font-bold">ES</span>
+        </div>
+      )}
       <div className="max-w-[720px] bg-[#f5f5f5] rounded-[16px_16px_16px_0] p-4">
         <p className="text-[14px] font-normal leading-[26px] text-[#202224] whitespace-pre-line">
           {message.text}
         </p>
         <div className="text-right mt-2">
           <span className="text-[12px] font-normal leading-[17px] text-[#757575]">
-            {formatTime(message.createdAt)}
+            {formatTime(messageTime)}
           </span>
         </div>
       </div>

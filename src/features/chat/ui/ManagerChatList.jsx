@@ -1,15 +1,16 @@
-import React, { memo, useState, useEffect } from 'react';
-import { Clock, MessageSquare, User, X, Trash2, Users, MoreVertical, Settings, UserPlus } from 'lucide-react';
+import React, { memo, useState } from 'react';
+import { Clock, MessageSquare, User, X, Trash2, Users, MoreVertical, Settings } from 'lucide-react';
 import { useManagerChats } from '../../../shared/lib/hooks/use-manager-chats';
 import { useChat } from '../../../shared/lib/hooks/use-chat';
 import { useChatMessages } from '../../../shared/lib/hooks/use-chat-messages';
 import { useChatStore, CHAT_STATUS } from '../../../entities/chat/model';
 import { ClearMessagesButton } from './ClearMessagesButton';
 import { PendingChatsPanel } from './PendingChatsPanel';
-import { ChangeManagerDialog } from './ChangeManagerDialog';
-import { chatApi } from '../../../shared/api/chatApi';
+import { ChangeManagerModal } from './ChangeManagerModal';
 
 const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) => {
+  const [showActions, setShowActions] = useState(false);
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'PENDING':
@@ -43,11 +44,19 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
     });
   };
 
+  // Форматирование имени пользователя
+  const formatUserName = (chat) => {
+    if (chat.user?.name) {
+      return chat.user.name;
+    }
+    return `Пользователь #${chat.user_id}`;
+  };
+
   return (
     <div 
       className={`
         p-4 border-b border-gray-100 cursor-pointer 
-        transition-all duration-200 hover:bg-gray-50
+        transition-all duration-200 hover:bg-gray-50 relative
         ${isActive 
           ? 'bg-blue-50 border-l-4 border-l-blue-500 shadow-sm' 
           : 'border-l-4 border-l-transparent'
@@ -62,7 +71,7 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
           </div>
           <div>
             <h4 className="font-semibold text-gray-900">
-              Пользователь #{chat.user_id}
+              {formatUserName(chat)}
             </h4>
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <Clock className="w-3 h-3" />
@@ -71,44 +80,58 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
           </div>
         </div>
         
-        <div className={`px-2 py-1 text-xs rounded-md border ${getStatusColor(chat.status)}`}>
-          {getStatusText(chat.status)}
+        <div className="flex items-center space-x-2">
+          <div className={`px-2 py-1 text-xs rounded-md border ${getStatusColor(chat.status)}`}>
+            {getStatusText(chat.status)}
+          </div>
+          
+          {/* Меню действий для активных чатов */}
+          {chat.status === 'ACCEPTED' && (
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowActions(!showActions);
+                }}
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <MoreVertical className="w-4 h-4 text-gray-500" />
+              </button>
+              
+              {showActions && (
+                <div className="absolute right-0 top-8 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[140px]">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChangeManager(chat);
+                      setShowActions(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Сменить менеджера</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
       
-      {/* Кнопки действий */}
-      <div className="flex items-center space-x-2">
-        {chat.status === 'PENDING' && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAccept(chat.id);
-            }}
-            className="flex-1 px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 
-                       text-white text-sm font-medium rounded-lg 
-                       hover:from-green-600 hover:to-green-700 
-                       transform hover:scale-105 transition-all duration-200"
-          >
-            Принять чат
-          </button>
-        )}
-        
-        {chat.status === 'ACCEPTED' && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onChangeManager(chat);
-            }}
-            className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 
-                       text-white text-sm font-medium rounded-lg 
-                       hover:from-blue-600 hover:to-blue-700 
-                       transform hover:scale-105 transition-all duration-200"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Сменить менеджера</span>
-          </button>
-        )}
-      </div>
+      {chat.status === 'PENDING' && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAccept(chat.id);
+          }}
+          className="w-full mt-2 px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 
+                     text-white text-sm font-medium rounded-lg 
+                     hover:from-green-600 hover:to-green-700 
+                     transform hover:scale-105 transition-all duration-200"
+        >
+          Принять чат
+        </button>
+      )}
     </div>
   );
 });
@@ -117,12 +140,8 @@ ChatItem.displayName = 'ChatItem';
 
 const ManagerChatList = memo(() => {
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' или 'active'
-  const [changeManagerDialog, setChangeManagerDialog] = useState({
-    isOpen: false,
-    chat: null
-  });
-  const [availableManagers, setAvailableManagers] = useState([]);
-  const [isLoadingManagers, setIsLoadingManagers] = useState(false);
+  const [showChangeManagerModal, setShowChangeManagerModal] = useState(false);
+  const [selectedChatForManager, setSelectedChatForManager] = useState(null);
   
   const { 
     chats, 
@@ -132,7 +151,7 @@ const ManagerChatList = memo(() => {
     acceptChat,
     clearNotifications,
     clearChatMessages,
-    changeManager
+    loadChats
   } = useManagerChats();
   
   const { activeChat, acceptChat: acceptChatFromWebSocket } = useChat();
@@ -142,29 +161,6 @@ const ManagerChatList = memo(() => {
   
   // Импортируем store напрямую для установки активного чата
   const { setActiveChat, setChatStatus } = useChatStore();
-
-  // Загрузка списка менеджеров
-  useEffect(() => {
-    const loadManagers = async () => {
-      try {
-        setIsLoadingManagers(true);
-        const managers = await chatApi.getManagers();
-        setAvailableManagers(managers);
-      } catch (error) {
-        console.error('Ошибка при загрузке менеджеров:', error);
-        // Фолбэк к демо-данным
-        setAvailableManagers([
-          { id: 2, name: 'Алия Менеджер' },
-          { id: 3, name: 'Бекзат Менеджер' },
-          { id: 4, name: 'Диана Менеджер' }
-        ]);
-      } finally {
-        setIsLoadingManagers(false);
-      }
-    };
-
-    loadManagers();
-  }, []);
 
   // Обработка принятия чата
   const handleAcceptChat = async (chatId) => {
@@ -198,32 +194,18 @@ const ManagerChatList = memo(() => {
     return await clearMessages();
   };
 
-  // Открытие диалога смены менеджера
-  const handleOpenChangeManager = (chat) => {
-    setChangeManagerDialog({
-      isOpen: true,
-      chat
-    });
+  // Обработка открытия модала смены менеджера
+  const handleChangeManager = (chat) => {
+    setSelectedChatForManager(chat);
+    setShowChangeManagerModal(true);
   };
 
-  // Закрытие диалога смены менеджера
-  const handleCloseChangeManager = () => {
-    setChangeManagerDialog({
-      isOpen: false,
-      chat: null
-    });
-  };
-
-  // Смена менеджера
-  const handleChangeManager = async (newManagerId) => {
-    if (!changeManagerDialog.chat) return;
-    
-    try {
-      await changeManager(changeManagerDialog.chat.id, newManagerId);
-      handleCloseChangeManager();
-    } catch (error) {
-      console.error('Ошибка при смене менеджера:', error);
-    }
+  // Обработка смены менеджера
+  const handleManagerChanged = async () => {
+    setShowChangeManagerModal(false);
+    setSelectedChatForManager(null);
+    // Обновляем список чатов
+    await loadChats(true);
   };
 
   // Фильтруем чаты по статусу
@@ -362,7 +344,7 @@ const ManagerChatList = memo(() => {
                   isActive={activeChat?.id === chat.id}
                   onAccept={handleAcceptChat}
                   onSelect={() => handleSelectChat(chat)}
-                  onChangeManager={handleOpenChangeManager}
+                  onChangeManager={handleChangeManager}
                 />
               ))
             )}
@@ -384,14 +366,13 @@ const ManagerChatList = memo(() => {
         </div>
       </div>
 
-      {/* Диалог смены менеджера */}
-      <ChangeManagerDialog
-        isOpen={changeManagerDialog.isOpen}
-        onClose={handleCloseChangeManager}
-        currentManager={{ id: changeManagerDialog.chat?.manager_id }}
-        availableManagers={availableManagers}
-        onChangeManager={handleChangeManager}
-        isChanging={isLoadingManagers}
+      {/* Модал смены менеджера */}
+      <ChangeManagerModal
+        isOpen={showChangeManagerModal}
+        onClose={() => setShowChangeManagerModal(false)}
+        chat={selectedChatForManager}
+        currentManager={selectedChatForManager?.manager}
+        onManagerChanged={handleManagerChanged}
       />
     </div>
   );

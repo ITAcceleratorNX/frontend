@@ -8,4 +8,4 @@ export { ChatDebugInfo } from './ui/ChatDebugInfo';
 export { ClearMessagesButton } from './ui/ClearMessagesButton';
 export { PendingChatCard } from './ui/PendingChatCard';
 export { PendingChatsPanel } from './ui/PendingChatsPanel';
-export { ChangeManagerDialog } from './ui/ChangeManagerDialog'; 
+export { ChangeManagerModal } from './ui/ChangeManagerModal'; 
