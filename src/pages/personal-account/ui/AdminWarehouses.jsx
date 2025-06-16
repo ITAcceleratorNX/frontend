@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const DUMMY_WAREHOUSES = [
   {
@@ -60,6 +61,12 @@ const DUMMY_WAREHOUSES = [
 ];
 
 const AdminWarehouses = () => {
+  const navigate = useNavigate();
+
+  const handleCardClick = (id) => {
+    navigate(`/admin/warehouses/${id}`);
+  };
+
   return (
     <div className="p-6 font-['Abhaya Libre SemiBold']">
       <h1 className="text-3xl font-medium mb-6">Список складов</h1>
@@ -92,7 +99,11 @@ const AdminWarehouses = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {DUMMY_WAREHOUSES.map((warehouse) => (
-          <div key={warehouse.id} className={`p-4 rounded-lg shadow-md border border-gray-200 ${warehouse.status === 'Active' ? 'bg-white' : 'bg-[#DEE0E4]'}`}>
+          <div 
+            key={warehouse.id} 
+            className={`p-4 rounded-lg shadow-md border border-gray-200 cursor-pointer ${warehouse.status === 'Active' ? 'bg-white' : 'bg-[#DEE0E4]'}`}
+            onClick={() => handleCardClick(warehouse.id)}
+          >
             <div
               className={`text-white text-xs px-7 font-['Abhaya Libre SemiBold'] py-1.5 rounded-full inline-block mb-2 ${warehouse.status === 'Active' ? 'bg-[#3A532D]' : 'bg-[#777777]'}`}
             >

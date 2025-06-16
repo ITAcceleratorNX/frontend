@@ -7,6 +7,7 @@ import Contracts from './ui/Contracts';
 import Settings from './ui/Settings';
 import ChatSection from './ui/ChatSection';
 import AdminUsers from './ui/AdminUsers';
+import ManagerUsers from './ui/ManagerUsers';
 import AdminWarehouses from './ui/AdminWarehouses';
 import { useAuth } from '../../shared/context/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -64,7 +65,8 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'personal' && <PersonalData />}
           {activeNav === 'contracts' && <Contracts />}
           {activeNav === 'chat' && <ChatSection />}
-          {activeNav === 'users' && <AdminUsers />}
+          {activeNav === 'adminusers' && <AdminUsers />}
+          {activeNav === 'managerusers' && <ManagerUsers />}
           {activeNav === 'warehouses' && <AdminWarehouses />}
           {activeNav === 'payments' && (
             <div className="w-full max-w-4xl mx-auto p-8">

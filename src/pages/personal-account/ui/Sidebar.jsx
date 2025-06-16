@@ -28,7 +28,7 @@ const userNavItems = [
 // Разделы для менеджеров
 const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
-  { label: 'Пользователи', icon: icon8, key: 'users' },
+  { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Чат', icon: icon3, key: 'chat' },
   { divider: true },
@@ -39,7 +39,7 @@ const managerNavItems = [
 // Разделы для администраторов
 const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
-  { label: 'Пользователи', icon: icon8, key: 'users' },
+  { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { divider: true },
   { label: 'Настройки', icon: icon5, key: 'settings' },

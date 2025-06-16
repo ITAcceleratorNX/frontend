@@ -152,7 +152,7 @@ const PaymentHistory = () => {
 
   return (
     <div className="w-full flex flex-col items-center pt-8 mt-12">
-      <div className="w-[1150px] ml-[80px] bg-white rounded-2xl p-8" style={{boxShadow:'0 8px 32px 0 rgba(40,40,80,0.10)'}}>
+      <div className="w-[1150px] ml-[80px] bg-white rounded-2xl shadow-lg p-8" style={{boxShadow:'0 8px 32px 0 rgba(40,40,80,0.10)'}}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-medium text-[#273655] font-['Nunito Sans']">История платежей</h2>
           <div className="relative flex items-center" ref={ref}>
@@ -217,7 +217,7 @@ const PaymentHistory = () => {
 const Contracts = () => {
   return (
     <div className="w-full flex flex-col items-center pt-8 mt-2">
-      <div className="w-[1150px] ml-[80px] bg-white rounded-2xl p-8" style={{boxShadow:'0 8px 32px 0 rgba(40,40,80,0.10)'}}>
+      <div className="w-[1150px] ml-[80px] bg-white rounded-2xl shadow-lg p-8" style={{boxShadow:'0 8px 32px 0 rgba(40,40,80,0.10)'}}>
         <MonthSelector />
         <div className="w-full">
           <table className="w-full">
@@ -300,7 +300,7 @@ const StorageInfoFrame = () => {
   );
 };
 
-const AdminUsersProfile = memo(() => {
+const ManagerUsersProfile = memo(() => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -370,7 +370,7 @@ const AdminUsersProfile = memo(() => {
         <main className="flex-1 mr-[110px]">
           <div className="max-w-5xl mx-auto py-12 px-10">
             <div className="flex items-center mb-8">
-              <button onClick={() => navigate('/personal-account', { state: { activeSection: 'adminusers' } })} className="mr-4 p-2 rounded-full hover:bg-gray-100 transition-colors">
+              <button onClick={() => navigate('/personal-account', { state: { activeSection: 'managerusers' } })} className="mr-4 p-2 rounded-full hover:bg-gray-100 transition-colors">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M15.75 19.5L8.25 12L15.75 4.5" stroke="#273655" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -436,4 +436,4 @@ const AdminUsersProfile = memo(() => {
   );
 });
 
-export default AdminUsersProfile;
+export default ManagerUsersProfile;
