@@ -7,7 +7,6 @@ import Contracts from './ui/Contracts';
 import Settings from './ui/Settings';
 import ChatSection from './ui/ChatSection';
 import { useAuth } from '../../shared/context/AuthContext';
-import Footer from '../../widgets/Footer';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -72,7 +71,6 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'settings' && <Settings />}
         </main>
       </div>
-      <Footer />
     </div>
   );
   }, [activeNav, isLoading, isAuthenticated]);

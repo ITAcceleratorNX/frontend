@@ -26,12 +26,36 @@ export const useChatStore = create(
     
     // Действия для сообщений
     setMessages: (messages) => set({ messages }),
-    addMessage: (message) => set(state => ({
-      messages: [...state.messages, message]
-    })),
-    prependMessages: (messages) => set(state => ({
-      messages: [...messages, ...state.messages]
-    })),
+    addMessage: (message) => set(state => {
+      // Проверяем, существует ли уже сообщение с таким ID
+      const messageExists = state.messages.some(msg => msg.id === message.id);
+      if (messageExists) {
+        if (import.meta.env.DEV) {
+          console.log('ChatStore: Сообщение уже существует, пропускаем дубликат:', message.id);
+        }
+        return state; // Возвращаем текущее состояние без изменений
+      }
+      
+      return {
+        messages: [...state.messages, message]
+      };
+    }),
+    prependMessages: (messages) => set(state => {
+      // Фильтруем новые сообщения, исключая уже существующие
+      const existingIds = new Set(state.messages.map(msg => msg.id));
+      const newMessages = messages.filter(msg => !existingIds.has(msg.id));
+      
+      if (newMessages.length === 0) {
+        if (import.meta.env.DEV) {
+          console.log('ChatStore: Все сообщения уже существуют, пропускаем');
+        }
+        return state;
+      }
+      
+      return {
+        messages: [...newMessages, ...state.messages]
+      };
+    }),
     setHasMoreMessages: (hasMore) => set({ hasMoreMessages: hasMore }),
     setIsLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
     

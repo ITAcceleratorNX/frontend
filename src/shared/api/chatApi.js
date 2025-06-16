@@ -232,5 +232,16 @@ export const chatApi = {
     }
 
     return stats;
+  },
+
+  // Получить список доступных менеджеров
+  getManagers: async () => {
+    try {
+      const response = await api.get('/users/managers');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при получении списка менеджеров:', error);
+      throw error;
+    }
   }
 }; 

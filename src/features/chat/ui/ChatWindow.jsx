@@ -14,6 +14,7 @@ import { QuickActions } from './QuickActions';
 import { ManagerChatList } from './ManagerChatList';
 import { ConnectionError } from './ConnectionError';
 import { ChatDebugInfo } from './ChatDebugInfo';
+import { ClearMessagesButton } from './ClearMessagesButton';
 
 const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
   const { user, isAuthenticated } = useAuth();
@@ -35,7 +36,8 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
     groupedMessages, 
     hasMoreMessages, 
     isLoadingMessages, 
-    loadMoreMessages 
+    loadMoreMessages,
+    clearMessages 
   } = useChatMessages(activeChat?.id);
 
   const messagesEndRef = useRef(null);
@@ -46,6 +48,12 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [groupedMessages]);
+
+  // Обработка очистки сообщений
+  const handleClearMessages = async () => {
+    if (!activeChat?.id) return;
+    return await clearMessages();
+  };
 
   // Проверка авторизации
   if (!isAuthenticated) {
@@ -83,14 +91,27 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
             />
             <ServerStatus />
           </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X size={20} />
-            </button>
-          )}
+          
+          <div className="flex items-center gap-2">
+            {/* Кнопка очистки сообщений для менеджера */}
+            {activeChat && (
+              <ClearMessagesButton
+                onClear={handleClearMessages}
+                disabled={!activeChat}
+                variant="icon"
+                className="mr-2"
+              />
+            )}
+            
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -147,14 +168,27 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
           />
           <ServerStatus />
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        )}
+        
+        <div className="flex items-center gap-2">
+          {/* Кнопка очистки сообщений для пользователя */}
+          {(activeChat && (chatStatus === CHAT_STATUS.ACTIVE || groupedMessages.length > 0)) && (
+            <ClearMessagesButton
+              onClear={handleClearMessages}
+              disabled={!activeChat}
+              variant="icon"
+              className="mr-2"
+            />
+          )}
+          
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Область сообщений */}
