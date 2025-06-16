@@ -1,125 +1,137 @@
 import React, { memo, useState, useRef, useCallback } from 'react';
-import { Send, Paperclip, Mic, Smile } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { Send, Paperclip } from 'lucide-react';
 
 const MessageInput = memo(({ 
   onSend, 
   disabled = false, 
-  placeholder = 'Написать сообщение...' 
+  placeholder = "Напишите сообщение...",
+  className = ""
 }) => {
   const [message, setMessage] = useState('');
-  const fileInputRef = useRef(null);
+  const [isComposing, setIsComposing] = useState(false);
+  const textareaRef = useRef(null);
 
-  // Отправка сообщения
+  // Автоматическое изменение высоты textarea
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+  }, []);
+
+  // Обработка изменения текста
+  const handleMessageChange = useCallback((e) => {
+    setMessage(e.target.value);
+    adjustTextareaHeight();
+  }, [adjustTextareaHeight]);
+
+  // Обработка отправки сообщения
   const handleSend = useCallback(() => {
-    if (!message.trim() || disabled) return;
+    const trimmedMessage = message.trim();
     
-    const success = onSend(message.trim());
-    if (success) {
+    if (!trimmedMessage || disabled || !onSend) {
+      return;
+    }
+
+    const success = onSend(trimmedMessage);
+    if (success !== false) {
       setMessage('');
+      // Сбрасываем высоту после отправки
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+      }, 0);
     }
   }, [message, disabled, onSend]);
 
-  // Обработка нажатия Enter
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  // Обработка нажатия клавиш
+  const handleKeyDown = useCallback((e) => {
+    // Если пользователь не в процессе ввода (IME) и нажал Enter без Shift
+    if (!isComposing && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  }, [handleSend]);
+  }, [isComposing, handleSend]);
 
-  // Обработка выбора файла
-  const handleFileSelect = useCallback((event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (import.meta.env.DEV) {
-        console.log('MessageInput: Файл выбран:', file.name);
-      }
-      // TODO: Добавить логику загрузки файла
-      toast.info(`Файл ${file.name} выбран (функция загрузки будет добавлена позже)`);
-    }
+  // Обработка начала/конца ввода (для IME)
+  const handleCompositionStart = useCallback(() => {
+    setIsComposing(true);
   }, []);
 
-  // Обработка записи голоса
-  const handleVoiceRecord = useCallback(() => {
-    if (import.meta.env.DEV) {
-      console.log('MessageInput: Запись голоса');
-    }
-    // TODO: Добавить логику записи голоса
-    toast.info('Функция записи голоса будет добавлена позже');
-  }, []);
-
-  // Обработка выбора эмодзи
-  const handleEmojiSelect = useCallback(() => {
-    if (import.meta.env.DEV) {
-      console.log('MessageInput: Выбор эмодзи');
-    }
-    // TODO: Добавить логику выбора эмодзи
-    toast.info('Функция выбора эмодзи будет добавлена позже');
+  const handleCompositionEnd = useCallback(() => {
+    setIsComposing(false);
   }, []);
 
   return (
-    <div className="border-t border-[#e0e0e0] p-4">
-      <div className="flex items-center space-x-3">
-        {/* Кнопка прикрепления файла */}
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          className="icon-btn text-[#757575] hover:text-[#263554] transition-colors p-2 rounded-md hover:bg-gray-100"
-          disabled={disabled}
+    <div className={`p-4 border-t border-[#e0e0e0] bg-white ${className}`}>
+      <div className="flex items-end space-x-3">
+        {/* Кнопка прикрепления (пока неактивна) */}
+        <button
+          type="button"
+          disabled
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 cursor-not-allowed"
+          title="Прикрепить файл (скоро)"
         >
-          <Paperclip className="w-[21px] h-[13px]" />
+          <Paperclip size={20} />
         </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          onChange={handleFileSelect}
-          className="hidden"
-          accept="image/*,application/pdf,.doc,.docx"
-        />
-        
-        {/* Поле ввода сообщения */}
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder={placeholder}
+
+        {/* Поле ввода */}
+        <div className="flex-1 relative">
+          <textarea
+            ref={textareaRef}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onChange={handleMessageChange}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
+            placeholder={placeholder}
             disabled={disabled}
-            className="w-full border-none focus:ring-0 text-[16px] font-normal leading-[22px] text-[#333] placeholder-[#9d9d9d] outline-none bg-transparent"
+            rows={1}
+            className={`
+              w-full resize-none rounded-[20px] border border-[#e0e0e0] 
+              px-4 py-3 pr-12 text-[14px] leading-[20px] 
+              placeholder-[#757575] focus:outline-none focus:border-[#263554] 
+              transition-colors min-h-[50px] max-h-[120px]
+              ${disabled ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}
+            `}
+            style={{ overflowY: 'auto' }}
           />
+          
+          {/* Счетчик символов (показываем при приближении к лимиту) */}
+          {message.length > 200 && (
+            <div className="absolute -top-6 right-0 text-xs text-gray-500">
+              {message.length}/500
+            </div>
+          )}
         </div>
-        
-        {/* Кнопка записи голоса */}
-        <button 
-          onClick={handleVoiceRecord}
-          className="icon-btn text-[#757575] hover:text-[#263554] transition-colors p-2 rounded-md hover:bg-gray-100"
-          disabled={disabled}
-        >
-          <Mic className="w-[21px] h-[17px]" />
-        </button>
-        
-        {/* Кнопка эмодзи */}
-        <button 
-          onClick={handleEmojiSelect}
-          className="icon-btn text-[#757575] hover:text-[#263554] transition-colors p-2 rounded-md hover:bg-gray-100"
-          disabled={disabled}
-        >
-          <Smile className="w-[21px] h-[14px]" />
-        </button>
-        
+
         {/* Кнопка отправки */}
         <button
+          type="button"
           onClick={handleSend}
-          disabled={!message.trim() || disabled}
-          className="send-btn bg-[#263554] text-white px-6 py-2 rounded-[6px] flex items-center space-x-2 hover:bg-[#1e2a42] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={disabled || !message.trim()}
+          className={`
+            flex-shrink-0 w-10 h-10 flex items-center justify-center 
+            rounded-full transition-all duration-200
+            ${disabled || !message.trim() 
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+              : 'bg-[#263554] text-white hover:bg-[#1e2c4f] hover:scale-105 active:scale-95'
+            }
+          `}
+          title="Отправить сообщение"
         >
-          <span className="text-[12px] font-semibold leading-[17px]">
-            Отправить
-          </span>
-          <Send className="w-[14px] h-[12px]" />
+          <Send size={18} />
         </button>
       </div>
+
+      {/* Подсказка для быстрых действий */}
+      {!disabled && (
+        <div className="mt-2 text-xs text-gray-500 text-center">
+          <span>Enter - отправить, Shift+Enter - новая строка</span>
+        </div>
+      )}
     </div>
   );
 });

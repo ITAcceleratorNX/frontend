@@ -145,6 +145,32 @@ export const chatApi = {
     }
   },
 
+  // Получить активный чат пользователя (новый endpoint /chats/me)
+  getUserChat: async () => {
+    const cacheKey = '/chats/me';
+    
+    try {
+      const response = await api.get('/chats/me');
+      
+      if (import.meta.env.DEV) {
+        console.log('ChatAPI: Получен чат пользователя:', response.data);
+      }
+      
+      return response.data;
+    } catch (error) {
+      // 404 - это нормально, значит у пользователя нет активного чата
+      if (error.response?.status === 404) {
+        if (import.meta.env.DEV) {
+          console.log('ChatAPI: У пользователя нет активного чата');
+        }
+        return null;
+      }
+      
+      console.error('Ошибка при получении чата пользователя:', error);
+      throw error;
+    }
+  },
+
   // Утилиты для управления кешем
   
   // Очистить весь кеш API
@@ -168,6 +194,14 @@ export const chatApi = {
     requestCache.delete('/chats/pending-chats');
     if (import.meta.env.DEV) {
       console.log('ChatAPI: Кеш ожидающих чатов инвалидирован');
+    }
+  },
+
+  // Инвалидировать кеш чата пользователя
+  invalidateUserChat: () => {
+    requestCache.delete('/chats/me');
+    if (import.meta.env.DEV) {
+      console.log('ChatAPI: Кеш чата пользователя инвалидирован');
     }
   },
 

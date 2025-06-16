@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useWebSocket } from './use-websocket';
+import { useUserChat } from './use-user-chat';
 import { useChatStore, WS_MESSAGE_TYPES, CHAT_STATUS, USER_ROLES } from '../../../entities/chat/model';
 import { toast } from 'react-toastify';
 
 export const useChat = () => {
   const { user, isAuthenticated } = useAuth();
   const { isConnected, isReconnecting, sendMessage: sendWebSocketMessage, addMessageHandler, removeMessageHandler } = useWebSocket();
+  
+  // Автоматическая загрузка чата пользователя
+  const { loadUserChat } = useUserChat();
   
   // Zustand store
   const {
@@ -31,7 +35,7 @@ export const useChat = () => {
   // Обработка WebSocket сообщений
   const handleWebSocketMessage = useCallback((data) => {
     if (import.meta.env.DEV) {
-      console.log('Chat: Получено WebSocket сообщение:', data.type);
+      console.log('Chat: Получено WebSocket сообщение:', data.type, data);
     }
 
     switch (data.type) {
@@ -41,14 +45,29 @@ export const useChat = () => {
         break;
         
       case WS_MESSAGE_TYPES.CHAT_ACCEPTED:
-        setActiveChat({ id: data.chatId });
+        setActiveChat({ 
+          id: data.chatId,
+          manager_id: data.managerId 
+        });
         setManagerId(data.managerId);
         setChatStatus(CHAT_STATUS.ACTIVE);
         toast.success('Менеджер присоединился к чату');
+        
+        // Инвалидируем кеш чата пользователя
+        import('../../api/chatApi').then(({ chatApi }) => {
+          chatApi.invalidateUserChat();
+        });
         break;
         
       case WS_MESSAGE_TYPES.NEW_MESSAGE:
-        addMessage(data.message);
+        // Добавляем новое сообщение только если это не наше собственное сообщение
+        if (data.message && data.message.sender_id !== user?.id) {
+          addMessage(data.message);
+          
+          if (import.meta.env.DEV) {
+            console.log('Chat: Добавлено новое сообщение:', data.message);
+          }
+        }
         break;
         
       case WS_MESSAGE_TYPES.NEW_CHAT:
@@ -66,6 +85,11 @@ export const useChat = () => {
       case WS_MESSAGE_TYPES.CHAT_CLOSED:
         setChatStatus(CHAT_STATUS.CLOSED);
         toast.info('Чат завершен');
+        
+        // Инвалидируем кеш чата пользователя
+        import('../../api/chatApi').then(({ chatApi }) => {
+          chatApi.invalidateUserChat();
+        });
         break;
         
       default:
@@ -73,7 +97,7 @@ export const useChat = () => {
           console.log('Chat: Неизвестный тип WebSocket сообщения:', data.type);
         }
     }
-  }, [setChatStatus, setActiveChat, setManagerId, addMessage, addNewChatNotification, user?.role]);
+  }, [setChatStatus, setActiveChat, setManagerId, addMessage, addNewChatNotification, user?.role, user?.id]);
 
   // Подключение обработчика сообщений
   useEffect(() => {
@@ -129,6 +153,20 @@ export const useChat = () => {
       return false;
     }
     
+    // Создаем временное сообщение для оптимистичного обновления
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      chat_id: activeChat.id,
+      sender_id: user.id,
+      text: messageText.trim(),
+      is_from_user: user.role !== USER_ROLES.MANAGER,
+      createdAt: new Date().toISOString(),
+      isTemporary: true
+    };
+    
+    // Оптимистично добавляем сообщение в UI
+    addMessage(tempMessage);
+    
     const success = sendWebSocketMessage({
       type: WS_MESSAGE_TYPES.SEND_MESSAGE,
       chatId: activeChat.id,
@@ -141,8 +179,14 @@ export const useChat = () => {
       console.log('Chat: Сообщение отправлено:', messageText.trim());
     }
     
+    if (!success) {
+      // Если отправка не удалась, удаляем временное сообщение
+      // TODO: Реализовать логику удаления временного сообщения
+      toast.error('Не удалось отправить сообщение');
+    }
+    
     return success;
-  }, [isConnected, sendWebSocketMessage, activeChat?.id, user?.id, user?.role]);
+  }, [isConnected, sendWebSocketMessage, activeChat?.id, user?.id, user?.role, addMessage]);
 
   // Принять чат (для менеджеров)
   const acceptChat = useCallback((chatId) => {

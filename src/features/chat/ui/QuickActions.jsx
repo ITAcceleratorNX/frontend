@@ -1,122 +1,122 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo } from 'react';
+import { MessageCircle, Phone, Mail, HelpCircle } from 'lucide-react';
 
-const QuickActions = memo(({ onStart, canStart = true }) => {
-  const [selectedAction, setSelectedAction] = useState('');
+const QuickActions = memo(({ onStart, canStart = false, className = '' }) => {
+  const quickActionButtons = [
+    {
+      id: 'start-chat',
+      label: 'Начать чат',
+      icon: MessageCircle,
+      action: onStart,
+      primary: true,
+      disabled: !canStart
+    },
+    {
+      id: 'support',
+      label: 'Поддержка',
+      icon: HelpCircle,
+      action: () => console.log('Открыть раздел поддержки'),
+      disabled: true // Пока неактивно
+    },
+    {
+      id: 'call',
+      label: 'Звонок',
+      icon: Phone,
+      action: () => console.log('Инициировать звонок'),
+      disabled: true // Пока неактивно
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      icon: Mail,
+      action: () => window.open('mailto:support@extraspace.com'),
+      disabled: false
+    }
+  ];
 
-  // Быстрые сообщения
-  const quickMessages = {
-    consultation: 'Мне нужна консультация',
-    booking: 'Ошибка в бронировании',
-    technical: 'Техническая поддержка',
-    pricing: 'Вопрос по тарифам'
+  const handleAction = (action, disabled) => {
+    if (disabled || !action) return;
+    action();
   };
 
-  // Обработка быстрого действия
-  const handleQuickAction = useCallback((action) => {
-    setSelectedAction(quickMessages[action] || '');
-  }, []);
-
-  // Начать чат с выбранным сообщением
-  const handleStartChat = useCallback(() => {
-    if (!canStart) return;
-    
-    const success = onStart();
-    if (success && selectedAction) {
-      // TODO: Отправить быстрое сообщение после подключения
-      if (import.meta.env.DEV) {
-        console.log('QuickActions: Выбранное сообщение:', selectedAction);
-      }
-    }
-  }, [onStart, canStart, selectedAction]);
-
   return (
-    <div className="flex flex-col items-center">
-      {/* Быстрые действия в стиле designchat */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <button
-          onClick={() => handleQuickAction('consultation')}
-          className={`quick-action-btn w-[225px] h-[69px] border rounded-[10px] flex flex-col items-start justify-center px-5 hover-effect transition-all ${
-            selectedAction === quickMessages.consultation 
-              ? 'border-[#263554] bg-blue-50' 
-              : 'border-[#263554] hover:bg-gray-50'
-          }`}
-        >
-          <span className="text-[14px] font-semibold leading-[18px] text-[#263554]">
-            Мне нужна консультация
-          </span>
-          <span className="text-[12px] font-normal leading-[16px] text-[#263554]">
-            Получить помощь специалиста
-          </span>
-        </button>
-        
-        <button
-          onClick={() => handleQuickAction('booking')}
-          className={`quick-action-btn w-[208px] h-[69px] border rounded-[10px] flex flex-col items-start justify-center px-5 hover-effect transition-all ${
-            selectedAction === quickMessages.booking 
-              ? 'border-[#263554] bg-blue-50' 
-              : 'border-[#263554] hover:bg-gray-50'
-          }`}
-        >
-          <span className="text-[14px] font-semibold leading-[18px] text-[#263554]">
-            Ошибка в бронировании
-          </span>
-          <span className="text-[12px] font-normal leading-[16px] text-[#263554]">
-            Решить проблему с заказом
-          </span>
-        </button>
-        
-        <button
-          onClick={() => handleQuickAction('technical')}
-          className={`quick-action-btn w-[225px] h-[69px] border rounded-[10px] flex flex-col items-start justify-center px-5 hover-effect transition-all ${
-            selectedAction === quickMessages.technical 
-              ? 'border-[#263554] bg-blue-50' 
-              : 'border-[#263554] hover:bg-gray-50'
-          }`}
-        >
-          <span className="text-[14px] font-semibold leading-[18px] text-[#263554]">
-            Техническая поддержка
-          </span>
-          <span className="text-[12px] font-normal leading-[16px] text-[#263554]">
-            Помощь с техническими вопросами
-          </span>
-        </button>
-        
-        <button
-          onClick={() => handleQuickAction('pricing')}
-          className={`quick-action-btn w-[208px] h-[69px] border rounded-[10px] flex flex-col items-start justify-center px-5 hover-effect transition-all ${
-            selectedAction === quickMessages.pricing 
-              ? 'border-[#263554] bg-blue-50' 
-              : 'border-[#263554] hover:bg-gray-50'
-          }`}
-        >
-          <span className="text-[14px] font-semibold leading-[18px] text-[#263554]">
-            Вопрос по тарифам
-          </span>
-          <span className="text-[12px] font-normal leading-[16px] text-[#263554]">
-            Узнать о ценах и условиях
-          </span>
-        </button>
+    <div className={`${className}`}>
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold text-[#273655] mb-2">
+          Как мы можем помочь?
+        </h3>
+        <p className="text-gray-600 text-sm">
+          Выберите удобный способ связи с нашей службой поддержки
+        </p>
       </div>
 
-      {/* Показываем выбранное сообщение */}
-      {selectedAction && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            Будет отправлено: "{selectedAction}"
+      <div className="grid grid-cols-2 gap-4">
+        {quickActionButtons.map((button) => {
+          const Icon = button.icon;
+          const isPrimary = button.primary && !button.disabled;
+          
+          return (
+            <button
+              key={button.id}
+              onClick={() => handleAction(button.action, button.disabled)}
+              disabled={button.disabled}
+              className={`
+                group relative p-6 rounded-xl border-2 transition-all duration-300
+                flex flex-col items-center space-y-3 min-h-[120px]
+                ${isPrimary 
+                  ? 'border-[#273655] bg-[#273655] text-white hover:bg-[#1e2c4f] hover:border-[#1e2c4f] hover:scale-105' 
+                  : button.disabled
+                    ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-[#273655] hover:bg-[#f8f9fa] hover:scale-105'
+                }
+              `}
+              title={button.disabled ? 'Скоро будет доступно' : `${button.label}`}
+            >
+              <div className={`
+                p-3 rounded-full transition-colors
+                ${isPrimary 
+                  ? 'bg-white bg-opacity-20' 
+                  : button.disabled 
+                    ? 'bg-gray-200' 
+                    : 'bg-[#273655] bg-opacity-10 group-hover:bg-[#273655] group-hover:bg-opacity-20'
+                }
+              `}>
+                <Icon 
+                  size={24} 
+                  className={isPrimary ? 'text-white' : button.disabled ? 'text-gray-400' : 'text-[#273655]'} 
+                />
+              </div>
+              
+              <span className={`
+                font-medium text-sm
+                ${isPrimary ? 'text-white' : button.disabled ? 'text-gray-400' : 'text-gray-700'}
+              `}>
+                {button.label}
+              </span>
+
+              {button.disabled && (
+                <span className="absolute top-2 right-2 text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded-full">
+                  Скоро
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 text-center">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="flex items-center justify-center space-x-2 text-blue-700">
+            <MessageCircle size={16} />
+            <span className="text-sm font-medium">
+              Среднее время ответа: 2-5 минут
+            </span>
+          </div>
+          <p className="text-xs text-blue-600 mt-1">
+            Мы работаем круглосуточно, чтобы помочь вам
           </p>
         </div>
-      )}
-      
-      {/* Кнопка начала чата */}
-      <button
-        onClick={handleStartChat}
-        disabled={!canStart}
-        className="bg-[#263554] text-white px-6 py-2 rounded-[6px] flex items-center space-x-2 hover:bg-[#1e2a42] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span className="text-[12px] font-semibold leading-[17px]">
-          Начать чат
-        </span>
-      </button>
+      </div>
     </div>
   );
 });
