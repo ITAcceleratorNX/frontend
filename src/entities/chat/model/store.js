@@ -16,6 +16,7 @@ export const useChatStore = create(
     chatStatus: 'idle', // 'idle', 'pending', 'active', 'closed'
     isConnected: false,
     managerId: null,
+    managerName: null,
     
     // Уведомления для менеджеров
     newChatNotifications: [],
@@ -39,6 +40,7 @@ export const useChatStore = create(
     setChatStatus: (status) => set({ chatStatus: status }),
     setConnectionStatus: (isConnected) => set({ isConnected }),
     setManagerId: (managerId) => set({ managerId }),
+    setManagerName: (managerName) => set({ managerName }),
     
     // Действия для уведомлений менеджеров
     addNewChatNotification: (notification) => set(state => ({
@@ -55,6 +57,7 @@ export const useChatStore = create(
       messages: [],
       chatStatus: 'idle',
       managerId: null,
+      managerName: null,
       hasMoreMessages: true,
       isLoadingMessages: false
     }),
@@ -68,6 +71,7 @@ export const useChatStore = create(
       chatStatus: 'idle',
       isConnected: false,
       managerId: null,
+      managerName: null,
       newChatNotifications: []
     }),
     

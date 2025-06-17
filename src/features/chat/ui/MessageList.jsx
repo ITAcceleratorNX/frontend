@@ -1,65 +1,137 @@
 import React, { memo, useEffect, useRef } from 'react';
+import { ChevronUp } from 'lucide-react';
 import { ChatMessage } from '../../../entities/chat/ui';
-import { USER_ROLES } from '../../../entities/chat/model';
-import { useAuth } from '../../../shared/context/AuthContext';
 
 const MessageList = memo(({ 
   messages = [], 
   hasMoreMessages = false, 
   isLoadingMessages = false, 
-  onLoadMore, 
+  onLoadMore,
   messagesEndRef,
   className = '' 
 }) => {
-  const { user } = useAuth();
-  const messagesContainerRef = useRef(null);
-  const lastMessageCount = useRef(messages.length);
-  
-  // Автоскролл при добавлении новых сообщений (только если пользователь внизу)
-  useEffect(() => {
-    if (messages.length > lastMessageCount.current && messagesContainerRef.current) {
-      const container = messagesContainerRef.current;
-      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-      
-      if (isAtBottom && messagesEndRef?.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-    lastMessageCount.current = messages.length;
-  }, [messages.length, messagesEndRef]);
+  const containerRef = useRef(null);
 
-  // Обработка скролла для загрузки предыдущих сообщений
+  // Скролл к последнему сообщению при добавлении новых
+  useEffect(() => {
+    if (messagesEndRef?.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, messagesEndRef]);
+
+  // Обработка скролла для загрузки истории
   const handleScroll = (e) => {
-    const { scrollTop } = e.target;
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
     
-    // Если пользователь почти докрутил до верха и есть еще сообщения
-    if (scrollTop < 100 && hasMoreMessages && !isLoadingMessages && onLoadMore) {
+    // Если прокрутили в самый верх и есть еще сообщения
+    if (scrollTop === 0 && hasMoreMessages && !isLoadingMessages && onLoadMore) {
       onLoadMore();
     }
   };
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long'
+  // Форматирование даты для разделителей DD.MM
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    
+    // Проверяем валидность даты
+    if (isNaN(date.getTime())) {
+      if (import.meta.env.DEV) {
+        console.error('MessageList: Invalid date for formatDate:', timestamp);
+      }
+      return 'Неверная дата';
+    }
+    
+    return date.toLocaleDateString('ru-RU', { 
+      day: '2-digit', 
+      month: '2-digit' 
     });
   };
 
-  const renderDateSeparator = (date, key) => (
-    <div key={key} className="flex justify-center my-4">
-      <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
-        {date}
-      </span>
+  // Получить дату без времени для сравнения
+  const getDateOnly = (timestamp) => {
+    if (!timestamp) {
+      if (import.meta.env.DEV) {
+        console.warn('MessageList: Empty timestamp for getDateOnly');
+      }
+      return new Date().setHours(0, 0, 0, 0);
+    }
+    
+    const date = new Date(timestamp);
+    
+    // Проверяем валидность даты
+    if (isNaN(date.getTime())) {
+      if (import.meta.env.DEV) {
+        console.error('MessageList: Invalid timestamp for getDateOnly:', timestamp);
+      }
+      return new Date().setHours(0, 0, 0, 0);
+    }
+    
+    // Возвращаем дату без времени для корректного сравнения
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  };
+
+  // Группировка сообщений с разделителями дат
+  const processMessages = () => {
+    if (!messages.length) return [];
+    
+    const processed = [];
+    let lastDate = null;
+    
+    messages.forEach((message, index) => {
+      // Приоритет created_at из API (ISO формат)
+      const messageTimestamp = message.created_at;
+      
+      // Проверяем наличие временной метки
+      if (!messageTimestamp) {
+        if (import.meta.env.DEV) {
+          console.warn('MessageList: Сообщение без created_at:', message);
+        }
+        return; // Пропускаем сообщение без даты
+      }
+      
+      const messageDate = getDateOnly(messageTimestamp);
+      
+      // Если дата изменилась, добавляем разделитель
+      if (lastDate !== messageDate) {
+        processed.push({
+          type: 'date',
+          date: messageTimestamp,
+          id: `date-${messageDate}`
+        });
+        lastDate = messageDate;
+      }
+      
+      // Добавляем сообщение
+      processed.push({
+        type: 'message',
+        ...message
+      });
+    });
+    
+    return processed;
+  };
+
+  // Компонент разделителя даты
+  const renderDateSeparator = (timestamp, key) => (
+    <div key={key} className="flex items-center justify-center my-4">
+      <div className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full font-medium">
+        {formatDate(timestamp)}
+      </div>
     </div>
   );
 
+  // Рендер сообщения или разделителя
   const renderMessage = (messageData, index) => {
-    const isFromUser = user?.role !== USER_ROLES.MANAGER ? messageData.is_from_user : !messageData.is_from_user;
-    const showAvatar = index === 0 || messages[index - 1]?.is_from_user !== messageData.is_from_user;
+    if (messageData.type === 'date') {
+      return renderDateSeparator(messageData.date, messageData.id);
+    }
+
+    const isFromUser = messageData.is_from_user;
+    const showAvatar = !isFromUser;
     
     return (
-      <div key={messageData.id} className="message-item animate-fadeInUp mb-4">
-        <ChatMessage 
+      <div key={messageData.id} className="mb-3">
+        <ChatMessage
           message={messageData}
           isFromUser={isFromUser}
           showAvatar={showAvatar}
@@ -68,54 +140,54 @@ const MessageList = memo(({
     );
   };
 
+  const processedMessages = processMessages();
+
   return (
-    <div className={`flex flex-col h-full ${className}`}>
-      {/* Индикатор загрузки предыдущих сообщений */}
+    <div 
+      ref={containerRef}
+      className={`flex-1 overflow-y-auto p-4 space-y-2 ${className}`}
+      onScroll={handleScroll}
+    >
+      {/* Кнопка "Загрузить еще" */}
       {hasMoreMessages && (
-        <div className="flex justify-center py-2">
-          {isLoadingMessages ? (
-            <div className="flex items-center text-gray-500 text-sm">
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400 mr-2"></div>
-              Загрузка сообщений...
-            </div>
-          ) : (
-            <button
-              onClick={onLoadMore}
-              className="text-blue-500 hover:text-blue-600 text-sm px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
-            >
-              Загрузить предыдущие сообщения
-            </button>
-          )}
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={onLoadMore}
+            disabled={isLoadingMessages}
+            className={`
+              flex items-center space-x-2 px-3 py-2 rounded-lg text-xs transition-colors
+              ${isLoadingMessages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }
+            `}
+          >
+            {isLoadingMessages ? (
+              <>
+                <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin" />
+                <span>Загрузка...</span>
+              </>
+            ) : (
+              <>
+                <ChevronUp className="w-3 h-3" />
+                <span>Загрузить ранние сообщения</span>
+              </>
+            )}
+          </button>
         </div>
       )}
 
-      {/* Контейнер сообщений */}
-      <div 
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-2 space-y-1"
-        onScroll={handleScroll}
-      >
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <p>Пока нет сообщений</p>
-          </div>
-        ) : (
-          messages.map((item, index) => {
-            // Обработка элементов группированных сообщений
-            if (item.type === 'date') {
-              return renderDateSeparator(item.date, item.id);
-            } else if (item.type === 'message') {
-              return renderMessage(item, index);
-            } else {
-              // Обычное сообщение (без группировки)
-              return renderMessage(item, index);
-            }
-          })
-        )}
-        
-        {/* Якорь для автоскролла */}
-        <div ref={messagesEndRef} />
-      </div>
+      {/* Сообщения */}
+      {processedMessages.length > 0 ? (
+        processedMessages.map((messageData, index) => renderMessage(messageData, index))
+      ) : (
+        <div className="flex items-center justify-center h-32 text-gray-400">
+          <p className="text-sm">Сообщений пока нет</p>
+        </div>
+      )}
+
+      {/* Якорь для автоскролла */}
+      <div ref={messagesEndRef} />
     </div>
   );
 });

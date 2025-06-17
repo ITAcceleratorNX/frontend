@@ -1,21 +1,22 @@
 import React, { memo } from 'react';
 import { CHAT_STATUS } from '../model';
+import chatIcon from '../../../assets/chat_icon.png';
 
-const ChatStatus = memo(({ status, isConnected, isReconnecting }) => {
+const ChatStatus = memo(({ status, isConnected, isReconnecting, managerName }) => {
   const getStatusText = () => {
     if (!isConnected) {
-      return isReconnecting ? 'переподключение...' : 'не в сети';
+      return isReconnecting ? 'Переподключение...' : 'Не в сети';
     }
     
     switch (status) {
       case CHAT_STATUS.PENDING:
         return 'ожидание менеджера...';
       case CHAT_STATUS.ACTIVE:
-        return 'менеджер онлайн';
+        return managerName ? `Менеджер: ${managerName}` : 'Менеджер онлайн';
       case CHAT_STATUS.CLOSED:
-        return 'чат завершен';
+        return 'Чат завершен';
       default:
-        return 'менеджер';
+        return 'Менеджер';
     }
   };
 
@@ -38,16 +39,20 @@ const ChatStatus = memo(({ status, isConnected, isReconnecting }) => {
 
   return (
     <div className="flex items-center">
-      <div className={`w-[24px] h-[24px] bg-[#273655] rounded-[12px] flex items-center justify-center mr-3 status-indicator ${getStatusClass()}`}>
-        <span className="text-white text-xs font-bold">ES</span>
+      <div className={`w-[24px] h-[24px] rounded-[12px] flex items-center justify-center mr-3 status-indicator overflow-hidden ${getStatusClass()}`}>
+        <img 
+          src={chatIcon} 
+          alt="ExtraSpace" 
+          className="w-full h-full object-cover"
+        />
       </div>
       <div>
-        <h3 className="header-title text-[20px] font-normal leading-[26px] tracking-[1px] text-[#273655] capitalize">
+        <h3 className="header-title text-[20px] font-normal leading-[26px] tracking-[1px] text-[#1e2c4f] capitalize">
           ExtraSpace
         </h3>
-        <p className="text-[8px] font-normal leading-[10px] text-[#979797]">
+        <h3 className="text-[10px] font-normal leading-[10px] text-[#1e2c4f]">
           {getStatusText()}
-        </p>
+        </h3>
       </div>
     </div>
   );

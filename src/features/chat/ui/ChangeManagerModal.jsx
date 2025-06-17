@@ -71,7 +71,7 @@ const ChangeManagerModal = memo(({
         {/* Заголовок */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-[#1e2c4f] rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-white" />
             </div>
             <h2 className="text-xl font-bold text-gray-900">Сменить менеджера</h2>
@@ -91,18 +91,18 @@ const ChangeManagerModal = memo(({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Текущий менеджер:
             </label>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="bg-[#1e2c4f]/10 border border-[#1e2c4f]/20 rounded-lg p-3">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#1e2c4f] rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">
                     {formatManagerName(currentManager || {}).charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <div className="font-medium text-blue-900">
+                  <div className="font-medium text-[#1e2c4f]">
                     {formatManagerName(currentManager || {})}
                   </div>
-                  <div className="text-sm text-blue-600">
+                  <div className="text-sm text-[#1e2c4f]/70">
                     ID: {currentManager?.id || chat?.manager_id}
                   </div>
                 </div>
@@ -118,7 +118,7 @@ const ChangeManagerModal = memo(({
             
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1e2c4f]"></div>
               </div>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -131,7 +131,7 @@ const ChangeManagerModal = memo(({
                     className={`
                       p-3 border rounded-lg cursor-pointer transition-all duration-200
                       ${selectedManagerId === manager.id
-                        ? 'border-blue-500 bg-blue-50 shadow-sm'
+                        ? 'border-[#1e2c4f] bg-[#1e2c4f]/10 shadow-sm'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }
                     `}
@@ -141,7 +141,7 @@ const ChangeManagerModal = memo(({
                         <div className={`
                           w-8 h-8 rounded-full flex items-center justify-center
                           ${selectedManagerId === manager.id
-                            ? 'bg-blue-500'
+                            ? 'bg-[#1e2c4f]'
                             : 'bg-gray-400'
                           }
                         `}>
@@ -160,7 +160,7 @@ const ChangeManagerModal = memo(({
                       </div>
                       
                       {selectedManagerId === manager.id && (
-                        <Check className="w-5 h-5 text-blue-500" />
+                        <Check className="w-5 h-5 text-[#1e2c4f]" />
                       )}
                     </div>
                   </div>
@@ -185,7 +185,7 @@ const ChangeManagerModal = memo(({
             className={`
               flex items-center space-x-2 px-6 py-2 rounded-lg font-medium transition-all duration-200
               ${selectedManagerId && !isChanging
-                ? 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-lg transform hover:scale-105'
+                ? 'bg-[#1e2c4f] text-white hover:bg-[#1e2c4f]/90 hover:shadow-lg transform hover:scale-105'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }
             `}

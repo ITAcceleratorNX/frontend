@@ -1,55 +1,31 @@
 import React, { memo } from 'react';
 import { MoreHorizontal } from 'lucide-react';
+import chatIcon from '../../../assets/chat_icon.png';
 
 const ChatMessage = memo(({ message, isFromUser, showAvatar = true }) => {
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
     
+    // Используем created_at в ISO формате из API
     const messageDate = new Date(timestamp);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
     
-    // Если сообщение сегодня - показываем только время
-    if (messageDay.getTime() === today.getTime()) {
-      return messageDate.toLocaleTimeString('ru-RU', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    // Проверяем валидность даты
+    if (isNaN(messageDate.getTime())) {
+      if (import.meta.env.DEV) {
+        console.warn('ChatMessage: Invalid date format:', timestamp);
+      }
+      return '';
     }
     
-    // Если вчера
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (messageDay.getTime() === yesterday.getTime()) {
-      return `вчера ${messageDate.toLocaleTimeString('ru-RU', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })}`;
-    }
-    
-    // Если в этом году - показываем дату без года
-    if (messageDate.getFullYear() === now.getFullYear()) {
-      return messageDate.toLocaleDateString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-    
-    // Полная дата
-    return messageDate.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
+    // Возвращаем только время в формате HH:mm
+    return messageDate.toLocaleTimeString('ru-RU', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
-  // Используем created_at из API, fallback на createdAt или текущее время
-  const messageTime = message.created_at || message.createdAt || Date.now();
+  // Используем created_at из API (ISO формат)
+  const messageTime = message.created_at;
 
   if (isFromUser) {
     return (
@@ -72,8 +48,12 @@ const ChatMessage = memo(({ message, isFromUser, showAvatar = true }) => {
   return (
     <div className="flex items-start space-x-3">
       {showAvatar && (
-        <div className="w-[40px] h-[40px] bg-[#273655] rounded-[15px] flex items-center justify-center mt-2">
-          <span className="text-white text-sm font-bold">ES</span>
+        <div className="w-[40px] h-[40px] rounded-[15px] flex items-center justify-center mt-2 overflow-hidden">
+          <img 
+            src={chatIcon} 
+            alt="Chat" 
+            className="w-full h-full object-cover"
+          />
         </div>
       )}
       <div className="max-w-[720px] bg-[#f5f5f5] rounded-[16px_16px_16px_0] p-4">

@@ -10,6 +10,7 @@ export const useUserChat = () => {
     setActiveChat, 
     setChatStatus,
     setManagerId,
+    setManagerName,
     isConnected 
   } = useChatStore();
   
@@ -31,9 +32,12 @@ export const useUserChat = () => {
           status: userChat.status
         });
         
-        // Устанавливаем менеджера
+        // Устанавливаем менеджера и его имя
         if (userChat.manager_id) {
           setManagerId(userChat.manager_id);
+        }
+        if (userChat.managerName) {
+          setManagerName(userChat.managerName);
         }
         
         // Устанавливаем статус чата
@@ -53,6 +57,7 @@ export const useUserChat = () => {
         setActiveChat(null);
         setChatStatus(CHAT_STATUS.IDLE);
         setManagerId(null);
+        setManagerName(null);
         
         if (import.meta.env.DEV) {
           console.log('useUserChat: У пользователя нет активного чата');
@@ -64,7 +69,7 @@ export const useUserChat = () => {
       console.error('useUserChat: Ошибка при загрузке чата пользователя:', error);
       return false;
     }
-  }, [isAuthenticated, user?.id, user?.role, setActiveChat, setChatStatus, setManagerId]);
+  }, [isAuthenticated, user?.id, user?.role, setActiveChat, setChatStatus, setManagerId, setManagerName]);
 
   // Автоматическая загрузка чата при аутентификации и подключении
   useEffect(() => {
@@ -79,8 +84,9 @@ export const useUserChat = () => {
       setActiveChat(null);
       setChatStatus(CHAT_STATUS.IDLE);
       setManagerId(null);
+      setManagerName(null);
     }
-  }, [isAuthenticated, setActiveChat, setChatStatus, setManagerId]);
+  }, [isAuthenticated, setActiveChat, setChatStatus, setManagerId, setManagerName]);
 
   return {
     activeChat,

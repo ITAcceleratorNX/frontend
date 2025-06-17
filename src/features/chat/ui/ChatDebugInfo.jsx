@@ -18,7 +18,7 @@ const ChatDebugInfo = memo(() => {
   const { messages, groupedMessages } = useChatMessages(activeChat?.id);
   
   // Дополнительное состояние из store
-  const { managerId, newChatNotifications } = useChatStore();
+  const { managerId, managerName, newChatNotifications } = useChatStore();
 
   if (!import.meta.env.DEV) {
     return null;
@@ -36,6 +36,7 @@ const ChatDebugInfo = memo(() => {
         <div><strong className="text-blue-300">Chat Status:</strong> <span className="text-yellow-400">{chatStatus}</span></div>
         <div><strong className="text-blue-300">Active Chat ID:</strong> <span className="text-yellow-400">{activeChat?.id || 'None'}</span></div>
         <div><strong className="text-blue-300">Manager ID:</strong> <span className="text-yellow-400">{managerId || activeChat?.manager_id || 'None'}</span></div>
+        <div><strong className="text-blue-300">Manager Name:</strong> <span className="text-green-400">{managerName || 'None'}</span></div>
         <div><strong className="text-blue-300">Can Start Chat:</strong> <span className={canStartChat ? 'text-green-400' : 'text-red-400'}>{canStartChat ? '✅' : '❌'}</span></div>
         <div><strong className="text-blue-300">Can Send Message:</strong> <span className={canSendMessage ? 'text-green-400' : 'text-red-400'}>{canSendMessage ? '✅' : '❌'}</span></div>
         <div><strong className="text-blue-300">Messages Count:</strong> <span className="text-green-400">{messages.length}</span></div>

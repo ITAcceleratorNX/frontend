@@ -70,7 +70,7 @@ const PendingChatsExample = memo(() => {
                 <p><strong>ID чата:</strong> {chat.id}</p>
                 <p><strong>ID пользователя:</strong> {chat.user_id}</p>
                 <p><strong>Статус:</strong> {chat.status}</p>
-                <p><strong>Менеджер:</strong> {chat.manager_id || 'Не назначен'}</p>
+                <h2><strong>Менеджер:</strong> {chat.manager_id || 'Не назначен'}</h2>
               </div>
             ))}
           </div>

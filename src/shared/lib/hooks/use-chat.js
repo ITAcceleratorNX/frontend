@@ -24,7 +24,8 @@ export const useChat = () => {
     setManagerId,
     addNewChatNotification,
     removeNewChatNotification,
-    resetChat
+    resetChat,
+    setManagerName
   } = useChatStore();
 
   // Обновляем статус соединения в store
@@ -50,6 +51,9 @@ export const useChat = () => {
           manager_id: data.managerId 
         });
         setManagerId(data.managerId);
+        if (data.managerName) {
+          setManagerName(data.managerName);
+        }
         setChatStatus(CHAT_STATUS.ACTIVE);
         toast.success('Менеджер присоединился к чату');
         
@@ -68,6 +72,9 @@ export const useChat = () => {
             manager_id: data.managerId
           });
           setManagerId(data.managerId);
+          if (data.managerName) {
+            setManagerName(data.managerName);
+          }
           setChatStatus(CHAT_STATUS.ACTIVE);
           toast.success(`Вам назначен чат #${data.chatId}`);
         }
@@ -155,7 +162,7 @@ export const useChat = () => {
           console.log('Chat: Неизвестный тип WebSocket сообщения:', data.type);
         }
     }
-  }, [setChatStatus, setActiveChat, setManagerId, addMessage, addNewChatNotification, user?.role, user?.id]);
+  }, [setChatStatus, setActiveChat, setManagerId, addMessage, addNewChatNotification, user?.role, user?.id, setManagerName]);
 
   // Подключение обработчика сообщений
   useEffect(() => {
