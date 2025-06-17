@@ -7,6 +7,8 @@ import icon3 from '../../../assets/3.svg';
 import icon4 from '../../../assets/4.svg';
 import icon5 from '../../../assets/5.svg';
 import icon6 from '../../../assets/6.svg';
+import icon8 from '../../../assets/8.svg';
+import icon9 from '../../../assets/9.svg';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
@@ -26,7 +28,10 @@ const userNavItems = [
 // Разделы для менеджеров
 const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
+  { label: 'Пользователи', icon: icon8, key: 'managerusers' },
+  { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Чат', icon: icon3, key: 'chat' },
+  { divider: true },
   { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
@@ -34,6 +39,9 @@ const managerNavItems = [
 // Разделы для администраторов
 const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
+  { label: 'Пользователи', icon: icon8, key: 'adminusers' },
+  { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { divider: true },
   { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
