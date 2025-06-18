@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import RoundPlaceIcon from '../../assets/round-place-24px.svg';
 import RoundPhoneIcon from '../../assets/round-phone-24px.svg';
 import LinkedInIcon from '../../assets/linkedin black.1.svg';
@@ -21,27 +22,30 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#0A142F] w-full h-[500px] text-white font-['Assistant'] mt-48">
+    <footer className="bg-[#0A142F] w-full h-[550px] text-white font-['Assistant'] mt-48">
       <div className="container mx-auto px-4">
         <hr className="border-t border-[#FFFFFF] mt-20 mb-10 ml-20 mr-20 opacity-50"/>
         <div className="flex flex-col md:flex-row items-start justify-between py-8">
-          <h2 className="text-7xl py-6 ml-20 font-bold font-['Audiowide'] mt-[-20px]">ExtraSpace</h2>
-          <div className="flex flex-col font-['Montserrat'] space-y-6 md:items-start md:text-left mt-[-25px] mr-[50px] flex-shrink-0">
-            <a href="#" className="flex items-center mb-2">
+          <h2 className="text-7xl py-6 ml-20 font-bold font-['Audiowide'] mt-[-4px]">ExtraSpace</h2>
+          <div className="flex flex-col font-['Montserrat'] space-y-6 md:items-start md:text-left mt-[-25px] mr-[10px] flex-shrink-0">
+            <Link to="/" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">ГЛАВНАЯ</span>
-            </a>
-            <a href="#" className="flex items-center mb-2">
+            </Link>
+            <Link to="/about-warehouse-rental" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">ОБ АРЕНДЕ СКЛАДОВ</span>
-            </a>
-            <a href="#" className="flex items-center mb-2">
+            </Link>
+            <Link to="/cloud-storage" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">ОБЛАЧНОЕ ХРАНЕНИЕ</span>
-            </a>
-            <a href="#" className="flex items-center mb-2">
+            </Link>
+            <Link to="/moving" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">МУВИНГ</span>
-            </a>
-            <a href="#" className="flex items-center mb-2">
+            </Link>
+            <Link to="/tariffs" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">ТАРИФЫ</span>
-            </a>
+            </Link>
+            <Link to="/privacy-policy" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
+              <span className="whitespace-nowrap">ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</span>
+            </Link>
           </div>
           <div className="flex flex-col mr-[100px] mt-[40px] space-y-2">
             <p className="text-base text-white font-['Assistant']">Свяжитесь с нами — поможем!</p>
@@ -66,10 +70,10 @@ const Footer = () => {
         </div>
         <div className="justify-between items-center mt-4">
           <nav className="flex space-x-8 uppercase text-xs ml-20">
-            <p className="font-['Montserrat'] mt-[-140px] w-[280px]">ExtraSpace — надёжное решение для хранения.</p>
+            <p className="font-['Montserrat'] mt-[-170px] w-[280px]">ExtraSpace — надёжное решение для хранения.</p>
           </nav>
           <nav className="flex space-x-8 uppercase text-xs ml-20">
-            <p className="font-['Montserrat'] mt-[-90px] w-[350px] mb-7 text-[#A6A6A6]">Мы предлагаем аренду складов в Алматы с круглосуточной охраной, удобным доступом и комфортными условиями хранения.</p>
+            <p className="font-['Montserrat'] mt-[-120px] w-[350px] mb-7 text-[#A6A6A6]">Мы предлагаем аренду складов в Алматы с круглосуточной охраной, удобным доступом и комфортными условиями хранения.</p>
           </nav>
           <div className="text-xs text-right py-2 text-[#A6A6A6] font-['Assistant'] mb-[-15px] mr-[130px]">Copyright © 2025 · Lift Media Inc.</div>
         </div>
