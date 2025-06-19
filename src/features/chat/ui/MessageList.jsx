@@ -6,16 +6,16 @@ const MessageList = memo(({
   messages = [], 
   hasMoreMessages = false, 
   isLoadingMessages = false, 
-  onLoadMore,
+  onLoadMore, 
   messagesEndRef,
   className = '' 
 }) => {
   const containerRef = useRef(null);
-
+  
   // Скролл к последнему сообщению при добавлении новых
   useEffect(() => {
     if (messagesEndRef?.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, messagesEndRef]);
 
@@ -131,7 +131,7 @@ const MessageList = memo(({
     
     return (
       <div key={messageData.id} className="mb-3">
-        <ChatMessage
+        <ChatMessage 
           message={messageData}
           isFromUser={isFromUser}
           showAvatar={showAvatar}
@@ -151,8 +151,8 @@ const MessageList = memo(({
       {/* Кнопка "Загрузить еще" */}
       {hasMoreMessages && (
         <div className="flex justify-center mb-4">
-          <button
-            onClick={onLoadMore}
+            <button
+              onClick={onLoadMore}
             disabled={isLoadingMessages}
             className={`
               flex items-center space-x-2 px-3 py-2 rounded-lg text-xs transition-colors
@@ -173,7 +173,7 @@ const MessageList = memo(({
                 <span>Загрузить ранние сообщения</span>
               </>
             )}
-          </button>
+            </button>
         </div>
       )}
 
@@ -183,11 +183,11 @@ const MessageList = memo(({
       ) : (
         <div className="flex items-center justify-center h-32 text-gray-400">
           <p className="text-sm">Сообщений пока нет</p>
-        </div>
-      )}
-
-      {/* Якорь для автоскролла */}
-      <div ref={messagesEndRef} />
+          </div>
+        )}
+        
+        {/* Якорь для автоскролла */}
+        <div ref={messagesEndRef} />
     </div>
   );
 });

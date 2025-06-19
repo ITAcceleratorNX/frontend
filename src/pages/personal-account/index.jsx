@@ -9,6 +9,11 @@ import ChatSection from './ui/ChatSection';
 import AdminUsers from './ui/AdminUsers';
 import ManagerUsers from './ui/ManagerUsers';
 import AdminWarehouses from './ui/AdminWarehouses';
+import { 
+  UserNotificationsPage, 
+  AdminNotifications, 
+  ManagerNotifications 
+} from './ui/notifications';
 import { useAuth } from '../../shared/context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -40,6 +45,20 @@ const PersonalAccountPage = memo(() => {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
+  // Выбор компонента уведомлений в зависимости от роли
+  const getNotificationsComponent = () => {
+    if (!user) return null;
+    
+    switch (user.role) {
+      case 'ADMIN':
+        return <AdminNotifications />;
+      case 'MANAGER':
+        return <ManagerNotifications />;
+      default:
+        return <UserNotificationsPage />;
+    }
+  };
+
   // Мемоизируем контент страницы для предотвращения ререндеров
   const pageContent = useMemo(() => {
   // Пока идет проверка аутентификации, показываем загрузку
@@ -65,6 +84,7 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'personal' && <PersonalData />}
           {activeNav === 'contracts' && <Contracts />}
           {activeNav === 'chat' && <ChatSection />}
+          {activeNav === 'notifications' && getNotificationsComponent()}
           {activeNav === 'adminusers' && <AdminUsers />}
           {activeNav === 'managerusers' && <ManagerUsers />}
           {activeNav === 'warehouses' && <AdminWarehouses />}
@@ -79,7 +99,7 @@ const PersonalAccountPage = memo(() => {
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated]);
+  }, [activeNav, isLoading, isAuthenticated, user]);
 
   if (import.meta.env.DEV) {
     console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 

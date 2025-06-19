@@ -5,4 +5,13 @@ export { useManagerChats } from './use-manager-chats';
 export { usePendingChats } from './use-pending-chats';
 export { useUserChat } from './use-user-chat';
 export { useWebSocket } from './use-websocket';
-export { useUserQuery } from './use-user-query'; 
+export { useUserQuery } from './use-user-query';
+export { 
+  useNotifications, 
+  useUserNotifications, 
+  useAllNotifications, 
+  useSendNotification, 
+  useMarkAsRead,
+  useNotificationStats,
+  useNotificationUsers
+} from './use-notifications'; 
