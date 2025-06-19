@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
-import { Header} from '../../widgets';
+import { Link } from 'react-router-dom';
+import { Header } from '../../widgets';
+import Footer from '../../widgets/Footer';
 import Vector038 from '../../assets/Vector_038.svg';
 import image85 from '../../assets/image 85.png';
 import ShieldEye from '../../assets/Shield Eye@2x.png';
 import eyeScan from '../../assets/Eye Scan.svg';
 import hand from '../../assets/hand.png';
 import fingerprint from '../../assets/fingerprint.png';
-import group1010 from '../../assets/Group 1010.png';
+import group1010 from '../../assets/group 1010.png';
 
 const OnlinePaymentPage = () => {
   useEffect(() => {
@@ -111,9 +113,11 @@ const OnlinePaymentPage = () => {
               Совершая оплату на сайте extraspace.kz, клиент соглашается с условиями настоящей публичной оферты на оказание услуг аренды помещений. Полный текст оферты доступен по ссылке:
             </p>
           </div>
-          <button className="px-6 py-1 rounded-full text-lg font-medium font-['Montserrat'] transition-colors mt-0 mb-10" style={{backgroundColor: '#FFFFFF', color: 'black'}}>
-            Cтраница<b>→</b>
-          </button>
+          <Link to="/offer">
+            <button className="px-6 py-1 rounded-full text-lg font-medium font-['Montserrat'] transition-colors mt-0 mb-10" style={{backgroundColor: '#FFFFFF', color: 'black'}}>
+              Cтраница<b>→</b>
+            </button>
+          </Link>
         </div>
       </section>
 

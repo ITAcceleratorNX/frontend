@@ -13,6 +13,8 @@ import ChatPage from '../pages/chat';
 import AboutWarehouseRentalPage from '../pages/about-warehouse-rental';
 import CloudStoragePage from '../pages/CloudStorage';
 import OnlinePaymentPage from '../pages/online-payment';
+import OfferPage from '../pages/offer';
+import PrivacyPolicyPage from '../pages/privacy-policy';
 
 import PersonalAccountPage from '../pages/personal-account';
 import AdminUsersProfile from '../pages/personal-account/ui/AdminUsersProfile';
@@ -109,7 +111,9 @@ const Routing = memo(() => {
     { path: "/chat", element: <ChatPage /> },
     { path: "/about-warehouse-rental", element: <AboutWarehouseRentalPage /> },
     { path: "/cloud-storage", element: <CloudStoragePage /> },
-    { path: "/online-payment", element: <OnlinePaymentPage /> }
+    { path: "/online-payment", element: <OnlinePaymentPage /> },
+    { path: "/offer", element: <OfferPage /> },
+    { path: "/privacy-policy", element: <PrivacyPolicyPage /> }
   ], []);
 
   const protectedRoutes = useMemo(() => [
