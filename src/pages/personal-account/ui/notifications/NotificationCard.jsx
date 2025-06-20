@@ -4,7 +4,7 @@ import chatIcon from '../../../../assets/chat_icon.png';
 const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   const handleClick = () => {
     if (!notification.is_read && onMarkAsRead) {
-      onMarkAsRead(notification.notification_id);
+      onMarkAsRead(notification.notification_id || notification.id);
     }
   };
 
@@ -78,7 +78,7 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
             </h4>
             <p className="text-gray-700 leading-relaxed"
                style={{fontSize: 'var(--content-size)'}}>
-              {notification.message}
+              {notification.message || notification.content}
             </p>
           </div>
           <div className="flex-shrink-0 ml-4">

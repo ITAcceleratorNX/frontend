@@ -23,9 +23,19 @@ class NotificationAPI {
     try {
       const response = await api.get('/notifications');
       console.log('Ответ с сервера:', response.data);
-      return { data: response.data.notifications };
+      // Проверяем структуру данных и возвращаем их в правильном формате
+      if (Array.isArray(response.data)) {
+        // Если сервер вернул массив, используем его напрямую
+        return { data: response.data };
+      } else if (response.data && response.data.notifications) {
+        // Если сервер вернул объект с полем notifications
+        return { data: response.data.notifications };
+      } else {
+        // Если структура неизвестна, возвращаем данные как есть
+        return { data: response.data };
+      }
     } catch (error) {
-      console.error('Error fetching user notifications:', error);
+      console.error('Error fetching all notifications:', error);
       throw error;
     }
   }

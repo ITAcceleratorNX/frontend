@@ -21,14 +21,14 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = 
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.content.toLowerCase().includes(searchTerm.toLowerCase());
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesSearch;
   });
 
   // Group notifications by date
   const groupedNotifications = filteredNotifications.reduce((groups, notification) => {
-    const date = new Date(notification.timestamp).toLocaleDateString('ru-RU', {
+    const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -96,9 +96,12 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
                   {/* Notifications for this date */}
                   <div className="space-y-3">
                     {notifications.map((notification) => (
-                      <div key={notification.id} className="relative">
+                      <div key={notification.notification_id} className="relative">
                         <NotificationCard
-                          notification={notification}
+                          notification={{
+                            ...notification,
+                            id: notification.notification_id
+                          }}
                           onMarkAsRead={() => {}} // History mode - no marking as read
                           scale={scale}
                         />
@@ -108,7 +111,7 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
                                marginLeft: `${52 * scale}px`,
                                fontSize: 'var(--text-size)'
                              }}>
-                          Получатели: {notification.recipients?.length || 0} пользователей
+                          Получатели: {notification.recipients?.length || 1} пользователей
                         </div>
                       </div>
                     ))}
