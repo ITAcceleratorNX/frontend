@@ -3,8 +3,7 @@ import NotificationCard from './NotificationCard';
 
 const NotificationHistory = ({ notifications = [], scale = 1 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all'); // all, read, unread
-
+  
   // Стили для масштабирования
   const scaleStyle = {
     fontSize: `${16 * scale}px`,
@@ -18,18 +17,13 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
     '--border-radius': `${8 * scale}px`,
   };
 
-  // Filter notifications based on search and filter type
+  // Filter notifications based on search
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = 
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       notification.content.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesFilter = 
-      filterType === 'all' ||
-      (filterType === 'read' && notification.isRead) ||
-      (filterType === 'unread' && !notification.isRead);
-    
-    return matchesSearch && matchesFilter;
+    return matchesSearch;
   });
 
   // Group notifications by date
@@ -46,13 +40,6 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
     groups[date].push(notification);
     return groups;
   }, {});
-
-  const getFilterCount = (type) => {
-    if (type === 'all') return notifications.length;
-    if (type === 'read') return notifications.filter(n => n.isRead).length;
-    if (type === 'unread') return notifications.filter(n => !n.isRead).length;
-    return 0;
-  };
 
   return (
     <div className="max-w-4xl mx-auto" style={scaleStyle}>
@@ -78,52 +65,6 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
               />
             </div>
           </div>
-          
-          {/* Filters */}
-          <div className="flex items-center gap-4 mt-4">
-            <button
-              onClick={() => setFilterType('all')}
-              className={`px-6 py-3 rounded text-center transition-colors ${
-                filterType === 'all'
-                  ? 'bg-[#1e2c4f] text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              style={{
-                fontSize: 'var(--button-size)',
-                minWidth: `${100 * scale}px`,
-              }}
-            >
-              Все ({getFilterCount('all')})
-            </button>
-            <button
-              onClick={() => setFilterType('unread')}
-              className={`px-6 py-3 rounded text-center transition-colors ${
-                filterType === 'unread'
-                  ? 'bg-[#1e2c4f] text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              style={{
-                fontSize: 'var(--button-size)',
-                minWidth: `${160 * scale}px`,
-              }}
-            >
-              Непрочитанные ({getFilterCount('unread')})
-            </button>
-            <button
-              onClick={() => setFilterType('read')}
-              className={`px-6 py-3 rounded text-center transition-colors ${
-                filterType === 'read'
-                  ? 'bg-[#1e2c4f] text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              style={{
-                fontSize: 'var(--button-size)',
-                minWidth: `${160 * scale}px`,
-              }}
-            >
-              Прочитанные ({getFilterCount('read')})
-            </button>
-          </div>
         </div>
         
         <div className="p-6">
@@ -131,13 +72,10 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
             <div className="text-center py-8">
               <div className="text-gray-400 text-4xl mb-4">📋</div>
               <h3 className="font-medium text-gray-900 mb-2" style={{fontSize: 'var(--heading-size)'}}>
-                {searchTerm || filterType !== 'all' 
-                  ? 'Ничего не найдено' 
-                  : 'История пуста'
-                }
+                {searchTerm ? 'Ничего не найдено' : 'История пуста'}
               </h3>
               <p className="text-gray-600" style={{fontSize: 'var(--text-size)'}}>
-                {searchTerm || filterType !== 'all'
+                {searchTerm
                   ? 'Попробуйте изменить параметры поиска'
                   : 'Отправленные уведомления появятся здесь'
                 }
