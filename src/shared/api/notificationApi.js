@@ -4,13 +4,17 @@ import { api } from './axios';
 // const API_URL = isDevelopment ? '/api' : 'https://extraspace-backend.onrender.com';
 // Не нужно добавлять префикс '/api' к путям
 
+const isDevelopment = import.meta.env.DEV;
+
 class NotificationAPI {
 
   // Получение уведомлений для пользователя
   async getUserNotifications() {
     try {
       const response = await api.get('/notifications/user');
-      console.log('Ответ с сервера:', response.data);
+      if (isDevelopment) {
+        console.log('Ответ с сервера (пользовательские уведомления):', response.data);
+      }
       return { data: response.data };
     } catch (error) {
       console.error('Error fetching user notifications:', error);
@@ -22,18 +26,11 @@ class NotificationAPI {
   async getAllNotifications() {
     try {
       const response = await api.get('/notifications');
-      console.log('Ответ с сервера:', response.data);
-      // Проверяем структуру данных и возвращаем их в правильном формате
-      if (Array.isArray(response.data)) {
-        // Если сервер вернул массив, используем его напрямую
-        return { data: response.data };
-      } else if (response.data && response.data.notifications) {
-        // Если сервер вернул объект с полем notifications
-        return { data: response.data.notifications };
-      } else {
-        // Если структура неизвестна, возвращаем данные как есть
-        return { data: response.data };
+      if (isDevelopment) {
+        console.log('Ответ с сервера (все уведомления):', response.data);
       }
+      // Возвращаем массив напрямую, без вложенности в notifications
+      return { data: response.data };
     } catch (error) {
       console.error('Error fetching all notifications:', error);
       throw error;
@@ -43,7 +40,9 @@ class NotificationAPI {
   // Отправка уведомления
   async sendNotification(notification) {
     try {
-      console.log(notification);
+      if (isDevelopment) {
+        console.log('Отправка уведомления:', notification);
+      }
       const response = await api.post('/notifications/bulk', notification);
       return { data: response.data };
     } catch (error) {
@@ -56,8 +55,8 @@ class NotificationAPI {
   async markAsRead(notificationId) {
     try {
       const response = await api.patch(`/notifications/${notificationId}/read`);
-      if (response.data) {
-        console.log(response.data);
+      if (response.data && isDevelopment) {
+        console.log('Уведомление помечено как прочитанное:', response.data);
       }
       return { data: { id: notificationId, isRead: true } };
     } catch (error) {
@@ -70,6 +69,9 @@ class NotificationAPI {
   async getUsers() {
     try {
       const response = await api.get('/users');
+      if (isDevelopment) {
+        console.log('Получен список пользователей:', response.data.length, 'пользователей');
+      }
       return { data: response.data };
     } catch (error) {
       console.error('Error fetching users:', error);

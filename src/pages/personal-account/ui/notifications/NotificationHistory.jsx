@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import NotificationCard from './NotificationCard';
 
-const NotificationHistory = ({ notifications = [], scale = 1 }) => {
+const NotificationHistory = memo(({ notifications = [], scale = 1 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Стили для масштабирования
-  const scaleStyle = {
+  // Отладочный вывод для проверки данных (только в development)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('NotificationHistory - полученные уведомления:', notifications);
+    }
+  }, [notifications]);
+  
+  // Мемоизируем стили для масштабирования
+  const scaleStyle = useMemo(() => ({
     fontSize: `${16 * scale}px`,
     '--heading-size': `${24 * scale}px`,
     '--text-size': `${18 * scale}px`,
@@ -15,31 +22,41 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
     '--spacing': `${20 * scale}px`,
     '--input-padding': `${16 * scale}px`,
     '--border-radius': `${8 * scale}px`,
-  };
+  }), [scale]);
 
-  // Filter notifications based on search
-  const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = 
-      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.message.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesSearch;
-  });
-
-  // Group notifications by date
-  const groupedNotifications = filteredNotifications.reduce((groups, notification) => {
-    const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+  // Мемоизируем фильтрованные уведомления
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter(notification => {
+      const matchesSearch = 
+        notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        notification.message?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      return matchesSearch;
     });
-    
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(notification);
-    return groups;
-  }, {});
+  }, [notifications, searchTerm]);
+
+  // Мемоизируем группировку по датам
+  const groupedNotifications = useMemo(() => {
+    return filteredNotifications.reduce((groups, notification) => {
+      // Проверяем наличие даты и используем created_at вместо timestamp
+      if (!notification.created_at) {
+        console.warn('Уведомление без даты:', notification);
+        return groups;
+      }
+      
+      const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(notification);
+      return groups;
+    }, {});
+  }, [filteredNotifications]);
 
   return (
     <div className="max-w-4xl mx-auto" style={scaleStyle}>
@@ -98,10 +115,7 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
                     {notifications.map((notification) => (
                       <div key={notification.notification_id} className="relative">
                         <NotificationCard
-                          notification={{
-                            ...notification,
-                            id: notification.notification_id
-                          }}
+                          notification={notification}
                           onMarkAsRead={() => {}} // History mode - no marking as read
                           scale={scale}
                         />
@@ -124,6 +138,8 @@ const NotificationHistory = ({ notifications = [], scale = 1 }) => {
       </div>
     </div>
   );
-};
+});
+
+NotificationHistory.displayName = 'NotificationHistory';
 
 export default NotificationHistory; 

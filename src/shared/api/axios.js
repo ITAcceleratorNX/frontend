@@ -31,13 +31,14 @@ export const setAuthNavigator = (navigateFunction) => {
 // Логирование запросов
 api.interceptors.request.use(
   (config) => {
-    // В продакшене логируем только ошибки
+    // Логируем только в режиме разработки
     if (isDevelopment) {
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
     }
     return config;
   },
   (error) => {
+    // Ошибки запросов логируем всегда
     console.error('[API Request Error]', error);
     return Promise.reject(error);
   }
@@ -46,15 +47,15 @@ api.interceptors.request.use(
 // Логирование и обработка ответов
 api.interceptors.response.use(
   (response) => {
-    // В продакшене логируем только ошибки
+    // Логируем только в режиме разработки
     if (isDevelopment) {
-    console.log(`[API Response] ${response.status} от ${response.config.url}:`, response.data);
+      console.log(`[API Response] ${response.status} от ${response.config.url}`);
     }
     return response;
   },
   (error) => {
-    // Всегда логируем ошибки
-    console.error('[API Response Error]', error);
+    // Критичные ошибки логируем всегда
+    console.error('[API Response Error]', error.response?.status, error.response?.data || error.message);
     
     // Обработка 401 ошибки (Unauthorized)
     if (error.response && error.response.status === 401) {
@@ -72,7 +73,9 @@ api.interceptors.response.use(
         
         // Если у нас есть функция перенаправления и мы не на странице входа
         if (navigateToLogin && !isLoginPage) {
-          console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
+          if (isDevelopment) {
+            console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
+          }
           
           // Устанавливаем флаг, чтобы избежать множественных перенаправлений
           redirectInProgress = true;
@@ -96,16 +99,18 @@ api.interceptors.response.use(
       }
     } 
     else if (error.response) {
-      // Сервер вернул ответ со статус-кодом, отличным от 2xx
-      console.log(`[API Error] Статус ${error.response.status}:`, {
-        data: error.response.data,
-        headers: error.response.headers,
-      });
+      // Детали других ошибок логируем только в режиме разработки
+      if (isDevelopment) {
+        console.log(`[API Error] Статус ${error.response.status}:`, {
+          data: error.response.data,
+          headers: error.response.headers,
+        });
+      }
     } else if (error.request) {
-      // Запрос был сделан, но ответ не получен
+      // Сетевые ошибки логируем всегда
       console.log('[API Error] Нет ответа:', error.request);
     } else {
-      // Что-то пошло не так при настройке запроса
+      // Другие ошибки логируем всегда
       console.log('[API Error] Ошибка запроса:', error.message);
     }
     
@@ -130,7 +135,9 @@ export const makeDirectRequest = async (url, method = 'GET', data) => {
     });
     
     const responseData = await response.json();
-    console.log(`[Direct Fetch] ${response.status} от ${url}:`, responseData);
+    if (isDevelopment) {
+      console.log(`[Direct Fetch] ${response.status} от ${url}:`, responseData);
+    }
     return { status: response.status, data: responseData };
   } catch (error) {
     console.error('[Direct Fetch Error]', error);

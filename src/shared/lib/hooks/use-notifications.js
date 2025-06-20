@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationApi } from '../../api/notificationApi';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import { useMemo } from 'react';
 
 // Query keys для уведомлений
 export const NOTIFICATION_QUERY_KEYS = {
@@ -15,11 +16,12 @@ export const NOTIFICATION_QUERY_KEYS = {
 export const useUserNotifications = () => {
   const { user } = useAuth();
   const userId = user?.id;
+  const isUser = user?.role === 'USER';
 
   return useQuery({
     queryKey: NOTIFICATION_QUERY_KEYS.user(userId),
     queryFn: () => notificationApi.getUserNotifications(userId),
-    enabled: !!userId,
+    enabled: !!userId && isUser, // Включаем только для обычных пользователей
     select: (data) => data.data,
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
@@ -93,37 +95,44 @@ export const useMarkAsRead = () => {
   return useMutation({
     mutationFn: (notificationId) => notificationApi.markAsRead(notificationId),
     onMutate: async (notificationId) => {
+      const isUser = user?.role === 'USER';
+      const queryKey = isUser 
+        ? NOTIFICATION_QUERY_KEYS.user(user?.id)
+        : NOTIFICATION_QUERY_KEYS.all;
+      
       // Отменяем исходящие запросы
-      await queryClient.cancelQueries({ queryKey: NOTIFICATION_QUERY_KEYS.user(user?.id) });
+      await queryClient.cancelQueries({ queryKey });
       
       // Получаем предыдущие данные для отката
-      const previousData = queryClient.getQueryData(NOTIFICATION_QUERY_KEYS.user(user?.id));
+      const previousData = queryClient.getQueryData(queryKey);
       
       // Оптимистично обновляем кеш
-      queryClient.setQueryData(NOTIFICATION_QUERY_KEYS.user(user?.id), (oldData) => {
+      queryClient.setQueryData(queryKey, (oldData) => {
         if (!oldData?.data) return oldData;
         return {
           ...oldData,
           data: oldData.data.map(notification =>
-            notification.id === notificationId
-              ? { ...notification, isRead: true }
+            notification.notification_id === notificationId
+              ? { ...notification, is_read: true }
               : notification
           )
         };
       });
       
-      return { previousData };
+      return { previousData, queryKey };
     },
     onError: (err, notificationId, context) => {
       // Откатываем изменения при ошибке
-      if (context?.previousData) {
-        queryClient.setQueryData(NOTIFICATION_QUERY_KEYS.user(user?.id), context.previousData);
+      if (context?.previousData && context?.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
       }
       toast.error('Ошибка при пометке уведомления как прочитанного');
     },
-    onSettled: () => {
+    onSettled: (data, error, notificationId, context) => {
       // Перезапрашиваем данные после мутации
-      queryClient.invalidateQueries({ queryKey: NOTIFICATION_QUERY_KEYS.user(user?.id) });
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
     }
   });
 };
@@ -148,6 +157,9 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const userRole = user?.role;
   
+  // Мемоизируем роль для предотвращения ненужных ререндеров
+  const memoizedUserRole = useMemo(() => userRole, [userRole]);
+  
   const userNotifications = useUserNotifications();
   const allNotifications = useAllNotifications();
   const users = useNotificationUsers();
@@ -156,31 +168,49 @@ export const useNotifications = () => {
   const sendNotification = useSendNotification();
   const markAsRead = useMarkAsRead();
 
-  // Возвращаем данные в зависимости от роли
-  if (userRole === 'USER') {
-    return {
-      notifications: userNotifications.data || [],
-      isLoading: userNotifications.isLoading,
-      error: userNotifications.error,
-      markAsRead: markAsRead.mutate,
-      isMarkingAsRead: markAsRead.isPending,
-      // Для пользователей не нужны эти функции
-      users: [],
-      sendNotification: null,
-      stats: null
-    };
-  }
+  // Мемоизируем результат для предотвращения ненужных ререндеров
+  return useMemo(() => {
+    // Возвращаем данные в зависимости от роли
+    if (memoizedUserRole === 'USER') {
+      return {
+        notifications: userNotifications.data || [],
+        isLoading: userNotifications.isLoading,
+        error: userNotifications.error,
+        markAsRead: markAsRead.mutate,
+        isMarkingAsRead: markAsRead.isPending,
+        // Для пользователей не нужны эти функции
+        users: [],
+        sendNotification: null,
+        stats: null
+      };
+    }
 
-  // Для менеджеров и админов
-  return {
-    notifications: allNotifications.data || [],
-    users: users.data || [],
-    stats: stats.data || null,
-    isLoading: allNotifications.isLoading || users.isLoading,
-    error: allNotifications.error || users.error,
-    sendNotification: sendNotification.mutate,
-    isSending: sendNotification.isPending,
-    markAsRead: markAsRead.mutate,
-    isMarkingAsRead: markAsRead.isPending
-  };
+    // Для менеджеров и админов
+    return {
+      notifications: allNotifications.data || [],
+      users: users.data || [],
+      stats: stats.data || null,
+      isLoading: allNotifications.isLoading || users.isLoading,
+      error: allNotifications.error || users.error,
+      sendNotification: sendNotification.mutate,
+      isSending: sendNotification.isPending,
+      markAsRead: markAsRead.mutate,
+      isMarkingAsRead: markAsRead.isPending
+    };
+  }, [
+    memoizedUserRole,
+    userNotifications.data,
+    userNotifications.isLoading,
+    userNotifications.error,
+    allNotifications.data,
+    allNotifications.isLoading,
+    allNotifications.error,
+    users.data,
+    users.isLoading,
+    stats.data,
+    sendNotification.mutate,
+    sendNotification.isPending,
+    markAsRead.mutate,
+    markAsRead.isPending
+  ]);
 }; 
