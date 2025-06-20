@@ -29,7 +29,8 @@ const userNavItems = [
 const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
-  { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Склады', icon: icon9, key: 'managerwarehouses' },
+  { label: 'Мувинг', icon: icon9, key: 'managermoving' },
   { label: 'Чат', icon: icon3, key: 'chat' },
   { divider: true },
   { label: 'Настройки', icon: icon5, key: 'settings' },
@@ -40,7 +41,17 @@ const managerNavItems = [
 const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
-  { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Склады', icon: icon9, key: 'adminwarehouses' },
+  { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
+  { divider: true },
+  { label: 'Настройки', icon: icon5, key: 'settings' },
+  { label: 'Выйти', icon: icon6, key: 'logout' },
+];
+
+// Разделы для грузчиков
+const deliveryNavItems = [
+  { label: 'Личные данные', icon: icon1, key: 'personal' },
+  { label: 'Request', icon: icon8, key: 'deliveryrequest' },
   { divider: true },
   { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
@@ -51,14 +62,27 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Добавляем отладочную информацию
+  console.log('Sidebar: текущий пользователь:', { 
+    role: user?.role,
+    isAuth: !!user,
+    activeNav
+  });
+
   // Определяем, какие разделы показать в зависимости от роли
   const getNavItemsByRole = (role) => {
-    switch (role) {
+    console.log('getNavItemsByRole вызван с ролью:', role);
+    
+    switch (role?.toUpperCase()) {  
       case 'ADMIN':
         return adminNavItems;
       case 'MANAGER':
         return managerNavItems;
+      case 'DELIVERY':
+      case 'COURIER':  
+        return deliveryNavItems;
       default:
+        console.log('Используются userNavItems для роли:', role);
         return userNavItems;
     }
   };
@@ -147,7 +171,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         }, 300);
       }
     }
-    // Здесь можно добавить переходы для других пунктов
+    // Все остальные пункты меню просто меняют activeNav
   };
 
   return (

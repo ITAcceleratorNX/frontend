@@ -7,8 +7,12 @@ import Contracts from './ui/Contracts';
 import Settings from './ui/Settings';
 import ChatSection from './ui/ChatSection';
 import AdminUsers from './ui/AdminUsers';
+import AdminMoving from './ui/AdminMoving';
 import ManagerUsers from './ui/ManagerUsers';
+import ManagerMoving from './ui/ManagerMoving';
 import AdminWarehouses from './ui/AdminWarehouses';
+import ManagerWarehouses from './ui/ManagerWarehouses';
+import DeliveryRequest from './ui/DeliveryRequest';
 import { useAuth } from '../../shared/context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -62,24 +66,39 @@ const PersonalAccountPage = memo(() => {
       <div className="flex flex-1">
         <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         <main className="flex-1 flex flex-col items-start justify-center py-12 px-10 bg-white">
-          {activeNav === 'personal' && <PersonalData />}
-          {activeNav === 'contracts' && <Contracts />}
-          {activeNav === 'chat' && <ChatSection />}
-          {activeNav === 'adminusers' && <AdminUsers />}
-          {activeNav === 'managerusers' && <ManagerUsers />}
-          {activeNav === 'warehouses' && <AdminWarehouses />}
-          {activeNav === 'payments' && (
-            <div className="w-full max-w-4xl mx-auto p-8">
-              <h1 className="text-2xl font-bold text-[#273655] mb-4">Платежи</h1>
-              <p className="text-gray-600">Раздел платежей в разработке...</p>
-            </div>
+          {/* Ограничения для ролей */}
+          {(user?.role === 'DELIVERY' || user?.role === 'COURIER') ? (
+            <>
+              {activeNav === 'personal' && <PersonalData />}
+              {activeNav === 'chat' && <ChatSection />}
+              {activeNav === 'settings' && <Settings />}
+              {activeNav === 'deliveryrequest' && <DeliveryRequest />}
+            </>
+          ) : (
+            <>
+              {activeNav === 'personal' && <PersonalData />}
+              {activeNav === 'contracts' && <Contracts />}
+              {activeNav === 'chat' && <ChatSection />}
+              {activeNav === 'adminusers' && <AdminUsers />}
+              {activeNav === 'adminmoving' && <AdminMoving />}
+              {activeNav === 'managerusers' && <ManagerUsers />}
+              {activeNav === 'managermoving' && <ManagerMoving />}
+              {activeNav === 'adminwarehouses' && <AdminWarehouses />}
+              {activeNav === 'managerwarehouses' && <ManagerWarehouses />}
+              {activeNav === 'payments' && (
+                <div className="w-full max-w-4xl mx-auto p-8">
+                  <h1 className="text-2xl font-bold text-[#273655] mb-4">Платежи</h1>
+                  <p className="text-gray-600">Раздел платежей в разработке...</p>
+                </div>
+              )}
+              {activeNav === 'settings' && <Settings />}
+            </>
           )}
-          {activeNav === 'settings' && <Settings />}
         </main>
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated]);
+  }, [activeNav, isLoading, isAuthenticated, user]);
 
   if (import.meta.env.DEV) {
     console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 

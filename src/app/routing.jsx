@@ -19,6 +19,11 @@ import PersonalAccountPage from '../pages/personal-account';
 import AdminUsersProfile from '../pages/personal-account/ui/AdminUsersProfile';
 import ManagerUsersProfile from '../pages/personal-account/ui/ManagerUsersProfile';
 import AdminWarehouseData from '../pages/personal-account/ui/AdminWarehouseData';
+import ManagerWarehouseData from '../pages/personal-account/ui/ManagerWarehouseData';
+import AdminMovingOrder from '../pages/personal-account/ui/AdminMovingOrder';
+import ManagerMovingOrder from '../pages/personal-account/ui/ManagerMovingOrder';
+import DeliveryRequest from '../pages/personal-account/ui/DeliveryRequest';
+import DeliveryRequestOrder from '../pages/personal-account/ui/DeliveryRequestOrder';
 
 // Мемоизированный компонент для логирования маршрутов - только в режиме разработки
 const RouteLogger = memo(({ children }) => {
@@ -118,7 +123,11 @@ const Routing = memo(() => {
     { path: "/personal-account", element: <PersonalAccountPage /> },
     { path: "/admin/users/:userId/profile", element: <AdminUsersProfile /> },
     { path: "/personal-account/manager/users/:userId", element: <ManagerUsersProfile /> },
-    { path: "/admin/warehouses/:warehouseId", element: <AdminWarehouseData /> }
+    { path: "/personal-account/admin/warehouses/:warehouseId", element: <AdminWarehouseData /> },
+    { path: "/personal-account/manager/warehouses/:warehouseId", element: <ManagerWarehouseData /> },
+    { path: "/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
+    { path: "/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
+    { path: "/personal-account/delivery/order/:orderId", element: <DeliveryRequestOrder /> },
   ], []);
 
   // Мемоизируем маппинг маршрутов для предотвращения повторного создания элементов

@@ -66,10 +66,10 @@ const DUMMY_WAREHOUSES = [
   },
 ];
 
-const AdminWarehouseData = () => {
+const ManagerWarehouseData = () => {
   const navigate = useNavigate();
   const { warehouseId } = useParams();
-  const [activeNav, setActiveNav] = useState('adminwarehouses');
+  const [activeNav, setActiveNav] = useState('managerwarehouses');
 
   const warehouse = DUMMY_WAREHOUSES.find(w => w.id === warehouseId);
 
@@ -88,7 +88,7 @@ const AdminWarehouseData = () => {
             <div className="w-[1150px] ml-[80px] bg-white rounded-2xl p-8">
               <div className="flex items-center mb-6">
                 <div 
-                  onClick={() => navigate('/personal-account', { state: { activeSection: 'adminwarehouses' } })}
+                  onClick={() => navigate('/personal-account', { state: { activeSection: 'managerwarehouses' } })}
                   className="flex items-center text-[#000000] text-lg mr-2 cursor-pointer"
                 >
                   <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -123,4 +123,4 @@ const AdminWarehouseData = () => {
   );
 };
 
-export default AdminWarehouseData;
+export default ManagerWarehouseData;
