@@ -1,15 +1,15 @@
 import { api } from './axios';
 
-// Mock API endpoints для уведомлений
-// В будущем можно будет заменить на реальные API вызовы
-const API_URL = 'https://extraspace-backend.onrender.com';
+// Базовый URL уже настроен в axios.js:
+// const API_URL = isDevelopment ? '/api' : 'https://extraspace-backend.onrender.com';
+// Не нужно добавлять префикс '/api' к путям
 
 class NotificationAPI {
 
   // Получение уведомлений для пользователя
   async getUserNotifications() {
     try {
-      const response = await api.get(`${API_URL}/notifications/user`);
+      const response = await api.get('/notifications/user');
       console.log('Ответ с сервера:', response.data);
       return { data: response.data };
     } catch (error) {
@@ -21,7 +21,7 @@ class NotificationAPI {
   // Получение всех уведомлений (для менеджеров/админов)
   async getAllNotifications() {
     try {
-      const response = await api.get(`${API_URL}/notifications`);
+      const response = await api.get('/notifications');
       console.log('Ответ с сервера:', response.data);
       return { data: response.data.notifications };
     } catch (error) {
@@ -34,7 +34,7 @@ class NotificationAPI {
   async sendNotification(notification) {
     try {
       console.log(notification);
-      const response = await api.post(API_URL+'/notifications/bulk', notification);
+      const response = await api.post('/notifications/bulk', notification);
       return { data: response.data };
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -45,7 +45,7 @@ class NotificationAPI {
   // Пометить уведомление как прочитанное
   async markAsRead(notificationId) {
     try {
-      const response = await api.patch(`${API_URL}/notifications/${notificationId}/read`);
+      const response = await api.patch(`/notifications/${notificationId}/read`);
       if (response.data) {
         console.log(response.data);
       }
@@ -59,7 +59,7 @@ class NotificationAPI {
   // Получение списка пользователей (для отправки уведомлений)
   async getUsers() {
     try {
-      const response = await api.get(`${API_URL}/users`);
+      const response = await api.get('/users');
       return { data: response.data };
     } catch (error) {
       console.error('Error fetching users:', error);
