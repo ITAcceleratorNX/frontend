@@ -3,8 +3,8 @@ import chatIcon from '../../../../assets/chat_icon.png';
 
 const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   const handleClick = () => {
-    if (!notification.isRead && onMarkAsRead) {
-      onMarkAsRead(notification.id);
+    if (!notification.is_read && onMarkAsRead) {
+      onMarkAsRead(notification.notification_id);
     }
   };
 
@@ -30,7 +30,7 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   return (
     <div 
       className={`relative flex items-start space-x-3 border transition-all duration-200 cursor-pointer hover:shadow-sm ${
-        notification.isRead 
+        notification.is_read 
           ? 'bg-white border-gray-200' 
           : 'bg-blue-50 border-blue-200 shadow-sm'
       }`}
@@ -38,14 +38,15 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
       style={scaleStyle}
     >
       {/* Unread indicator */}
-      {!notification.isRead && (
+      {!notification.is_read && (
         <div className="absolute top-4 left-2 w-2 h-2 bg-[#1e2c4f] rounded-full"
              style={{
                width: `${8 * scale}px`,
                height: `${8 * scale}px`,
                top: `${16 * scale}px`,
                left: `${8 * scale}px`,
-             }}></div>
+             }}>
+        </div>
       )}
       
       {/* Avatar */}
@@ -77,13 +78,13 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
             </h4>
             <p className="text-gray-700 leading-relaxed"
                style={{fontSize: 'var(--content-size)'}}>
-              {notification.content}
+              {notification.message}
             </p>
           </div>
           <div className="flex-shrink-0 ml-4">
             <span className="text-gray-500"
                   style={{fontSize: 'var(--time-size)'}}>
-              {formatTime(notification.timestamp)}
+              {formatTime(notification.created_at)}
             </span>
           </div>
         </div>
@@ -92,4 +93,4 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   );
 };
 
-export default NotificationCard; 
+export default NotificationCard;

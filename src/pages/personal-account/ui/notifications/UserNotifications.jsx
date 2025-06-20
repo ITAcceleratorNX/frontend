@@ -4,7 +4,7 @@ import NotificationCard from './NotificationCard';
 const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
   // Group notifications by date
   const groupedNotifications = notifications.reduce((groups, notification) => {
-    const date = new Date(notification.timestamp).toLocaleDateString('ru-RU', {
+    const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit'
     });
@@ -61,7 +61,7 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
               <div className="space-y-3">
                 {notifications.map((notification) => (
                   <NotificationCard
-                    key={notification.id}
+                    key={notification.notification_id}
                     notification={notification}
                     onMarkAsRead={onMarkAsRead}
                     scale={scale}
@@ -76,4 +76,4 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
   );
 };
 
-export default UserNotifications; 
+export default UserNotifications;
