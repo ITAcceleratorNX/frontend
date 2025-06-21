@@ -28,16 +28,18 @@ export const AuthProvider = ({ children }) => {
   // Доступ к кешу React Query
   const queryClient = useQueryClient();
 
-  // Логирование только в режиме разработки
+  // Расширенное логирование в режиме разработки
   useEffect(() => {
     if (import.meta.env.DEV && (!isLoading || !isFetching)) {
-      console.log('AuthContext: Статус авторизации:', { 
-        isAuthenticated: !!user, 
-        isLoading, 
+      console.log('AuthContext: Данные пользователя:', { 
+        isAuthenticated: !!user,
+        role: user?.role,
+        hasUser: !!user,
+        isLoading,
         isFetching,
-        hasUser: !!user
+        user // Полные данные пользователя
       });
-              }
+    }
   }, [user, isLoading, isFetching]);
 
   // Мемоизированная функция для входа

@@ -60,11 +60,11 @@ const DUMMY_WAREHOUSES = [
   },
 ];
 
-const AdminWarehouses = () => {
+const ManagerWarehouses = () => {
   const navigate = useNavigate();
 
   const handleCardClick = (id) => {
-    navigate(`/personal-account/admin/warehouses/${id}`);
+    navigate(`/personal-account/manager/warehouses/${id}`);
   };
 
   return (
@@ -124,4 +124,4 @@ const AdminWarehouses = () => {
   );
 };
 
-export default AdminWarehouses; 
+export default ManagerWarehouses; 

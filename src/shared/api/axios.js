@@ -128,12 +128,18 @@ export const makeDirectRequest = async (url, method = 'GET', data) => {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       // Включаем передачу cookies
       credentials: 'include',
+      mode: 'cors',
       body: data ? JSON.stringify(data) : undefined,
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const responseData = await response.json();
     if (isDevelopment) {
     console.log(`[Direct Fetch] ${response.status} от ${url}:`, responseData);

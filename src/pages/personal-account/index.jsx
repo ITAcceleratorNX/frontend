@@ -7,12 +7,19 @@ import Contracts from './ui/Contracts';
 import Settings from './ui/Settings';
 import ChatSection from './ui/ChatSection';
 import AdminUsers from './ui/AdminUsers';
+import AdminMoving from './ui/AdminMoving';
 import ManagerUsers from './ui/ManagerUsers';
+import ManagerMoving from './ui/ManagerMoving';
 import AdminWarehouses from './ui/AdminWarehouses';
+import ManagerWarehouses from './ui/ManagerWarehouses';
+import CourierRequest from './ui/CourierRequest';
+import CourierRequestOrder from './ui/CourierRequestOrder';
+
 import { 
   UserNotificationsPage, 
   AdminNotifications, 
-  ManagerNotifications 
+  ManagerNotifications,
+  CourierNotifications,
 } from './ui/notifications';
 import { useAuth } from '../../shared/context/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -54,6 +61,8 @@ const PersonalAccountPage = memo(() => {
         return <AdminNotifications />;
       case 'MANAGER':
         return <ManagerNotifications />;
+      case 'COURIER':
+        return <CourierNotifications />;
       default:
         return <UserNotificationsPage />;
     }
@@ -81,13 +90,20 @@ const PersonalAccountPage = memo(() => {
       <div className="flex flex-1">
         <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         <main className="flex-1 flex flex-col items-start justify-center py-12 px-10 bg-white">
+
+
           {activeNav === 'personal' && <PersonalData />}
           {activeNav === 'contracts' && <Contracts />}
           {activeNav === 'chat' && <ChatSection />}
           {activeNav === 'notifications' && getNotificationsComponent()}
           {activeNav === 'adminusers' && <AdminUsers />}
           {activeNav === 'managerusers' && <ManagerUsers />}
-          {activeNav === 'warehouses' && <AdminWarehouses />}
+          {activeNav === 'adminwarehouses' && <AdminWarehouses />}
+          {activeNav === 'managerwarehouses' && <ManagerWarehouses />}
+          {activeNav === 'adminmoving' && <AdminMoving />}
+          {activeNav === 'managermoving' && <ManagerMoving />}
+          {activeNav === 'courierrequests' && <CourierRequest />}
+          {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
           {activeNav === 'payments' && (
             <div className="w-full max-w-4xl mx-auto p-8">
               <h1 className="text-2xl font-bold text-[#273655] mb-4">Платежи</h1>

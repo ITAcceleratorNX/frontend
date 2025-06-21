@@ -5,5 +5,6 @@ export { default as ManagerUsersProfile } from './ManagerUsersProfile';
 export { 
   UserNotificationsPage, 
   AdminNotifications, 
-  ManagerNotifications 
+  ManagerNotifications,
+  CourierNotifications,
 } from './notifications';
