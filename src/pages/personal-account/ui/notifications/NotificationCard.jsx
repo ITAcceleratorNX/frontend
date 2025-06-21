@@ -37,17 +37,7 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
       onClick={handleClick}
       style={scaleStyle}
     >
-      {/* Unread indicator */}
-      {!notification.is_read && (
-        <div className="absolute top-4 left-2 w-2 h-2 bg-[#1e2c4f] rounded-full"
-             style={{
-               width: `${8 * scale}px`,
-               height: `${8 * scale}px`,
-               top: `${16 * scale}px`,
-               left: `${8 * scale}px`,
-             }}>
-        </div>
-      )}
+
       
       {/* Avatar */}
       <div className="flex-shrink-0">
@@ -93,4 +83,4 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   );
 };
 
-export default NotificationCard;
+export default NotificationCard; 

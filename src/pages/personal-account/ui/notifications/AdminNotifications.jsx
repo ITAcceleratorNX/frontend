@@ -9,14 +9,6 @@ const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState('history');
   const [interfaceScale, setInterfaceScale] = useState(1); // Масштаб интерфейса (1 = 100%)
   
-  // Загружаем сохраненный масштаб при монтировании
-  useEffect(() => {
-    const savedScale = localStorage.getItem('notificationScale');
-    if (savedScale) {
-      setInterfaceScale(parseFloat(savedScale));
-    }
-  }, []);
-  
   // Используем хук для получения данных уведомлений
   const {
     notifications,
@@ -28,6 +20,13 @@ const AdminNotifications = () => {
     isSending,
     markAsRead
   } = useNotifications();
+
+  // Отладочный вывод для проверки структуры данных (только в development)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('AdminNotifications - полученные данные:', notifications);
+    }
+  }, [notifications]);
 
   // Handle sending new notification
   const handleSendNotification = async (notification) => {
@@ -167,7 +166,7 @@ const AdminNotifications = () => {
           />
         )}
         
-        {activeTab === 'history' && (
+                  {activeTab === 'history' && (
           <NotificationHistory
             notifications={notifications || []}
             scale={interfaceScale}

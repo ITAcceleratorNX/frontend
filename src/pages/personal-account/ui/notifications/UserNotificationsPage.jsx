@@ -21,6 +21,13 @@ const UserNotificationsPage = () => {
     markAsRead
   } = useNotifications();
 
+  // Отладочный вывод для проверки структуры данных (только в development)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('UserNotificationsPage - полученные данные:', notifications);
+    }
+  }, [notifications]);
+
   // Функция для изменения масштаба интерфейса
   const changeScale = (newScale) => {
     setInterfaceScale(newScale);

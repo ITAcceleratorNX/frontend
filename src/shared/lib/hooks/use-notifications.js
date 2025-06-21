@@ -22,18 +22,7 @@ export const useUserNotifications = () => {
     queryKey: NOTIFICATION_QUERY_KEYS.user(userId),
     queryFn: () => notificationApi.getUserNotifications(userId),
     enabled: !!userId && isUser, // Включаем только для обычных пользователей
-    select: (data) => {
-      // Если data.data является объектом с полем notifications, извлекаем массив
-      if (data.data && Array.isArray(data.data.notifications)) {
-        return data.data.notifications;
-      }
-      // Если data.data уже массив, возвращаем его
-      if (Array.isArray(data.data)) {
-        return data.data;
-      }
-      // В остальных случаях возвращаем пустой массив
-      return [];
-    },
+    select: (data) => data.data,
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
   });
@@ -48,18 +37,7 @@ export const useAllNotifications = () => {
     queryKey: NOTIFICATION_QUERY_KEYS.all,
     queryFn: () => notificationApi.getAllNotifications(),
     enabled: isManagerOrAdmin,
-    select: (data) => {
-      // Если data.data является объектом с полем notifications, извлекаем массив
-      if (data.data && Array.isArray(data.data.notifications)) {
-        return data.data.notifications;
-      }
-      // Если data.data уже массив, возвращаем его
-      if (Array.isArray(data.data)) {
-        return data.data;
-      }
-      // В остальных случаях возвращаем пустой массив
-      return [];
-    },
+    select: (data) => data.data,
     staleTime: 2 * 60 * 1000, // 2 минуты
     cacheTime: 5 * 60 * 1000, // 5 минут
   });
@@ -93,8 +71,11 @@ export const useSendNotification = () => {
       
       // Добавляем новое уведомление в кеш оптимистично
       queryClient.setQueryData(NOTIFICATION_QUERY_KEYS.all, (oldData) => {
-        if (!Array.isArray(oldData)) return oldData;
-        return [data.data, ...oldData];
+        if (!oldData?.data) return oldData;
+        return {
+          ...oldData,
+          data: [data.data, ...oldData.data]
+        };
       });
 
       toast.success('Уведомление успешно отправлено!');
@@ -127,12 +108,15 @@ export const useMarkAsRead = () => {
       
       // Оптимистично обновляем кеш
       queryClient.setQueryData(queryKey, (oldData) => {
-        if (!Array.isArray(oldData)) return oldData;
-        return oldData.map(notification =>
-          notification.notification_id === notificationId
-            ? { ...notification, is_read: true }
-            : notification
-        );
+        if (!oldData?.data) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.map(notification =>
+            notification.notification_id === notificationId
+              ? { ...notification, is_read: true }
+              : notification
+          )
+        };
       });
       
       return { previousData, queryKey };
@@ -186,33 +170,33 @@ export const useNotifications = () => {
 
   // Мемоизируем результат для предотвращения ненужных ререндеров
   return useMemo(() => {
-    // Возвращаем данные в зависимости от роли
+  // Возвращаем данные в зависимости от роли
     if (memoizedUserRole === 'USER') {
-      return {
-        notifications: userNotifications.data || [],
-        isLoading: userNotifications.isLoading,
-        error: userNotifications.error,
-        markAsRead: markAsRead.mutate,
-        isMarkingAsRead: markAsRead.isPending,
-        // Для пользователей не нужны эти функции
-        users: [],
-        sendNotification: null,
-        stats: null
-      };
-    }
-
-    // Для менеджеров и админов
     return {
-      notifications: allNotifications.data || [],
-      users: users.data || [],
-      stats: stats.data || null,
-      isLoading: allNotifications.isLoading || users.isLoading,
-      error: allNotifications.error || users.error,
-      sendNotification: sendNotification.mutate,
-      isSending: sendNotification.isPending,
+      notifications: userNotifications.data || [],
+      isLoading: userNotifications.isLoading,
+      error: userNotifications.error,
       markAsRead: markAsRead.mutate,
-      isMarkingAsRead: markAsRead.isPending
+      isMarkingAsRead: markAsRead.isPending,
+      // Для пользователей не нужны эти функции
+      users: [],
+      sendNotification: null,
+      stats: null
     };
+  }
+
+  // Для менеджеров и админов
+  return {
+    notifications: allNotifications.data || [],
+    users: users.data || [],
+    stats: stats.data || null,
+    isLoading: allNotifications.isLoading || users.isLoading,
+    error: allNotifications.error || users.error,
+    sendNotification: sendNotification.mutate,
+    isSending: sendNotification.isPending,
+    markAsRead: markAsRead.mutate,
+    isMarkingAsRead: markAsRead.isPending
+  };
   }, [
     memoizedUserRole,
     userNotifications.data,

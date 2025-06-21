@@ -29,6 +29,13 @@ const ManagerNotifications = () => {
     markAsRead
   } = useNotifications();
 
+  // Отладочный вывод для проверки структуры данных (только в development)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('ManagerNotifications - полученные данные:', notifications);
+    }
+  }, [notifications]);
+
   // Отправка нового уведомления
   const handleSendNotification = async (notification) => {
     try {

@@ -4,26 +4,12 @@ import NotificationCard from './NotificationCard';
 const NotificationHistory = memo(({ notifications = [], scale = 1 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Обеспечиваем, что notifications всегда массив
-  const safeNotifications = useMemo(() => {
-    if (Array.isArray(notifications)) {
-      return notifications;
-    }
-    // Если notifications это объект с полем notifications
-    if (notifications && Array.isArray(notifications.notifications)) {
-      return notifications.notifications;
-    }
-    // В остальных случаях возвращаем пустой массив
-    return [];
-  }, [notifications]);
-  
   // Отладочный вывод для проверки данных (только в development)
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('NotificationHistory - исходные данные:', notifications);
-      console.log('NotificationHistory - безопасные уведомления:', safeNotifications);
+      console.log('NotificationHistory - полученные уведомления:', notifications);
     }
-  }, [notifications, safeNotifications]);
+  }, [notifications]);
   
   // Мемоизируем стили для масштабирования
   const scaleStyle = useMemo(() => ({
@@ -40,14 +26,14 @@ const NotificationHistory = memo(({ notifications = [], scale = 1 }) => {
 
   // Мемоизируем фильтрованные уведомления
   const filteredNotifications = useMemo(() => {
-    return safeNotifications.filter(notification => {
+    return notifications.filter(notification => {
     const matchesSearch = 
         notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         notification.message?.toLowerCase().includes(searchTerm.toLowerCase());
     
       return matchesSearch;
     });
-  }, [safeNotifications, searchTerm]);
+  }, [notifications, searchTerm]);
 
   // Мемоизируем группировку по датам
   const groupedNotifications = useMemo(() => {
@@ -133,14 +119,6 @@ const NotificationHistory = memo(({ notifications = [], scale = 1 }) => {
                           onMarkAsRead={() => {}} // History mode - no marking as read
                           scale={scale}
                         />
-                        {/* Recipients info */}
-                        <div className="mt-2 ml-13 text-gray-500"
-                             style={{
-                               marginLeft: `${52 * scale}px`,
-                               fontSize: 'var(--text-size)'
-                             }}>
-                          Получатели: {notification.recipients?.length || 1} пользователей
-                        </div>
                       </div>
                     ))}
                   </div>

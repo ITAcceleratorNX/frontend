@@ -15,7 +15,10 @@ class NotificationAPI {
       if (isDevelopment) {
         console.log('Ответ с сервера (пользовательские уведомления):', response.data);
       }
-      return { data: response.data };
+      // Проверяем структуру ответа и возвращаем массив уведомлений
+      const notifications = Array.isArray(response.data) ? response.data : 
+                           (response.data.notifications || []);
+      return { data: notifications };
     } catch (error) {
       console.error('Error fetching user notifications:', error);
       throw error;
@@ -29,8 +32,12 @@ class NotificationAPI {
       if (isDevelopment) {
         console.log('Ответ с сервера (все уведомления):', response.data);
       }
-      // Возвращаем массив напрямую, без вложенности в notifications
-      return { data: response.data };
+      
+      // Проверяем структуру ответа и извлекаем массив уведомлений
+      const notifications = Array.isArray(response.data) ? response.data : 
+                          (response.data.notifications || []);
+      
+      return { data: notifications };
     } catch (error) {
       console.error('Error fetching all notifications:', error);
       throw error;

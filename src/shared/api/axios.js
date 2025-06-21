@@ -74,7 +74,7 @@ api.interceptors.response.use(
         // Если у нас есть функция перенаправления и мы не на странице входа
         if (navigateToLogin && !isLoginPage) {
           if (isDevelopment) {
-            console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
+          console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
           }
           
           // Устанавливаем флаг, чтобы избежать множественных перенаправлений
@@ -101,10 +101,10 @@ api.interceptors.response.use(
     else if (error.response) {
       // Детали других ошибок логируем только в режиме разработки
       if (isDevelopment) {
-        console.log(`[API Error] Статус ${error.response.status}:`, {
-          data: error.response.data,
-          headers: error.response.headers,
-        });
+      console.log(`[API Error] Статус ${error.response.status}:`, {
+        data: error.response.data,
+        headers: error.response.headers,
+      });
       }
     } else if (error.request) {
       // Сетевые ошибки логируем всегда
@@ -136,7 +136,7 @@ export const makeDirectRequest = async (url, method = 'GET', data) => {
     
     const responseData = await response.json();
     if (isDevelopment) {
-      console.log(`[Direct Fetch] ${response.status} от ${url}:`, responseData);
+    console.log(`[Direct Fetch] ${response.status} от ${url}:`, responseData);
     }
     return { status: response.status, data: responseData };
   } catch (error) {
