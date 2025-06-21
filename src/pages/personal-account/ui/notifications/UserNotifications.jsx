@@ -2,8 +2,21 @@ import React from 'react';
 import NotificationCard from './NotificationCard';
 
 const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
+  // Обеспечиваем, что notifications всегда массив
+  const safeNotifications = React.useMemo(() => {
+    if (Array.isArray(notifications)) {
+      return notifications;
+    }
+    // Если notifications это объект с полем notifications
+    if (notifications && Array.isArray(notifications.notifications)) {
+      return notifications.notifications;
+    }
+    // В остальных случаях возвращаем пустой массив
+    return [];
+  }, [notifications]);
+
   // Group notifications by date
-  const groupedNotifications = notifications.reduce((groups, notification) => {
+  const groupedNotifications = safeNotifications.reduce((groups, notification) => {
     const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit'
@@ -23,7 +36,7 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
     '--text-size': `${18 * scale}px`,
   };
 
-  if (notifications.length === 0) {
+  if (safeNotifications.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-8 text-center" style={scaleStyle}>
         <div className="text-gray-400 text-4xl mb-4">📫</div>

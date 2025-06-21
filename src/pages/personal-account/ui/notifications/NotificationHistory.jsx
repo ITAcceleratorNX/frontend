@@ -4,12 +4,26 @@ import NotificationCard from './NotificationCard';
 const NotificationHistory = memo(({ notifications = [], scale = 1 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
+  // Обеспечиваем, что notifications всегда массив
+  const safeNotifications = useMemo(() => {
+    if (Array.isArray(notifications)) {
+      return notifications;
+    }
+    // Если notifications это объект с полем notifications
+    if (notifications && Array.isArray(notifications.notifications)) {
+      return notifications.notifications;
+    }
+    // В остальных случаях возвращаем пустой массив
+    return [];
+  }, [notifications]);
+  
   // Отладочный вывод для проверки данных (только в development)
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('NotificationHistory - полученные уведомления:', notifications);
+      console.log('NotificationHistory - исходные данные:', notifications);
+      console.log('NotificationHistory - безопасные уведомления:', safeNotifications);
     }
-  }, [notifications]);
+  }, [notifications, safeNotifications]);
   
   // Мемоизируем стили для масштабирования
   const scaleStyle = useMemo(() => ({
@@ -26,14 +40,14 @@ const NotificationHistory = memo(({ notifications = [], scale = 1 }) => {
 
   // Мемоизируем фильтрованные уведомления
   const filteredNotifications = useMemo(() => {
-    return notifications.filter(notification => {
-      const matchesSearch = 
+    return safeNotifications.filter(notification => {
+    const matchesSearch = 
         notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         notification.message?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+    
       return matchesSearch;
     });
-  }, [notifications, searchTerm]);
+  }, [safeNotifications, searchTerm]);
 
   // Мемоизируем группировку по датам
   const groupedNotifications = useMemo(() => {
@@ -45,17 +59,17 @@ const NotificationHistory = memo(({ notifications = [], scale = 1 }) => {
       }
       
       const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(notification);
-      return groups;
-    }, {});
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(notification);
+    return groups;
+  }, {});
   }, [filteredNotifications]);
 
   return (

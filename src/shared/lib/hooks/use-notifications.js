@@ -22,7 +22,18 @@ export const useUserNotifications = () => {
     queryKey: NOTIFICATION_QUERY_KEYS.user(userId),
     queryFn: () => notificationApi.getUserNotifications(userId),
     enabled: !!userId && isUser, // Включаем только для обычных пользователей
-    select: (data) => data.data,
+    select: (data) => {
+      // Если data.data является объектом с полем notifications, извлекаем массив
+      if (data.data && Array.isArray(data.data.notifications)) {
+        return data.data.notifications;
+      }
+      // Если data.data уже массив, возвращаем его
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      // В остальных случаях возвращаем пустой массив
+      return [];
+    },
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
   });
@@ -37,7 +48,18 @@ export const useAllNotifications = () => {
     queryKey: NOTIFICATION_QUERY_KEYS.all,
     queryFn: () => notificationApi.getAllNotifications(),
     enabled: isManagerOrAdmin,
-    select: (data) => data.data,
+    select: (data) => {
+      // Если data.data является объектом с полем notifications, извлекаем массив
+      if (data.data && Array.isArray(data.data.notifications)) {
+        return data.data.notifications;
+      }
+      // Если data.data уже массив, возвращаем его
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      // В остальных случаях возвращаем пустой массив
+      return [];
+    },
     staleTime: 2 * 60 * 1000, // 2 минуты
     cacheTime: 5 * 60 * 1000, // 5 минут
   });
@@ -71,11 +93,8 @@ export const useSendNotification = () => {
       
       // Добавляем новое уведомление в кеш оптимистично
       queryClient.setQueryData(NOTIFICATION_QUERY_KEYS.all, (oldData) => {
-        if (!oldData?.data) return oldData;
-        return {
-          ...oldData,
-          data: [data.data, ...oldData.data]
-        };
+        if (!Array.isArray(oldData)) return oldData;
+        return [data.data, ...oldData];
       });
 
       toast.success('Уведомление успешно отправлено!');
@@ -108,15 +127,12 @@ export const useMarkAsRead = () => {
       
       // Оптимистично обновляем кеш
       queryClient.setQueryData(queryKey, (oldData) => {
-        if (!oldData?.data) return oldData;
-        return {
-          ...oldData,
-          data: oldData.data.map(notification =>
-            notification.notification_id === notificationId
-              ? { ...notification, is_read: true }
-              : notification
-          )
-        };
+        if (!Array.isArray(oldData)) return oldData;
+        return oldData.map(notification =>
+          notification.notification_id === notificationId
+            ? { ...notification, is_read: true }
+            : notification
+        );
       });
       
       return { previousData, queryKey };

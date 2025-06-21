@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNotifications } from '../../../../shared/lib/hooks/use-notifications';
 import { toast } from 'react-toastify';
 import NotificationCard from './NotificationCard';
@@ -8,6 +8,14 @@ import NotificationHistory from './NotificationHistory';
 const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState('history');
   const [interfaceScale, setInterfaceScale] = useState(1); // Масштаб интерфейса (1 = 100%)
+  
+  // Загружаем сохраненный масштаб при монтировании
+  useEffect(() => {
+    const savedScale = localStorage.getItem('notificationScale');
+    if (savedScale) {
+      setInterfaceScale(parseFloat(savedScale));
+    }
+  }, []);
   
   // Используем хук для получения данных уведомлений
   const {
