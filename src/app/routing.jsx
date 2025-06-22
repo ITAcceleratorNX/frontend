@@ -1,6 +1,7 @@
 import { useCallback, useEffect, memo, useMemo } from 'react';
 import { Navigate, useLocation, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../shared/context/AuthContext';
+import UserOnlyRoute from '../shared/routes/UserOnlyRoute';
 
 import HomePage from '../pages/home';
 import EmailVerificationPage from '../pages/email-verification';
@@ -17,6 +18,7 @@ import OfferPage from '../pages/offer';
 import PrivacyPolicyPage from '../pages/privacy-policy';
 
 import PersonalAccountPage from '../pages/personal-account';
+import WarehouseOrderPage from '../pages/warehouse-order';
 import AdminUsersProfile from '../pages/personal-account/ui/AdminUsersProfile';
 import ManagerUsersProfile from '../pages/personal-account/ui/ManagerUsersProfile';
 import AdminWarehouseData from '../pages/personal-account/ui/AdminWarehouseData';
@@ -130,6 +132,10 @@ const Routing = memo(() => {
     { path: "/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
     { path: "/personal-account/courier/order/:orderId", element: <CourierRequestOrder /> },
   ], []);
+
+  const userOnlyRoutes = useMemo(() => [
+    { path: "/warehouse-order", element: <WarehouseOrderPage /> },
+  ], []);
   // Мемоизируем маппинг маршрутов для предотвращения повторного создания элементов
   const publicRouteElements = useMemo(() => 
     publicRoutes.map(route => (
@@ -148,6 +154,15 @@ const Routing = memo(() => {
         element={<ProtectedRoute>{route.element}</ProtectedRoute>}
       />
     )), [protectedRoutes]);
+
+  const userOnlyRouteElements = useMemo(() => 
+    userOnlyRoutes.map(route => (
+      <Route
+        key={route.path}
+        path={route.path}
+        element={<UserOnlyRoute>{route.element}</UserOnlyRoute>}
+      />
+    )), [userOnlyRoutes]);
   
   return (
     <RouteLogger>
@@ -157,6 +172,9 @@ const Routing = memo(() => {
         
         {/* Защищенные маршруты */}
         {protectedRouteElements}
+        
+        {/* Маршруты только для USER роли */}
+        {userOnlyRouteElements}
         
         {/* Редирект для несуществующих маршрутов */}
         <Route path="*" element={<Navigate to="/" replace />} />

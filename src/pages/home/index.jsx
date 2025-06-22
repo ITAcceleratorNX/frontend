@@ -439,6 +439,15 @@ const HomePage = memo(() => {
           </div>
         </div>
       </section>
+      <div className="flex justify-center w-full px-10 my-10">
+        <button 
+          onClick={() => navigate("/warehouse-order")} 
+          className="w-[320px] h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-[28px] hover:bg-[#d87d1c] transition-colors font-['Montserrat'] disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_8px_0_#B0B0B0]"
+        >
+          ЗАБРОНИРОВАТЬ БОКС
+        </button>
+      </div>
+
       {/* Четвертый фрейм: калькулятор стоимости и warehouse.png */}
       <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
         <div className="w-full max-w-[1100px] mx-auto flex flex-row items-start gap-[60px] bg-transparent px-4">
