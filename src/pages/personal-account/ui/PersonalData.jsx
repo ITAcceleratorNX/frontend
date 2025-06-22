@@ -27,7 +27,8 @@ const PersonalData = memo(() => {
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    iin: user?.iin || ''
+    iin: user?.iin || '',
+    address: user?.address || ''
   }), [user]);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
@@ -40,12 +41,14 @@ const PersonalData = memo(() => {
       name: user.name || '',
       email: user.email || '',
       phone: user.phone || '',
-      iin: user.iin || ''
+      iin: user.iin || '',
+      address: user.address || ''
     })) {
       setValue('name', user.name || '');
       setValue('email', user.email || '');
       setValue('phone', user.phone || '');
       setValue('iin', user.iin || '');
+      setValue('address', user.address || '');
     }
   }, [user, setValue, defaultValues]);
 
@@ -63,7 +66,8 @@ const PersonalData = memo(() => {
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      iin: user?.iin || ''
+      iin: user?.iin || '',
+      address: user?.address || ''
     });
     
     if (!hasChanges) {
@@ -144,65 +148,82 @@ const PersonalData = memo(() => {
       <span className="text-[#3B5B7C] text-xs mb-8 cursor-pointer hover:underline">Загрузите фото</span>
       
       {/* Форма личных данных */}
-      <form className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" onSubmit={handleSubmit(onSubmit)}>
-        <div className="w-full">
-          <Input
-            label="Имя и фамилия"
-            placeholder="Иван Иванов"
-            disabled={!isEditing}
-            {...register('name', { required: 'Имя обязательно для заполнения' })}
-            error={errors.name?.message}
-            className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
-          />
+      <form className="w-full mb-8" onSubmit={handleSubmit(onSubmit)}>
+        {/* Основные поля в 2 колонки */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="w-full">
+            <Input
+              label="Имя и фамилия"
+              placeholder="Иван Иванов"
+              disabled={!isEditing}
+              {...register('name', { required: 'Имя обязательно для заполнения' })}
+              error={errors.name?.message}
+              className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
+            />
+          </div>
+          
+          <div className="w-full">
+            <Input
+              label="Электронная почта"
+              placeholder="email@example.com"
+              disabled={!isEditing}
+              {...register('email', { 
+                required: 'Email обязателен для заполнения',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Некорректный email адрес'
+                }
+              })}
+              error={errors.email?.message}
+              className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
+            />
+          </div>
+          
+          <div className="w-full">
+            <Input
+              label="Телефон"
+              placeholder="+7 (XXX) XXX-XX-XX"
+              disabled={!isEditing}
+              {...register('phone', { 
+                pattern: {
+                  value: /^\+?[0-9]{10,15}$/,
+                  message: 'Некорректный номер телефона'
+                }
+              })}
+              error={errors.phone?.message}
+              className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
+            />
+          </div>
+          
+          <div className="w-full">
+            <Input
+              label="ИИН"
+              placeholder="XXXXXXXXXXXX"
+              disabled={!isEditing}
+              {...register('iin', { 
+                pattern: {
+                  value: /^[0-9]{12}$/,
+                  message: 'ИИН должен содержать 12 цифр'
+                }
+              })}
+              error={errors.iin?.message}
+              className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
+            />
+          </div>
         </div>
-        
-        <div className="w-full">
-          <Input
-            label="Электронная почта"
-            placeholder="email@example.com"
-            disabled={!isEditing}
-            {...register('email', { 
-              required: 'Email обязателен для заполнения',
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: 'Некорректный email адрес'
-              }
-            })}
-            error={errors.email?.message}
-            className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
-          />
-        </div>
-        
-        <div className="w-full">
-          <Input
-            label="Телефон"
-            placeholder="+7 (XXX) XXX-XX-XX"
-            disabled={!isEditing}
-            {...register('phone', { 
-              pattern: {
-                value: /^\+?[0-9]{10,15}$/,
-                message: 'Некорректный номер телефона'
-              }
-            })}
-            error={errors.phone?.message}
-            className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
-          />
-        </div>
-        
-        <div className="w-full">
-          <Input
-            label="ИИН"
-            placeholder="XXXXXXXXXXXX"
-            disabled={!isEditing}
-            {...register('iin', { 
-              pattern: {
-                value: /^[0-9]{12}$/,
-                message: 'ИИН должен содержать 12 цифр'
-              }
-            })}
-            error={errors.iin?.message}
-            className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
-          />
+
+        {/* Поле адреса по центру */}
+        <div className="flex justify-center mb-6">
+          <div className="w-full max-w-md">
+            <Input
+              label="Адрес"
+              placeholder="г. Алматы, ул. Примерная, д. 123"
+              disabled={!isEditing}
+              {...register('address')}
+              error={errors.address?.message}
+              className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
+            />
+          </div>
         </div>
       </form>
       
