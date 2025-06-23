@@ -6,6 +6,7 @@ import Footer from '../../widgets/Footer';
 import { warehouseApi } from '../../shared/api/warehouseApi';
 import { useAuth } from '../../shared/context/AuthContext';
 import ChatButton from '../../shared/components/ChatButton';
+import InteractiveWarehouseCanvas from '../../components/InteractiveWarehouseCanvas';
 
 const WarehouseOrderPage = memo(() => {
   const navigate = useNavigate();
@@ -235,45 +236,70 @@ const WarehouseOrderPage = memo(() => {
               2. Выберите бокс в складе "{selectedWarehouse.name}"
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {selectedWarehouse.storage
-                .filter(storage => storage.storage_type === 'INDIVIDUAL' && storage.status === 'VACANT')
-                .map((storage) => (
-                  <div
-                    key={storage.id}
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                      selectedStorage?.id === storage.id
-                        ? 'border-[#273655] bg-blue-50'
-                        : 'border-gray-200 hover:border-[#273655]'
-                    }`}
-                    onClick={() => setSelectedStorage(storage)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-[18px] font-bold text-[#273655]">
-                        Бокс {storage.name}
-                      </h4>
-                      <span className="text-green-600 text-sm font-medium">
-                        {storage.status === 'VACANT' ? 'Свободен' : 'Занят'}
-                      </span>
+            {/* Проверяем, есть ли у склада интерактивная схема */}
+            {selectedWarehouse.name === "EXTRA SPACE Мега" ? (
+              // Интерактивная схема для склада "EXTRA SPACE Мега"
+              <div className="flex justify-center">
+                <InteractiveWarehouseCanvas
+                  storageBoxes={selectedWarehouse.storage}
+                  onBoxSelect={setSelectedStorage}
+                  selectedStorage={selectedStorage}
+                />
+              </div>
+            ) : selectedWarehouse.name === "EXTRA SPACE Главный склад" ? (
+              // Сообщение для главного склада
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center mb-6">
+                <div className="text-[#273655] text-lg font-medium mb-2">
+                  Интерактивная схема для этого склада будет добавлена в ближайшее время
+                </div>
+                <div className="text-[#6B6B6B]">
+                  Пока что используйте список доступных боксов ниже
+                </div>
+              </div>
+            ) : null}
+            
+            {/* Обычный список карточек для складов без интерактивной схемы */}
+            {selectedWarehouse.name !== "EXTRA SPACE Мега" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {selectedWarehouse.storage
+                  .filter(storage => storage.storage_type === 'INDIVIDUAL' && storage.status === 'VACANT')
+                  .map((storage) => (
+                    <div
+                      key={storage.id}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        selectedStorage?.id === storage.id
+                          ? 'border-[#273655] bg-blue-50'
+                          : 'border-gray-200 hover:border-[#273655]'
+                      }`}
+                      onClick={() => setSelectedStorage(storage)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-[18px] font-bold text-[#273655]">
+                          Бокс {storage.name}
+                        </h4>
+                        <span className="text-green-600 text-sm font-medium">
+                          {storage.status === 'VACANT' ? 'Свободен' : 'Занят'}
+                        </span>
+                      </div>
+                      
+                      {storage.image_url && (
+                        <img 
+                          src={storage.image_url} 
+                          alt={`Бокс ${storage.name}`}
+                          className="w-full h-32 object-cover rounded mb-3"
+                        />
+                      )}
+                      
+                      <div className="space-y-1 text-sm text-[#6B6B6B]">
+                        <p>Общий объем: {storage.total_volume} м³</p>
+                        <p>Доступно: {storage.available_volume} м³</p>
+                        <p>Высота: {storage.height} м</p>
+                        <p className="text-[#273655] font-medium">{storage.description}</p>
+                      </div>
                     </div>
-                    
-                    {storage.image_url && (
-                      <img 
-                        src={storage.image_url} 
-                        alt={`Бокс ${storage.name}`}
-                        className="w-full h-32 object-cover rounded mb-3"
-                      />
-                    )}
-                    
-                    <div className="space-y-1 text-sm text-[#6B6B6B]">
-                      <p>Общий объем: {storage.total_volume} м³</p>
-                      <p>Доступно: {storage.available_volume} м³</p>
-                      <p>Высота: {storage.height} м</p>
-                      <p className="text-[#273655] font-medium">{storage.description}</p>
-                    </div>
-                  </div>
-                ))}
-            </div>
+                  ))}
+              </div>
+            )}
             
             {selectedWarehouse.storage.filter(s => s.storage_type === 'INDIVIDUAL' && s.status === 'VACANT').length === 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
