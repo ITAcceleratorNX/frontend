@@ -4,25 +4,25 @@ Warehouse API:
   GET:/warehouses:
   Responses: 200 List of all warehouses:
   {
-        "id": 2,
-        "name": "EXTRA SPACE Мега",
-        "address": "Абиша Кекилбайулы, 270 блок 4, Алматы",
-        "latitude": "14.14000000",
-        "longitude": "14.14000000",
-        "work_start": "08:00:00",
-        "work_end": "22:00:00",
-        "status": "AVAILABLE",
-        "storage": [
-            {
-                "id": 21,
-                "warehouse_id": 2,
-                "name": "7B",
-                "storage_type": "INDIVIDUAL",
-                "description": "individual storage",
-                "image_url": "https://hips.hearstapps.com/hmg-prod/images/self-storage-facility-interior-with-tools-royalty-free-image-1727987323.jpg?crop=0.821xw:0.824xh;0.179xw,0.0648xh&resize=1200:*",
-                "height": "3",
-                "total_volume": "3.50",
-                "available_volume": "3.50",
+         "id": 3,
+    "name": "EXTRA SPACE Главный склад",
+    "address": "Касымова улица, 32, Алматы",
+    "latitude": "14.14000000",
+    "longitude": "14.14000000",
+    "work_start": "09:00:00",
+    "work_end": "18:00:00",
+    "status": "AVAILABLE",
+    "storage": [
+        {
+            "id": 38,
+            "warehouse_id": 3,
+            "name": "2a",
+            "storage_type": "INDIVIDUAL",
+            "description": "individual storage",
+            "image_url": "https://hips.hearstapps.com/hmg-prod/images/self-storage-facility-interior-with-tools-royalty-free-image-1727987323.jpg?crop=0.821xw:0.824xh;0.179xw,0.0648xh&resize=1200:*",
+            "height": "3",
+            "total_volume": "15.00",
+            "available_volume": "15.00",
                 "status": "VACANT"  // есть дви разных статуса: [ VACANT, OCCUPIED ]
             },
             {

@@ -6,7 +6,7 @@ import './App.css';
 function App() {
     return (
         <div className="warehouse-container">
-            <h1>Индивидуальное складское хранение</h1>
+            <h1>Облачное складское хранение</h1>
             <WarehouseCanvas />
             <ToastContainer />
         </div>

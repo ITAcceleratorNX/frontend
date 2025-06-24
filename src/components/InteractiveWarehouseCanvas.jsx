@@ -9,12 +9,40 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
   const [lockImg, setLockImg] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
 
+  // Отладочная информация для проверки данных
+  useEffect(() => {
+    if (import.meta.env.DEV && storageBoxes?.length > 0) {
+      console.log('InteractiveWarehouseCanvas: Данные боксов с API:', storageBoxes);
+      console.log('InteractiveWarehouseCanvas: Боксы со статусом OCCUPIED:', 
+        storageBoxes.filter(s => s.status === 'OCCUPIED').map(s => ({ name: s.name, status: s.status }))
+      );
+      console.log('InteractiveWarehouseCanvas: Боксы со статусом VACANT:', 
+        storageBoxes.filter(s => s.status === 'VACANT').map(s => ({ name: s.name, status: s.status }))
+      );
+    }
+  }, [storageBoxes]);
+
+  // Отладочная информация для схемы складов
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('InteractiveWarehouseCanvas: Все боксы в схеме:', 
+        warehouseLayoutData.map(box => box.name)
+      );
+    }
+  }, []);
+
   // Загрузка фонового изображения
   useEffect(() => {
     const img = new window.Image();
     img.src = backgroundImage;
     img.onload = () => {
       setBackgroundImg(img);
+      if (import.meta.env.DEV) {
+        console.log('InteractiveWarehouseCanvas: Фоновое изображение загружено');
+      }
+    };
+    img.onerror = () => {
+      console.error('InteractiveWarehouseCanvas: Ошибка загрузки фонового изображения');
     };
   }, []);
 
@@ -24,21 +52,37 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
     img.src = lockIcon;
     img.onload = () => {
       setLockImg(img);
+      if (import.meta.env.DEV) {
+        console.log('InteractiveWarehouseCanvas: Иконка замка загружена');
+      }
+    };
+    img.onerror = () => {
+      console.error('InteractiveWarehouseCanvas: Ошибка загрузки иконки замка');
     };
   }, []);
 
-  // Функция получения статуса бокса по имени
+  // Функция получения статуса бокса по имени (учитывает разный регистр)
   const getBoxStatus = (boxName) => {
     const box = storageBoxes.find(storage => 
-      storage.name === boxName && storage.storage_type === 'INDIVIDUAL'
+      storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
     );
-    return box ? box.status : 'OCCUPIED'; // По умолчанию считаем занятым, если не найден
+    
+    // Если бокс найден в API данных, используем его статус
+    // Если не найден, считаем его занятым (OCCUPIED)
+    const status = box ? box.status : 'OCCUPIED';
+    
+    // Отладочная информация
+    if (import.meta.env.DEV) {
+      console.log(`Бокс "${boxName}": найден=${!!box}, статус=${status}`);
+    }
+    
+    return status;
   };
 
-  // Функция получения данных бокса по имени
+  // Функция получения данных бокса по имени (учитывает разный регистр)
   const getBoxData = (boxName) => {
     return storageBoxes.find(storage => 
-      storage.name === boxName && storage.storage_type === 'INDIVIDUAL'
+      storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
     );
   };
 
@@ -89,9 +133,13 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
           
           {warehouseLayoutData.map((box) => {
             const status = getBoxStatus(box.name);
-            const isSelected = selectedStorage?.name === box.name;
             const isHovered = hoveredId === box.name;
             const boxData = getBoxData(box.name);
+            
+            // Отладочная информация для каждого бокса
+            if (import.meta.env.DEV && status === 'OCCUPIED') {
+              console.log(`Рендеринг занятого бокса: ${box.name}, lockImg загружен: ${!!lockImg}`);
+            }
             
             return (
               <React.Fragment key={box.name}>
@@ -101,22 +149,18 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                   width={box.width}
                   height={box.height}
                   fill={
-                    isSelected
-                      ? "rgba(39, 54, 85, 0.7)" // Темно-синий для выбранного
-                      : isHovered && status === 'VACANT'
+                    isHovered && status === 'VACANT'
                       ? "rgba(254, 243, 178, 0.9)" // Более яркий жёлтый при hover
                       : status === 'VACANT'
                       ? "#fef3b2" // Жёлтый для свободных
                       : "rgba(200, 200, 200, 0.8)" // Серый для занятых
                   }
                   stroke={
-                    isSelected
-                      ? "#273655"
-                      : status === 'VACANT'
+                    status === 'VACANT'
                       ? "#f59e0b" // Оранжевая граница для свободных
                       : "#6b7280" // Серая граница для занятых
                   }
-                  strokeWidth={isSelected ? 3 : 1}
+                  strokeWidth={1}
                   cornerRadius={4}
                   onClick={() => handleBoxClick(box.name)}
                   onMouseEnter={() => handleMouseEnter(box.name)}
@@ -138,40 +182,38 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                   />
                 )}
                 
-                {/* Название бокса */}
+                {/* Название бокса - строго по центру */}
                 <Text
                   text={box.name}
-                  x={box.x + box.width / 2}
+                  x={box.x}
                   y={status === 'OCCUPIED' ? box.y + box.height / 2 + 20 : box.y + box.height / 2}
+                  width={box.width}
                   fontSize={12}
                   fontFamily="Montserrat, sans-serif"
                   fontStyle="bold"
                   fill={
-                    isSelected
-                      ? "#ffffff"
-                      : status === 'VACANT'
+                    status === 'VACANT'
                       ? "#92400e" // Темно-желтый текст для свободных
                       : "#6b7280" // Серый текст для занятых
                   }
                   align="center"
                   verticalAlign="middle"
-                  offsetX={0}
                   offsetY={6}
                   listening={false}
                 />
                 
-                {/* Информация о доступном объеме для свободных боксов */}
-                {status === 'VACANT' && boxData && (
+                {/* Информация о доступном объеме при hover */}
+                {isHovered && status === 'VACANT' && boxData && (
                   <Text
                     text={`${boxData.available_volume} м³`}
-                    x={box.x + box.width / 2}
+                    x={box.x}
                     y={box.y + box.height / 2 + 15}
+                    width={box.width}
                     fontSize={10}
                     fontFamily="Montserrat, sans-serif"
-                    fill={isSelected ? "#ffffff" : "#92400e"}
+                    fill="#92400e"
                     align="center"
                     verticalAlign="middle"
-                    offsetX={0}
                     offsetY={5}
                     listening={false}
                   />
@@ -181,42 +223,6 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
           })}
         </Layer>
       </Stage>
-
-      {/* Информация о выбранном боксе */}
-      {selectedStorage && (
-        <div className="mt-6 bg-white border border-gray-200 rounded-lg p-4 max-w-md">
-          <h4 className="text-lg font-bold text-[#273655] mb-2">
-            Выбранный бокс: {selectedStorage.name}
-          </h4>
-          <div className="space-y-1 text-sm text-[#6B6B6B]">
-            <p>Общий объем: <span className="font-medium text-[#273655]">{selectedStorage.total_volume} м³</span></p>
-            <p>Доступно: <span className="font-medium text-[#273655]">{selectedStorage.available_volume} м³</span></p>
-            <p>Высота: <span className="font-medium text-[#273655]">{selectedStorage.height} м</span></p>
-            <p className="text-[#273655] font-medium">{selectedStorage.description}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Легенда */}
-      <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 max-w-md">
-        <h5 className="font-bold text-[#273655] mb-3">Обозначения:</h5>
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-[#fef3b2] border border-[#f59e0b] rounded"></div>
-            <span className="text-[#6B6B6B]">Свободный бокс</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-gray-300 border border-gray-400 rounded flex items-center justify-center">
-              🔒
-            </div>
-            <span className="text-[#6B6B6B]">Занятый бокс</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-[#273655] border-2 border-[#273655] rounded"></div>
-            <span className="text-[#6B6B6B]">Выбранный бокс</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 });

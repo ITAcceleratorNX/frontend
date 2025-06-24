@@ -5,6 +5,8 @@
 
 # Файлы IDE
 /.idea
+.docs/
+
 
 # Сборка
 dist
