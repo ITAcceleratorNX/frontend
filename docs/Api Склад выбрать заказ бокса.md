@@ -1,7 +1,6 @@
-# API Warehouse Box Selection Documentation
 
-## Warehouse API:
-1. Get all warehouses!
+Warehouse API:
+1.Get all warehouses!
   GET:/warehouses:
   Responses: 200 List of all warehouses:
   {
@@ -24,7 +23,7 @@
             "height": "3",
             "total_volume": "15.00",
             "available_volume": "15.00",
-                "status": "VACANT"  // есть три разных статуса: [ VACANT, OCCUPIED, PENDING ]
+                "status": "VACANT"  // есть дви разных статуса: [ VACANT, OCCUPIED ]
             },
             {
                 "id": 25,
@@ -36,15 +35,15 @@
                 "height": "3",
                 "total_volume": "4.00",
                 "available_volume": "4.00",
-                "status": "PENDING"  // есть три разных статуса: [ VACANT, OCCUPIED, PENDING ]
+                "status": "VACANT"  // есть две разных статуса: [ VACANT, OCCUPIED ]
             },
         ]    
     }
 
 ---
 
-## Order API:
-2. Создать новый заказ!
+Order API:
+2.Создать новый заказ!
   POST:/orders:
   Request body -> Example Value
   {
@@ -96,43 +95,3 @@ Responses: 201 Заказ успешно создан:
   ]
 }  
 
-3. Get warehouse by ID:
- GET:/warehouses/{id}
-   Parameters: id
-{
-    "id": 2,
-    "name": "EXTRA SPACE Мега",
-    "address": "Абиша Кекилбайулы, 270 блок 4, Алматы",
-    "latitude": "14.14000000",
-    "longitude": "14.14000000",
-    "work_start": "08:00:00",
-    "work_end": "22:00:00",
-    "status": "AVAILABLE",
-    "storage": [
-        {
-            "id": 27,
-            "warehouse_id": 2,
-            "name": "13B",
-            "storage_type": "INDIVIDUAL",
-            "description": "individual storage",
-            "image_url": "https://hips.hearstapps.com/hmg-prod/images/self-storage-facility-interior-with-tools-royalty-free-image-1727987323.jpg?crop=0.821xw:0.824xh;0.179xw,0.0648xh&resize=1200:*",
-            "height": "3",
-            "total_volume": "6.00",
-            "available_volume": "0.00",
-            "status": "PENDING"
-        }
-      ]
-    }
-
-   Responses:
-Code	Description	Links
-200	
-Warehouse found
-
-401	
-Unauthorized (no token)
-
-404	
-Warehouse not found
-
----
