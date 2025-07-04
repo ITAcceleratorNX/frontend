@@ -16,6 +16,9 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
       console.log('InteractiveWarehouseCanvas: Боксы со статусом OCCUPIED:', 
         storageBoxes.filter(s => s.status === 'OCCUPIED').map(s => ({ name: s.name, status: s.status }))
       );
+      console.log('InteractiveWarehouseCanvas: Боксы со статусом PENDING:', 
+        storageBoxes.filter(s => s.status === 'PENDING').map(s => ({ name: s.name, status: s.status }))
+      );
       console.log('InteractiveWarehouseCanvas: Боксы со статусом VACANT:', 
         storageBoxes.filter(s => s.status === 'VACANT').map(s => ({ name: s.name, status: s.status }))
       );
@@ -28,8 +31,9 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
       console.log('InteractiveWarehouseCanvas: Все боксы в схеме:', 
         warehouseLayoutData.map(box => box.name)
       );
+      console.log('InteractiveWarehouseCanvas: Выбранный бокс:', selectedStorage);
     }
-  }, []);
+  }, [selectedStorage]);
 
   // Загрузка фонового изображения
   useEffect(() => {
@@ -71,9 +75,9 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
     // Если не найден, считаем его занятым (OCCUPIED)
     const status = box ? box.status : 'OCCUPIED';
     
-    // Отладочная информация
-    if (import.meta.env.DEV) {
-      console.log(`Бокс "${boxName}": найден=${!!box}, статус=${status}`);
+    // Отладочная информация для проблемных боксов
+    if (import.meta.env.DEV && (status === 'OCCUPIED' || status === 'PENDING')) {
+      console.log(`Бокс "${boxName}": найден=${!!box}, статус=${status}, box data:`, box);
     }
     
     return status;
@@ -84,6 +88,17 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
     return storageBoxes.find(storage => 
       storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
     );
+  };
+
+  // Проверка, является ли бокс выбранным
+  const isBoxSelected = (boxName) => {
+    if (!selectedStorage) return false;
+    return selectedStorage.name.toLowerCase() === boxName.toLowerCase();
+  };
+
+  // Функция проверки, занят ли бокс (OCCUPIED или PENDING)
+  const isBoxOccupied = (status) => {
+    return status === 'OCCUPIED' || status === 'PENDING';
   };
 
   // Обработчик клика по боксу
@@ -134,11 +149,49 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
           {warehouseLayoutData.map((box) => {
             const status = getBoxStatus(box.name);
             const isHovered = hoveredId === box.name;
+            const isSelected = isBoxSelected(box.name);
+            const isOccupied = isBoxOccupied(status);
             const boxData = getBoxData(box.name);
             
-            // Отладочная информация для каждого бокса
-            if (import.meta.env.DEV && status === 'OCCUPIED') {
-              console.log(`Рендеринг занятого бокса: ${box.name}, lockImg загружен: ${!!lockImg}`);
+            // Отладочная информация для каждого занятого бокса
+            if (import.meta.env.DEV && isOccupied) {
+              console.log(`Рендеринг занятого бокса: ${box.name}, статус: ${status}, lockImg загружен: ${!!lockImg}, позиция: x=${box.x}, y=${box.y}, размер: ${box.width}x${box.height}`);
+            }
+            
+            // Определяем цвет заливки с учетом всех состояний
+            let fillColor;
+            if (isSelected) {
+              fillColor = "rgba(39, 54, 85, 0.7)"; // Тёмно-синий для выбранного
+            } else if (isHovered && status === 'VACANT') {
+              fillColor = "rgba(254, 243, 178, 0.9)"; // Более яркий жёлтый при hover
+            } else if (status === 'VACANT') {
+              fillColor = "#fef3b2"; // Жёлтый для свободных
+            } else {
+              fillColor = "rgba(200, 200, 200, 0.8)"; // Серый для занятых (OCCUPIED/PENDING)
+            }
+
+            // Определяем цвет границы
+            let strokeColor;
+            let strokeWidth;
+            if (isSelected) {
+              strokeColor = "#273655"; // Тёмно-синий для выбранного
+              strokeWidth = 3;
+            } else if (status === 'VACANT') {
+              strokeColor = "#f59e0b"; // Оранжевая граница для свободных
+              strokeWidth = 1;
+            } else {
+              strokeColor = "#6b7280"; // Серая граница для занятых
+              strokeWidth = 1;
+            }
+
+            // Определяем цвет текста
+            let textColor;
+            if (isSelected) {
+              textColor = "#ffffff"; // Белый текст для выбранного
+            } else if (status === 'VACANT') {
+              textColor = "#92400e"; // Темно-желтый текст для свободных
+            } else {
+              textColor = "#6b7280"; // Серый текст для занятых
             }
             
             return (
@@ -148,19 +201,9 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                   y={box.y}
                   width={box.width}
                   height={box.height}
-                  fill={
-                    isHovered && status === 'VACANT'
-                      ? "rgba(254, 243, 178, 0.9)" // Более яркий жёлтый при hover
-                      : status === 'VACANT'
-                      ? "#fef3b2" // Жёлтый для свободных
-                      : "rgba(200, 200, 200, 0.8)" // Серый для занятых
-                  }
-                  stroke={
-                    status === 'VACANT'
-                      ? "#f59e0b" // Оранжевая граница для свободных
-                      : "#6b7280" // Серая граница для занятых
-                  }
-                  strokeWidth={1}
+                  fill={fillColor}
+                  stroke={strokeColor}
+                  strokeWidth={strokeWidth}
                   cornerRadius={4}
                   onClick={() => handleBoxClick(box.name)}
                   onMouseEnter={() => handleMouseEnter(box.name)}
@@ -170,8 +213,8 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                   }}
                 />
                 
-                {/* Иконка замка для занятых боксов */}
-                {status === 'OCCUPIED' && lockImg && (
+                {/* Иконка замка для занятых боксов (OCCUPIED или PENDING) */}
+                {isOccupied && lockImg && (
                   <Image
                     image={lockImg}
                     x={box.x + box.width / 2 - 12}
@@ -186,16 +229,12 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                 <Text
                   text={box.name}
                   x={box.x}
-                  y={status === 'OCCUPIED' ? box.y + box.height / 2 + 20 : box.y + box.height / 2}
+                  y={isOccupied ? box.y + box.height / 2 + 20 : box.y + box.height / 2}
                   width={box.width}
                   fontSize={12}
                   fontFamily="Montserrat, sans-serif"
                   fontStyle="bold"
-                  fill={
-                    status === 'VACANT'
-                      ? "#92400e" // Темно-желтый текст для свободных
-                      : "#6b7280" // Серый текст для занятых
-                  }
+                  fill={textColor}
                   align="center"
                   verticalAlign="middle"
                   offsetY={6}

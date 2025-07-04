@@ -5,7 +5,7 @@
 
 # Файлы IDE
 /.idea
-.docs/
+# .docs/
 
 
 # Сборка
@@ -45,4 +45,4 @@ lerna-debug.log*
 .cursor/
 
 # Директории документации
-/docs/
+# /docs/
