@@ -254,8 +254,8 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
                   type="button"
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 disabled:opacity-50"
-                  style={{ fontSize: 'var(--button-size)', height: 'var(--button-height)' }}
+                  className="bg-[#1e2c4f] text-white px-6 py-2 rounded hover:bg-[#1e2c4f] disabled:opacity-50"
+                  style={{ fontSize: 'var(--button-size )', height: 'var(--button-height)' }}
               >
                 {isLoading ? 'Отправка...' : 'Отправить'}
             </button>

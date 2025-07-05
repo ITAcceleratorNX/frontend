@@ -10,6 +10,7 @@ import icon6 from '../../../assets/6.svg';
 import icon8 from '../../../assets/8.svg';
 import icon9 from '../../../assets/9.svg';
 import icon10 from '../../../assets/10.svg';
+import icon11 from '../../../assets/11.svg';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
@@ -33,6 +34,7 @@ const managerNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'managerwarehouses' },
   { label: 'Мувинг', icon: icon9, key: 'managermoving' },
+  { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
@@ -46,6 +48,7 @@ const adminNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'adminwarehouses' },
   { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
+  { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
   { label: 'Настройки', icon: icon5, key: 'settings' },

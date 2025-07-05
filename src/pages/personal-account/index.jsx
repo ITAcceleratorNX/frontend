@@ -14,6 +14,8 @@ import AdminWarehouses from './ui/AdminWarehouses';
 import ManagerWarehouses from './ui/ManagerWarehouses';
 import CourierRequest from './ui/CourierRequest';
 import CourierRequestOrder from './ui/CourierRequestOrder';
+import OrderManagement from './ui/OrderManagement';
+import UserPayments from './ui/UserPayments';
 
 import { 
   UserNotificationsPage, 
@@ -102,14 +104,10 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'managerwarehouses' && <ManagerWarehouses />}
           {activeNav === 'adminmoving' && <AdminMoving />}
           {activeNav === 'managermoving' && <ManagerMoving />}
+          {activeNav === 'request' && <OrderManagement />}
           {activeNav === 'courierrequests' && <CourierRequest />}
           {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
-          {activeNav === 'payments' && (
-            <div className="w-full max-w-4xl mx-auto p-8">
-              <h1 className="text-2xl font-bold text-[#273655] mb-4">Платежи</h1>
-              <p className="text-gray-600">Раздел платежей в разработке...</p>
-            </div>
-          )}
+          {activeNav === 'payments' && <UserPayments />}
           {activeNav === 'settings' && <Settings />}
         </main>
       </div>
