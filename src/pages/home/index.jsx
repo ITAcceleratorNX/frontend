@@ -26,6 +26,7 @@ import FAQ from "../../components/FAQ";
 import WarehouseMap from "../../components/WarehouseMap";
 import ChatButton from "../../shared/components/ChatButton";
 import api from "../../shared/api/axios";
+import { warehouseApi } from "../../shared/api/warehouseApi";
 
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
@@ -39,6 +40,13 @@ const HomePage = memo(() => {
   const [totalCost, setTotalCost] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Новые состояния для выбора склада
+  const [isWarehouseDropdownOpen, setIsWarehouseDropdownOpen] = useState(false);
+  const [apiWarehouses, setApiWarehouses] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [warehousesLoading, setWarehousesLoading] = useState(false);
+  const [warehousesError, setWarehousesError] = useState(null);
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -88,6 +96,67 @@ const HomePage = memo(() => {
 
     fetchPrices();
   }, []);
+
+  // Загрузка складов с API
+  useEffect(() => {
+    const fetchWarehouses = async () => {
+      try {
+        setWarehousesLoading(true);
+        setWarehousesError(null);
+        const data = await warehouseApi.getAllWarehouses();
+        setApiWarehouses(Array.isArray(data) ? data : []);
+        
+        // Устанавливаем первый склад как выбранный по умолчанию
+        if (data && data.length > 0) {
+          setSelectedWarehouse(data[0]);
+        }
+        
+        if (import.meta.env.DEV) {
+          console.log("Склады с API загружены:", data);
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке складов:", error);
+        setWarehousesError("Не удалось загрузить список складов");
+        // Используем статичные склады как fallback
+        setSelectedWarehouse(warehouses[0]);
+      } finally {
+        setWarehousesLoading(false);
+      }
+    };
+
+    fetchWarehouses();
+  }, [warehouses]);
+
+  // Закрытие dropdown при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isWarehouseDropdownOpen) {
+        // Проверяем, что клик был не по элементу dropdown
+        const dropdown = event.target.closest('.warehouse-dropdown');
+        if (!dropdown) {
+          setIsWarehouseDropdownOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isWarehouseDropdownOpen]);
+
+  // Функции для управления выпадающим списком
+  const toggleWarehouseDropdown = () => {
+    setIsWarehouseDropdownOpen(!isWarehouseDropdownOpen);
+  };
+
+  const handleWarehouseSelect = (warehouse) => {
+    setSelectedWarehouse(warehouse);
+    setIsWarehouseDropdownOpen(false);
+    if (import.meta.env.DEV) {
+      console.log("Выбран склад:", warehouse);
+    }
+  };
 
   // Функция расчета стоимости
   const calculateCost = () => {
@@ -751,77 +820,154 @@ const HomePage = memo(() => {
           >
             <WarehouseMap warehouses={warehouses} />
           </div>
-          {/* Правая часть: прямоугольная карточка филиала */}
-          <div
-            className="bg-white rounded-lg flex flex-row items-center justify-start pr- py-8 self-center"
-            style={{
-              minWidth: 540,
-              minHeight: 300,
-              height: 300,
-              maxHeight: 320,
-              maxWidth: 600,
-              width: 560,
-              boxShadow: "4px 4px 8px 0 #B0B0B0",
-            }}
-          >
-            {/* Левая часть: только крупный логотип */}
-            <div className="flex items-center justify-center w-[270px] h-[270px] p-2">
-              <img
-                src={warehouses[0]?.image || extraOldLogo}
-                alt="logo"
-                className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]"
-              />
-            </div>
-            {/* Правая часть: все надписи и кнопка */}
-            <div className="flex flex-col items-start justify-center flex-1 h-full gap-y-2 ml-6">
-              <div
-                className="text-[#3E4958] text-[20px] font-medium leading-tight"
-                style={{ lineHeight: 1.1 }}
-              >
-                {warehouses[0]?.name || "EXTRA SPACE Главный склад"}
+          {/* Правая часть: карточка выбранного склада */}
+          <div className="relative">
+            {warehousesLoading && (
+              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
               </div>
-              <div className="text-[#3E4958] text-[15px] font-normal leading-tight">
-                {warehouses[0]?.phone || "+7 727 123 4567"}
+            )}
+            
+            <div
+              className="bg-white rounded-lg flex flex-row items-center justify-start pr- py-8 self-center"
+              style={{
+                minWidth: 540,
+                minHeight: 300,
+                height: 300,
+                maxHeight: 320,
+                maxWidth: 600,
+                width: 560,
+                boxShadow: "4px 4px 8px 0 #B0B0B0",
+              }}
+            >
+              {/* Левая часть: логотип */}
+              <div className="flex items-center justify-center w-[270px] h-[270px] p-2">
+                <img
+                  src={selectedWarehouse?.image || extraspaceLogo}
+                  alt="logo"
+                  className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]"
+                />
               </div>
-              <div className="text-[#3E4958] text-[15px] font-normal">
-                {warehouses[0]?.workingHours || "Пн-Пт: 09:00-18:00"}
-              </div>
-              <div className="flex items-center mt-1 mb-2">
-                <span
-                  className="relative inline-block"
-                  style={{ width: 24, height: 24 }}
+              {/* Правая часть: информация о складе */}
+              <div className="flex flex-col items-start justify-center flex-1 h-full gap-y-2 ml-6">
+                <div
+                  className="text-[#3E4958] text-[20px] font-medium leading-tight"
+                  style={{ lineHeight: 1.1 }}
                 >
-                  <img
-                    src={beigeCircle}
-                    alt="beige circle"
-                    className="absolute left-0 top-0 w-full h-full"
-                  />
-                  <img
-                    src={houseOnBeigeCircle}
-                    alt="house on beige"
-                    className="absolute left-1/2 top-1/2"
-                    style={{
-                      width: "15px",
-                      height: "15px",
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  />
-                </span>
-                <span className="text-[#273655] text-[15px] font-normal ml-2">
-                  {warehouses[0]?.address || "Касымова улица, 32, Алматы"}
-                </span>
+                  {selectedWarehouse?.name || "Загрузка..."}
+                </div>
+                
+                {selectedWarehouse && (
+                  <>
+                    <div className="text-[#3E4958] text-[15px] font-normal leading-tight">
+                      Статус: <span className={`font-medium ${selectedWarehouse.status === 'AVAILABLE' ? 'text-green-600' : 'text-red-600'}`}>
+                        {selectedWarehouse.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}
+                      </span>
+                    </div>
+                    <div className="text-[#3E4958] text-[15px] font-normal">
+                      {selectedWarehouse.work_start && selectedWarehouse.work_end ? 
+                        `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}` : 
+                        "Режим работы уточняется"
+                      }
+                    </div>
+                    <div className="flex items-center mt-1 mb-2">
+                      <span
+                        className="relative inline-block"
+                        style={{ width: 24, height: 24 }}
+                      >
+                        <img
+                          src={beigeCircle}
+                          alt="beige circle"
+                          className="absolute left-0 top-0 w-full h-full"
+                        />
+                        <img
+                          src={houseOnBeigeCircle}
+                          alt="house on beige"
+                          className="absolute left-1/2 top-1/2"
+                          style={{
+                            width: "15px",
+                            height: "15px",
+                            transform: "translate(-50%, -50%)",
+                          }}
+                        />
+                      </span>
+                      <span className="text-[#273655] text-[15px] font-normal ml-2">
+                        {selectedWarehouse.address || "Адрес уточняется"}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {warehousesError && (
+                  <div className="text-red-600 text-sm mb-2">
+                    {warehousesError}
+                  </div>
+                )}
+
+                {/* Кнопка выбора склада с выпадающим списком */}
+                <div className="relative w-full max-w-[240px] mt-0 warehouse-dropdown">
+                  <button
+                    className="px-2 py-3 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full flex items-center justify-center gap-2"
+                    onClick={toggleWarehouseDropdown}
+                    disabled={warehousesLoading}
+                  >
+                    Выбрать склад
+                    <svg 
+                      className={`w-4 h-4 transition-transform ${isWarehouseDropdownOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Выпадающий список */}
+                  {isWarehouseDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
+                      {apiWarehouses.length > 0 ? (
+                        apiWarehouses.map((warehouse) => (
+                          <button
+                            key={warehouse.id}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 text-sm"
+                            onClick={() => handleWarehouseSelect(warehouse)}
+                          >
+                            <div className="font-medium text-[#273655]">
+                              {warehouse.name}
+                            </div>
+                            <div className="text-gray-600 text-xs mt-1">
+                              {warehouse.address}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                warehouse.status === 'AVAILABLE' 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : 'bg-red-100 text-red-700'
+                              }`}>
+                                {warehouse.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}
+                              </span>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-gray-500 text-center">
+                          Нет доступных складов
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Кнопка бронирования */}
+                {selectedWarehouse && selectedWarehouse.status === 'AVAILABLE' && (
+                  <button
+                    className="px-2 py-2 bg-[#F86812] text-white rounded-full text-sm font-medium hover:bg-[#d87d1c] transition-colors w-full max-w-[240px] mt-2"
+                    onClick={() => navigate("/warehouse-order")}
+                  >
+                    Забронировать бокс
+                  </button>
+                )}
               </div>
-              <button
-                className="px-2 py-3 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full max-w-[240px] mt-0"
-                onClick={() => {
-                  // Здесь можно добавить логику перехода к странице склада или бронирования
-                  if (import.meta.env.DEV) {
-                    console.log("Выбран склад:", warehouses[0]);
-                  }
-                }}
-              >
-                Выбрать этот склад
-              </button>
             </div>
           </div>
         </div>

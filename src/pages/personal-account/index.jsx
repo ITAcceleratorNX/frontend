@@ -10,8 +10,7 @@ import AdminUsers from './ui/AdminUsers';
 import AdminMoving from './ui/AdminMoving';
 import ManagerUsers from './ui/ManagerUsers';
 import ManagerMoving from './ui/ManagerMoving';
-import AdminWarehouses from './ui/AdminWarehouses';
-import ManagerWarehouses from './ui/ManagerWarehouses';
+import InfoWarehouses from './ui/InfoWarehouses';
 import CourierRequest from './ui/CourierRequest';
 import CourierRequestOrder from './ui/CourierRequestOrder';
 import OrderManagement from './ui/OrderManagement';
@@ -100,8 +99,7 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'notifications' && getNotificationsComponent()}
           {activeNav === 'adminusers' && <AdminUsers />}
           {activeNav === 'managerusers' && <ManagerUsers />}
-          {activeNav === 'adminwarehouses' && <AdminWarehouses />}
-          {activeNav === 'managerwarehouses' && <ManagerWarehouses />}
+          {activeNav === 'warehouses' && <InfoWarehouses />}
           {activeNav === 'adminmoving' && <AdminMoving />}
           {activeNav === 'managermoving' && <ManagerMoving />}
           {activeNav === 'request' && <OrderManagement />}

@@ -32,7 +32,7 @@ const userNavItems = [
 const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
-  { label: 'Склады', icon: icon9, key: 'managerwarehouses' },
+  { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Мувинг', icon: icon9, key: 'managermoving' },
   { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Чат', icon: icon3, key: 'chat' },
@@ -46,7 +46,7 @@ const managerNavItems = [
 const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
-  { label: 'Склады', icon: icon9, key: 'adminwarehouses' },
+  { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
   { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
@@ -97,7 +97,6 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const navItems = getNavItemsByRole(user?.role);
 
   const handleNavClick = async (key) => {
-    setActiveNav(key);
     if (key === 'logout') {
       try {
         // Показываем уведомление о начале процесса выхода
@@ -177,8 +176,20 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         navigate('/');
         }, 300);
       }
+    } else {
+      // Для всех остальных разделов
+      setActiveNav(key);
+      
+      // Проверяем, находимся ли мы на странице WarehouseData или других внешних страницах
+      const currentPath = window.location.pathname;
+      const isOnWarehouseDataPage = currentPath.includes('/warehouses/') && !currentPath.endsWith('/warehouses');
+      const isOnDetailPage = currentPath.includes('/users/') || currentPath.includes('/moving/order/');
+      
+      // Если мы на странице деталей (не в основном личном кабинете), перенаправляем в личный кабинет
+      if (isOnWarehouseDataPage || isOnDetailPage) {
+        navigate('/personal-account', { state: { activeSection: key } });
+      }
     }
-    // Здесь можно добавить переходы для других пунктов
   };
 
   return (

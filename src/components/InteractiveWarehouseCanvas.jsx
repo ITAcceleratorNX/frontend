@@ -4,7 +4,7 @@ import backgroundImage from "../assets/INDIVIDUAL.png";
 import lockIcon from "../assets/lock.png";
 import warehouseLayoutData from "../assets/warehouseLayout.json";
 
-const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }) => {
+const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, userRole, isViewOnly = false }) => {
   const [backgroundImg, setBackgroundImg] = useState(null);
   const [lockImg, setLockImg] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
@@ -13,6 +13,7 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
   useEffect(() => {
     if (import.meta.env.DEV && storageBoxes?.length > 0) {
       console.log('InteractiveWarehouseCanvas: Данные боксов с API:', storageBoxes);
+      console.log('InteractiveWarehouseCanvas: Режим просмотра:', isViewOnly, 'Роль пользователя:', userRole);
       console.log('InteractiveWarehouseCanvas: Боксы со статусом OCCUPIED:', 
         storageBoxes.filter(s => s.status === 'OCCUPIED').map(s => ({ name: s.name, status: s.status }))
       );
@@ -23,7 +24,7 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
         storageBoxes.filter(s => s.status === 'VACANT').map(s => ({ name: s.name, status: s.status }))
       );
     }
-  }, [storageBoxes]);
+  }, [storageBoxes, isViewOnly, userRole]);
 
   // Отладочная информация для схемы складов
   useEffect(() => {
@@ -106,14 +107,25 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
     const boxData = getBoxData(boxName);
     const status = getBoxStatus(boxName);
     
-    if (status === 'VACANT' && boxData) {
-      onBoxSelect(boxData);
-      if (import.meta.env.DEV) {
-        console.log('Выбран бокс:', boxData);
+    if (isViewOnly) {
+      // В режиме просмотра (для ADMIN/MANAGER) можно выбрать любой бокс для просмотра информации
+      if (boxData) {
+        onBoxSelect(boxData);
+        if (import.meta.env.DEV) {
+          console.log('Выбран бокс для просмотра:', boxData);
+        }
       }
     } else {
-      if (import.meta.env.DEV) {
-        console.log('Бокс недоступен:', boxName, status);
+      // Для обычных пользователей работает старая логика - только свободные боксы
+      if (status === 'VACANT' && boxData) {
+        onBoxSelect(boxData);
+        if (import.meta.env.DEV) {
+          console.log('Выбран бокс:', boxData);
+        }
+      } else {
+        if (import.meta.env.DEV) {
+          console.log('Бокс недоступен:', boxName, status);
+        }
       }
     }
   };
@@ -121,8 +133,18 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
   // Обработчики для hover эффектов
   const handleMouseEnter = (boxName) => {
     const status = getBoxStatus(boxName);
-    if (status === 'VACANT') {
-      setHoveredId(boxName);
+    const boxData = getBoxData(boxName);
+    
+    if (isViewOnly) {
+      // В режиме просмотра можно ховерить на любой бокс
+      if (boxData) {
+        setHoveredId(boxName);
+      }
+    } else {
+      // Для обычных пользователей - только на свободные боксы
+      if (status === 'VACANT') {
+        setHoveredId(boxName);
+      }
     }
   };
 
@@ -194,6 +216,11 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
               textColor = "#6b7280"; // Серый текст для занятых
             }
             
+            // Определяем стиль курсора
+            const cursorStyle = isViewOnly 
+              ? 'pointer' // В режиме просмотра все боксы кликабельны
+              : (status === 'VACANT' ? 'pointer' : 'not-allowed');
+            
             return (
               <React.Fragment key={box.name}>
                 <Rect
@@ -209,7 +236,7 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                   onMouseEnter={() => handleMouseEnter(box.name)}
                   onMouseLeave={handleMouseLeave}
                   style={{
-                    cursor: status === 'VACANT' ? 'pointer' : 'not-allowed'
+                    cursor: cursorStyle
                   }}
                 />
                 
@@ -241,16 +268,19 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                   listening={false}
                 />
                 
-                {/* Информация о доступном объеме при hover */}
-                {isHovered && status === 'VACANT' && boxData && (
+                {/* Информация при hover */}
+                {isHovered && boxData && (
                   <Text
-                    text={`${boxData.available_volume} м³`}
+                    text={isViewOnly 
+                      ? `${boxData.available_volume} м³`
+                      : `${boxData.available_volume} м³`
+                    }
                     x={box.x}
                     y={box.y + box.height / 2 + 15}
                     width={box.width}
                     fontSize={10}
                     fontFamily="Montserrat, sans-serif"
-                    fill="#92400e"
+                    fill={isViewOnly ? "#273655" : "#92400e"}
                     align="center"
                     verticalAlign="middle"
                     offsetY={5}

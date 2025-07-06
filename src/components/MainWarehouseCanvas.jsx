@@ -4,7 +4,7 @@ import backgroundImage from "../assets/Main_Individual.png";
 import lockIcon from "../assets/lock.png";
 import warehouseLayoutData from "../assets/Main_Individual_storage.json";
 
-const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }) => {
+const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, userRole, isViewOnly = false }) => {
   const [backgroundImg, setBackgroundImg] = useState(null);
   const [lockImg, setLockImg] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
@@ -13,6 +13,7 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
   useEffect(() => {
     if (import.meta.env.DEV && storageBoxes?.length > 0) {
       console.log('MainWarehouseCanvas: Данные боксов с API:', storageBoxes);
+      console.log('MainWarehouseCanvas: Режим просмотра:', isViewOnly, 'Роль пользователя:', userRole);
       console.log('MainWarehouseCanvas: Имена боксов INDIVIDUAL:', 
         storageBoxes.filter(s => s.storage_type === 'INDIVIDUAL').map(s => s.name)
       );
@@ -26,7 +27,7 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
         storageBoxes.filter(s => s.status === 'VACANT').map(s => ({ name: s.name, status: s.status }))
       );
     }
-  }, [storageBoxes]);
+  }, [storageBoxes, isViewOnly, userRole]);
 
   // Отладочная информация для схемы складов
   useEffect(() => {
@@ -114,14 +115,25 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
     const boxData = getBoxData(boxName);
     const status = getBoxStatus(boxName);
     
-    if (status === 'VACANT' && boxData) {
-      onBoxSelect(boxData);
-      if (import.meta.env.DEV) {
-        console.log('Выбран бокс:', boxData);
+    if (isViewOnly) {
+      // В режиме просмотра (для ADMIN/MANAGER) можно выбрать любой бокс для просмотра информации
+      if (boxData) {
+        onBoxSelect(boxData);
+        if (import.meta.env.DEV) {
+          console.log('Выбран бокс для просмотра:', boxData);
+        }
       }
     } else {
-      if (import.meta.env.DEV) {
-        console.log('Бокс недоступен:', boxName, status);
+      // Для обычных пользователей работает старая логика - только свободные боксы
+      if (status === 'VACANT' && boxData) {
+        onBoxSelect(boxData);
+        if (import.meta.env.DEV) {
+          console.log('Выбран бокс:', boxData);
+        }
+      } else {
+        if (import.meta.env.DEV) {
+          console.log('Бокс недоступен:', boxName, status);
+        }
       }
     }
   };
@@ -129,8 +141,18 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
   // Обработчики для hover эффектов
   const handleMouseEnter = (boxName) => {
     const status = getBoxStatus(boxName);
-    if (status === 'VACANT') {
-      setHoveredId(boxName);
+    const boxData = getBoxData(boxName);
+    
+    if (isViewOnly) {
+      // В режиме просмотра можно ховерить на любой бокс
+      if (boxData) {
+        setHoveredId(boxName);
+      }
+    } else {
+      // Для обычных пользователей - только на свободные боксы
+      if (status === 'VACANT') {
+        setHoveredId(boxName);
+      }
     }
   };
 
@@ -196,7 +218,7 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
             let fillColor;
             if (isSelected) {
               fillColor = "rgba(39, 54, 85, 0.7)"; // Тёмно-синий для выбранного
-            } else if (isHovered && status === 'VACANT') {
+            } else if (isHovered && (isViewOnly || status === 'VACANT')) {
               fillColor = "rgba(254, 243, 178, 0.9)"; // Более яркий жёлтый при hover
             } else if (status === 'VACANT') {
               fillColor = "#fef3b2"; // Жёлтый для свободных
@@ -227,7 +249,12 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
             } else {
               textColor = "#6b7280"; // Серый текст для занятых
             }
-            
+
+            // Определяем стиль курсора
+            const cursorStyle = isViewOnly 
+              ? 'pointer' // В режиме просмотра все боксы кликабельны
+              : (status === 'VACANT' ? 'pointer' : 'not-allowed');
+
             return (
               <React.Fragment key={box.name}>
                 {box.type && box.points ? (
@@ -246,6 +273,7 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
                     onMouseEnter={() => handleMouseEnter(box.name)}
                     onMouseLeave={handleMouseLeave}
                     listening={true}
+                    cursor={cursorStyle}
                   />
                 ) : (
                   // Прямоугольная форма
@@ -262,6 +290,7 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
                     onMouseEnter={() => handleMouseEnter(box.name)}
                     onMouseLeave={handleMouseLeave}
                     listening={true}
+                    cursor={cursorStyle}
                   />
                 )}
                 
@@ -293,15 +322,18 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage }
                   listening={false}
                 />
                 
-                {/* Информация о доступном объеме при hover */}
-                {isHovered && status === 'VACANT' && boxData && (
+                {/* Информация при hover */}
+                {isHovered && boxData && (
                   <Text
-                    text={`${boxData.available_volume} м³`}
+                    text={isViewOnly 
+                      ? `${boxData.available_volume} м³`
+                      : `${boxData.available_volume} м³`
+                    }
                     x={centerX}
                     y={centerY + 18}
                     fontSize={12}
                     fontFamily="Montserrat, sans-serif"
-                    fill="#92400e"
+                    fill={isViewOnly ? "#273655" : "#92400e"}
                     align="center"
                     verticalAlign="middle"
                     offsetX={0}

@@ -27,7 +27,9 @@ const WarehouseOrderPage = memo(() => {
   const [months, setMonths] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Проверка доступа осуществляется в UserOnlyRoute компоненте
+  // Проверяем роль пользователя - функции заказа доступны только для USER
+  const isUserRole = user?.role === 'USER';
+  const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   // Загрузка складов при монтировании
   useEffect(() => {
@@ -181,10 +183,13 @@ const WarehouseOrderPage = memo(() => {
         {/* Заголовок */}
         <div className="text-center mb-8">
           <h1 className="text-[48px] font-bold text-[#273655] mb-4">
-            ЗАКАЗ БОКСА
+            {isUserRole ? 'ЗАКАЗ БОКСА' : 'ПРОСМОТР СКЛАДОВ И БОКСОВ'}
           </h1>
           <p className="text-[18px] text-[#6B6B6B]">
-            Выберите склад и бокс для аренды, добавьте ваши вещи
+            {isUserRole 
+              ? 'Выберите склад и бокс для аренды, добавьте ваши вещи'
+              : 'Просмотр состояния складов и боксов'
+            }
           </p>
         </div>
 
@@ -247,7 +252,7 @@ const WarehouseOrderPage = memo(() => {
         {selectedWarehouse && selectedWarehouse.storage && (
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-              2. Выберите бокс в складе "{selectedWarehouse.name}"
+              {isUserRole ? '2. Выберите бокс в складе' : '2. Боксы в складе'} "{selectedWarehouse.name}"
             </h2>
             
             {/* Проверяем, есть ли у склада интерактивная схема */}
@@ -258,6 +263,8 @@ const WarehouseOrderPage = memo(() => {
                   storageBoxes={selectedWarehouse.storage}
                   onBoxSelect={setSelectedStorage}
                   selectedStorage={selectedStorage}
+                  userRole={user?.role}
+                  isViewOnly={isAdminOrManager}
                 />
               </div>
             ) : selectedWarehouse.name === "EXTRA SPACE Главный склад" ? (
@@ -267,6 +274,8 @@ const WarehouseOrderPage = memo(() => {
                   storageBoxes={selectedWarehouse.storage}
                   onBoxSelect={setSelectedStorage}
                   selectedStorage={selectedStorage}
+                  userRole={user?.role}
+                  isViewOnly={isAdminOrManager}
                 />
               </div>
             ) : null}
@@ -275,7 +284,7 @@ const WarehouseOrderPage = memo(() => {
         )}
 
         {/* Форма добавления товаров */}
-        {selectedStorage && (
+        {selectedStorage && isUserRole && (
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
               3. Добавьте ваши вещи
@@ -369,8 +378,54 @@ const WarehouseOrderPage = memo(() => {
           </div>
         )}
 
+        {/* Информация о выбранном боксе для ADMIN/MANAGER */}
+        {selectedStorage && isAdminOrManager && (
+          <div className="mb-8">
+            <h2 className="text-[24px] font-bold text-[#273655] mb-4">
+              Информация о выбранном боксе
+            </h2>
+            
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Название бокса:</span>
+                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.name}</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Тип хранения:</span>
+                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.storage_type}</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Статус:</span>
+                  <p className={`text-lg font-semibold ${selectedStorage.status === 'VACANT' ? 'text-green-600' : selectedStorage.status === 'OCCUPIED' ? 'text-red-600' : 'text-yellow-600'}`}>
+                    {selectedStorage.status === 'VACANT' ? 'Свободен' : selectedStorage.status === 'OCCUPIED' ? 'Занят' : 'Ожидает'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Общий объем:</span>
+                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.total_volume} м³</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Доступный объем:</span>
+                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.available_volume} м³</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Высота:</span>
+                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.height} м</p>
+                </div>
+              </div>
+              {selectedStorage.description && (
+                <div className="mt-4">
+                  <span className="text-sm font-medium text-gray-600">Описание:</span>
+                  <p className="text-gray-700 mt-1">{selectedStorage.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Срок аренды и кнопка заказа */}
-        {selectedStorage && (
+        {selectedStorage && isUserRole && (
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
               4. Укажите срок аренды

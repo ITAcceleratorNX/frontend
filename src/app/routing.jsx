@@ -21,8 +21,7 @@ import PersonalAccountPage from '../pages/personal-account';
 import WarehouseOrderPage from '../pages/warehouse-order';
 import AdminUsersProfile from '../pages/personal-account/ui/AdminUsersProfile';
 import ManagerUsersProfile from '../pages/personal-account/ui/ManagerUsersProfile';
-import AdminWarehouseData from '../pages/personal-account/ui/AdminWarehouseData';
-import ManagerWarehouseData from '../pages/personal-account/ui/ManagerWarehouseData';
+import WarehouseData from '../pages/personal-account/ui/WarehouseData';
 import AdminMovingOrder from '../pages/personal-account/ui/AdminMovingOrder';
 import ManagerMovingOrder from '../pages/personal-account/ui/ManagerMovingOrder';
 import CourierRequest from '../pages/personal-account/ui/CourierRequest';
@@ -126,15 +125,16 @@ const Routing = memo(() => {
     { path: "/personal-account", element: <PersonalAccountPage /> },
     { path: "/admin/users/:userId/profile", element: <AdminUsersProfile /> },
     { path: "/personal-account/manager/users/:userId", element: <ManagerUsersProfile /> },
-     { path: "/personal-account/admin/warehouses/:warehouseId", element: <AdminWarehouseData /> },
-    { path: "/personal-account/manager/warehouses/:warehouseId", element: <ManagerWarehouseData /> },
+    { path: "/personal-account/admin/warehouses/:warehouseId", element: <WarehouseData /> },
+    { path: "/personal-account/manager/warehouses/:warehouseId", element: <WarehouseData /> },
     { path: "/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
     { path: "/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
     { path: "/personal-account/courier/order/:orderId", element: <CourierRequestOrder /> },
+    { path: "/warehouse-order", element: <WarehouseOrderPage /> },
   ], []);
 
   const userOnlyRoutes = useMemo(() => [
-    { path: "/warehouse-order", element: <WarehouseOrderPage /> },
+    // Убираем /warehouse-order отсюда - теперь доступно всем авторизованным пользователям
   ], []);
   // Мемоизируем маппинг маршрутов для предотвращения повторного создания элементов
   const publicRouteElements = useMemo(() => 
