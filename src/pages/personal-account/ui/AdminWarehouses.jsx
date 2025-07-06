@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const DUMMY_WAREHOUSES = [
@@ -62,10 +62,20 @@ const DUMMY_WAREHOUSES = [
 
 const AdminWarehouses = () => {
   const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const handleCardClick = (id) => {
     navigate(`/personal-account/admin/warehouses/${id}`);
   };
+
+  const handleFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+  };
+
+  const filteredWarehouses = DUMMY_WAREHOUSES.filter(warehouse => {
+    if (statusFilter === 'All') return true;
+    return warehouse.status === statusFilter;
+  });
 
   return (
     <div className="p-6 font-['Abhaya Libre SemiBold']">
@@ -81,8 +91,12 @@ const AdminWarehouses = () => {
           <div className="relative">
             <select
               className="p-2 border border-[#777777] rounded-md appearance-none pr-8 text-[#000000] bg-white"
+              value={statusFilter}
+              onChange={handleFilterChange}
             >
-              <option value="All" className="text-[#FF8B37]">Active All</option>
+              <option value="All">Все</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -91,14 +105,10 @@ const AdminWarehouses = () => {
             </div>
           </div>
         </div>
-        <button className="bg-[#263654] hover:bg-[#3b4352] text-white px-8 py-2 rounded-md flex items-center space-x-2 shadow-md">
-          <span className="text-xl">+</span>
-          <span>Создать новый склад</span>
-        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {DUMMY_WAREHOUSES.map((warehouse) => (
+        {filteredWarehouses.map((warehouse) => (
           <div 
             key={warehouse.id} 
             className={`p-4 rounded-lg shadow-md border border-gray-200 cursor-pointer ${warehouse.status === 'Active' ? 'bg-white' : 'bg-[#DEE0E4]'}`}
