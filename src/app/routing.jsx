@@ -23,6 +23,8 @@ import AdminUsersProfile from '../pages/personal-account/ui/AdminUsersProfile';
 import ManagerUsersProfile from '../pages/personal-account/ui/ManagerUsersProfile';
 import AdminWarehouseData from '../pages/personal-account/ui/AdminWarehouseData';
 import ManagerWarehouseData from '../pages/personal-account/ui/ManagerWarehouseData';
+import AdminWarehouseEdit from '../pages/personal-account/ui/AdminWarehouseEdit';
+import ManagerWarehouseEdit from '../pages/personal-account/ui/ManagerWarehouseEdit';
 import AdminMovingOrder from '../pages/personal-account/ui/AdminMovingOrder';
 import ManagerMovingOrder from '../pages/personal-account/ui/ManagerMovingOrder';
 import CourierRequestOrder from '../pages/personal-account/ui/CourierRequestOrder';
@@ -127,8 +129,8 @@ const Routing = memo(() => {
     { path: "/personal-account/manager/users/:userId", element: <ManagerUsersProfile /> },
      { path: "/personal-account/admin/warehouses/:warehouseId", element: <AdminWarehouseData /> },
     { path: "/personal-account/manager/warehouses/:warehouseId", element: <ManagerWarehouseData /> },
-    { path: "/personal-account/admin/warehouses/:warehouseId/edit", element: <AdminWarehouseData /> },
-    { path: "/personal-account/manager/warehouses/:warehouseId/edit", element: <ManagerWarehouseData /> },
+    { path: "/personal-account/admin/warehouses/:warehouseId/edit", element: <AdminWarehouseEdit /> },
+    { path: "/personal-account/manager/warehouses/:warehouseId/edit", element: <ManagerWarehouseEdit /> },
     { path: "/personal-account/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
     { path: "/personal-account/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
     { path: "/personal-account/courier/order/:orderId", element: <CourierRequestOrder /> },

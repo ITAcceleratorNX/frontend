@@ -14,6 +14,32 @@ export const warehouseApi = {
     }
   },
 
+  // Получение склада по ID с боксами
+  getWarehouseById: async (warehouseId) => {
+    try {
+      console.log(`Отправка запроса на получение склада ${warehouseId}`);
+      const response = await api.get(`/warehouses/${warehouseId}`);
+      console.log('Склад загружен:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при загрузке склада:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Обновление данных склада
+  updateWarehouse: async (warehouseId, warehouseData) => {
+    try {
+      console.log(`Отправка запроса на обновление склада ${warehouseId}:`, warehouseData);
+      const response = await api.put(`/warehouses/${warehouseId}`, warehouseData);
+      console.log('Склад успешно обновлен:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении склада:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Создание нового заказа
   createOrder: async (orderData) => {
     try {
