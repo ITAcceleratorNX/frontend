@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Settings, Plus, History, Loader2, AlertCircle, Shield, Minus, BarChart3 } from 'lucide-react';
 import { useNotifications } from '../../../../shared/lib/hooks/use-notifications';
 import { toast } from 'react-toastify';
 import NotificationCard from './NotificationCard';
@@ -7,7 +8,7 @@ import NotificationHistory from './NotificationHistory';
 
 const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState('history');
-  const [interfaceScale, setInterfaceScale] = useState(1); // Масштаб интерфейса (1 = 100%)
+  const [interfaceScale, setInterfaceScale] = useState(1);
   
   // Используем хук для получения данных уведомлений
   const {
@@ -45,27 +46,16 @@ const AdminNotifications = () => {
     localStorage.setItem('notificationScale', newScale);
   };
 
-  // Стили для масштабирования
-  const scaleStyle = {
-    fontSize: `${16 * interfaceScale}px`,
-    '--card-width': `${650 * interfaceScale}px`,
-    '--card-height': `${Math.min(700 * interfaceScale, 800)}px`,
-    '--heading-size': `${26 * interfaceScale}px`,
-    '--text-size': `${20 * interfaceScale}px`,
-    '--button-height': `${50 * interfaceScale}px`,
-    '--button-font': `${20 * interfaceScale}px`,
-    '--spacing': `${20 * interfaceScale}px`,
-  };
-
   // Show loading state
   if (isLoading) {
     return (
-      <div className="space-y-6" style={scaleStyle}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e2c4f] mx-auto mb-4"></div>
-            <p className="text-gray-600" style={{fontSize: 'var(--text-size)'}}>Загрузка уведомлений...</p>
+      <div className="min-h-[600px] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin mx-auto" />
           </div>
+          <p className="text-gray-600 font-medium">Загрузка системы уведомлений...</p>
+          <p className="text-sm text-gray-500">Пожалуйста, подождите</p>
         </div>
       </div>
     );
@@ -74,105 +64,187 @@ const AdminNotifications = () => {
   // Show error state
   if (error) {
     return (
-      <div className="space-y-6" style={scaleStyle}>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="text-red-500 text-4xl mb-4">⚠️</div>
-            <p className="text-red-600" style={{fontSize: 'var(--text-size)'}}>Ошибка загрузки уведомлений</p>
-            <p className="text-gray-500 mt-2" style={{fontSize: 'var(--text-size)'}}>{error.message}</p>
+      <div className="min-h-[600px] flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-red-600" />
           </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-900">Ошибка загрузки</h3>
+            <p className="text-gray-600">Не удалось загрузить систему уведомлений</p>
+            <p className="text-sm text-gray-500">{error.message}</p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center px-4 py-2 bg-[#1e2c4f] text-white rounded-lg hover:bg-[#1e2c4f]/90 transition-colors"
+          >
+            Попробовать снова
+          </button>
         </div>
       </div>
     );
   }
 
+  const totalNotifications = notifications?.length || 0;
+  const totalUsers = users?.length || 0;
+
   return (
-    <div className="space-y-6" style={scaleStyle}>
-      {/* Header with role indicator and scale controls */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-gray-900" style={{fontSize: 'var(--heading-size)'}}>
-            Система уведомлений
-          </h1>
-          <p className="text-gray-600 mt-1" style={{fontSize: 'var(--text-size)'}}>
-            Управляйте системой уведомлений
-          </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold mb-1">Система уведомлений</h1>
+              <p className="text-white/80">
+                Управление уведомлениями и коммуникацией с пользователями
+              </p>
+            </div>
+          </div>
+          
+          {/* Scale Controls */}
+          <div className="flex items-center space-x-3">
+            <div className="text-sm text-white/80 font-medium">Масштаб:</div>
+            <div className="flex items-center bg-white/10 rounded-lg p-1">
+              <button 
+                onClick={() => changeScale(0.8)} 
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                  interfaceScale === 0.8 
+                    ? 'bg-white text-[#1e2c4f] font-semibold' 
+                    : 'text-white/80 hover:bg-white/20'
+                }`}
+                title="Уменьшить масштаб"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => changeScale(1)} 
+                className={`flex items-center justify-center w-8 h-8 rounded mx-1 transition-colors ${
+                  interfaceScale === 1 
+                    ? 'bg-white text-[#1e2c4f] font-semibold' 
+                    : 'text-white/80 hover:bg-white/20'
+                }`}
+                title="Обычный масштаб"
+              >
+                A
+              </button>
+              <button 
+                onClick={() => changeScale(1.2)} 
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                  interfaceScale === 1.2 
+                    ? 'bg-white text-[#1e2c4f] font-semibold' 
+                    : 'text-white/80 hover:bg-white/20'
+                }`}
+                title="Увеличить масштаб"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
-        
-        {/* Scale Controls */}
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-600" style={{fontSize: 'var(--text-size)'}}>Масштаб:</span>
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => changeScale(0.8)} 
-              className={`px-3 py-1 rounded ${interfaceScale === 0.8 ? 'bg-[#1e2c4f] text-white' : 'bg-gray-200'}`}
-              style={{fontSize: 'var(--button-font)'}}
-            >
-              A-
-            </button>
-            <button 
-              onClick={() => changeScale(1)} 
-              className={`px-3 py-1 rounded ${interfaceScale === 1 ? 'bg-[#1e2c4f] text-white' : 'bg-gray-200'}`}
-              style={{fontSize: 'var(--button-font)'}}
-            >
-              A
-            </button>
-            <button 
-              onClick={() => changeScale(1.2)} 
-              className={`px-3 py-1 rounded ${interfaceScale === 1.2 ? 'bg-[#1e2c4f] text-white' : 'bg-gray-200'}`}
-              style={{fontSize: 'var(--button-font)'}}
-            >
-              A+
-            </button>
+
+        {/* Статистика */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <BarChart3 className="w-5 h-5 text-white/80" />
+              <div>
+                <p className="text-white/80 text-sm">Всего уведомлений</p>
+                <p className="text-xl font-bold text-white">{totalNotifications}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <Settings className="w-5 h-5 text-white/80" />
+              <div>
+                <p className="text-white/80 text-sm">Пользователей</p>
+                <p className="text-xl font-bold text-white">{totalUsers}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <Plus className="w-5 h-5 text-white/80" />
+              <div>
+                <p className="text-white/80 text-sm">Отправлено сегодня</p>
+                <p className="text-xl font-bold text-white">{stats?.sentToday || 0}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Simplified Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab('create')}
-            className={`py-3 px-6 border-b-2 font-medium transition-colors ${
-              activeTab === 'create'
-                ? 'border-[#1e2c4f] text-[#1e2c4f]'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            style={{fontSize: 'var(--button-font)'}}
-          >
-            Создать
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`py-3 px-6 border-b-2 font-medium transition-colors ${
-              activeTab === 'history'
-                ? 'border-[#1e2c4f] text-[#1e2c4f]'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            style={{fontSize: 'var(--button-font)'}}
-          >
-            История
-          </button>
-        </nav>
+      {/* Navigation Tabs */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="border-b border-gray-200">
+          <nav className="flex">
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all ${
+                activeTab === 'create'
+                  ? 'border-b-2 border-[#1e2c4f] text-[#1e2c4f] bg-blue-50'
+                  : 'text-gray-600 hover:text-[#1e2c4f] hover:bg-gray-50'
+              }`}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Создать уведомление</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all ${
+                activeTab === 'history'
+                  ? 'border-b-2 border-[#1e2c4f] text-[#1e2c4f] bg-blue-50'
+                  : 'text-gray-600 hover:text-[#1e2c4f] hover:bg-gray-50'
+              }`}
+            >
+              <History className="w-4 h-4" />
+              <span>История уведомлений</span>
+              {totalNotifications > 0 && (
+                <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                  {totalNotifications}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+
+        {/* Content */}
+        <div className="min-h-[500px]">
+          {activeTab === 'create' && (
+            <div className="p-6">
+              <CreateNotificationForm
+                users={users || []}
+                onSendNotification={handleSendNotification}
+                scale={interfaceScale}
+              />
+            </div>
+          )}
+          
+          {activeTab === 'history' && (
+            <div className="p-6">
+              <NotificationHistory
+                notifications={notifications || []}
+                scale={interfaceScale}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="min-h-[500px]">
-        {activeTab === 'create' && (
-          <CreateNotificationForm
-            users={users || []}
-            onSendNotification={handleSendNotification}
-            scale={interfaceScale}
-          />
-        )}
-        
-                  {activeTab === 'history' && (
-          <NotificationHistory
-            notifications={notifications || []}
-            scale={interfaceScale}
-          />
-        )}
-      </div>
+      {/* Loading overlay для отправки */}
+      {isSending && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm mx-4 text-center">
+            <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Отправка уведомления</h3>
+            <p className="text-gray-600">Пожалуйста, подождите...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

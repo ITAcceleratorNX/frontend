@@ -319,27 +319,62 @@ const ManagerChatList = memo(() => {
         )}
       </div>
 
-      {/* Уведомления о новых чатах - компактные */}
+      {/* Уведомления о новых чатах - современный дизайн */}
       {newChatNotifications.length > 0 && (
-        <div className="bg-blue-50 border-b border-blue-200 p-2">
-          {newChatNotifications.map((notification) => (
-            <div key={notification.chatId} className="flex items-center justify-between bg-white rounded p-2 shadow-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-[#1e2c4f] rounded-full flex items-center justify-center">
-                  <MessageSquare className="w-3 h-3 text-white" />
-                </div>
-                <span className="text-xs font-medium text-blue-900">
-                  Новый чат #{notification.chatId}
-                </span>
-              </div>
-              <button
-                onClick={() => handleAcceptChat(notification.chatId)}
-                className="px-2 py-1 bg-[#1e2c4f] text-white text-xs rounded hover:bg-[#1e2c4f]/90 transition-colors"
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-3">
+          <div className="space-y-2">
+            {newChatNotifications.map((notification) => (
+              <div 
+                key={notification.chatId} 
+                className="group relative flex items-center justify-between bg-white rounded-xl p-3 shadow-sm border border-blue-200 hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
               >
-                Принять
+                {/* Индикатор нового уведомления */}
+                <div className="absolute top-2 left-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                
+                <div className="flex items-center space-x-3 pl-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-full flex items-center justify-center shadow-sm">
+                    <MessageSquare className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      Новый чат #{notification.chatId}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Пользователь ожидает ответа
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => handleAcceptChat(notification.chatId)}
+                  className="flex items-center space-x-1 px-3 py-2 bg-[#1e2c4f] text-white text-xs font-medium rounded-lg hover:bg-[#1e2c4f]/90 transition-all duration-200 hover:shadow-md"
+                  title="Принять чат"
+                >
+                  <MessageSquare className="w-3 h-3" />
+                  <span>Принять</span>
+                </button>
+
+                {/* Hover эффект */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#1e2c4f]/0 to-[#1e2c4f]/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Общая информация */}
+          <div className="mt-3 pt-2 border-t border-blue-200/50">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-blue-700 font-medium">
+                📢 {newChatNotifications.length} новых уведомлений
+              </span>
+              <button
+                onClick={clearNotifications}
+                className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                title="Очистить все уведомления"
+              >
+                Очистить все
               </button>
             </div>
-          ))}
+          </div>
         </div>
       )}
 

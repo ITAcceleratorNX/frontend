@@ -186,7 +186,8 @@ const AllUsers = () => {
   const handleProfileClick = (userId) => {
     const isAdminUser = currentUser?.role === 'ADMIN';
     const basePath = isAdminUser ? '/admin/users' : '/personal-account/manager/users';
-    navigate(`${basePath}/${userId}/profile`);
+    const profilePath = isAdminUser ? `${basePath}/${userId}/profile` : `${basePath}/${userId}`;
+    navigate(profilePath);
   };
 
   // Получение отображаемого имени роли

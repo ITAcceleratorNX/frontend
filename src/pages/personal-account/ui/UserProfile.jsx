@@ -85,6 +85,8 @@ const UserProfile = () => {
 
   // Проверяем роль текущего пользователя
   const isAdmin = currentUser?.role === 'ADMIN';
+  const isManager = currentUser?.role === 'MANAGER';
+  const isAdminOrManager = isAdmin || isManager;
 
   useEffect(() => {
     const fetchUsers = async () => {
