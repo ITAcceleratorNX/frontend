@@ -107,12 +107,22 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
                   <span className="text-sm">{order.total_volume} м³</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Стоимость:</span>
+                  <span className="text-sm text-gray-600">Создан:</span>
+                  <span className="text-sm">{formatDate(order.created_at)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Стоимость аренды:</span>
                   <span className="text-sm font-medium text-[#273655]">{formatPrice(order.total_price)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Создан:</span>
-                  <span className="text-sm">{formatDate(order.created_at)}</span>
+                  <span className="text-sm text-gray-600">Депозит:</span>
+                  <span className="text-sm font-medium">15 000 ₸</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-gray-300">
+                  <span className="text-sm text-gray-900 font-semibold">Общая сумма:</span>
+                  <span className="text-sm font-bold text-[#273655]">
+                    {formatPrice((parseFloat(order.total_price) || 0) + 15000)}
+                  </span>
                 </div>
               </div>
             </div>

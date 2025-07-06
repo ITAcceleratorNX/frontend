@@ -80,8 +80,18 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
               <span className="ml-2">{order.total_volume} м³</span>
             </div>
             <div>
-              <span className="text-gray-600">Стоимость:</span>
+              <span className="text-gray-600">Стоимость аренды:</span>
               <span className="ml-2 font-medium text-[#273655]">{formatPrice(order.total_price)}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Депозит:</span>
+              <span className="ml-2 font-medium">15 000 ₸</span>
+            </div>
+            <div className="pt-2 border-t border-gray-300">
+              <span className="text-gray-900 font-semibold">Общая сумма:</span>
+              <span className="ml-2 font-bold text-[#273655] text-base">
+                {formatPrice((parseFloat(order.total_price) || 0) + 15000)}
+              </span>
             </div>
           </div>
         </div>
