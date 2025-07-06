@@ -80,23 +80,52 @@ const InfoWarehouses = () => {
   };
 
   const getStatusDisplay = (status) => {
-    return status === 'AVAILABLE' ? 'Active' : 'Inactive';
+    return status === 'AVAILABLE' ? 'Активный' : 'Неактивный';
   };
 
-  const getStatusClass = (status) => {
-    return status === 'AVAILABLE' ? 'bg-[#3A532D]' : 'bg-[#777777]';
+  const getStatusBadge = (status) => {
+    if (status === 'AVAILABLE') {
+      return 'bg-green-100 text-green-800 border border-green-200';
+    }
+    return 'bg-gray-100 text-gray-800 border border-gray-200';
   };
 
-  const getCardClass = (status) => {
-    return status === 'AVAILABLE' ? 'bg-white' : 'bg-[#DEE0E4]';
+  const getCardStyle = (status) => {
+    return status === 'AVAILABLE' 
+      ? 'border-green-200 hover:border-green-300 hover:shadow-lg' 
+      : 'border-gray-200 hover:border-gray-300 hover:shadow-md opacity-75';
   };
 
   if (isLoading) {
     return (
-      <div className="p-6 font-['Abhaya Libre SemiBold']">
-        <h1 className="text-3xl font-medium mb-6">Список складов</h1>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#273655]"></div>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Заголовок загрузки */}
+        <div className="space-y-2">
+          <div className="h-8 bg-gray-200 rounded-lg w-64 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
+        </div>
+
+        {/* Фильтры загрузки */}
+        <div className="flex gap-4">
+          <div className="h-10 bg-gray-200 rounded-lg w-80 animate-pulse"></div>
+          <div className="h-10 bg-gray-200 rounded-lg w-48 animate-pulse"></div>
+        </div>
+
+        {/* Карточки загрузки */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="h-6 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-6 bg-gray-200 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -104,115 +133,192 @@ const InfoWarehouses = () => {
 
   if (error) {
     return (
-      <div className="p-6 font-['Abhaya Libre SemiBold']">
-        <h1 className="text-3xl font-medium mb-6">Список складов</h1>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-          <div className="text-red-600 mb-4">{error}</div>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-[#263654] hover:bg-[#3b4352] text-white px-6 py-2 rounded-md"
-          >
-            Повторить попытку
-          </button>
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="bg-white rounded-xl border border-red-200 shadow-sm">
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Повторить попытку
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 font-['Abhaya Libre SemiBold']">
-      <h1 className="text-3xl font-medium mb-6">Список складов</h1>
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Заголовок */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-gray-900">Управление складами</h1>
+        <p className="text-gray-600">Просматривайте и управляйте всеми складами в системе</p>
+      </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <input
-            type="text"
-            placeholder="Поиск склада по названию или адресу..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64 p-2 border border-[#777777] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-300 text-gray-700 placeholder-gray-500"
-          />
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="p-2 border border-[#777777] rounded-md appearance-none pr-8 text-[#000000] bg-white"
-            >
-              <option value="ALL">Все склады</option>
-              <option value="ACTIVE">Активные</option>
-              <option value="INACTIVE">Неактивные</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9l4.243 4.243z"/>
-              </svg>
+      {/* Поиск и фильтры */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+            {/* Поиск */}
+            <div className="relative flex-1 max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Поиск по названию или адресу..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors"
+              />
+            </div>
+
+            {/* Фильтр по статусу */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors"
+              >
+                <option value="ALL">Все склады</option>
+                <option value="ACTIVE">Активные</option>
+                <option value="INACTIVE">Неактивные</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="text-sm text-gray-600">
-          Найдено складов: {filteredWarehouses.length} из {warehouses.length}
+          
+          {/* Статистика */}
+          <div className="flex items-center text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-lg">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            Найдено: <span className="font-medium text-gray-900 ml-1">{filteredWarehouses.length}</span> из <span className="font-medium text-gray-900">{warehouses.length}</span>
+          </div>
         </div>
       </div>
 
+      {/* Список складов */}
       {filteredWarehouses.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <div className="text-gray-500">
-            {searchTerm || statusFilter !== 'ALL' 
-              ? 'Склады не найдены по заданным критериям' 
-              : 'Склады не найдены'
-            }
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Склады не найдены</h3>
+            <p className="text-gray-600 mb-6">
+              {searchTerm || statusFilter !== 'ALL' 
+                ? 'Попробуйте изменить критерии поиска или фильтрации' 
+                : 'В системе пока нет ни одного склада'
+              }
+            </p>
+            {(searchTerm || statusFilter !== 'ALL') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('ALL');
+                }}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#273655] bg-[#273655]/5 hover:bg-[#273655]/10 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Сбросить фильтры
+              </button>
+            )}
           </div>
-          {(searchTerm || statusFilter !== 'ALL') && (
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('ALL');
-              }}
-              className="mt-4 text-[#273655] underline hover:no-underline"
-            >
-              Сбросить фильтры
-            </button>
-          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredWarehouses.map((warehouse) => (
             <div 
               key={warehouse.id} 
-              className={`relative p-4 rounded-lg shadow-md border border-gray-200 cursor-pointer transition-all hover:shadow-lg ${getCardClass(warehouse.status)}`}
+              className={`group bg-white rounded-xl border shadow-sm cursor-pointer transition-all duration-200 ${getCardStyle(warehouse.status)}`}
               onClick={() => handleCardClick(warehouse.id)}
             >
-              <button
-                onClick={(e) => handleEditClick(warehouse.id, e)}
-                className="absolute top-3 right-3 p-2 text-gray-500 hover:text-[#273655] hover:bg-gray-100 rounded-full transition-all"
-                title="Редактировать склад"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
+              <div className="p-6">
+                {/* Заголовок карточки */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(warehouse.status)}`}>
+                    <div className={`w-2 h-2 rounded-full mr-2 ${warehouse.status === 'AVAILABLE' ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                    {getStatusDisplay(warehouse.status)}
+                  </div>
+                  
+                  <button
+                    onClick={(e) => handleEditClick(warehouse.id, e)}
+                    className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-[#273655] hover:bg-gray-100 rounded-lg transition-all duration-200"
+                    title="Редактировать склад"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                </div>
 
-              <div
-                className={`text-white text-xs px-7 font-['Abhaya Libre SemiBold'] py-1.5 rounded-full inline-block mb-2 ${getStatusClass(warehouse.status)}`}
-              >
-                {getStatusDisplay(warehouse.status)}
-              </div>
-              <h2 className="text-lg font-semibold mb-1">{warehouse.name}</h2>
-              <p className="text-sm text-[#000000] mb-2">{warehouse.address}</p>
-              <p className="text-xs text-gray-600 mb-2">
-                Время работы: {warehouse.work_start} - {warehouse.work_end}
-              </p>
-              {warehouse.storage && (
-                <p className="text-xs text-[#273655] font-medium">
-                  Боксов: {warehouse.storage.length} 
-                  {warehouse.storage.filter && (
-                    <span className="text-green-600">
-                      {' '}(свободно: {warehouse.storage.filter(s => s.status === 'VACANT').length})
-                    </span>
+                {/* Основная информация */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#273655] transition-colors">
+                    {warehouse.name}
+                  </h3>
+                  
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex items-start">
+                      <svg className="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="line-clamp-2">{warehouse.address}</span>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{warehouse.work_start} - {warehouse.work_end}</span>
+                    </div>
+                  </div>
+
+                  {/* Статистика боксов */}
+                  {warehouse.storage && (
+                    <div className="pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Всего боксов:</span>
+                        <span className="font-medium text-gray-900">{warehouse.storage.length}</span>
+                      </div>
+                      {warehouse.storage.filter && (
+                        <div className="flex items-center justify-between text-sm mt-1">
+                          <span className="text-gray-600">Свободно:</span>
+                          <span className="font-medium text-green-600">
+                            {warehouse.storage.filter(s => s.status === 'VACANT').length}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   )}
-                </p>
-              )}
+                </div>
+
+                {/* Индикатор hover */}
+                <div className="absolute inset-0 rounded-xl ring-2 ring-[#273655] ring-opacity-0 group-hover:ring-opacity-20 transition-all duration-200 pointer-events-none"></div>
+              </div>
             </div>
           ))}
         </div>

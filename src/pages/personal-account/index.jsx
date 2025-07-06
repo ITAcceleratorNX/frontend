@@ -6,9 +6,8 @@ import PersonalData from './ui/PersonalData';
 import Contracts from './ui/Contracts';
 import Settings from './ui/Settings';
 import ChatSection from './ui/ChatSection';
-import AdminUsers from './ui/AdminUsers';
+import AllUsers from './ui/AllUsers';
 import AdminMoving from './ui/AdminMoving';
-import ManagerUsers from './ui/ManagerUsers';
 import ManagerMoving from './ui/ManagerMoving';
 import InfoWarehouses from './ui/InfoWarehouses';
 import CourierRequest from './ui/CourierRequest';
@@ -97,8 +96,8 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'contracts' && <Contracts />}
           {activeNav === 'chat' && <ChatSection />}
           {activeNav === 'notifications' && getNotificationsComponent()}
-          {activeNav === 'adminusers' && <AdminUsers />}
-          {activeNav === 'managerusers' && <ManagerUsers />}
+          {activeNav === 'adminusers' && <AllUsers />}
+          {activeNav === 'managerusers' && <AllUsers />}
           {activeNav === 'warehouses' && <InfoWarehouses />}
           {activeNav === 'adminmoving' && <AdminMoving />}
           {activeNav === 'managermoving' && <ManagerMoving />}

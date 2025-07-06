@@ -1,12 +1,9 @@
 import { api } from './axios';
 
-// Базовый URL уже настроен в axios.js:
-// const API_URL = isDevelopment ? '/api' : 'https://extraspace-backend.onrender.com';
-// Не нужно добавлять префикс '/api' к путям
 
 const isDevelopment = import.meta.env.DEV;
 
-class NotificationAPI {
+export const notificationApi = {
 
   // Получение уведомлений для пользователя
   async getUserNotifications() {
@@ -23,7 +20,7 @@ class NotificationAPI {
       console.error('Error fetching user notifications:', error);
       throw error;
     }
-  }
+  },
 
   // Получение всех уведомлений (для менеджеров/админов)
   async getAllNotifications() {
@@ -42,7 +39,7 @@ class NotificationAPI {
       console.error('Error fetching all notifications:', error);
       throw error;
     }
-  }
+  },
 
   // Отправка уведомления
   async sendNotification(notification) {
@@ -56,7 +53,7 @@ class NotificationAPI {
       console.error('Error sending notification:', error);
       throw error;
     }
-  }
+  },
 
   // Пометить уведомление как прочитанное
   async markAsRead(notificationId) {
@@ -70,7 +67,7 @@ class NotificationAPI {
       console.error('Error marking notification as read:', error);
       throw error;
     }
-  }
+  },
 
   // Получение списка пользователей (для отправки уведомлений)
   async getUsers() {
@@ -84,7 +81,7 @@ class NotificationAPI {
       console.error('Error fetching users:', error);
       throw error;
     }
-  }
+  },
 
   // Получение статистики уведомлений
   async getNotificationStats() {
@@ -107,9 +104,3 @@ class NotificationAPI {
     }
   }
 }
-
-// Создаем и экспортируем экземпляр API
-export const notificationApi = new NotificationAPI();
-
-// Экспортируем класс для возможного использования в других местах
-export default NotificationAPI;

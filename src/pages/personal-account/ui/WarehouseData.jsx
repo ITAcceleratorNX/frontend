@@ -136,29 +136,70 @@ const WarehouseData = () => {
     });
   };
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+    const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
+    navigate(`/personal-account/${basePath}/warehouses/${warehouseId}?edit=true`, { replace: true });
+  };
+
   const getStatusDisplay = (status) => {
-    return status === 'AVAILABLE' ? 'Active' : 'Inactive';
+    return status === 'AVAILABLE' ? 'Активный' : 'Неактивный';
   };
 
-  const getStatusClass = (status) => {
-    return status === 'AVAILABLE' ? 'bg-[#3A532D]' : 'bg-[#777777]';
+  const getStatusBadge = (status) => {
+    if (status === 'AVAILABLE') {
+      return 'bg-green-100 text-green-800 border border-green-200';
+    }
+    return 'bg-gray-100 text-gray-800 border border-gray-200';
   };
 
-  const getCardClass = (status) => {
-    return status === 'AVAILABLE' ? 'bg-white' : 'bg-[#DEE0E4]';
-  };
+  const getStatCard = (title, value, icon, color = 'text-gray-600') => (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className={`text-2xl font-bold ${color}`}>{value}</p>
+        </div>
+        <div className={`p-3 rounded-lg bg-gray-50 ${color}`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-          <main className="flex-1 mr-[110px]">
-            <div className="w-full flex flex-col items-center pt-8">
-              <div className="w-[1150px] ml-[80px] bg-white rounded-2xl p-8">
-                <div className="flex items-center justify-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#273655]"></div>
+          <main className="flex-1 p-6">
+            <div className="max-w-6xl mx-auto space-y-6">
+              {/* Заголовок загрузки */}
+              <div className="flex items-center space-x-4">
+                <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
+              </div>
+
+              {/* Карточки загрузки */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                    <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+                    <div className="space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                      <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -170,32 +211,41 @@ const WarehouseData = () => {
 
   if (error || !warehouse) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-          <main className="flex-1 mr-[110px]">
-            <div className="w-full flex flex-col items-center pt-6">
-              <div className="w-[1150px] ml-[80px] bg-white rounded-2xl p-8">
-                <div className="flex items-center mb-6">
-                  <button 
-                    onClick={handleBackToList}
-                    className="flex items-center text-[#000000] text-lg mr-2 cursor-pointer hover:text-[#273655]"
-                  >
-                    <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+          <main className="flex-1 p-6">
+            <div className="max-w-6xl mx-auto">
+              <div className="bg-white rounded-xl border border-red-200 shadow-sm">
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <span className="font-['Nunito Sans']">Назад к списку</span>
-                  </button>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-                  <div className="text-red-600 mb-4">{error || 'Склад не найден'}</div>
-                  <button
-                    onClick={handleBackToList}
-                    className="bg-[#263654] hover:bg-[#3b4352] text-white px-6 py-2 rounded-md"
-                  >
-                    Вернуться к списку
-                  </button>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
+                  <p className="text-gray-600 mb-6">{error || 'Склад не найден'}</p>
+                  <div className="flex justify-center space-x-4">
+                    <button
+                      onClick={handleBackToList}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Назад к списку
+                    </button>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Повторить
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -206,189 +256,321 @@ const WarehouseData = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <div className="flex flex-1">
         <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-        <main className="flex-1 mr-[110px]">
-          <div className="w-full flex flex-col items-center pt-8">
-            <div className="w-[1150px] ml-[80px] bg-white rounded-2xl p-8">
-              <div className="flex items-center justify-between mb-6">
+        <main className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto space-y-6">
+            {/* Breadcrumb и заголовок */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
                 <button 
                   onClick={handleBackToList}
-                  className="flex items-center text-[#000000] text-lg cursor-pointer hover:text-[#273655]"
+                  className="inline-flex items-center text-gray-600 hover:text-[#273655] transition-colors"
                 >
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                   </svg>
-                  <span className="font-['Nunito Sans']">Данные склада</span>
+                  <span className="text-sm font-medium">Склады</span>
                 </button>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <h1 className="text-2xl font-bold text-gray-900">{warehouse.name}</h1>
               </div>
 
-              {!isEditing ? (
-                // Режим просмотра
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Карточка склада */}
-                  <div className={`p-6 rounded-lg shadow-md border border-gray-200 ${getCardClass(warehouse.status)}`}>
-                    <div
-                      className={`text-white text-xs px-7 font-['Abhaya Libre SemiBold'] py-1.5 rounded-full inline-block mb-4 ${getStatusClass(warehouse.status)}`}
-                    >
-                      {getStatusDisplay(warehouse.status)}
-                    </div>
-                    <h2 className="text-2xl font-semibold mb-4">{warehouse.name}</h2>
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <span className="font-medium text-gray-600">Адрес:</span>
-                        <p className="text-[#000000]">{warehouse.address}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-600">Время работы:</span>
-                        <p className="text-[#000000]">{warehouse.work_start} - {warehouse.work_end}</p>
-                      </div>
-                      {warehouse.latitude && warehouse.longitude && (
-                        <div>
-                          <span className="font-medium text-gray-600">Координаты:</span>
-                          <p className="text-[#000000]">{warehouse.latitude}, {warehouse.longitude}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Статистика боксов */}
-                  {warehouse.storage && (
-                    <div className="p-6 rounded-lg shadow-md border border-gray-200 bg-white">
-                      <h3 className="text-xl font-semibold mb-4">Статистика боксов</h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Всего боксов:</span>
-                          <span className="font-medium">{warehouse.storage.length}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Свободные:</span>
-                          <span className="font-medium text-green-600">
-                            {warehouse.storage.filter(s => s.status === 'VACANT').length}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Занятые:</span>
-                          <span className="font-medium text-red-600">
-                            {warehouse.storage.filter(s => s.status === 'OCCUPIED').length}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Ожидающие:</span>
-                          <span className="font-medium text-yellow-600">
-                            {warehouse.storage.filter(s => s.status === 'PENDING').length}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // Режим редактирования
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Название склада
-                      </label>
-                      <input
-                        type="text"
-                        {...register('name', { required: 'Название обязательно' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#273655] focus:border-[#273655]"
-                      />
-                      {errors.name && (
-                        <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Статус
-                      </label>
-                      <select
-                        {...register('status')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#273655] focus:border-[#273655]"
-                      >
-                        <option value="AVAILABLE">Активный</option>
-                        <option value="UNAVAILABLE">Неактивный</option>
-                      </select>
-                    </div>
-
-                    <div className="lg:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Адрес
-                      </label>
-                      <textarea
-                        {...register('address', { required: 'Адрес обязателен' })}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#273655] focus:border-[#273655]"
-                      />
-                      {errors.address && (
-                        <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Время начала работы
-                      </label>
-                      <input
-                        type="time"
-                        {...register('work_start', { required: 'Время начала обязательно' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#273655] focus:border-[#273655]"
-                      />
-                      {errors.work_start && (
-                        <p className="mt-1 text-sm text-red-600">{errors.work_start.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Время окончания работы
-                      </label>
-                      <input
-                        type="time"
-                        {...register('work_end', { required: 'Время окончания обязательно' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#273655] focus:border-[#273655]"
-                      />
-                      {errors.work_end && (
-                        <p className="mt-1 text-sm text-red-600">{errors.work_end.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-4">
-                    <button
-                      type="button"
-                      onClick={handleCancel}
-                      className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Отмена
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSaving || !isDirty}
-                      className="px-6 py-2 bg-[#273655] text-white rounded-md hover:bg-[#1e2c4f] disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSaving ? 'Сохранение...' : 'Сохранить'}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* Кнопка "Подробно" - только в режиме просмотра */}
               {!isEditing && (
-                <div className="mt-8 flex justify-center">
-                  <button
-                    onClick={() => navigate('/warehouse-order')}
-                    className="px-8 py-3 bg-[#273655] text-white text-lg font-medium rounded-lg hover:bg-[#1e2c4f] transition-colors"
-                  >
-                    Подробно боксов
-                  </button>
-                </div>
+                <button
+                  onClick={handleEditClick}
+                  className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Редактировать
+                </button>
               )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Основная информация */}
+              <div className="lg:col-span-2 space-y-6">
+                {!isEditing ? (
+                  // Режим просмотра
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-gray-900">Информация о складе</h2>
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(warehouse.status)}`}>
+                          <div className={`w-2 h-2 rounded-full mr-2 ${warehouse.status === 'AVAILABLE' ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                          {getStatusDisplay(warehouse.status)}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6 space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Название</label>
+                            <p className="text-lg font-semibold text-gray-900 mt-1">{warehouse.name}</p>
+                          </div>
+                          
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Время работы</label>
+                            <div className="flex items-center mt-1">
+                              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <p className="text-gray-900">{warehouse.work_start} - {warehouse.work_end}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Адрес</label>
+                          <div className="flex items-start mt-1">
+                            <svg className="w-4 h-4 mr-2 mt-1 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <p className="text-gray-900">{warehouse.address}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {warehouse.latitude && warehouse.longitude && (
+                        <div className="pt-4 border-t border-gray-100">
+                          <label className="text-sm font-medium text-gray-500">Координаты</label>
+                          <p className="text-gray-900 mt-1">{warehouse.latitude}, {warehouse.longitude}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  // Режим редактирования
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-200">
+                      <h2 className="text-lg font-semibold text-gray-900">Редактирование склада</h2>
+                      <p className="text-sm text-gray-600 mt-1">Внесите изменения в информацию о складе</p>
+                    </div>
+                    
+                    <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Название склада *
+                            </label>
+                            <input
+                              type="text"
+                              {...register('name', { required: 'Название обязательно' })}
+                              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                              placeholder="Введите название склада"
+                            />
+                            {errors.name && (
+                              <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {errors.name.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Статус
+                            </label>
+                            <select
+                              {...register('status')}
+                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors"
+                            >
+                              <option value="AVAILABLE">Активный</option>
+                              <option value="UNAVAILABLE">Неактивный</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Адрес *
+                          </label>
+                          <textarea
+                            {...register('address', { required: 'Адрес обязателен' })}
+                            rows={3}
+                            className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors resize-none ${
+                              errors.address ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Введите полный адрес склада"
+                          />
+                          {errors.address && (
+                            <p className="mt-1 text-sm text-red-600 flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {errors.address.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Время открытия *
+                            </label>
+                            <input
+                              type="time"
+                              {...register('work_start', { required: 'Время начала обязательно' })}
+                              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                errors.work_start ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                            />
+                            {errors.work_start && (
+                              <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {errors.work_start.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Время закрытия *
+                            </label>
+                            <input
+                              type="time"
+                              {...register('work_end', { required: 'Время окончания обязательно' })}
+                              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                errors.work_end ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                            />
+                            {errors.work_end && (
+                              <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {errors.work_end.message}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                          <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            Отмена
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isSaving || !isDirty}
+                            className="px-6 py-2.5 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2c4f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isSaving ? (
+                              <div className="flex items-center">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Сохранение...
+                              </div>
+                            ) : (
+                              'Сохранить изменения'
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Кнопка "Подробно боксов" - только в режиме просмотра */}
+                {!isEditing && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-[#273655]/10 rounded-full flex items-center justify-center">
+                        <svg className="w-8 h-8 text-[#273655]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Управление боксами</h3>
+                      <p className="text-gray-600 mb-6">Просмотрите детальную схему склада и состояние всех боксов</p>
+                      <button
+                        onClick={() => navigate('/warehouse-order')}
+                        className="inline-flex items-center px-6 py-3 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2c4f] transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Подробно боксов
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Статистика боксов */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Статистика боксов</h3>
+                
+                {warehouse.storage ? (
+                  <>
+                    {getStatCard(
+                      'Всего боксов',
+                      warehouse.storage.length,
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>,
+                      'text-gray-900'
+                    )}
+                    
+                    {getStatCard(
+                      'Свободные',
+                      warehouse.storage.filter(s => s.status === 'VACANT').length,
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>,
+                      'text-green-600'
+                    )}
+                    
+                    {getStatCard(
+                      'Занятые',
+                      warehouse.storage.filter(s => s.status === 'OCCUPIED').length,
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>,
+                      'text-red-600'
+                    )}
+                    
+                    {getStatCard(
+                      'Ожидающие',
+                      warehouse.storage.filter(s => s.status === 'PENDING').length,
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>,
+                      'text-yellow-600'
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-gray-500">Нет данных о боксах</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </main>

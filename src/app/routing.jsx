@@ -19,8 +19,7 @@ import PrivacyPolicyPage from '../pages/privacy-policy';
 
 import PersonalAccountPage from '../pages/personal-account';
 import WarehouseOrderPage from '../pages/warehouse-order';
-import AdminUsersProfile from '../pages/personal-account/ui/AdminUsersProfile';
-import ManagerUsersProfile from '../pages/personal-account/ui/ManagerUsersProfile';
+import UserProfile from '../pages/personal-account/ui/UserProfile';
 import WarehouseData from '../pages/personal-account/ui/WarehouseData';
 import AdminMovingOrder from '../pages/personal-account/ui/AdminMovingOrder';
 import ManagerMovingOrder from '../pages/personal-account/ui/ManagerMovingOrder';
@@ -123,8 +122,8 @@ const Routing = memo(() => {
 
   const protectedRoutes = useMemo(() => [
     { path: "/personal-account", element: <PersonalAccountPage /> },
-    { path: "/admin/users/:userId/profile", element: <AdminUsersProfile /> },
-    { path: "/personal-account/manager/users/:userId", element: <ManagerUsersProfile /> },
+    { path: "/admin/users/:userId/profile", element: <UserProfile /> },
+    { path: "/personal-account/manager/users/:userId", element: <UserProfile /> },
     { path: "/personal-account/admin/warehouses/:warehouseId", element: <WarehouseData /> },
     { path: "/personal-account/manager/warehouses/:warehouseId", element: <WarehouseData /> },
     { path: "/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
