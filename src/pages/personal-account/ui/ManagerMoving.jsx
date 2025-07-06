@@ -45,7 +45,7 @@ const OrderCard = ({ order }) => {
   const cardStyles = order.status === 'wait' ? 'min-h-[80px] h-[40px]' : 'min-h-[120px] h-[150px]';
 
   const handleCardClick = () => {
-    navigate(`/manager/moving/order/${order.id}`);
+    navigate(`/personal-account/manager/moving/order/${order.id}`);
   };
 
   return (

@@ -19,7 +19,7 @@ const OfferPage = () => {
 
       {/* Back Button */}
       <div className="flex items-center mb-4 mt-10 ml-8">
-        <button onClick={() => navigate('/online-payment', { state: { activeSection: 'adminusers' } })} className="mr-4 p-2 rounded-full hover:bg-gray-100 transition-colors">
+        <button onClick={() => navigate('/online-payment')} className="mr-4 p-2 rounded-full hover:bg-gray-100 transition-colors">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15.75 19.5L8.25 12L15.75 4.5" stroke="#273655" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

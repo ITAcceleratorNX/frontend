@@ -111,15 +111,50 @@ export default function AboutWarehouseRentPage() {
               </div>
             )}
             {viewMode === 'list' && (
-              <div className="flex flex-col items-center justify-center w-[1100px] h-[400px]">
+              <div className="flex flex-col items-center justify-center w-[1100px] min-h-[400px]">
                 <div className="w-full flex flex-col items-center">
                   <div className="bg-[#A35656] text-white px-16 py-1 text-[20px] font-semibold focus:outline-none">
                     Алматы
                   </div>
-                  <div className="w-[calc(100%-20px)] h-[1.5px] bg-[#A35656] mb-10"></div>
-                  <div className="w-[calc(100%-20px)] h-[1.5px] bg-[#A35656] my-10"></div>
-                  <div className="w-[calc(100%-20px)] h-[1.5px] bg-[#A35656] my-10"></div>
-                  <div className="w-[calc(100%-20px)] h-[1.5px] bg-[#A35656] my-10"></div>
+                  <div className="w-full mt-6 space-y-4">
+                    {warehouses.map((warehouse) => (
+                      <div key={warehouse.id} className="w-full bg-white border border-gray-200 rounded-lg shadow-md p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-[22px] font-bold text-[#273655] mb-2">{warehouse.name}</h3>
+                            <div className="space-y-2 text-[16px] text-gray-700">
+                              <div className="flex items-center">
+                                <svg className="w-5 h-5 mr-2 text-[#A35656]" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                </svg>
+                                <span>{warehouse.address}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <svg className="w-5 h-5 mr-2 text-[#A35656]" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                </svg>
+                                <span>{warehouse.phone}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <svg className="w-5 h-5 mr-2 text-[#A35656]" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                </svg>
+                                <span>{warehouse.workingHours}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end space-y-2">
+                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${warehouse.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {warehouse.available ? 'Доступен' : 'Занят'}
+                            </div>
+                            <button className="bg-[#A35656] text-white px-6 py-2 rounded-lg hover:bg-[#8a4848] transition-colors">
+                              Выбрать
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

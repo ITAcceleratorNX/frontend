@@ -56,7 +56,7 @@ const CourierRequestOrder = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
-          <Sidebar activeNav="adminmoving" setActiveNav={() => {}} />
+          <Sidebar activeNav="courierrequests" setActiveNav={() => {}} />
           <main className="flex-1 mr-[110px]">
             <div className="max-w-5xl mx-auto py-12 px-10">
               <div className="flex items-center mb-8">

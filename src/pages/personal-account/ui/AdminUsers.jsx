@@ -272,7 +272,7 @@ const AdminUsers = () => {
                             permissions: user.permissions
                           };
                           console.log('Navigating with user data:', userData);
-                          navigate(`/admin/users/${user.id}/profile`, {
+                          navigate(`/personal-account/admin/users/${user.id}/profile`, {
                             state: { userData }
                           });
                         } else if (e.target.value === 'delete') {

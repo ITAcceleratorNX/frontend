@@ -13,7 +13,6 @@ import ManagerMoving from './ui/ManagerMoving';
 import AdminWarehouses from './ui/AdminWarehouses';
 import ManagerWarehouses from './ui/ManagerWarehouses';
 import CourierRequest from './ui/CourierRequest';
-import CourierRequestOrder from './ui/CourierRequestOrder';
 
 import { 
   UserNotificationsPage, 
@@ -103,7 +102,6 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'adminmoving' && <AdminMoving />}
           {activeNav === 'managermoving' && <ManagerMoving />}
           {activeNav === 'courierrequests' && <CourierRequest />}
-          {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
           {activeNav === 'payments' && (
             <div className="w-full max-w-4xl mx-auto p-8">
               <h1 className="text-2xl font-bold text-[#273655] mb-4">Платежи</h1>
