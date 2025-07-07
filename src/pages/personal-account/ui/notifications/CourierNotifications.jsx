@@ -1,101 +1,184 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Bell, Settings, Loader2, AlertCircle, Minus, Plus } from 'lucide-react';
 import { useNotifications } from '../../../../shared/lib/hooks/use-notifications';
-import NotificationCard from './NotificationCard';
+import UserNotifications from './UserNotifications';
 
 const CourierNotifications = () => {
-  const { 
+  const [interfaceScale, setInterfaceScale] = useState(1);
+  
+  // Загружаем сохраненный масштаб при монтировании
+  useEffect(() => {
+    const savedScale = localStorage.getItem('notificationScale');
+    if (savedScale) {
+      setInterfaceScale(parseFloat(savedScale));
+    }
+  }, []);
+  
+  // Используем хук для получения данных уведомлений
+  const {
     notifications,
     isLoading,
     error,
     markAsRead
   } = useNotifications();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e2c4f]"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-600">Ошибка загрузки уведомлений: {error.message}</p>
-      </div>
-    );
-  }
-
-  // Group notifications by date (используем тот же подход, что и в UserNotifications)
-  const groupedNotifications = notifications.reduce((groups, notification) => {
-    const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit'
-    });
-    
-    if (!groups[date]) {
-      groups[date] = [];
+  // Отладочный вывод для проверки структуры данных (только в development)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('CourierNotifications - полученные данные:', notifications);
     }
-    groups[date].push(notification);
-    return groups;
-  }, {});
+  }, [notifications]);
 
-  // Стили для масштабирования (как в UserNotifications)
-  const scale = 1; // Фиксированный масштаб для курьеров
-  const scaleStyle = {
-    fontSize: scale ? `${16 * scale}px` : 'inherit',
-    '--heading-size': `${22 * scale}px`,
-    '--text-size': `${18 * scale}px`,
+  // Функция для изменения масштаба интерфейса
+  const changeScale = (newScale) => {
+    setInterfaceScale(newScale);
+    localStorage.setItem('notificationScale', newScale);
   };
 
-  if (notifications.length === 0) {
+  const unreadCount = notifications?.filter(n => !n.is_read)?.length || 0;
+
+  // Show loading state
+  if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center" style={scaleStyle}>
-        <div className="text-gray-400 text-4xl mb-4">📫</div>
-        <h3 className="font-medium text-gray-900 mb-2" style={{fontSize: 'var(--heading-size)'}}>
-          Нет уведомлений
-        </h3>
-        <p className="text-gray-600" style={{fontSize: 'var(--text-size)'}}>
-          Новые уведомления появятся здесь
-        </p>
+      <div className="min-h-[600px] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin mx-auto" />
+          </div>
+          <p className="text-gray-600 font-medium">Загрузка уведомлений...</p>
+          <p className="text-sm text-gray-500">Пожалуйста, подождите</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-900">Ошибка загрузки</h3>
+            <p className="text-gray-600">Не удалось загрузить уведомления</p>
+            <p className="text-sm text-gray-500">{error.message}</p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center px-4 py-2 bg-[#1e2c4f] text-white rounded-lg hover:bg-[#1e2c4f]/90 transition-colors"
+          >
+            Попробовать снова
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto" style={scaleStyle}>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900" style={{fontSize: 'var(--heading-size)'}}>
-            Мои уведомления
-          </h2>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <Bell className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold mb-1">Мои уведомления</h1>
+              <p className="text-white/80">
+                {notifications?.length > 0 
+                  ? `Всего уведомлений: ${notifications.length}${unreadCount > 0 ? ` • Непрочитанных: ${unreadCount}` : ''}`
+                  : 'У вас пока нет уведомлений'
+                }
+              </p>
+            </div>
+          </div>
         
-        <div className="p-6 space-y-6">
-          {Object.entries(groupedNotifications).map(([date, notifications]) => (
-            <div key={date} className="space-y-4">
-              {/* Date Separator */}
-              <div className="flex items-center justify-center">
-                <div className="bg-gray-100 text-gray-600 font-medium px-4 py-2 rounded-full"
-                     style={{fontSize: 'var(--text-size)'}}>
-                  {date}
-                </div>
+          {/* Scale Controls */}
+          <div className="flex items-center space-x-3">
+            <div className="text-sm text-white/80 font-medium">Масштаб:</div>
+            <div className="flex items-center bg-white/10 rounded-lg p-1">
+              <button 
+                onClick={() => changeScale(0.8)} 
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                  interfaceScale === 0.8 
+                    ? 'bg-white text-[#1e2c4f] font-semibold' 
+                    : 'text-white/80 hover:bg-white/20'
+                }`}
+                title="Уменьшить масштаб"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => changeScale(1)} 
+                className={`flex items-center justify-center w-8 h-8 rounded mx-1 transition-colors ${
+                  interfaceScale === 1 
+                    ? 'bg-white text-[#1e2c4f] font-semibold' 
+                    : 'text-white/80 hover:bg-white/20'
+                }`}
+                title="Обычный масштаб"
+              >
+                A
+              </button>
+              <button 
+                onClick={() => changeScale(1.2)} 
+                className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
+                  interfaceScale === 1.2 
+                    ? 'bg-white text-[#1e2c4f] font-semibold' 
+                    : 'text-white/80 hover:bg-white/20'
+                }`}
+                title="Увеличить масштаб"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Статистика */}
+        {notifications?.length > 0 && (
+          <div className="flex items-center mt-4 pt-4 border-t border-white/20">
+            <div className="flex items-center space-x-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-white/80">Непрочитанные: {unreadCount}</span>
               </div>
-              
-              {/* Notifications for this date */}
-              <div className="space-y-3">
-                {notifications.map((notification) => (
-                  <NotificationCard
-                    key={notification.notification_id}
-                    notification={notification}
-                    onMarkAsRead={markAsRead}
-                    scale={scale}
-                  />
-                ))}
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-white/80">Прочитанные: {notifications.length - unreadCount}</span>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="bg-white rounded-xl border border-gray-200 min-h-[500px]">
+        {notifications?.length === 0 ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                <Bell className="w-8 h-8 text-gray-400" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-gray-900">Пока нет уведомлений</h3>
+                <p className="text-gray-500 max-w-sm">
+                  Когда у вас появятся новые уведомления, они будут отображаться здесь
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-6">
+            <UserNotifications 
+              notifications={notifications || []}
+              onMarkAsRead={markAsRead}
+              scale={interfaceScale}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

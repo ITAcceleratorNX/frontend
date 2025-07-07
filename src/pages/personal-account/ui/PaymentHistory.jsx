@@ -128,7 +128,7 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
           <div className="flex items-center gap-4">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e2c4f]"></div>
             <span className="text-lg font-medium text-[#1e2c4f]">Загрузка истории платежей...</span>
-          </div>
+      </div>
         </CardContent>
       </Card>
     );
@@ -144,12 +144,12 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
           <h3 className="text-xl font-semibold text-red-800 mb-4">Ошибка загрузки</h3>
           <p className="text-red-600 mb-6 text-lg">Ошибка при загрузке истории платежей: {error.message}</p>
           <Button 
-            onClick={onRefetch} 
+          onClick={onRefetch}
             variant="outline" 
             className="border-red-300 text-red-700 hover:bg-red-50 rounded-xl px-6 py-3 text-lg"
-          >
+        >
             <RefreshCw className="w-5 h-5 mr-2" />
-            Попробовать снова
+          Попробовать снова
           </Button>
         </CardContent>
       </Card>
@@ -162,7 +162,7 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
         <CardContent className="text-center py-16">
           <div className="mx-auto w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-6">
             <CreditCard className="w-16 h-16 text-gray-400" />
-          </div>
+      </div>
           <h3 className="text-2xl font-semibold text-gray-900 mb-2">Нет истории платежей</h3>
           <p className="text-gray-500 text-lg">У вас пока нет записей о платежах</p>
         </CardContent>
@@ -172,11 +172,11 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
 
   return (
     <div className="space-y-6">
-      {payments.map((order) => (
+        {payments.map((order) => (
         <Card key={order.id} className="border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden">
-          {/* Заголовок заказа */}
+            {/* Заголовок заказа */}
           <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
-            <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-[#1e2c4f] bg-opacity-10 rounded-2xl">
                   <CreditCard className="w-6 h-6 text-[#1e2c4f]" />
@@ -192,32 +192,32 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                 </div>
               </div>
               <div className="flex items-center gap-6">
-                <div className="text-right">
+                  <div className="text-right">
                   <p className="text-2xl font-bold text-[#1e2c4f] mb-2">
-                    {formatPrice(order.total_price)} ₸
-                  </p>
+                      {formatPrice(order.total_price)} ₸
+                    </p>
                   <Badge variant="outline" className="border-[#1e2c4f] text-[#1e2c4f] font-semibold text-sm">
                     {order.status}
                   </Badge>
-                </div>
+                  </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => toggleOrderExpansion(order.id)}
+                    onClick={() => toggleOrderExpansion(order.id)}
                   className="border-gray-300 hover:bg-gray-50 rounded-xl p-3 transition-all"
-                >
+                  >
                   <ChevronDown 
                     className={`w-5 h-5 transition-transform duration-200 ${
-                      expandedOrders.has(order.id) ? 'rotate-180' : ''
-                    }`}
+                        expandedOrders.has(order.id) ? 'rotate-180' : ''
+                      }`} 
                   />
                 </Button>
               </div>
             </div>
           </CardHeader>
 
-          {/* Детали платежей по месяцам */}
-          {expandedOrders.has(order.id) && order.order_payment && (
+            {/* Детали платежей по месяцам */}
+            {expandedOrders.has(order.id) && order.order_payment && (
             <CardContent className="p-6">
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
@@ -229,12 +229,12 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                   {order.order_payment.map((payment) => (
                     <Card key={payment.id} className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                       <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
                             <div className="flex items-center gap-4 mb-4">
                               <h5 className="text-lg font-semibold text-gray-900">
-                                {getMonthName(payment.month)} {payment.year}
-                              </h5>
+                              {getMonthName(payment.month)} {payment.year}
+                            </h5>
                               {getPaymentStatusBadge(payment.status)}
                             </div>
                             
@@ -245,44 +245,44 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                                   <p className="text-lg font-bold text-[#1e2c4f]">{formatPrice(payment.amount)} ₸</p>
                                 </CardContent>
                               </Card>
-                              
-                              {payment.penalty_amount && parseFloat(payment.penalty_amount) > 0 && (
+                            
+                            {payment.penalty_amount && parseFloat(payment.penalty_amount) > 0 && (
                                 <Card className="bg-white border shadow-sm rounded-xl">
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Штраф</p>
                                     <p className="text-lg font-bold text-red-600">+{formatPrice(payment.penalty_amount)} ₸</p>
                                   </CardContent>
                                 </Card>
-                              )}
-                              
-                              {payment.paid_at && (
+                            )}
+                            
+                            {payment.paid_at && (
                                 <Card className="bg-white border shadow-sm rounded-xl">
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Дата оплаты</p>
                                     <p className="text-sm font-semibold text-gray-900">{formatDate(payment.paid_at)}</p>
                                   </CardContent>
                                 </Card>
-                              )}
-                              
-                              {payment.payment_id && (
+                            )}
+                            
+                            {payment.payment_id && (
                                 <Card className="bg-white border shadow-sm rounded-xl">
                                   <CardContent className="p-4">
                                     <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">ID транзакции</p>
                                     <p className="text-xs font-mono text-gray-700 break-all">{payment.payment_id}</p>
                                   </CardContent>
                                 </Card>
-                              )}
-                            </div>
+                            )}
                           </div>
-                          
-                          {/* Кнопки действий */}
+                        </div>
+                        
+                        {/* Кнопки действий */}
                           <div className="ml-8 flex flex-col gap-3">
-                            {payment.status === 'UNPAID' && order.status === 'APPROVED' && (
+                          {payment.status === 'UNPAID' && order.status === 'APPROVED' && (
                               <Button
-                                onClick={() => handleManualPayment(payment.id)}
-                                disabled={createManualPaymentMutation.isLoading}
+                              onClick={() => handleManualPayment(payment.id)}
+                              disabled={createManualPaymentMutation.isLoading}
                                 className="bg-[#1e2c4f] hover:bg-[#162540] text-white rounded-xl px-6 py-3 shadow-md hover:shadow-lg transition-all"
-                              >
+                            >
                                 {createManualPaymentMutation.isLoading ? (
                                   <div className="flex items-center gap-2">
                                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -295,14 +295,14 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                                   </div>
                                 )}
                               </Button>
-                            )}
-                            
-                            {payment.status === 'MANUAL' && (
+                          )}
+                          
+                          {payment.status === 'MANUAL' && (
                               <Button
-                                onClick={() => handleManualPayment(payment.id)}
-                                disabled={createManualPaymentMutation.isLoading}
+                              onClick={() => handleManualPayment(payment.id)}
+                              disabled={createManualPaymentMutation.isLoading}
                                 className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl px-6 py-3 shadow-md hover:shadow-lg transition-all"
-                              >
+                            >
                                 {createManualPaymentMutation.isLoading ? (
                                   <div className="flex items-center gap-2">
                                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -315,30 +315,30 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                                   </div>
                                 )}
                               </Button>
-                            )}
-                            
-                            {payment.status === 'PAID' && (
+                          )}
+                          
+                          {payment.status === 'PAID' && (
                               <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 px-4 py-2 rounded-xl font-semibold">
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 ✓ Оплачено
                               </Badge>
-                            )}
-                          </div>
+                          )}
                         </div>
+                      </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               </div>
             </CardContent>
-          )}
+            )}
 
-          {/* Краткая информация при свернутом состоянии */}
-          {!expandedOrders.has(order.id) && order.order_payment && (
+            {/* Краткая информация при свернутом состоянии */}
+            {!expandedOrders.has(order.id) && order.order_payment && (
             <CardContent className="p-6">
               <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-2xl">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-sm">
                     <div className="flex gap-6">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
@@ -358,9 +358,9 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                 </CardContent>
               </Card>
             </CardContent>
-          )}
+            )}
         </Card>
-      ))}
+        ))}
     </div>
   );
 };

@@ -178,7 +178,7 @@ export const usePaymentsStats = () => {
   }, [payments]);
 
   return stats;
-};
+}; 
 
 // Хук для добавления услуги к заказу
 export const useCreateOrderService = () => {

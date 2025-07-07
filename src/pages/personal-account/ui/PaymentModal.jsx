@@ -143,40 +143,40 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
         <DialogHeader className="space-y-1 pb-2">
           <DialogTitle className="text-base font-bold text-[#1e2c4f] flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />
-            Подтверждение оплаты
+                Подтверждение оплаты
           </DialogTitle>
           <DialogDescription className="text-xs text-gray-400">
             Проверьте детали перед оплатой
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+            <div className="space-y-3">
           {/* Основная информация */}
           <Card className="border-gray-200 rounded-lg">
             <CardContent className="p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Заказ:</span>
                 <Badge variant="outline" className="text-xs text-[#1e2c4f] h-5">#{order.id}</Badge>
-              </div>
-              
-              {order.storage && (
+                  </div>
+                  
+                  {order.storage && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-600">Бокс:</span>
                   <span className="text-xs font-medium truncate max-w-[120px]">{order.storage.name}</span>
-                </div>
-              )}
-              
+                    </div>
+                  )}
+                  
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Объем:</span>
                 <span className="text-xs font-semibold text-[#1e2c4f]">{order.total_volume} м³</span>
-              </div>
-              
+                  </div>
+                  
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Период:</span>
                 <span className="text-xs">
                   {formatDate(order.start_date)} — {formatDate(order.end_date)}
-                </span>
-              </div>
+                    </span>
+                  </div>
             </CardContent>
           </Card>
 
@@ -281,14 +281,14 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                 <div className="text-xs font-bold text-[#1e2c4f]">
                                   {formatPrice(tariff.price)} ₸
                                 </div>
-                              </div>
+                  </div>
                             </div>
                           );
                         })}
-                      </div>
-                    )}
+                </div>
+              )}
                   </div>
-
+                  
                   {/* Выбор даты */}
                   {selectedTariff && (
                     <div>
@@ -319,11 +319,11 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 <span className="text-xs text-gray-600">Сумма аренды:</span>
                 <span className="text-sm font-bold text-[#1e2c4f]">{formatPrice(order.total_price)} ₸</span>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-600">Депозит:</span>
                 <span className="text-sm font-bold text-orange-600">15 000 ₸</span>
-              </div>
+                  </div>
 
               {movingEnabled && selectedTariff && (
                 <div className="flex justify-between items-center">
@@ -373,11 +373,11 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
         <DialogFooter className="flex gap-2 pt-2">
           <Button
             variant="outline"
-            onClick={onCancel}
-            disabled={isProcessing}
+              onClick={onCancel}
+              disabled={isProcessing}
             className="flex-1 h-8 text-xs rounded-lg"
-          >
-            Отмена
+            >
+              Отмена
           </Button>
           <Button
             onClick={handleConfirmPayment}
@@ -388,12 +388,12 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
               <div className="flex items-center gap-1">
                 <div className="animate-spin rounded-full h-3 w-3 border-t border-b border-white"></div>
                 Обработка...
-              </div>
+          </div>
             ) : (
               <div className="flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
                 Подтвердить оплату
-              </div>
+        </div>
             )}
           </Button>
         </DialogFooter>

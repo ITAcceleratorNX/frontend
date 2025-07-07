@@ -24,7 +24,6 @@ import WarehouseData from '../pages/personal-account/ui/WarehouseData';
 import AdminMovingOrder from '../pages/personal-account/ui/AdminMovingOrder';
 import ManagerMovingOrder from '../pages/personal-account/ui/ManagerMovingOrder';
 import CourierRequest from '../pages/personal-account/ui/CourierRequest';
-import CourierRequestOrder from '../pages/personal-account/ui/CourierRequestOrder';
 
 // Мемоизированный компонент для логирования маршрутов - только в режиме разработки
 const RouteLogger = memo(({ children }) => {
@@ -128,7 +127,6 @@ const Routing = memo(() => {
     { path: "/personal-account/manager/warehouses/:warehouseId", element: <WarehouseData /> },
     { path: "/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
     { path: "/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
-    { path: "/personal-account/courier/order/:orderId", element: <CourierRequestOrder /> },
     { path: "/warehouse-order", element: <WarehouseOrderPage /> },
   ], []);
 

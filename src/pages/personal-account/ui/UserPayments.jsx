@@ -73,7 +73,7 @@ const UserPayments = () => {
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1e2c4f]"></div>
               <span className="ml-4 text-[#1e2c4f] font-medium text-lg">Загрузка данных...</span>
-            </div>
+        </div>
           </CardContent>
         </Card>
       </div>
@@ -87,12 +87,12 @@ const UserPayments = () => {
           <CardContent className="p-8 text-center">
             <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <p className="text-red-600 text-lg mb-4">Ошибка при загрузке данных: {ordersError.message}</p>
-            <button 
-              onClick={() => refetchOrders()}
+          <button 
+            onClick={() => refetchOrders()}
               className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors shadow-md"
-            >
-              Попробовать снова
-            </button>
+          >
+            Попробовать снова
+          </button>
           </CardContent>
         </Card>
       </div>
@@ -121,11 +121,11 @@ const UserPayments = () => {
             <div className="flex items-center gap-4">
               <div className="p-4 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-2xl group-hover:from-blue-200 group-hover:to-indigo-200 transition-all">
                 <Package className="w-8 h-8 text-[#1e2c4f]" />
-              </div>
+      </div>
               <div>
                 <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Всего заказов</p>
                 <p className="text-3xl font-bold text-[#1e2c4f]">{orders.length}</p>
-              </div>
+            </div>
             </div>
           </CardContent>
         </Card>
@@ -135,11 +135,11 @@ const UserPayments = () => {
             <div className="flex items-center gap-4">
               <div className="p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-2xl group-hover:from-green-200 group-hover:to-emerald-200 transition-all">
                 <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
+          </div>
               <div>
                 <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Подтверждено</p>
                 <p className="text-3xl font-bold text-green-600">{approvedOrders.length}</p>
-              </div>
+        </div>
             </div>
           </CardContent>
         </Card>
@@ -149,11 +149,11 @@ const UserPayments = () => {
             <div className="flex items-center gap-4">
               <div className="p-4 bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl group-hover:from-orange-200 group-hover:to-red-200 transition-all">
                 <Clock className="w-8 h-8 text-orange-600" />
-              </div>
+            </div>
               <div>
                 <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Неоплачено</p>
                 <p className="text-3xl font-bold text-orange-600">{unpaidOrders.length}</p>
-              </div>
+        </div>
             </div>
           </CardContent>
         </Card>
@@ -163,11 +163,11 @@ const UserPayments = () => {
             <div className="flex items-center gap-4">
               <div className="p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-2xl group-hover:from-emerald-200 group-hover:to-teal-200 transition-all">
                 <TrendingUp className="w-8 h-8 text-emerald-600" />
-              </div>
+            </div>
               <div>
                 <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Оплачено</p>
                 <p className="text-3xl font-bold text-emerald-600">{paidOrders.length}</p>
-              </div>
+        </div>
             </div>
           </CardContent>
         </Card>
@@ -183,20 +183,20 @@ const UserPayments = () => {
                 className="data-[state=active]:bg-white data-[state=active]:text-[#1e2c4f] data-[state=active]:shadow-lg rounded-xl font-semibold transition-all text-lg h-10"
               >
                 <Package className="w-5 h-5 mr-2" />
-                Мои заказы
+            Мои заказы
               </TabsTrigger>
               <TabsTrigger 
                 value="history" 
                 className="data-[state=active]:bg-white data-[state=active]:text-[#1e2c4f] data-[state=active]:shadow-lg rounded-xl font-semibold transition-all text-lg h-10"
               >
                 <CreditCard className="w-5 h-5 mr-2" />
-                История платежей
+            История платежей
               </TabsTrigger>
             </TabsList>
           </CardHeader>
 
           <TabsContent value="orders" className="p-6 space-y-6">
-            <div>
+        <div>
               <div className="flex items-center gap-3 mb-6">
                 <Package className="w-6 h-6 text-[#1e2c4f]" />
                 <h2 className="text-2xl font-bold text-[#1e2c4f]">Активные заказы</h2>
@@ -212,32 +212,32 @@ const UserPayments = () => {
                     <p className="text-gray-500 text-lg">У вас пока нет активных заказов</p>
                   </CardContent>
                 </Card>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {orders.map((order) => (
-                    <UserOrderCard
-                      key={order.id}
-                      order={order}
-                      onPayOrder={handlePayOrder}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {orders.map((order) => (
+                  <UserOrderCard
+                    key={order.id}
+                    order={order}
+                    onPayOrder={handlePayOrder}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
           </TabsContent>
 
           <TabsContent value="history" className="p-6 space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <CreditCard className="w-6 h-6 text-[#1e2c4f]" />
               <h2 className="text-2xl font-bold text-[#1e2c4f]">Детализация платежей</h2>
-            </div>
-            
-            <PaymentHistory 
-              payments={payments}
-              isLoading={paymentsLoading}
-              error={paymentsError}
-              onRefetch={refetchPayments}
-            />
+        </div>
+
+        <PaymentHistory 
+          payments={payments}
+          isLoading={paymentsLoading}
+          error={paymentsError}
+          onRefetch={refetchPayments}
+        />
           </TabsContent>
         </Tabs>
       </Card>

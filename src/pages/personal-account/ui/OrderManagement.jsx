@@ -104,9 +104,9 @@ const OrderManagement = () => {
       <div className="w-full max-w-6xl mx-auto p-8">
         <Card className="p-12">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1e2c4f]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1e2c4f]"></div>
             <span className="ml-3 text-[#1e2c4f] font-medium">Загрузка заказов...</span>
-          </div>
+        </div>
         </Card>
       </div>
     );
@@ -123,16 +123,16 @@ const OrderManagement = () => {
               </svg>
             </div>
             <div className="text-red-700 mb-4 font-medium">
-              {error?.message || 'Произошла ошибка при загрузке заказов'}
-            </div>
+            {error?.message || 'Произошла ошибка при загрузке заказов'}
+          </div>
             <Button
-              onClick={() => refetch()}
+            onClick={() => refetch()}
               className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90"
-            >
+          >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Попробовать снова
+            Попробовать снова
             </Button>
           </CardContent>
         </Card>
@@ -228,21 +228,21 @@ const OrderManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {/* Поиск */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Поиск по ID, имени, email или телефону
-              </label>
+          {/* Поиск */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Поиск по ID, имени, email или телефону
+            </label>
               <div className="relative">
                 <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
-                  placeholder="Введите поисковый запрос..."
-                />
+              placeholder="Введите поисковый запрос..."
+            />
               </div>
             </div>
 
@@ -321,12 +321,12 @@ const OrderManagement = () => {
                 </svg>
               </div>
               <div className="text-gray-500 text-lg mb-2 font-medium">Заказы не найдены</div>
-              <div className="text-gray-400">
-                {searchQuery || statusFilter !== 'ALL' 
-                  ? 'Попробуйте изменить критерии поиска или фильтры'
-                  : 'Пока нет заказов для отображения'
-                }
-              </div>
+            <div className="text-gray-400">
+              {searchQuery || statusFilter !== 'ALL' 
+                ? 'Попробуйте изменить критерии поиска или фильтры'
+                : 'Пока нет заказов для отображения'
+              }
+            </div>
               {(searchQuery || statusFilter !== 'ALL') && (
                 <Button
                   variant="outline"

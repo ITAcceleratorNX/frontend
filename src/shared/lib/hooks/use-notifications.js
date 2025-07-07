@@ -16,12 +16,12 @@ export const NOTIFICATION_QUERY_KEYS = {
 export const useUserNotifications = () => {
   const { user } = useAuth();
   const userId = user?.id;
-  const isUser = user?.role === 'USER';
+  const isUser = user?.role === 'USER' || user?.role === 'COURIER'; // Добавляем поддержку курьеров
 
   return useQuery({
     queryKey: NOTIFICATION_QUERY_KEYS.user(userId),
     queryFn: () => notificationApi.getUserNotifications(userId),
-    enabled: !!userId && isUser, // Включаем только для обычных пользователей
+    enabled: !!userId && isUser, // Включаем для обычных пользователей и курьеров
     select: (data) => data.data,
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
@@ -95,7 +95,7 @@ export const useMarkAsRead = () => {
   return useMutation({
     mutationFn: (notificationId) => notificationApi.markAsRead(notificationId),
     onMutate: async (notificationId) => {
-      const isUser = user?.role === 'USER';
+      const isUser = user?.role === 'USER' || user?.role === 'COURIER'; // Добавляем поддержку курьеров
       const queryKey = isUser 
         ? NOTIFICATION_QUERY_KEYS.user(user?.id)
         : NOTIFICATION_QUERY_KEYS.all;
@@ -171,14 +171,14 @@ export const useNotifications = () => {
   // Мемоизируем результат для предотвращения ненужных ререндеров
   return useMemo(() => {
   // Возвращаем данные в зависимости от роли
-    if (memoizedUserRole === 'USER') {
+    if (memoizedUserRole === 'USER' || memoizedUserRole === 'COURIER') { // Добавляем поддержку курьеров
     return {
       notifications: userNotifications.data || [],
       isLoading: userNotifications.isLoading,
       error: userNotifications.error,
       markAsRead: markAsRead.mutate,
       isMarkingAsRead: markAsRead.isPending,
-      // Для пользователей не нужны эти функции
+      // Для пользователей и курьеров не нужны эти функции
       users: [],
       sendNotification: null,
       stats: null
