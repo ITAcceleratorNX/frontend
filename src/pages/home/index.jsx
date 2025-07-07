@@ -828,73 +828,73 @@ const HomePage = memo(() => {
               </div>
             )}
             
-            <div
-              className="bg-white rounded-lg flex flex-row items-center justify-start pr- py-8 self-center"
-              style={{
-                minWidth: 540,
-                minHeight: 300,
-                height: 300,
-                maxHeight: 320,
-                maxWidth: 600,
-                width: 560,
-                boxShadow: "4px 4px 8px 0 #B0B0B0",
-              }}
-            >
+          <div
+            className="bg-white rounded-lg flex flex-row items-center justify-start pr- py-8 self-center"
+            style={{
+              minWidth: 540,
+              minHeight: 300,
+              height: 300,
+              maxHeight: 320,
+              maxWidth: 600,
+              width: 560,
+              boxShadow: "4px 4px 8px 0 #B0B0B0",
+            }}
+          >
               {/* Левая часть: логотип */}
-              <div className="flex items-center justify-center w-[270px] h-[270px] p-2">
-                <img
+            <div className="flex items-center justify-center w-[270px] h-[270px] p-2">
+              <img
                   src={selectedWarehouse?.image || extraspaceLogo}
-                  alt="logo"
-                  className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]"
-                />
-              </div>
+                alt="logo"
+                className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]"
+              />
+            </div>
               {/* Правая часть: информация о складе */}
-              <div className="flex flex-col items-start justify-center flex-1 h-full gap-y-2 ml-6">
-                <div
-                  className="text-[#3E4958] text-[20px] font-medium leading-tight"
-                  style={{ lineHeight: 1.1 }}
-                >
+            <div className="flex flex-col items-start justify-center flex-1 h-full gap-y-2 ml-6">
+              <div
+                className="text-[#3E4958] text-[20px] font-medium leading-tight"
+                style={{ lineHeight: 1.1 }}
+              >
                   {selectedWarehouse?.name || "Загрузка..."}
-                </div>
+              </div>
                 
                 {selectedWarehouse && (
                   <>
-                    <div className="text-[#3E4958] text-[15px] font-normal leading-tight">
+              <div className="text-[#3E4958] text-[15px] font-normal leading-tight">
                       Статус: <span className={`font-medium ${selectedWarehouse.status === 'AVAILABLE' ? 'text-green-600' : 'text-red-600'}`}>
                         {selectedWarehouse.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}
                       </span>
-                    </div>
-                    <div className="text-[#3E4958] text-[15px] font-normal">
+              </div>
+              <div className="text-[#3E4958] text-[15px] font-normal">
                       {selectedWarehouse.work_start && selectedWarehouse.work_end ? 
                         `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}` : 
                         "Режим работы уточняется"
                       }
-                    </div>
-                    <div className="flex items-center mt-1 mb-2">
-                      <span
-                        className="relative inline-block"
-                        style={{ width: 24, height: 24 }}
-                      >
-                        <img
-                          src={beigeCircle}
-                          alt="beige circle"
-                          className="absolute left-0 top-0 w-full h-full"
-                        />
-                        <img
-                          src={houseOnBeigeCircle}
-                          alt="house on beige"
-                          className="absolute left-1/2 top-1/2"
-                          style={{
-                            width: "15px",
-                            height: "15px",
-                            transform: "translate(-50%, -50%)",
-                          }}
-                        />
-                      </span>
-                      <span className="text-[#273655] text-[15px] font-normal ml-2">
+              </div>
+              <div className="flex items-center mt-1 mb-2">
+                <span
+                  className="relative inline-block"
+                  style={{ width: 24, height: 24 }}
+                >
+                  <img
+                    src={beigeCircle}
+                    alt="beige circle"
+                    className="absolute left-0 top-0 w-full h-full"
+                  />
+                  <img
+                    src={houseOnBeigeCircle}
+                    alt="house on beige"
+                    className="absolute left-1/2 top-1/2"
+                    style={{
+                      width: "15px",
+                      height: "15px",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                </span>
+                <span className="text-[#273655] text-[15px] font-normal ml-2">
                         {selectedWarehouse.address || "Адрес уточняется"}
-                      </span>
-                    </div>
+                </span>
+              </div>
                   </>
                 )}
 
@@ -906,7 +906,7 @@ const HomePage = memo(() => {
 
                 {/* Кнопка выбора склада с выпадающим списком */}
                 <div className="relative w-full max-w-[240px] mt-0 warehouse-dropdown">
-                  <button
+              <button
                     className="px-2 py-3 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full flex items-center justify-center gap-2"
                     onClick={toggleWarehouseDropdown}
                     disabled={warehousesLoading}
@@ -920,7 +920,7 @@ const HomePage = memo(() => {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  </button>
+              </button>
 
                   {/* Выпадающий список */}
                   {isWarehouseDropdownOpen && (
@@ -934,7 +934,7 @@ const HomePage = memo(() => {
                           >
                             <div className="font-medium text-[#273655]">
                               {warehouse.name}
-                            </div>
+            </div>
                             <div className="text-gray-600 text-xs mt-1">
                               {warehouse.address}
                             </div>

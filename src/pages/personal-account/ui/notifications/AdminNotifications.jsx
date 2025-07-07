@@ -92,56 +92,56 @@ const AdminNotifications = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <div>
+        <div>
               <h1 className="text-2xl font-bold mb-1">Система уведомлений</h1>
               <p className="text-white/80">
                 Управление уведомлениями и коммуникацией с пользователями
-              </p>
+          </p>
             </div>
-          </div>
-          
-          {/* Scale Controls */}
+        </div>
+        
+        {/* Scale Controls */}
           <div className="flex items-center space-x-3">
             <div className="text-sm text-white/80 font-medium">Масштаб:</div>
             <div className="flex items-center bg-white/10 rounded-lg p-1">
-              <button 
-                onClick={() => changeScale(0.8)} 
+            <button 
+              onClick={() => changeScale(0.8)} 
                 className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                   interfaceScale === 0.8 
                     ? 'bg-white text-[#1e2c4f] font-semibold' 
                     : 'text-white/80 hover:bg-white/20'
                 }`}
                 title="Уменьшить масштаб"
-              >
+            >
                 <Minus className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => changeScale(1)} 
+            </button>
+            <button 
+              onClick={() => changeScale(1)} 
                 className={`flex items-center justify-center w-8 h-8 rounded mx-1 transition-colors ${
                   interfaceScale === 1 
                     ? 'bg-white text-[#1e2c4f] font-semibold' 
                     : 'text-white/80 hover:bg-white/20'
                 }`}
                 title="Обычный масштаб"
-              >
-                A
-              </button>
-              <button 
-                onClick={() => changeScale(1.2)} 
+            >
+              A
+            </button>
+            <button 
+              onClick={() => changeScale(1.2)} 
                 className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                   interfaceScale === 1.2 
                     ? 'bg-white text-[#1e2c4f] font-semibold' 
                     : 'text-white/80 hover:bg-white/20'
                 }`}
                 title="Увеличить масштаб"
-              >
+            >
                 <Plus className="w-4 h-4" />
-              </button>
+            </button>
             </div>
           </div>
         </div>
@@ -180,26 +180,26 @@ const AdminNotifications = () => {
 
       {/* Navigation Tabs */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200">
           <nav className="flex">
-            <button
-              onClick={() => setActiveTab('create')}
+          <button
+            onClick={() => setActiveTab('create')}
               className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all ${
-                activeTab === 'create'
+              activeTab === 'create'
                   ? 'border-b-2 border-[#1e2c4f] text-[#1e2c4f] bg-blue-50'
                   : 'text-gray-600 hover:text-[#1e2c4f] hover:bg-gray-50'
-              }`}
-            >
+            }`}
+          >
               <Plus className="w-4 h-4" />
               <span>Создать уведомление</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
               className={`flex items-center space-x-2 px-6 py-4 font-medium transition-all ${
-                activeTab === 'history'
+              activeTab === 'history'
                   ? 'border-b-2 border-[#1e2c4f] text-[#1e2c4f] bg-blue-50'
                   : 'text-gray-600 hover:text-[#1e2c4f] hover:bg-gray-50'
-              }`}
+            }`}
             >
               <History className="w-4 h-4" />
               <span>История уведомлений</span>
@@ -208,30 +208,30 @@ const AdminNotifications = () => {
                   {totalNotifications}
                 </span>
               )}
-            </button>
-          </nav>
-        </div>
+          </button>
+        </nav>
+      </div>
 
-        {/* Content */}
-        <div className="min-h-[500px]">
-          {activeTab === 'create' && (
+      {/* Content */}
+      <div className="min-h-[500px]">
+        {activeTab === 'create' && (
             <div className="p-6">
-              <CreateNotificationForm
-                users={users || []}
-                onSendNotification={handleSendNotification}
-                scale={interfaceScale}
-              />
+          <CreateNotificationForm
+            users={users || []}
+            onSendNotification={handleSendNotification}
+            scale={interfaceScale}
+          />
             </div>
-          )}
-          
-          {activeTab === 'history' && (
+        )}
+        
+                  {activeTab === 'history' && (
             <div className="p-6">
-              <NotificationHistory
-                notifications={notifications || []}
-                scale={interfaceScale}
-              />
+          <NotificationHistory
+            notifications={notifications || []}
+            scale={interfaceScale}
+          />
             </div>
-          )}
+        )}
         </div>
       </div>
 

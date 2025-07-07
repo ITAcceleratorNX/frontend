@@ -90,7 +90,7 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
       <div className="text-center space-y-2">
         <h2 className="text-xl font-bold text-gray-900">Создать новое уведомление</h2>
         <p className="text-gray-600">Отправьте важную информацию пользователям системы</p>
-      </div>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Основная форма */}
@@ -103,7 +103,7 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
             <input
               type="text"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+                  onChange={e => setTitle(e.target.value)}
               placeholder="Например: Важное обновление системы"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e2c4f] focus:border-transparent transition-colors text-sm"
             />
@@ -116,28 +116,28 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
             </label>
             <textarea
               value={content}
-              onChange={e => setContent(e.target.value)}
+                  onChange={e => setContent(e.target.value)}
               rows={6}
               placeholder="Введите подробное описание уведомления..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e2c4f] focus:border-transparent resize-none transition-colors text-sm"
             />
           </div>
 
-          {/* Тип уведомления */}
+            {/* Тип уведомления */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <label className="block text-sm font-semibold text-gray-900 mb-3">
-              Тип уведомления *
-            </label>
-            <div className="relative">
-              <select
-                value={notificationType}
-                onChange={(e) => setNotificationType(e.target.value)}
+                Тип уведомления *
+              </label>
+              <div className="relative">
+                <select
+                    value={notificationType}
+                    onChange={(e) => setNotificationType(e.target.value)}
                 className="w-full appearance-none px-4 py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-[#1e2c4f] focus:border-transparent transition-colors text-sm pr-10"
-              >
+                >
                 <option value="general">📢 Общее уведомление</option>
                 <option value="payment">💳 Уведомление о платеже</option>
                 <option value="contract">📋 Уведомление о договоре</option>
-              </select>
+                </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
             </div>
           </div>
@@ -150,9 +150,9 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
             <div className="space-y-3">
               <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                 <input
-                  type="checkbox"
-                  checked={isEmail}
-                  onChange={() => setIsEmail(prev => !prev)}
+                    type="checkbox"
+                    checked={isEmail}
+                    onChange={() => setIsEmail(prev => !prev)}
                   className="w-4 h-4 text-[#1e2c4f] border-gray-300 rounded focus:ring-[#1e2c4f]"
                 />
                 <Mail className="w-4 h-4 text-gray-500" />
@@ -160,9 +160,9 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
               </label>
               <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                 <input
-                  type="checkbox"
-                  checked={isSms}
-                  onChange={() => setIsSms(prev => !prev)}
+                    type="checkbox"
+                    checked={isSms}
+                    onChange={() => setIsSms(prev => !prev)}
                   className="w-4 h-4 text-[#1e2c4f] border-gray-300 rounded focus:ring-[#1e2c4f]"
                 />
                 <MessageSquare className="w-4 h-4 text-gray-500" />
@@ -170,7 +170,7 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
               </label>
             </div>
           </div>
-        </div>
+            </div>
 
         {/* Боковая панель - получатели */}
         <div className="space-y-6">
@@ -197,7 +197,7 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
               </label>
 
               {/* Выборочная отправка */}
-              {!sendToAll && (
+            {!sendToAll && (
                 <div className="space-y-3">
                   {/* Поиск пользователей */}
                   <div className="relative">
@@ -223,10 +223,10 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
                           key={user.id}
                           className="flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
                         >
-                          <input
-                            type="checkbox"
-                            checked={selectedUsers.includes(user.id)}
-                            onChange={() => handleUserToggle(user.id)}
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={() => handleUserToggle(user.id)}
                             className="w-4 h-4 text-[#1e2c4f] border-gray-300 rounded focus:ring-[#1e2c4f]"
                           />
                           <div className="w-8 h-8 bg-[#1e2c4f] rounded-full flex items-center justify-center flex-shrink-0">
@@ -238,7 +238,7 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
                             </p>
                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
                           </div>
-                        </label>
+                      </label>
                       ))
                     )}
                   </div>
@@ -259,21 +259,21 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
                           <span className="text-xs text-[#1e2c4f]">
                             +{selectedUserNames.length - 3} еще
                           </span>
-                        )}
+                      )}
                       </div>
-                    </div>
-                  )}
+              </div>
+            )}
                 </div>
               )}
             </div>
           </div>
 
           {/* Кнопка отправки */}
-          <button
-            onClick={handleSubmit}
+            <button
+                  onClick={handleSubmit}
             disabled={isLoading || !title.trim() || !content.trim() || (!sendToAll && selectedUsers.length === 0)}
             className="w-full flex items-center justify-center space-x-2 px-6 py-4 bg-[#1e2c4f] text-white rounded-lg hover:bg-[#1e2c4f]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-          >
+              >
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -285,8 +285,8 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
                 <span>Отправить уведомление</span>
               </>
             )}
-          </button>
-        </div>
+            </button>
+          </div>
       </div>
     </div>
   );

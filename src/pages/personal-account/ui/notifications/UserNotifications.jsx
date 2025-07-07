@@ -37,7 +37,7 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
             <h3 className="text-lg font-semibold text-gray-900">Пока нет уведомлений</h3>
             <p className="text-gray-500">
               Когда у вас появятся новые уведомления, они будут отображаться здесь
-            </p>
+        </p>
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
         });
         
         return (
-          <div key={date} className="space-y-4">
+            <div key={date} className="space-y-4">
             {/* Date Header */}
             <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200 pb-3 mb-4">
               <div className="flex items-center justify-between">
@@ -88,10 +88,10 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
                     <Bell className="w-4 h-4 text-blue-500" />
                   </div>
                 )}
+                </div>
               </div>
-            </div>
-            
-            {/* Notifications for this date */}
+              
+              {/* Notifications for this date */}
             <div className="space-y-4">
               {notifications
                 .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -105,10 +105,10 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
                     }}
                   >
                     <NotificationCard
-                      notification={notification}
-                      onMarkAsRead={onMarkAsRead}
+                    notification={notification}
+                    onMarkAsRead={onMarkAsRead}
                       scale={1}
-                    />
+                  />
                   </div>
                 ))}
             </div>
@@ -121,9 +121,9 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
                   Более ранние уведомления
                 </div>
                 <div className="flex-1 border-t border-gray-200"></div>
-              </div>
+        </div>
             )}
-          </div>
+      </div>
         );
       })}
 

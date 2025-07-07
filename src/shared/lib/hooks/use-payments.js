@@ -178,4 +178,59 @@ export const usePaymentsStats = () => {
   }, [payments]);
 
   return stats;
+};
+
+// Хук для добавления услуги к заказу
+export const useCreateOrderService = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, serviceId }) => paymentsApi.createOrderService(orderId, serviceId),
+    onSuccess: (data) => {
+      console.log('Услуга успешно добавлена к заказу:', data);
+      showGenericSuccess('Услуга добавлена к заказу');
+      
+      // Обновляем кеш заказов
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['user-orders'] });
+    },
+    onError: (error) => {
+      console.error('Ошибка добавления услуги к заказу:', error);
+      const errorMessage = error.response?.data?.message || 'Ошибка при добавлении услуги';
+      showGenericError(errorMessage);
+    }
+  });
+};
+
+// Хук для создания заявки на мувинг
+export const useCreateMoving = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, movingDate }) => paymentsApi.createMoving(orderId, movingDate),
+    onSuccess: (data) => {
+      console.log('Заявка на мувинг успешно создана:', data);
+      showGenericSuccess('Заявка на мувинг создана');
+      
+      // Обновляем кеш
+      queryClient.invalidateQueries({ queryKey: ['moving'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+    onError: (error) => {
+      console.error('Ошибка создания заявки на мувинг:', error);
+      const errorMessage = error.response?.data?.message || 'Ошибка при создании заявки на мувинг';
+      showGenericError(errorMessage);
+    }
+  });
+};
+
+// Хук для получения тарифов
+export const useGetPrices = (options = {}) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.PRICES],
+    queryFn: paymentsApi.getPrices,
+    staleTime: 10 * 60 * 1000, // 10 минут - тарифы редко меняются
+    cacheTime: 30 * 60 * 1000, // 30 минут
+    ...options
+  });
 }; 

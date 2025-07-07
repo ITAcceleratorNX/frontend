@@ -89,28 +89,28 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
         <div className="flex-shrink-0 mt-1">
           <div className="w-10 h-10 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm">
             {getNotificationIcon(notification.notification_type)}
-          </div>
         </div>
-        
+      </div>
+      
         {/* Контент */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between">
             <div className="flex-1 mr-4">
               <h4 className={`font-semibold text-sm leading-tight mb-1 ${styles.titleClass}`}>
-                {notification.title}
-              </h4>
+              {notification.title}
+            </h4>
               <p className={`text-sm leading-relaxed ${styles.contentClass}`}>
-                {notification.message}
-              </p>
-            </div>
+              {notification.message}
+            </p>
+          </div>
             
             {/* Время и статус */}
             <div className="flex-shrink-0 flex flex-col items-end space-y-1">
               <div className="flex items-center space-x-1">
                 <Clock className="w-3 h-3 text-gray-400" />
                 <span className={`text-xs font-medium ${styles.timeClass}`}>
-                  {formatTime(notification.created_at)}
-                </span>
+              {formatTime(notification.created_at)}
+            </span>
               </div>
               
               {notification.is_read && (

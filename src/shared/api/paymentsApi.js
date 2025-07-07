@@ -52,5 +52,65 @@ export const paymentsApi = {
       console.error('PaymentsAPI: Ошибка при создании ручной оплаты:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Добавление услуги к заказу
+  createOrderService: async (orderId, serviceId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`PaymentsAPI: Добавление услуги ${serviceId} к заказу ${orderId}`);
+      }
+      const response = await api.post('/order-services', { 
+        order_id: orderId, 
+        service_id: serviceId 
+      });
+      if (isDevelopment) {
+        console.log('PaymentsAPI: Услуга успешно добавлена к заказу:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('PaymentsAPI: Ошибка при добавлении услуги к заказу:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Создание заявки на мувинг
+  createMoving: async (orderId, movingDate) => {
+    try {
+      if (isDevelopment) {
+        console.log(`PaymentsAPI: Создание заявки на мувинг для заказа ${orderId}`);
+      }
+      const response = await api.post('/moving', {
+        order_id: orderId,
+        moving_date: movingDate,
+        vehicle_type: "LARGE",
+        status: "PENDING_FROM",
+        availability: "AVAILABLE"
+      });
+      if (isDevelopment) {
+        console.log('PaymentsAPI: Заявка на мувинг успешно создана:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('PaymentsAPI: Ошибка при создании заявки на мувинг:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Получение тарифов (включая мувинг)
+  getPrices: async () => {
+    try {
+      if (isDevelopment) {
+        console.log('PaymentsAPI: Получение тарифов');
+      }
+      const response = await api.get('/prices');
+      if (isDevelopment) {
+        console.log('PaymentsAPI: Тарифы получены:', response.data?.length || 0, 'записей');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('PaymentsAPI: Ошибка при получении тарифов:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

@@ -323,7 +323,7 @@ const ManagerChatList = memo(() => {
       {newChatNotifications.length > 0 && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-3">
           <div className="space-y-2">
-            {newChatNotifications.map((notification) => (
+          {newChatNotifications.map((notification) => (
               <div 
                 key={notification.chatId} 
                 className="group relative flex items-center justify-between bg-white rounded-xl p-3 shadow-sm border border-blue-200 hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
