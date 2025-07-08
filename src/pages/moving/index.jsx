@@ -11,6 +11,7 @@ import warehouseImg from '../../assets/warehouse.png';
 import api from '../../shared/api/axios'; 
 
 import CostCalculator from '../../shared/components/CostCalculator';
+import MovingPricingCards from '../../shared/components/MovingPricingCards';
 
 const ProgressCircle = ({ step }) => {
   const total = 5;
@@ -230,6 +231,10 @@ const MovingPage = () => {
 
       {/* Калькулятор стоимости — локально для мувинга */}
       <CostCalculator />
+      
+      {/* Тарифные карточки мувинга */}
+      <MovingPricingCards />
+      
       <StepperForm />
       
       <Footer />
