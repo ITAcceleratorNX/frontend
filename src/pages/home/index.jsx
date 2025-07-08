@@ -408,13 +408,19 @@ const HomePage = memo(() => {
           </h2>
           {/* Видео */}
           <div className="w-full flex justify-center mb-7">
-            <video controls className="w-full max-w-[900px] shadow-lg">
-              <source
-                src="https://www.freeloops.tv/download/?download_id=2150&collection_id=2658"
-                type="video/mp4"
+            <div className="w-full max-w-[900px] shadow-lg">
+              <iframe
+                width="100%"
+                height="506"
+                src="https://www.youtube.com/embed/nW1yLTEeLWc?si=4O4dNpCsmMSlLY0x"
+                title="Как работает облачное хранение"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                className="rounded-lg"
               />
-              Ваш браузер не поддерживает видео.
-            </video>
+            </div>
           </div>
           {/* Подпись жирная */}
           <div className="text-[24px] md:text-[24px] font-bold text-[#273655] text-center mb-10">
