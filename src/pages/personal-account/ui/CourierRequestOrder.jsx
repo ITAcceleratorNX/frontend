@@ -19,7 +19,6 @@ import {
   Clock,
   Loader2,
   AlertCircle,
-  XCircle,
   Play,
   FileText,
   Box
@@ -59,9 +58,7 @@ const CourierRequestOrder = () => {
       setIsUpdating(true);
 
       if (order.status === 'DELIVERED') {
-        await api.delete(`/moving/${orderId}`);
-        toast.success('Заказ удалён');
-        navigate('/personal-account', { state: { activeSection: 'courierrequests' } });
+        toast.info('Завершённые заказы нельзя удалить');
         return;
       }
 
@@ -116,12 +113,7 @@ const CourierRequestOrder = () => {
       );
     }
     if (order.status === 'DELIVERED') {
-      return (
-        <Button {...buttonProps} variant="destructive">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-          Удалить
-        </Button>
-      );
+      return null;
     }
     return null;
   };
@@ -172,7 +164,7 @@ const CourierRequestOrder = () => {
   }
 
   if (error || !order) {
-    return (
+  return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
@@ -218,7 +210,7 @@ const CourierRequestOrder = () => {
                 <ArrowLeft className="w-4 h-4" />
                 Назад к заказам
               </Button>
-            </div>
+              </div>
 
             {/* Заголовок заказа */}
             <Card className="border-l-4 border-l-[#1e2c4f]">
@@ -281,12 +273,12 @@ const CourierRequestOrder = () => {
                         <p className="text-gray-700">{order.storageName || 'Не указано'}</p>
                       </div>
                     </div>
-                  </div>
+                </div>
                 </CardContent>
               </Card>
 
               {/* Услуги */}
-              {order.serviceDescriptions?.length > 0 && (
+                {order.serviceDescriptions?.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
@@ -308,11 +300,11 @@ const CourierRequestOrder = () => {
                     </div>
                   </CardContent>
                 </Card>
-              )}
+                )}
             </div>
 
             {/* Предметы для перевозки */}
-            {order.items?.length > 0 && (
+                {order.items?.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
@@ -326,14 +318,14 @@ const CourierRequestOrder = () => {
                 <CardContent>
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead>
+                        <thead>
                         <tr className="border-b border-gray-200">
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Название</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Объём</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Маркировка</th>
                         </tr>
-                      </thead>
-                      <tbody>
+                        </thead>
+                        <tbody>
                         {order.items.map((item) => (
                           <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
                             <td className="py-3 px-4">
@@ -355,18 +347,18 @@ const CourierRequestOrder = () => {
                                 {item.cargo_mark}
                               </Badge>
                             </td>
-                          </tr>
+                            </tr>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </tbody>
+                      </table>
+                    </div>
                 </CardContent>
               </Card>
-            )}
-          </div>
-        </main>
+                )}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
   );
 };
 

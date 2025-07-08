@@ -151,4 +151,21 @@ export const makeDirectRequest = async (url, method = 'GET', data) => {
   }
 };
 
+// API для получения завершённых заказов с пагинацией
+export const getDeliveredOrdersPaginated = async (page = 1, limit = 10) => {
+  try {
+    if (isDevelopment) {
+      console.log(`[API] Запрос завершённых заказов: page=${page}, limit=${limit}`);
+    }
+    const response = await api.get(`/moving/orders/delivered?page=${page}&limit=${limit}`);
+    if (isDevelopment) {
+      console.log('[API] Завершённые заказы получены:', response.data);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('[API] Ошибка при получении завершённых заказов:', error);
+    throw error;
+  }
+};
+
 export default api; 

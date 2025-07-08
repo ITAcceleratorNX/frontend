@@ -4,7 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
-import { api } from '../../../shared/api/axios';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '../../../components/ui/pagination';
+import { api, getDeliveredOrdersPaginated } from '../../../shared/api/axios';
 import { 
   Truck, 
   Package, 
@@ -44,7 +52,7 @@ const columns = [
   },
 ];
 
-const OrderCard = ({ order, onStatusChange, isLoading = false }) => {
+const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = false }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
@@ -67,10 +75,8 @@ const OrderCard = ({ order, onStatusChange, isLoading = false }) => {
           status: 'DELIVERED',
         });
         toast.success('Заказ завершён');
-      } else if (order.status === 'DELIVERED') {
-        await api.delete(`/moving/${order.movingOrderId}`);
-        toast.success('Заказ удалён');
       }
+      // Убираем возможность удаления для завершённых заказов
       onStatusChange();
     } catch (error) {
       console.error('Ошибка при изменении статуса заказа:', error);
@@ -79,6 +85,11 @@ const OrderCard = ({ order, onStatusChange, isLoading = false }) => {
   };
 
   const getActionButton = () => {
+    // Не показываем кнопку удаления для завершённых заказов
+    if (isDelivered) {
+      return null;
+    }
+
     if (order.status === 'PENDING_FROM' || order.status === 'PENDING_TO') {
       return (
         <Button 
@@ -98,18 +109,6 @@ const OrderCard = ({ order, onStatusChange, isLoading = false }) => {
           className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs"
         >
           {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Завершить'}
-        </Button>
-      );
-    }
-    if (order.status === 'DELIVERED') {
-      return (
-        <Button 
-          onClick={handleAction} 
-          disabled={isLoading}
-          variant="destructive" 
-          className="h-8 text-xs"
-        >
-          {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Удалить'}
         </Button>
       );
     }
@@ -188,9 +187,18 @@ const CourierRequest = () => {
   const [orders, setOrders] = useState({
     PENDING: [],
     IN_PROGRESS: [],
-    DELIVERED: [],
   });
+  
+  // Отдельное состояние для завершённых заказов с пагинацией
+  const [deliveredOrders, setDeliveredOrders] = useState({
+    results: [],
+    total: 0,
+    page: 1,
+    limit: 10,
+  });
+  
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeliveredLoading, setIsDeliveredLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchOrders = async () => {
@@ -202,7 +210,6 @@ const CourierRequest = () => {
         api.get('/moving/status/PENDING_FROM'),
         api.get('/moving/status/PENDING_TO'),
         api.get('/moving/status/IN_PROGRESS'),
-        api.get('/moving/status/DELIVERED'),
       ]);
 
       // Фильтрация по availability
@@ -212,7 +219,6 @@ const CourierRequest = () => {
       const newOrders = {
         PENDING: filterAvailable([...results[0].data, ...results[1].data]),
         IN_PROGRESS: filterAvailable(results[2].data),
-        DELIVERED: filterAvailable(results[3].data),
       };
 
       setOrders(newOrders);
@@ -225,9 +231,87 @@ const CourierRequest = () => {
     }
   };
 
+  const fetchDeliveredOrders = async (page = 1) => {
+    try {
+      setIsDeliveredLoading(true);
+      const data = await getDeliveredOrdersPaginated(page, 10);
+      setDeliveredOrders({
+        results: data.results || [],
+        total: data.total || 0,
+        page: data.page || page,
+        limit: data.limit || 10,
+      });
+    } catch (err) {
+      console.error('Ошибка при загрузке завершённых заказов:', err);
+      toast.error('Ошибка загрузки завершённых заказов');
+    } finally {
+      setIsDeliveredLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchDeliveredOrders(1);
   }, []);
+
+  const handlePageChange = (page) => {
+    fetchDeliveredOrders(page);
+  };
+
+  const renderPagination = () => {
+    const totalPages = Math.ceil(deliveredOrders.total / deliveredOrders.limit);
+    
+    // Не показываем пагинацию если меньше 2 страниц
+    if (totalPages <= 1) return null;
+
+    const currentPage = deliveredOrders.page;
+    
+    return (
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => handlePageChange(currentPage - 1)}
+              className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+          
+          {/* Показываем номера страниц */}
+          {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
+            let pageNumber;
+            if (totalPages <= 5) {
+              pageNumber = index + 1;
+            } else if (currentPage <= 3) {
+              pageNumber = index + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNumber = totalPages - 4 + index;
+            } else {
+              pageNumber = currentPage - 2 + index;
+            }
+            
+            return (
+              <PaginationItem key={pageNumber}>
+                <PaginationLink
+                  isActive={pageNumber === currentPage}
+                  onClick={() => handlePageChange(pageNumber)}
+                  className="cursor-pointer"
+                >
+                  {pageNumber}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          })}
+          
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => handlePageChange(currentPage + 1)}
+              className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -259,6 +343,13 @@ const CourierRequest = () => {
     );
   }
 
+  // Обновляем статистику
+  const allOrders = {
+    PENDING: orders.PENDING || [],
+    IN_PROGRESS: orders.IN_PROGRESS || [],
+    DELIVERED: deliveredOrders.results || [],
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -271,7 +362,9 @@ const CourierRequest = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {columns.map((col) => {
           const Icon = col.icon;
-          const count = orders[col.status]?.length || 0;
+          const count = col.status === 'DELIVERED' 
+            ? deliveredOrders.total 
+            : allOrders[col.status]?.length || 0;
           
           return (
             <Card key={col.status} className={`bg-gradient-to-br ${col.color} ${col.borderColor} border`}>
@@ -291,7 +384,8 @@ const CourierRequest = () => {
 
       {/* Колонки заказов */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {columns.map((col) => {
+        {/* Колонки для ожидающих и в процессе */}
+        {columns.slice(0, 2).map((col) => {
           const Icon = col.icon;
           const columnOrders = orders[col.status] || [];
           
@@ -322,7 +416,10 @@ const CourierRequest = () => {
                     <OrderCard 
                       key={order.movingOrderId} 
                       order={order} 
-                      onStatusChange={fetchOrders}
+                      onStatusChange={() => {
+                        fetchOrders();
+                        fetchDeliveredOrders(deliveredOrders.page);
+                      }}
                       isLoading={isLoading}
                     />
                   ))
@@ -331,6 +428,57 @@ const CourierRequest = () => {
             </div>
           );
         })}
+
+        {/* Колонка для завершённых заказов с пагинацией */}
+        <div className="space-y-4">
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 border">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
+                <CheckCircle2 className="w-5 h-5" />
+                Завершённые заказы
+                <Badge variant="outline" className="ml-auto">
+                  {deliveredOrders.total}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+
+          <div className="space-y-4">
+            {isDeliveredLoading ? (
+              <Card className="border-dashed border-2 border-gray-200">
+                <CardContent className="text-center py-8">
+                  <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Загрузка...</p>
+                </CardContent>
+              </Card>
+            ) : deliveredOrders.results.length === 0 ? (
+              <Card className="border-dashed border-2 border-gray-200">
+                <CardContent className="text-center py-8">
+                  <CheckCircle2 className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Нет завершённых заказов</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {deliveredOrders.results.map((order) => (
+                  <OrderCard 
+                    key={order.movingOrderId} 
+                    order={order} 
+                    onStatusChange={() => {
+                      fetchOrders();
+                      fetchDeliveredOrders(deliveredOrders.page);
+                    }}
+                    isLoading={isDeliveredLoading}
+                    isDelivered={true}
+                  />
+                ))}
+                
+                {/* Пагинация */}
+                {renderPagination()}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
