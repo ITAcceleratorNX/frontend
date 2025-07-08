@@ -40,9 +40,6 @@ const Footer = () => {
             <Link to="/moving" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">МУВИНГ</span>
             </Link>
-            <Link to="/tariffs" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
-              <span className="whitespace-nowrap">ТАРИФЫ</span>
-            </Link>
             <Link to="/privacy-policy" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</span>
             </Link>

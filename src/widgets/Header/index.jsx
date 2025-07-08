@@ -127,7 +127,6 @@ export const Header = memo(() => {
               <NavLink to="/about-warehouse-rental" className={getNavLinkClass}>ОБ АРЕНДЕ СКЛАДОВ</NavLink>
               <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
               <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
-              <NavLink to="/tariffs" className={getNavLinkClass}>ТАРИФЫ</NavLink>
             </div>
           </nav>
 
