@@ -11,6 +11,7 @@ import AdminMoving from './ui/AdminMoving';
 import ManagerMoving from './ui/ManagerMoving';
 import InfoWarehouses from './ui/InfoWarehouses';
 import CourierRequest from './ui/CourierRequest';
+import CourierRequestOrder from './ui/CourierRequestOrder';
 import OrderManagement from './ui/OrderManagement';
 import UserPayments from './ui/UserPayments';
 
@@ -103,6 +104,7 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'managermoving' && <ManagerMoving />}
           {activeNav === 'request' && <OrderManagement />}
           {activeNav === 'courierrequests' && <CourierRequest />}
+          {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
           {activeNav === 'payments' && <UserPayments />}
           {activeNav === 'settings' && <Settings />}
         </main>

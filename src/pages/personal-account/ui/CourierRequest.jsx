@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
 import { api } from '../../../shared/api/axios';
 import { 
   Truck, 
@@ -15,10 +14,9 @@ import {
   XCircle, 
   Loader2,
   AlertCircle,
+  ArrowRight,
   User,
-  Building,
-  FileText,
-  Box
+  Building
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -48,6 +46,10 @@ const columns = [
 
 const OrderCard = ({ order, onStatusChange, isLoading = false }) => {
   const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/personal-account/courier/order/${order.movingOrderId}`);
+  };
 
   const handleAction = async (e) => {
     e.stopPropagation();
@@ -128,174 +130,56 @@ const OrderCard = ({ order, onStatusChange, isLoading = false }) => {
     }
   };
 
-  const getCargoMarkText = (mark) => {
-    switch (mark) {
-      case 'HEAVY':
-        return 'Тяжёлое';
-      case 'NO':
-        return 'Обычное';
-      default:
-        return mark || 'Не указано';
-    }
-  };
-
-  const getCargoMarkBadge = (mark) => {
-    switch (mark) {
-      case 'HEAVY':
-        return 'destructive';
-      case 'NO':
-        return 'secondary';
-      default:
-        return 'outline';
-    }
-  };
-
   return (
-    <Card className="border-l-4 border-l-[#1e2c4f] hover:shadow-lg transition-all duration-200">
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value={`order-${order.movingOrderId}`} className="border-none">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CardTitle className="text-lg text-[#1e2c4f] flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  Заказ #{order.movingOrderId}
-                </CardTitle>
-                {getStatusBadge()}
-              </div>
-              <div className="flex items-center gap-2">
-                {getActionButton()}
-                <AccordionTrigger className="hover:no-underline p-2 hover:bg-gray-100 rounded-lg transition-colors [&[data-state=open]>svg]:rotate-180">
-                  <div className="sr-only">Показать подробности</div>
-                </AccordionTrigger>
-              </div>
+    <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 border-l-4 border-l-[#1e2c4f]">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-lg text-[#1e2c4f] flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Заказ #{order.movingOrderId}
+            </CardTitle>
+            {getStatusBadge()}
+          </div>
+          <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#1e2c4f] transition-colors" />
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4" onClick={handleCardClick}>
+        {/* Адреса */}
+        <div className="space-y-2">
+          <div className="flex items-start gap-2 text-sm">
+            <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="text-gray-600">Клиент:</span>
+              <p className="font-medium text-gray-900">{order?.userAddress || 'Не указан'}</p>
             </div>
-          </CardHeader>
+          </div>
+          
+          <div className="flex items-start gap-2 text-sm">
+            <Building className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="text-gray-600">Склад:</span>
+              <p className="font-medium text-gray-900">{order?.warehouseAddress || 'Не указан'}</p>
+            </div>
+          </div>
 
-          <AccordionContent>
-            <CardContent className="space-y-6 pt-0">
-              {/* Информация об адресах */}
-              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2 text-blue-700">
-                    <MapPin className="w-4 h-4" />
-                    Адреса
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-0">
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2">
-                      <User className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Адрес клиента</p>
-                        <p className="text-gray-700">{order?.userAddress || 'Не указан'}</p>
-                      </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-start gap-2">
-                      <Building className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Склад</p>
-                        <p className="text-gray-700">{order?.warehouseAddress || 'Не указан'}</p>
-                      </div>
-                    </div>
+          <div className="flex items-start gap-2 text-sm">
+            <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="text-gray-600">Хранилище:</span>
+              <p className="font-medium text-gray-900">{order?.storageName || 'Не указано'}</p>
+            </div>
+          </div>
+        </div>
 
-                    <Separator />
-
-                    <div className="flex items-start gap-2">
-                      <Box className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Хранилище</p>
-                        <p className="text-gray-700">{order?.storageName || 'Не указано'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Услуги */}
-              {order.serviceDescriptions?.length > 0 && (
-                <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2 text-purple-700">
-                      <FileText className="w-4 h-4" />
-                      Услуги
-                      <Badge variant="outline" className="ml-auto">
-                        {order.serviceDescriptions.length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2">
-                      {order.serviceDescriptions.map((desc, i) => (
-                        <div key={i} className="flex items-center gap-2 p-3 bg-white rounded-lg border border-purple-100">
-                          <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{desc}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Предметы для перевозки */}
-              {order.items?.length > 0 && (
-                <Card className="bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2 text-orange-700">
-                      <Package className="w-4 h-4" />
-                      Предметы для перевозки
-                      <Badge variant="outline" className="ml-auto">
-                        {order.items.length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-orange-200">
-                            <th className="text-left py-3 px-4 font-medium text-gray-900">Название</th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900">Объём</th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900">Маркировка</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {order.items.map((item) => (
-                            <tr key={item.id} className="border-b border-orange-100 hover:bg-orange-50/50">
-                              <td className="py-3 px-4">
-                                <div className="flex items-center gap-2">
-                                  <Box className="w-4 h-4 text-gray-400" />
-                                  <span className="font-medium text-gray-900">{item.name}</span>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <Badge variant="outline" className="font-mono">
-                                  {item.volume} м³
-                                </Badge>
-                              </td>
-                              <td className="py-3 px-4">
-                                <Badge 
-                                  variant={getCargoMarkBadge(item.cargo_mark)}
-                                  className="text-xs"
-                                >
-                                  {getCargoMarkText(item.cargo_mark)}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </CardContent>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        <Separator />
+        
+        {/* Кнопка действия */}
+        <div className="flex justify-end">
+          {getActionButton()}
+        </div>
+      </CardContent>
     </Card>
   );
 };
