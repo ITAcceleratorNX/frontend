@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
-import arrowDownIcon from '../../assets/arrow-down.svg';
 import warehouseImg from '../../assets/warehouse.png';
 import api from '../../shared/api/axios';
 
 const CostCalculator = () => {
   const [area, setArea] = useState(50);
   const [month, setMonth] = useState(1);
-  const [day, setDay] = useState(0);
   const [type, setType] = useState('INDIVIDUAL');
   const [prices, setPrices] = useState([]);
   const [totalCost, setTotalCost] = useState(null);
@@ -36,18 +34,33 @@ const CostCalculator = () => {
       setError('Цена для выбранного типа услуги не найдена');
       return;
     }
-    const amount = parseFloat(selectedPrice.amount);
-    const monthlyCost = amount * area * month;
-    const dailyCost = (amount * area / 30) * day;
-    const total = monthlyCost + dailyCost;
+    const price = parseFloat(selectedPrice.price);
+    const total = price * area * month;
     setTotalCost(Math.round(total));
     setError(null);
+    
+    if (import.meta.env.DEV) {
+      console.log('Расчет стоимости:', {
+        area,
+        month,
+        type,
+        price,
+        total,
+      });
+    }
   };
 
   const handleServiceTypeClick = (serviceType) => {
     setType(serviceType);
     setTotalCost(null);
   };
+
+  // Простая SVG иконка стрелки вниз
+  const ArrowDownIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
 
   return (
     <section className="w-full flex justify-center items-center mb-24 font-['Montserrat'] mt-40">
@@ -80,63 +93,63 @@ const CostCalculator = () => {
               />
             </div>
           </div>
-          <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (дни/месяцы):</label>
-          <div className="flex gap-4 mb-8 w-full">
-            <div className="relative flex-1">
-              <select 
-                value={month}
-                onChange={(e) => {
-                  setMonth(Number(e.target.value));
-                  setTotalCost(null);
-                }}
-                className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
-                style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
-              >
-                <option value={1}>1 месяц</option>
-                <option value={2}>2 месяца</option>
-                <option value={3}>3 месяца</option>
-                <option value={6}>6 месяцев</option>
-                <option value={12}>12 месяцев</option>
-              </select>
-              <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-            <div className="relative flex-1">
-              <select 
-                value={day}
-                onChange={(e) => {
-                  setDay(Number(e.target.value));
-                  setTotalCost(null);
-                }}
-                className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
-                style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
-              >
-                <option value={0}>0 дней</option>
-                <option value={1}>1 день</option>
-                <option value={7}>7 дней</option>
-                <option value={14}>14 дней</option>
-                <option value={21}>21 день</option>
-                <option value={30}>30 дней</option>
-              </select>
-              <img src={arrowDownIcon} alt="arrow down" className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (месяцы):</label>
+          <div className="relative w-full mb-8">
+            <select 
+              value={month}
+              onChange={(e) => {
+                setMonth(Number(e.target.value));
+                setTotalCost(null);
+              }}
+              className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[18px] text-[#273655] font-normal focus:outline-none appearance-none font-['Montserrat']" 
+              style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
+            >
+              <option value={1}>1 месяц</option>
+              <option value={2}>2 месяца</option>
+              <option value={3}>3 месяца</option>
+              <option value={6}>6 месяцев</option>
+              <option value={12}>12 месяцев</option>
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+              <ArrowDownIcon />
             </div>
           </div>
           <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']">Тип услуги:</label>
-          <div className="flex flex-row gap-4 w-full mb-8">
-            <button 
-              onClick={() => handleServiceTypeClick('INDIVIDUAL')}
-              className={`h-[56px] rounded-lg text-[16px] font-bold w-1/2 font-['Montserrat'] transition-colors ${type === 'INDIVIDUAL' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'}`}
-              style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
-            >
-              Индивидуальное хранение
-            </button>
-            <button 
-              onClick={() => handleServiceTypeClick('RACK')}
-              className={`h-[56px] rounded-lg text-[16px] font-bold w-1/2 font-['Montserrat'] transition-colors ${type === 'RACK' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'}`}
-              style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
-            >
-              Стеллажное хранение
-            </button>
+          <div className="flex flex-row gap-4 mb-4 w-full">
+            <div className="flex flex-col gap-4 w-1/2">
+              <button
+                onClick={() => handleServiceTypeClick('INDIVIDUAL')}
+                className={`h-[56px] rounded-lg text-[16px] font-bold w-full font-['Montserrat'] transition-colors ${
+                  type === 'INDIVIDUAL' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'
+                }`}
+                style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
+              >
+                Индивидуальное хранение
+              </button>
+              <button
+                onClick={() => handleServiceTypeClick('CLOUD')}
+                className={`h-[56px] rounded-lg text-[16px] font-bold w-full font-['Montserrat'] transition-colors ${
+                  type === 'CLOUD' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'
+                }`}
+                style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
+              >
+                Облачное хранилище
+              </button>
+            </div>
+            <div className="flex flex-col gap-4 w-1/2">
+              <button
+                onClick={() => handleServiceTypeClick('RACK')}
+                className={`h-[56px] rounded-lg text-[16px] font-bold w-full font-['Montserrat'] transition-colors ${
+                  type === 'RACK' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'
+                }`}
+                style={{boxShadow:'4px 4px 8px 0 #B0B0B0', border:'1px solid #273655'}}
+              >
+                Стеллажное хранение
+              </button>
+              <div className="h-[56px] w-full"></div>
+            </div>
           </div>
+
           {/* Блок с результатом расчета */}
           {totalCost !== null && (
             <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
@@ -156,7 +169,7 @@ const CostCalculator = () => {
           <button 
             onClick={calculateCost}
             disabled={isLoading || prices.length === 0}
-            className="w-full h-[56px] bg-[#32BA16] text-white text-[18px] font-bold rounded-lg hover:bg-[#28a012] transition-colors mt-4 font-['Montserrat'] disabled:opacity-50 disabled:cursor-not-allowed" 
+            className="w-full h-[56px] bg-[#f86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#f86812] transition-colors mt-4 font-['Montserrat'] disabled:opacity-50 disabled:cursor-not-allowed" 
             style={{boxShadow:'4px 4px 8px 0 #B0B0B0'}}
           >
             {isLoading ? 'ЗАГРУЗКА...' : 'РАССЧИТАТЬ'}
