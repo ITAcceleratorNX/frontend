@@ -90,13 +90,13 @@ const OrderManagement = () => {
 
     const { action, order } = modalData;
     
-    if (action === 'approve') {
-      await handleApproveOrder(order.id);
-    } else if (action === 'delete') {
+    // Для действий удаления используем старую логику
+    if (action === 'delete') {
       await handleDeleteOrder(order.id);
+      closeModal();
     }
-    
-    closeModal();
+    // Для подтверждения заказов теперь используется внутренняя логика модала
+    // closeModal() будет вызван из модала после успешного подтверждения
   };
 
   if (isLoading) {

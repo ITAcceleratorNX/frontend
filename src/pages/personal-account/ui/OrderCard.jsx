@@ -26,6 +26,65 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
     return parseFloat(price).toLocaleString('ru-RU') + ' ₸';
   };
 
+  // Функция для получения иконки услуги по типу
+  const getServiceIcon = (type) => {
+    switch (type) {
+      case 'DEPOSIT':
+        return '💰'; // Залог
+      case 'LOADER':
+        return '💪'; // Грузчик
+      case 'PACKER':
+        return '📦'; // Упаковщик
+      case 'FURNITURE_SPECIALIST':
+        return '🪑'; // Мебельщик
+      case 'GAZELLE':
+        return '🚚'; // Газель
+      case 'STRETCH_FILM':
+        return '📜'; // Стрейч-пленка
+      case 'BOX_SIZE':
+        return '📦'; // Коробка
+      case 'MARKER':
+        return '🖊️'; // Маркер
+      case 'UTILITY_KNIFE':
+        return '🔪'; // Канцелярский нож
+      case 'BUBBLE_WRAP_1':
+      case 'BUBBLE_WRAP_2':
+        return '🛡️'; // Воздушно-пузырчатая пленка
+      default:
+        return '⚙️'; // Общая услуга
+    }
+  };
+
+  // Функция для получения русского названия типа услуги
+  const getServiceTypeName = (type) => {
+    switch (type) {
+      case 'DEPOSIT':
+        return 'Залог';
+      case 'LOADER':
+        return 'Грузчик';
+      case 'PACKER':
+        return 'Упаковщик';
+      case 'FURNITURE_SPECIALIST':
+        return 'Мебельщик';
+      case 'GAZELLE':
+        return 'Газель';
+      case 'STRETCH_FILM':
+        return 'Стрейч-пленка';
+      case 'BOX_SIZE':
+        return 'Коробка';
+      case 'MARKER':
+        return 'Маркер';
+      case 'UTILITY_KNIFE':
+        return 'Канцелярский нож';
+      case 'BUBBLE_WRAP_1':
+        return 'Воздушно-пузырчатая пленка 10м';
+      case 'BUBBLE_WRAP_2':
+        return 'Воздушно-пузырчатая пленка 120м';
+      default:
+        return 'Услуга';
+    }
+  };
+
   // Функция для получения вариантов Badge
   const getStatusVariant = (status) => {
     switch(status) {
@@ -43,6 +102,35 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
 
   const getContractVariant = (status) => {
     return status === 'SIGNED' ? 'default' : 'secondary';
+  };
+
+  // Функция для получения компонента дополнительной услуги
+  const getServiceBadge = (isSelected, serviceName, color = 'blue') => {
+    if (isSelected) {
+      return (
+        <div className={`flex items-center gap-2 p-2 rounded-lg bg-${color}-50 border border-${color}-200`}>
+          <div className={`w-2 h-2 bg-${color}-500 rounded-full`}></div>
+          <div className="flex items-center gap-1">
+            <svg className={`w-3 h-3 text-${color}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className={`text-xs font-medium text-${color}-700`}>{serviceName}</span>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-200">
+          <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+          <div className="flex items-center gap-1">
+            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span className="text-xs text-gray-500">{serviceName}</span>
+          </div>
+        </div>
+      );
+    }
   };
 
   return (
@@ -71,8 +159,8 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
 
       <CardContent className="space-y-6">
         {/* Основная информация */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Информация о пользователе */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* Информация о клиенте */}
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2 text-blue-700">
@@ -199,13 +287,190 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Дополнительные услуги */}
+          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2 text-orange-700">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                </svg>
+                Доп. услуги
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {/* Услуга перевозки */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Moving
+                  </span>
+                  {order.is_selected_moving ? (
+                    <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Выбрано
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs text-gray-500 border-gray-300">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Не выбрано
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Услуга упаковки */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Package
+                  </span>
+                  {order.is_selected_package ? (
+                    <Badge className="text-xs bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-100">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Выбрано
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs text-gray-500 border-gray-300">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Не выбрано
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Общий статус дополнительных услуг */}
+                <div className="pt-2 border-t border-orange-200">
+                  {(order.is_selected_moving || order.is_selected_package) ? (
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-green-700 font-medium">
+                        {order.is_selected_moving && order.is_selected_package 
+                          ? 'Все услуги активны' 
+                          : 'Есть активные услуги'
+                        }
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      <span className="text-gray-500">Доп. услуги не выбраны</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Заказанные услуги из массива services */}
+        {order.services && order.services.length > 0 && (
+          <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2 text-amber-700">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Заказанные услуги
+                <Badge variant="secondary" className="ml-auto bg-amber-100 text-amber-800">
+                  {order.services.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {order.services.map((service, index) => (
+                  <Card key={service.id || index} className="bg-white border-amber-200 hover:border-amber-300 transition-colors">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 bg-[#1e2c4f] rounded-full flex items-center justify-center">
+                          <span className="text-sm">{getServiceIcon(service.type)}</span>
+                        </div>
+                                                 <div className="flex-1">
+                           <div className="flex items-center gap-2">
+                             <div className="font-medium text-gray-900 text-sm">
+                               {service.description || getServiceTypeName(service.type)}
+                             </div>
+                             {service.OrderService && service.OrderService.count > 1 && (
+                               <Badge className="text-xs px-2 py-0 bg-[#1e2c4f] text-white">
+                                 ×{service.OrderService.count}
+                               </Badge>
+                             )}
+                           </div>
+                         </div>
+                      </div>
+                      
+                      {/* Информация о цене */}
+                      {service.price && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">
+                            {service.OrderService && service.OrderService.count > 1 ? 'За единицу:' : 'Цена:'}
+                          </span>
+                          <span className="font-medium text-[#1e2c4f]">
+                            {formatPrice(service.price)}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Общая стоимость */}
+                      {service.price && service.OrderService && service.OrderService.count > 1 && (
+                        <div className="flex items-center justify-between text-xs mt-1 pt-1 border-t border-gray-200">
+                          <span className="text-gray-700 font-medium">Итого:</span>
+                          <span className="font-bold text-[#1e2c4f]">
+                            {formatPrice(parseFloat(service.price) * service.OrderService.count)}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {/* Сводка по услугам */}
+              <div className="mt-4 p-3 bg-white rounded-lg border border-amber-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Услуг заказано: <span className="font-medium text-gray-900">{order.services.length}</span>
+                  </span>
+                  {order.services.some(s => s.price) && (
+                    <span className="text-gray-600">
+                      Общая стоимость: <span className="font-bold text-[#1e2c4f]">
+                        {formatPrice(
+                          order.services.reduce((total, service) => {
+                            if (service.price && service.OrderService) {
+                              return total + (parseFloat(service.price) * service.OrderService.count);
+                            }
+                            return total;
+                          }, 0)
+                        )}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Предметы в заказе */}
         {order.items && order.items.length > 0 && (
-          <Card className="bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
+          <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2 text-orange-700">
+              <CardTitle className="text-base flex items-center gap-2 text-teal-700">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
@@ -218,7 +483,7 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {order.items.slice(0, 6).map((item) => (
-                  <Card key={item.id} className="bg-white border-orange-200 hover:border-orange-300 transition-colors">
+                  <Card key={item.id} className="bg-white border-teal-200 hover:border-teal-300 transition-colors">
                     <CardContent className="p-3">
                       <div className="font-medium text-gray-900 text-sm mb-1">{item.name}</div>
                       <div className="text-xs text-gray-600 flex items-center gap-2">

@@ -54,6 +54,23 @@ export const ordersApi = {
     }
   },
 
+  // Расширенное обновление заказа с услугами и moving_orders (для MANAGER и ADMIN)
+  updateOrderWithServices: async (orderId, orderData) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Расширенное обновление заказа ${orderId}:`, orderData);
+      }
+      const response = await api.put(`/orders/${orderId}/status`, orderData);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Заказ успешно обновлен с услугами:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при расширенном обновлении заказа:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Удаление заказа (для MANAGER и ADMIN)
   deleteOrder: async (orderId) => {
     try {

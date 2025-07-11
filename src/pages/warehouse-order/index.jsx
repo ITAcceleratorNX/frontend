@@ -26,6 +26,10 @@ const WarehouseOrderPage = memo(() => {
   ]);
   const [months, setMonths] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Новые состояния для дополнительных услуг
+  const [isSelectedMoving, setIsSelectedMoving] = useState(false);
+  const [isSelectedPackage, setIsSelectedPackage] = useState(false);
 
   // Проверяем роль пользователя - функции заказа доступны только для USER
   const isUserRole = user?.role === 'USER';
@@ -115,7 +119,9 @@ const WarehouseOrderPage = memo(() => {
           name: item.name.trim(),
           volume: parseFloat(item.volume),
           cargo_mark: item.cargo_mark
-        }))
+        })),
+        is_selected_moving: isSelectedMoving,
+        is_selected_package: isSelectedPackage
       };
 
       const result = await warehouseApi.createOrder(orderData);
@@ -424,11 +430,94 @@ const WarehouseOrderPage = memo(() => {
           </div>
         )}
 
+        {/* Дополнительные услуги */}
+        {selectedStorage && isUserRole && (
+          <div className="mb-8">
+            <h2 className="text-[24px] font-bold text-[#273655] mb-4">
+              5. Дополнительные услуги
+            </h2>
+            
+            <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
+              {/* Moving услуга */}
+              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex-1">
+                  <h3 className="text-[18px] font-semibold text-[#273655] mb-2">
+                    Услуга перевозки (Moving)
+                  </h3>
+                  <p className="text-[#6B6B6B] text-sm">
+                    Профессиональная перевозка ваших вещей на склад и обратно с использованием специального транспорта и грузчиков
+                  </p>
+                </div>
+                <div className="ml-4">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSelectedMoving}
+                      onChange={(e) => setIsSelectedMoving(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#273655]"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Package услуга */}
+              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex-1">
+                  <h3 className="text-[18px] font-semibold text-[#273655] mb-2">
+                    Услуга упаковки (Package)
+                  </h3>
+                  <p className="text-[#6B6B6B] text-sm">
+                    Профессиональная упаковка ваших вещей в специальные материалы для безопасного хранения
+                  </p>
+                </div>
+                <div className="ml-4">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSelectedPackage}
+                      onChange={(e) => setIsSelectedPackage(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#273655]"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Информация о выбранных услугах */}
+              {(isSelectedMoving || isSelectedPackage) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-[16px] font-semibold text-[#273655] mb-2">
+                    Выбранные дополнительные услуги:
+                  </h4>
+                  <ul className="space-y-1 text-sm text-[#6B6B6B]">
+                    {isSelectedMoving && (
+                      <li className="flex items-center">
+                        <span className="w-2 h-2 bg-[#273655] rounded-full mr-2"></span>
+                        Услуга перевозки (Moving)
+                      </li>
+                    )}
+                    {isSelectedPackage && (
+                      <li className="flex items-center">
+                        <span className="w-2 h-2 bg-[#273655] rounded-full mr-2"></span>
+                        Услуга упаковки (Package)
+                      </li>
+                    )}
+                  </ul>
+                  <p className="text-xs text-[#6B6B6B] mt-2">
+                    * Стоимость дополнительных услуг будет рассчитана после создания заказа
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Срок аренды и кнопка заказа */}
         {selectedStorage && isUserRole && (
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-              4. Укажите срок аренды
+              {(isSelectedMoving || isSelectedPackage) ? '6' : '4'}. Укажите срок аренды
             </h2>
             
             <div className="bg-white border border-gray-200 rounded-lg p-6">

@@ -12,6 +12,7 @@ import {
 export const PAYMENTS_QUERY_KEYS = {
   USER_PAYMENTS: 'user-payments',
   PAYMENT_DETAILS: 'payment-details',
+  PRICES: 'prices',
 };
 
 /**
@@ -227,7 +228,7 @@ export const useCreateMoving = () => {
 // Хук для получения тарифов
 export const useGetPrices = (options = {}) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.PRICES],
+    queryKey: [PAYMENTS_QUERY_KEYS.PRICES],
     queryFn: paymentsApi.getPrices,
     staleTime: 10 * 60 * 1000, // 10 минут - тарифы редко меняются
     cacheTime: 30 * 60 * 1000, // 30 минут

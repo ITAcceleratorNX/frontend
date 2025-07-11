@@ -169,4 +169,26 @@ export const useOrdersStats = () => {
     isLoading,
     error
   };
+};
+
+/**
+ * Хук для расширенного обновления заказа с услугами и moving_orders
+ */
+export const useUpdateOrderWithServices = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, orderData }) => ordersApi.updateOrderWithServices(orderId, orderData),
+    onSuccess: (data, variables) => {
+      // Инвалидируем кеш заказов
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      
+      showGenericSuccess(`Заказ #${variables.orderId} успешно подтвержден с дополнительными услугами!`);
+    },
+    onError: (error, variables) => {
+      console.error('Ошибка при расширенном обновлении заказа:', error);
+      showGenericError(`Не удалось обновить заказ #${variables.orderId} с услугами`);
+    }
+  });
 }; 
