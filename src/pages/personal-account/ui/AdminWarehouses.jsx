@@ -202,15 +202,15 @@ const AdminWarehouses = () => {
           Складов не найдено
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredWarehouses.map((warehouse) => (
-            <div 
-              key={warehouse.id} 
+          <div 
+            key={warehouse.id} 
               className={`p-4 rounded-lg shadow-md border border-gray-200 cursor-pointer relative ${
                 warehouse.status === 'AVAILABLE' ? 'bg-white' : 'bg-[#DEE0E4]'
               }`}
-              onClick={() => handleCardClick(warehouse.id)}
-            >
+            onClick={() => handleCardClick(warehouse.id)}
+          >
               <button
                 onClick={(e) => handleEditClick(e, warehouse.id)}
                 className="absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-xs rounded-md transition-colors"
@@ -221,10 +221,10 @@ const AdminWarehouses = () => {
                 className={`text-white text-xs px-7 font-['Abhaya Libre SemiBold'] py-1.5 rounded-full inline-block mb-2 ${
                   warehouse.status === 'AVAILABLE' ? 'bg-[#3A532D]' : 'bg-[#777777]'
                 }`}
-              >
+            >
                 {warehouse.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}
-              </div>
-              <h2 className="text-lg font-semibold mb-1">{warehouse.name}</h2>
+            </div>
+            <h2 className="text-lg font-semibold mb-1">{warehouse.name}</h2>
               <p className="text-sm text-[#000000] mb-2">{warehouse.address}</p>
               <p className="text-xs text-gray-600 mb-4">
                 Время работы: {warehouse.work_start} - {warehouse.work_end}
@@ -234,13 +234,13 @@ const AdminWarehouses = () => {
                   <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h7A2.5 2.5 0 0 1 14 2.5v11a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-11zM4.5 1A1.5 1.5 0 0 0 3 2.5v11A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 11.5 1h-7z"/>
                     <path d="M5 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 3zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 5zm0 2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 7z"/>
-                  </svg>
+</svg>
                   <span>{warehouse.storage ? warehouse.storage.length : 0}</span>
                 </div>
-              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
       )}
     </div>
   );

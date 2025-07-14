@@ -8,6 +8,8 @@ import good2 from "../../assets/good2.png";
 import procent2 from "../../assets/procent2.png";
 import key2 from "../../assets/key2.png";
 import chatgptImg from "../../assets/chatgpt.png";
+import storage5mImg from "../../assets/storage_5m.png";
+import storage10mImg from "../../assets/storage_10m.png";
 import warehouseImg from "../../assets/warehouse.png";
 import housePlanIcon from "../../assets/house-plan_5203481 1.svg";
 import arrowDownIcon from "../../assets/arrow-down.svg";
@@ -39,6 +41,137 @@ const HomePage = memo(() => {
   const [totalCost, setTotalCost] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Состояние для выбранного объема
+  const [selectedVolume, setSelectedVolume] = useState(3);
+  
+  // Состояние для модального окна
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Данные для объемов хранения
+  const volumeData = useMemo(
+    () => ({
+      3: {
+        title: "3 м³",
+        description1: "Такой объём подходит для хранения части мебели и бытовой техники из небольшой комнаты.",
+        description2: "Примерно столько занимает багаж из однокомнатной квартиры при переезде.",
+        description3: "Когда нужно спрятать всё лишнее, но пока не расставаться.",
+        capacity: "до 15 коробок или 8 предметов мебели",
+        examples: "- Матрас, стиральная машина, пылесос, тумбочка, чемодан и несколько коробок с вещами",
+        image: chatgptImg,
+        detailedInfo: {
+          dimensions: "1,5 × 1,5 × 2,0 м",
+          idealFor: "Небольшая комната, сезонные вещи, переезд из студии",
+          features: [
+            "Круглосуточный доступ к вашим вещам",
+            "Охраняемая территория с видеонаблюдением",
+            "Контроль температуры и влажности",
+            "Страхование хранимых вещей",
+            "Помощь в упаковке и транспортировке"
+          ],
+          pricing: "от 15 000 ₸/месяц",
+          whatFits: [
+            "Матрас односпальный или двуспальный",
+            "Стиральная машина",
+            "Пылесос",
+            "Тумбочка или небольшой комод",
+            "Чемодан и дорожные сумки",
+            "10-15 коробок с вещами",
+            "Велосипед",
+            "Мелкая бытовая техника"
+          ]
+        }
+      },
+      5: {
+        title: "5 м³",
+        description1: "Идеальный объём для хранения мебели из спальни или гостиной.",
+        description2: "Подходит для временного размещения вещей при ремонте или переезде.",
+        description3: "Достаточно места для техники, мебели и личных вещей.",
+        capacity: "до 25 коробок или 12 предметов мебели",
+        examples: "- Диван, кресло, комод, телевизор, микроволновка, стул, коробки с книгами и одеждой",
+        image: storage5mImg,
+        detailedInfo: {
+          dimensions: "2,0 × 1,5 × 2,0 м",
+          idealFor: "Спальня, гостиная, ремонт квартиры, переезд",
+          features: [
+            "Круглосуточный доступ к вашим вещам",
+            "Охраняемая территория с видеонаблюдением",
+            "Контроль температуры и влажности",
+            "Страхование хранимых вещей",
+            "Помощь в упаковке и транспортировке",
+            "Тележки для удобной загрузки"
+          ],
+          pricing: "от 22 000 ₸/месяц",
+          whatFits: [
+            "Диван двухместный",
+            "Кресло",
+            "Комод или тумба под ТВ",
+            "Телевизор до 65 дюймов",
+            "Микроволновая печь",
+            "Обеденные стулья (2-3 шт)",
+            "20-25 коробок с вещами",
+            "Офисное кресло и стол",
+            "Спортивный инвентарь",
+            "Бытовая техника (утюг, фен, etc.)"
+          ]
+        }
+      },
+      10: {
+        title: "10 м³",
+        description1: "Большой объём для хранения содержимого целой квартиры.",
+        description2: "Подойдёт при длительном переезде или хранении офисного оборудования.",
+        description3: "Максимум пространства для крупногабаритных вещей и техники.",
+        capacity: "до 50 коробок или 20 предметов мебели",
+        examples: "- Холодильник, диван, кресла, обеденный стол, шкаф, стиральная машина, множество коробок",
+        image: storage10mImg,
+        detailedInfo: {
+          dimensions: "2,5 × 2,0 × 2,0 м",
+          idealFor: "Целая квартира, офисный переезд, долгосрочное хранение",
+          features: [
+            "Круглосуточный доступ к вашим вещам",
+            "Охраняемая территория с видеонаблюдением",
+            "Контроль температуры и влажности",
+            "Страхование хранимых вещей",
+            "Помощь в упаковке и транспортировке",
+            "Тележки для удобной загрузки",
+            "Возможность частичной разгрузки"
+          ],
+          pricing: "от 35 000 ₸/месяц",
+          whatFits: [
+            "Холодильник полноразмерный",
+            "Диван трехместный",
+            "Кресла (2-3 шт)",
+            "Обеденный стол со стульями",
+            "Шкаф-купе или гардероб",
+            "Стиральная машина",
+            "Кровать двуспальная с матрасом",
+            "40-50 коробок с вещами",
+            "Офисная мебель",
+            "Крупная бытовая техника",
+            "Спортивное оборудование"
+          ]
+        }
+      },
+    }),
+    []
+  );
+
+  // Обработчик переключения объема
+  const handleVolumeChange = (volume) => {
+    setSelectedVolume(volume);
+  };
+
+  // Обработчик закрытия модального окна по Escape
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && isModalOpen) {
+        setIsModalOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [isModalOpen]);
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -374,42 +507,63 @@ const HomePage = memo(() => {
 
             {/* Кнопки выбора объёма */}
             <div className="flex gap-4 mb-8">
-              <button className="px-8 py-3 rounded-full bg-[#273655] text-white text-[22px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none">
+              <button 
+                onClick={() => handleVolumeChange(3)}
+                className={`px-8 py-3 rounded-full text-[22px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none transition-colors hover:bg-[#1e2940] ${
+                  selectedVolume === 3 
+                    ? 'bg-[#273655] text-white' 
+                    : 'bg-white text-[#273655] hover:bg-[#f8f9fa]'
+                }`}
+              >
                 3 м³
               </button>
-              <button className="px-8 py-3 rounded-full bg-white text-[#273655] text-[22px] font-medium border-2 border-[#273655] focus:outline-none">
+              <button 
+                onClick={() => handleVolumeChange(5)}
+                className={`px-8 py-3 rounded-full text-[22px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none transition-colors hover:bg-[#1e2940] ${
+                  selectedVolume === 5 
+                    ? 'bg-[#273655] text-white' 
+                    : 'bg-white text-[#273655] hover:bg-[#f8f9fa]'
+                }`}
+              >
                 5 м³
               </button>
-              <button className="px-8 py-3 rounded-full bg-white text-[#273655] text-[22px] font-medium border-2 border-[#273655] focus:outline-none">
+              <button 
+                onClick={() => handleVolumeChange(10)}
+                className={`px-8 py-3 rounded-full text-[22px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none transition-colors hover:bg-[#1e2940] ${
+                  selectedVolume === 10 
+                    ? 'bg-[#273655] text-white' 
+                    : 'bg-white text-[#273655] hover:bg-[#f8f9fa]'
+                }`}
+              >
                 10 м³
               </button>
             </div>
             {/* Описание */}
             <div className="mb-6">
               <div className="text-[#A3A3A3] text-[20px] font-medium leading-snug mb-2">
-                Такой объём подходит для хранения части мебели и бытовой техники
-                из небольшой комнаты.
+                {volumeData[selectedVolume].description1}
               </div>
               <div className="text-[#A3A3A3] text-[20px] font-medium leading-snug mb-2">
-                Примерно столько занимает багаж из однокомнатной квартиры при
-                переезде.
+                {volumeData[selectedVolume].description2}
               </div>
               <div className="text-[#A3A3A3] text-[20px] font-medium leading-snug mb-6">
-                Когда нужно спрятать всё лишнее, но пока не расставаться.
+                {volumeData[selectedVolume].description3}
               </div>
               <div className="text-[#273655] text-[18px] font-medium leading-snug mb-1">
-                Вмещает до X коробок или Y предметов мебели
+                Вмещает {volumeData[selectedVolume].capacity}
               </div>
               <div className="text-[#273655] text-[18px] font-medium leading-snug mb-1">
                 Примеры:
               </div>
               <div className="text-[#273655] text-[18px] font-medium leading-snug">
-                - Матрас, стиральная машина, пылесос, тумбочка, чемодан и
-                несколько коробок с вещами
+                {volumeData[selectedVolume].examples}
               </div>
             </div>
             {/* Кнопка Подробнее */}
-            <button className="mt-6 w-[260px] h-[56px] bg-[#273655] text-white text-[22px] font-medium rounded-full flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="mt-6 w-[260px] h-[56px] bg-[#273655] text-white text-[22px] font-medium rounded-full flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors"
+            >
               Подробнее
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -432,9 +586,9 @@ const HomePage = memo(() => {
           {/* Правая часть: картинка с мебелью и размерами */}
           <div className="flex-1 flex items-center justify-center">
             <img
-              src={chatgptImg}
-              alt="Склад с мебелью"
-              className="w-[420px] h-[420px] object-contain rounded-2xl mt-10"
+              src={volumeData[selectedVolume].image}
+              alt={`Склад с мебелью - ${volumeData[selectedVolume].title}`}
+              className="w-[420px] h-[420px] object-contain rounded-2xl mt-10 transition-opacity duration-300"
             />
           </div>
         </div>
@@ -644,13 +798,26 @@ const HomePage = memo(() => {
           </h2>
           {/* Видео */}
           <div className="w-full flex justify-center mb-7">
-            <video controls className="w-full max-w-[900px] shadow-lg">
-              <source
-                src="https://www.freeloops.tv/download/?download_id=2150&collection_id=2658"
-                type="video/mp4"
-              />
-              Ваш браузер не поддерживает видео.
-            </video>
+            <div className="w-full max-w-[900px] shadow-lg bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] rounded-lg overflow-hidden">
+              <div className="relative aspect-video flex items-center justify-center">
+                <img 
+                  src="https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                  alt="Облачное хранение"
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">Демонстрационное видео</h3>
+                    <p className="text-sm opacity-90">Видео скоро будет добавлено</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           {/* Подпись жирная */}
           <div className="text-[24px] md:text-[24px] font-bold text-[#273655] text-center mb-10">
@@ -833,6 +1000,121 @@ const HomePage = memo(() => {
       <ChatButton />
 
       <Footer />
+
+      {/* Модальное окно с подробностями */}
+      {isModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-8">
+              {/* Заголовок модального окна */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-[#273655]">
+                  Подробности тарифа {volumeData[selectedVolume].title}
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl w-8 h-8 flex items-center justify-center"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Основная информация */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                {/* Левая колонка */}
+                <div>
+                  <div className="bg-[#f8f9fa] rounded-2xl p-6 mb-6">
+                    <h3 className="text-xl font-bold text-[#273655] mb-4">Основные характеристики</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Размеры:</span>
+                        <span className="font-medium">{volumeData[selectedVolume].detailedInfo.dimensions}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Объем:</span>
+                        <span className="font-medium">{volumeData[selectedVolume].title}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Стоимость:</span>
+                        <span className="font-medium text-[#F86812]">{volumeData[selectedVolume].detailedInfo.pricing}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#f8f9fa] rounded-2xl p-6">
+                    <h3 className="text-xl font-bold text-[#273655] mb-4">Идеально подходит для:</h3>
+                    <p className="text-gray-700">{volumeData[selectedVolume].detailedInfo.idealFor}</p>
+                  </div>
+                </div>
+
+                {/* Правая колонка */}
+                <div>
+                  <img
+                    src={volumeData[selectedVolume].image}
+                    alt={`Склад ${volumeData[selectedVolume].title}`}
+                    className="w-full h-80 object-cover rounded-2xl mb-6"
+                  />
+                </div>
+              </div>
+
+              {/* Что поместится */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-[#273655] mb-4">Что поместится:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {volumeData[selectedVolume].detailedInfo.whatFits.map((item, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-[#F86812] rounded-full"></div>
+                      <span className="text-gray-700">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Преимущества */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-[#273655] mb-4">Преимущества ExtraSpace:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {volumeData[selectedVolume].detailedInfo.features.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Кнопки действий */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    navigate("/warehouse-order");
+                  }}
+                  className="flex-1 bg-[#F86812] text-white py-4 px-6 rounded-full text-lg font-medium hover:bg-[#d87d1c] transition-colors"
+                >
+                  Забронировать бокс
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 bg-gray-200 text-gray-700 py-4 px-6 rounded-full text-lg font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
