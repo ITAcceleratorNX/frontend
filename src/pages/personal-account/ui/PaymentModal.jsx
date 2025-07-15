@@ -149,40 +149,40 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
         <DialogHeader className="space-y-1 pb-2">
           <DialogTitle className="text-base font-bold text-[#1e2c4f] flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />
-            Подтверждение оплаты
+                Подтверждение оплаты
           </DialogTitle>
           <DialogDescription className="text-xs text-gray-400">
             Проверьте детали перед оплатой
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+            <div className="space-y-3">
           {/* Основная информация */}
           <Card className="border-gray-200 rounded-lg">
             <CardContent className="p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Заказ:</span>
                 <Badge variant="outline" className="text-xs text-[#1e2c4f] h-5">#{order.id}</Badge>
-              </div>
-              
-              {order.storage && (
+                  </div>
+                  
+                  {order.storage && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-600">Бокс:</span>
                   <span className="text-xs font-medium truncate max-w-[120px]">{order.storage.name}</span>
-                </div>
-              )}
-              
+                    </div>
+                  )}
+                  
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Объем:</span>
                 <span className="text-xs font-semibold text-[#1e2c4f]">{order.total_volume} м³</span>
-              </div>
-              
+                  </div>
+                  
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Период:</span>
                 <span className="text-xs">
                   {formatDate(order.start_date)} — {formatDate(order.end_date)}
-                </span>
-              </div>
+                    </span>
+                  </div>
             </CardContent>
           </Card>
 
@@ -212,7 +212,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
           {/* Заказанные услуги */}
           {order.services && order.services.length > 0 && (
             <>
-              <Separator />
+          <Separator />
               <Card className="border-amber-200 rounded-lg bg-amber-50">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-bold text-amber-800 flex items-center gap-2">
@@ -223,10 +223,10 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 <CardContent className="p-3 pt-0 space-y-2">
                   {order.services.map((service, index) => (
                     <div key={service.id || index} className="flex items-center justify-between bg-white rounded-lg p-2 border border-amber-200">
-                      <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                         <span className="text-sm">{getServiceIcon(service.type)}</span>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-gray-900">
                               {service.description || getServiceTypeName(service.type)}
                             </span>
@@ -235,7 +235,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                 ×{service.OrderService.count}
                               </Badge>
                             )}
-                          </div>
+                                  </div>
                           {service.price && (
                             <div className="text-xs text-gray-500">
                               {formatPrice(service.price)} ₸ за единицу
@@ -246,9 +246,9 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                       {service.price && service.OrderService && (
                         <div className="text-xs font-bold text-[#1e2c4f] text-right">
                           {formatPrice(parseFloat(service.price) * service.OrderService.count)} ₸
-                        </div>
-                      )}
-                    </div>
+                </div>
+              )}
+                  </div>
                   ))}
                   
                   {/* Итого по услугам */}
@@ -261,9 +261,9 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                         Стоимость услуг: {formatPrice(getServicesTotal())} ₸
                       </span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+            </CardContent>
+          </Card>
             </>
           )}
 
@@ -298,20 +298,20 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
           {/* Информация */}
           <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
             <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-blue-700 leading-tight">
-              После нажатия на кнопку вы будете перенаправлены на защищенную страницу для завершения оплаты.
-            </p>
+              <p className="text-xs text-blue-700 leading-tight">
+                После нажатия на кнопку вы будете перенаправлены на защищенную страницу для завершения оплаты.
+              </p>
           </div>
         </div>
 
         <DialogFooter className="flex gap-2 pt-2">
           <Button
             variant="outline"
-            onClick={onCancel}
-            disabled={isProcessing}
+              onClick={onCancel}
+              disabled={isProcessing}
             className="flex-1 h-8 text-xs rounded-lg"
-          >
-            Отмена
+            >
+              Отмена
           </Button>
           <Button
             onClick={handleConfirmPayment}
@@ -322,12 +322,12 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
               <div className="flex items-center gap-1">
                 <div className="animate-spin rounded-full h-3 w-3 border-t border-b border-white"></div>
                 Обработка...
-              </div>
+          </div>
             ) : (
               <div className="flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
                 Подтвердить оплату
-              </div>
+        </div>
             )}
           </Button>
         </DialogFooter>

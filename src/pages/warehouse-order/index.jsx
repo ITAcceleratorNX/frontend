@@ -26,7 +26,7 @@ const WarehouseOrderPage = memo(() => {
   ]);
   const [months, setMonths] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Новые состояния для дополнительных услуг
   const [isSelectedMoving, setIsSelectedMoving] = useState(false);
   const [isSelectedPackage, setIsSelectedPackage] = useState(false);

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
-import { Calendar, CreditCard, AlertCircle, CheckCircle, Clock, RefreshCw, ChevronDown } from 'lucide-react';
+import { Calendar, CreditCard, AlertCircle, CheckCircle, Clock, RefreshCw, ChevronDown, Receipt } from 'lucide-react';
 
 const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
   const [expandedOrders, setExpandedOrders] = useState(new Set());
@@ -35,6 +35,35 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
     onError: (error) => {
       console.error('Ошибка создания ручной оплаты:', error);
       const errorMessage = error.response?.data?.message || 'Ошибка при создании ручной оплаты';
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    }
+  });
+
+  const downloadReceiptMutation = useMutation({
+    mutationFn: paymentsApi.getPaymentReceipt,
+    onSuccess: (blob, orderPaymentId) => {
+      console.log('PDF-чек успешно получен:', orderPaymentId);
+      
+      // Создаем URL для blob и открываем в новой вкладке
+      const fileUrl = window.URL.createObjectURL(blob);
+      window.open(fileUrl, '_blank');
+      
+      // Очищаем URL через некоторое время
+      setTimeout(() => {
+        window.URL.revokeObjectURL(fileUrl);
+      }, 1000);
+      
+      toast.success('PDF-чек открыт в новой вкладке', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    },
+    onError: (error) => {
+      console.error('Ошибка при получении PDF-чека:', error);
+      const errorMessage = error.response?.data?.message || 'Ошибка при получении PDF-чека';
       toast.error(errorMessage, {
         position: "top-right",
         autoClose: 5000,
@@ -111,6 +140,10 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
 
   const handleManualPayment = (orderPaymentId) => {
     createManualPaymentMutation.mutate(orderPaymentId);
+  };
+
+  const handleDownloadReceipt = (orderPaymentId) => {
+    downloadReceiptMutation.mutate(orderPaymentId);
   };
 
   const getMonthName = (month) => {
@@ -318,10 +351,29 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                           )}
                           
                           {payment.status === 'PAID' && (
-                              <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 px-4 py-2 rounded-xl font-semibold">
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                ✓ Оплачено
-                              </Badge>
+                              <div className="flex flex-col gap-3">
+                                <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 px-4 py-2 rounded-xl font-semibold">
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  ✓ Оплачено
+                                </Badge>
+                                <Button
+                                  onClick={() => handleDownloadReceipt(payment.id)}
+                                  disabled={downloadReceiptMutation.isLoading}
+                                  className="bg-[#1e2c4f] hover:bg-[#162540] text-white rounded-xl px-6 py-3 shadow-md hover:shadow-lg transition-all"
+                                >
+                                  {downloadReceiptMutation.isLoading ? (
+                                    <div className="flex items-center gap-2">
+                                      <RefreshCw className="w-4 h-4 animate-spin" />
+                                      Загрузка...
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2">
+                                      <Receipt className="w-4 h-4" />
+                                      Скачать PDF-чек
+                                    </div>
+                                  )}
+                                </Button>
+                              </div>
                           )}
                         </div>
                       </div>

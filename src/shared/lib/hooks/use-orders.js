@@ -169,7 +169,7 @@ export const useOrdersStats = () => {
     isLoading,
     error
   };
-};
+}; 
 
 /**
  * Хук для расширенного обновления заказа с услугами и moving_orders

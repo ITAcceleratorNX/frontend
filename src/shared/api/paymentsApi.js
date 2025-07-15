@@ -112,5 +112,24 @@ export const paymentsApi = {
       console.error('PaymentsAPI: Ошибка при получении тарифов:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Получение PDF-чека для оплаченного платежа
+  getPaymentReceipt: async (orderPaymentId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`PaymentsAPI: Получение PDF-чека для order_payment_id ${orderPaymentId}`);
+      }
+      const response = await api.get(`/payments/${orderPaymentId}/receipt`, {
+        responseType: 'blob', // Важно для получения файла
+      });
+      if (isDevelopment) {
+        console.log('PaymentsAPI: PDF-чек успешно получен');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('PaymentsAPI: Ошибка при получении PDF-чека:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 
