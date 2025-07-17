@@ -135,12 +135,29 @@ export const Header = memo(() => {
             {authButtons}
 
             {/* Круглые иконки контактов с интерактивными эффектами */}
-            <button className="flex items-center justify-center w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 transition-all duration-300 hover:shadow-md hover:scale-110">
-              <Phone size={18} />
-            </button>
-            <button className="flex items-center justify-center w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 transition-all duration-300 hover:shadow-md hover:scale-110">
-              <Mail size={18} />
-            </button>
+            <div className="relative group">
+              <button className="flex items-center justify-center w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 transition-all duration-300 hover:shadow-md hover:scale-110">
+                <Phone size={18} />
+              </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-800">Телефон</p>
+                  <p className="text-sm text-[#1e2c4f] font-bold">+7 (776) 572-19-27</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <button className="flex items-center justify-center w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 transition-all duration-300 hover:shadow-md hover:scale-110">
+                <Mail size={18} />
+              </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-800">Email</p>
+                  <p className="text-sm text-[#1e2c4f] font-bold">extraspace@gmail.com</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>

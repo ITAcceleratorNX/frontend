@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCreatePayment } from '../../../shared/lib/hooks/use-payments';
+import { useGetPrices } from '../../../shared/lib/hooks/use-payments';
 import { 
   Dialog, 
   DialogContent, 
@@ -18,6 +19,7 @@ import { toast } from 'react-toastify';
 const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const createPaymentMutation = useCreatePayment();
+  const { data: prices } = useGetPrices();
 
   // Функция для получения иконки услуги по типу
   const getServiceIcon = (type) => {
@@ -134,11 +136,24 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
     }, 0);
   };
 
-  // Общая сумма: аренда + услуги
+  // Получение цены депозита услуг
+  const getDepositPrice = () => {
+    if (!prices || !Array.isArray(prices)) return 0;
+    
+    const depositService = prices.find(price => price.type === 'DEPOSIT');
+    if (depositService && depositService.price) {
+      return parseFloat(depositService.price);
+    }
+    
+    return 15000; // Fallback значение
+  };
+
+  // Общая сумма: аренда + услуги + депозит
   const getTotalPrice = () => {
     const basePrice = parseFloat(order.total_price) || 0;
     const servicesPrice = getServicesTotal();
-    return basePrice + servicesPrice;
+    const depositPrice = getDepositPrice();
+    return basePrice + servicesPrice + depositPrice;
   };
 
   if (!isOpen) return null;
@@ -283,6 +298,11 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                   <span className="text-sm font-bold text-amber-600">{formatPrice(getServicesTotal())} ₸</span>
                 </div>
               )}
+
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-600">Депозит услуг:</span>
+                <span className="text-sm font-bold text-purple-600">{formatPrice(getDepositPrice())} ₸</span>
+              </div>
               
               <Separator />
               
@@ -299,7 +319,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
           <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
             <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
               <p className="text-xs text-blue-700 leading-tight">
-                После нажатия на кнопку вы будете перенаправлены на защищенную страницу для завершения оплаты.
+                После нажатия на кнопку вы будете перенаправлены на защищенную страницу для завершения оплаты. В стоимость включен депозит за дополнительные услуги.
               </p>
           </div>
         </div>
