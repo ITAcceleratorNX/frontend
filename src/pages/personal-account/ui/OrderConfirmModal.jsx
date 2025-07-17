@@ -12,7 +12,7 @@ import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { getOrderStatusText, getCargoMarkText } from '../../../shared/lib/types/orders';
 import { useGetPrices } from '../../../shared/lib/hooks/use-payments';
-import { useUpdateOrderWithServices } from '../../../shared/lib/hooks/use-orders';
+import { useUpdateOrderWithServices, useUpdateOrder } from '../../../shared/lib/hooks/use-orders';
 
 const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
   if (!order) return null;
@@ -23,14 +23,15 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [movingOrders, setMovingOrders] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Новые состояния для Пункт 3.3
   const [isPunct33Selected, setIsPunct33Selected] = useState(false);
   const [punct33Text, setPunct33Text] = useState('');
 
   // Загрузка доступных услуг
   const { data: pricesData = [], isLoading: isPricesLoading } = useGetPrices();
-  const updateOrderMutation = useUpdateOrderWithServices();
+  const updateOrderWithServicesMutation = useUpdateOrderWithServices();
+  const updateOrderMutation = useUpdateOrder();
 
   // Фильтруем услуги начиная с id >= 5
   const availableServices = pricesData.filter(service => service.id >= 5);
@@ -98,28 +99,37 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
     if (action === 'approve' && order.status === 'INACTIVE') {
       setIsSubmitting(true);
       try {
-        const orderData = {
+        // 1. Обновляем статус и основные услуги
+        const statusUpdateData = {
           status: 'APPROVED',
           is_selected_moving: isSelectedMoving,
           is_selected_package: isSelectedPackage,
-          punct33: isPunct33Selected ? (punct33Text || null) : null // Новое поле
         };
 
         // Добавляем moving_orders если есть
         if (movingOrders.length > 0) {
-          orderData.moving_orders = movingOrders.filter(mo => mo.moving_date).map(mo => ({
+          statusUpdateData.moving_orders = movingOrders.filter(mo => mo.moving_date).map(mo => ({
             moving_date: new Date(mo.moving_date).toISOString(),
             status: mo.status,
-            address: mo.address || null // Добавляем address
+            address: mo.address || null
           }));
         }
 
         // Добавляем services если есть
         if (selectedServices.length > 0) {
-          orderData.services = selectedServices.filter(s => s.service_id && s.count > 0);
+          statusUpdateData.services = selectedServices.filter(s => s.service_id && s.count > 0);
         }
 
-        await updateOrderMutation.mutateAsync({ orderId: order.id, orderData });
+        await updateOrderWithServicesMutation.mutateAsync({ orderId: order.id, orderData: statusUpdateData });
+
+        // 2. Отдельно обновляем поле punct33, если оно было изменено
+        if (isPunct33Selected || order.punct33) {
+          const punct33UpdateData = {
+            punct33: isPunct33Selected ? (punct33Text || null) : null
+          };
+          await updateOrderMutation.mutateAsync({ orderId: order.id, orderData: punct33UpdateData });
+        }
+        
         onClose(); // Закрываем модал после успешного выполнения
       } catch (error) {
         console.error('Ошибка при подтверждении заказа:', error);
@@ -604,27 +614,27 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
                             <div key={index} className="p-3 bg-white rounded-lg border space-y-3">
                               {/* Поля даты и статуса */}
                               <div className="flex items-center gap-3">
-                                <input
-                                  type="datetime-local"
-                                  value={movingOrder.moving_date}
-                                  onChange={(e) => updateMovingOrder(index, 'moving_date', e.target.value)}
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
-                                />
-                                <select
-                                  value={movingOrder.status}
-                                  onChange={(e) => updateMovingOrder(index, 'status', e.target.value)}
-                                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
-                                >
-                                  <option value="PENDING_FROM">PENDING_FROM</option>
-                                  <option value="PENDING_TO">PENDING_TO</option>
-                                </select>
-                                <Button
-                                  onClick={() => removeMovingOrder(index)}
-                                  size="sm"
-                                  variant="destructive"
-                                >
-                                  Удалить
-                                </Button>
+                              <input
+                                type="datetime-local"
+                                value={movingOrder.moving_date}
+                                onChange={(e) => updateMovingOrder(index, 'moving_date', e.target.value)}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+                              />
+                              <select
+                                value={movingOrder.status}
+                                onChange={(e) => updateMovingOrder(index, 'status', e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+                              >
+                                <option value="PENDING_FROM">PENDING_FROM</option>
+                                <option value="PENDING_TO">PENDING_TO</option>
+                              </select>
+                              <Button
+                                onClick={() => removeMovingOrder(index)}
+                                size="sm"
+                                variant="destructive"
+                              >
+                                Удалить
+                              </Button>
                               </div>
                               
                               {/* Новое поле address */}

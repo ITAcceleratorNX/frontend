@@ -327,23 +327,23 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                       <div className="w-10 h-10 bg-[#273655] rounded-full flex items-center justify-center">
                         <span className="text-lg">{getServiceIcon(service.type)}</span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h5 className="font-semibold text-gray-900">
-                            {service.description || getServiceTypeName(service.type)}
-                          </h5>
-                          {service.OrderService && service.OrderService.count > 1 && (
-                            <span className="px-2 py-1 bg-[#273655] text-white text-xs font-bold rounded-full">
-                              ×{service.OrderService.count}
-                            </span>
-                          )}
-                        </div>
-                        {service.price && (
-                          <p className="text-sm font-medium text-[#273655]">
-                            {formatPrice(service.price)} ₸ {service.OrderService && service.OrderService.count > 1 ? `за единицу` : ''}
-                          </p>
-                        )}
-                      </div>
+                                             <div>
+                         <div className="flex items-center gap-2">
+                           <h5 className="font-semibold text-gray-900">
+                             {service.description || getServiceTypeName(service.type)}
+                           </h5>
+                           {service.OrderService && service.OrderService.count > 1 && (
+                             <span className="px-2 py-1 bg-[#273655] text-white text-xs font-bold rounded-full">
+                               ×{service.OrderService.count}
+                             </span>
+                           )}
+                         </div>
+                         {service.price && (
+                           <p className="text-sm font-medium text-[#273655]">
+                             {formatPrice(service.price)} ₸ {service.OrderService && service.OrderService.count > 1 ? `за единицу` : ''}
+                           </p>
+                         )}
+                       </div>
                     </div>
                     
                     {/* Общая стоимость услуги */}

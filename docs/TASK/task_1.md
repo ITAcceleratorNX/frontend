@@ -1,74 +1,120 @@
-# Task 1: Создание API модулей для работы с заказами и платежами
+@FAQ.jsx 
+У тебя есть секция "Часто задаваемые вопросы" (FAQ), и тебе нужно изменить её дизайн, используя компонент Accordion из shadcn/ui.
+Get:/faq
+[
+    {
+        "id": 3,
+        "question": "Доступ предоставляется согласно рабочему времени склада. Для индивидуального доступа за пределами графика уточняйте у администратора.",
+        "answer": "Доступ предоставляется согласно рабочему времени склада. Для индивидуального доступа за пределами графика уточняйте у администратора.",
+        "type": "STORAGE"
+    },
+    {
+        "id": 2,
+        "question": "Мы принимаем оплату банковской картой, по безналичному расчёту и через мобильные платежи (Kaspi, Apple Pay и др.).",
+        "answer": "Мы принимаем оплату банковской картой, по безналичному расчёту и через мобильные платежи (Kaspi, Apple Pay и др.).",
+        "type": "PAYMENT"
+    },
+    {
+        "id": 1,
+        "question": "Мы предлагаем три типа хранения: облачное хранение, индивидуальные боксы и rack cloud для хранения на стеллажах.",
+        "answer": "Мы предлагаем три типа хранения: облачное хранение, индивидуальные боксы и rack cloud для хранения на стеллажах.",
+        "type": "STORAGE"
+    },
+    {
+        "id": 4,
+        "question": "Минимальный срок аренды — 1 месяц. Также доступны помесячные и годовые тарифы с гибкой системой скидок.",
+        "answer": "Минимальный срок аренды — 1 месяц. Также доступны помесячные и годовые тарифы с гибкой системой скидок.",
+        "type": "STORAGE"
+    }
+]
 
-## Описание
-Создать API модули для работы с заказами и платежами, которые будут использоваться в компонентах оплаты.
+--
+Installation
+CLI
+Manual
+pnpm
+npm
+yarn
+bun
+npx shadcn@latest add accordion
+Copy
+Usage
+Copy
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+Copy
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1">
+    <AccordionTrigger>Is it accessible?</AccordionTrigger>
+    <AccordionContent>
+      Yes. It adheres to the WAI-ARIA design pattern.
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
 
-## Что нужно реализовать
+--
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
-### 1. API модуль для заказов (`src/shared/api/ordersApi.js`)
-
-**Методы:**
-- `getAllOrders()` - получение всех заказов (для MANAGER и ADMIN)
-- `getUserOrders()` - получение заказов текущего пользователя
-- `updateOrderStatus(id, status)` - обновление статуса заказа
-- `deleteOrder(id)` - удаление заказа
-
-**API Эндпоинты:**
-- **GET** `/orders` - получить все заказы
-- **GET** `/orders/me` - получить заказы текущего пользователя
-- **PUT** `/orders/{id}/status` - обновить статус заказа
-  ```json
-  {
-    "status": "APPROVED"
-  }
-  ```
-- **DELETE** `/orders/{id}` - удалить заказ
-
-### 2. API модуль для платежей (`src/shared/api/paymentsApi.js`)
-
-**Методы:**
-- `createPayment(orderId)` - создание оплаты по заказу
-- `getUserPayments()` - получение всех оплат пользователя
-- `createManualPayment(orderPaymentId)` - создание ручной оплаты
-
-**API Эндпоинты:**
-- **POST** `/payments` - создать оплату по заказу
-  ```json
-  {
-    "order_id": 1
-  }
-  ```
-- **GET** `/payments/me` - получить все оплаты текущего пользователя
-- **POST** `/payments/manual` - создать ручную оплату
-  ```json
-  {
-    "order_payment_id": 1
-  }
-  ```
-
-### 3. Структуры данных
-
-**Статусы заказов:**
-- `ACTIVE` - активный
-- `INACTIVE` - неактивный (требует подтверждения)
-- `APPROVED` - подтвержден (доступна оплата)
-- `PROCESSING` - в обработке
-
-**Статусы платежей:**
-- `PAID` - оплачен
-- `UNPAID` - не оплачен
-- `MANUAL` - ручная оплата
-
-**Статусы договоров:**
-- `SIGNED` - подписан
-- `UNSIGNED` - не подписан
-
-## Файлы для создания
-- `src/shared/api/ordersApi.js`
-- `src/shared/api/paymentsApi.js`
-
-## Технические требования
-- Использовать существующий axios instance из `src/shared/api/axios.js`
-- Включить `withCredentials: true` для всех запросов
-- Добавить обработку ошибок
-- Логирование в режиме разработки 
+export function AccordionDemo() {
+  return (
+    <Accordion
+      type="single"
+      collapsible
+      className="w-full"
+      defaultValue="item-1"
+    >
+      <AccordionItem value="item-1">
+        <AccordionTrigger>Product Information</AccordionTrigger>
+        <AccordionContent className="flex flex-col gap-4 text-balance">
+          <p>
+            Our flagship product combines cutting-edge technology with sleek
+            design. Built with premium materials, it offers unparalleled
+            performance and reliability.
+          </p>
+          <p>
+            Key features include advanced processing capabilities, and an
+            intuitive user interface designed for both beginners and experts.
+          </p>
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="item-2">
+        <AccordionTrigger>Shipping Details</AccordionTrigger>
+        <AccordionContent className="flex flex-col gap-4 text-balance">
+          <p>
+            We offer worldwide shipping through trusted courier partners.
+            Standard delivery takes 3-5 business days, while express shipping
+            ensures delivery within 1-2 business days.
+          </p>
+          <p>
+            All orders are carefully packaged and fully insured. Track your
+            shipment in real-time through our dedicated tracking portal.
+          </p>
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="item-3">
+        <AccordionTrigger>Return Policy</AccordionTrigger>
+        <AccordionContent className="flex flex-col gap-4 text-balance">
+          <p>
+            We stand behind our products with a comprehensive 30-day return
+            policy. If you&apos;re not completely satisfied, simply return the
+            item in its original condition.
+          </p>
+          <p>
+            Our hassle-free return process includes free return shipping and
+            full refunds processed within 48 hours of receiving the returned
+            item.
+          </p>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  )
+}

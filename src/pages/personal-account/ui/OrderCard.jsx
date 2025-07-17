@@ -415,18 +415,18 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
                         <div className="w-8 h-8 bg-[#1e2c4f] rounded-full flex items-center justify-center">
                           <span className="text-sm">{getServiceIcon(service.type)}</span>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="font-medium text-gray-900 text-sm">
-                              {service.description || getServiceTypeName(service.type)}
-                            </div>
-                            {service.OrderService && service.OrderService.count > 1 && (
-                              <Badge className="text-xs px-2 py-0 bg-[#1e2c4f] text-white">
-                                ×{service.OrderService.count}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
+                                                 <div className="flex-1">
+                           <div className="flex items-center gap-2">
+                             <div className="font-medium text-gray-900 text-sm">
+                               {service.description || getServiceTypeName(service.type)}
+                             </div>
+                             {service.OrderService && service.OrderService.count > 1 && (
+                               <Badge className="text-xs px-2 py-0 bg-[#1e2c4f] text-white">
+                                 ×{service.OrderService.count}
+                               </Badge>
+                             )}
+                           </div>
+                         </div>
                       </div>
                       
                       {/* Информация о цене */}
