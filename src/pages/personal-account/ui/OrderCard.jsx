@@ -270,6 +270,24 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
                     {order.contract_status === 'SIGNED' ? 'Подписан' : 'Не подписан'}
                   </Badge>
                 </div>
+                
+                {/* Отображение Пункт 3.3 если есть */}
+                {order.punct33 && (
+                  <div className="pt-2 border-t border-purple-200">
+                    <div className="flex items-start gap-2">
+                      <svg className="w-3 h-3 text-indigo-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <div className="flex-1">
+                        <div className="text-xs font-medium text-indigo-700 mb-1">Пункт 3.3:</div>
+                        <div className="text-xs text-gray-700 bg-indigo-50 rounded px-2 py-1 border border-indigo-200">
+                          {order.punct33}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="pt-2 border-t border-purple-200 text-xs text-gray-600 space-y-1">
                   <div className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,18 +415,18 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
                         <div className="w-8 h-8 bg-[#1e2c4f] rounded-full flex items-center justify-center">
                           <span className="text-sm">{getServiceIcon(service.type)}</span>
                         </div>
-                                                 <div className="flex-1">
-                           <div className="flex items-center gap-2">
-                             <div className="font-medium text-gray-900 text-sm">
-                               {service.description || getServiceTypeName(service.type)}
-                             </div>
-                             {service.OrderService && service.OrderService.count > 1 && (
-                               <Badge className="text-xs px-2 py-0 bg-[#1e2c4f] text-white">
-                                 ×{service.OrderService.count}
-                               </Badge>
-                             )}
-                           </div>
-                         </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium text-gray-900 text-sm">
+                              {service.description || getServiceTypeName(service.type)}
+                            </div>
+                            {service.OrderService && service.OrderService.count > 1 && (
+                              <Badge className="text-xs px-2 py-0 bg-[#1e2c4f] text-white">
+                                ×{service.OrderService.count}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       
                       {/* Информация о цене */}
@@ -461,6 +479,67 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
                     </span>
                   )}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Moving Orders - отображение с адресами */}
+        {order.moving_orders && order.moving_orders.length > 0 && (
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2 text-green-700">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Даты перемещения
+                <Badge variant="secondary" className="ml-auto bg-green-100 text-green-800">
+                  {order.moving_orders.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {order.moving_orders.map((movingOrder, index) => (
+                  <Card key={movingOrder.id || index} className="bg-white border-green-200 hover:border-green-300 transition-colors">
+                    <CardContent className="p-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-green-700">#{index + 1}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {movingOrder.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-sm">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-7 0h8m-8 0V5a1 1 0 00-1 1v11a1 1 0 001 1h2m6-12V5a1 1 0 011 1v11a1 1 0 01-1 1h-2m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            <span className="font-medium">Дата:</span>
+                            <span className="text-gray-700">{formatDate(movingOrder.moving_date)}</span>
+                          </div>
+                          
+                          {/* Отображение адреса если есть */}
+                          {movingOrder.address && (
+                            <div className="flex items-start gap-2">
+                              <svg className="w-4 h-4 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <div className="flex-1">
+                                <span className="font-medium">Адрес:</span>
+                                <div className="text-gray-700 bg-green-50 rounded px-2 py-1 mt-1 border border-green-200">
+                                  {movingOrder.address}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </CardContent>
           </Card>

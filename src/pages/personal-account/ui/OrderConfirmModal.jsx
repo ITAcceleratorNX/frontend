@@ -23,6 +23,10 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [movingOrders, setMovingOrders] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Новые состояния для Пункт 3.3
+  const [isPunct33Selected, setIsPunct33Selected] = useState(false);
+  const [punct33Text, setPunct33Text] = useState('');
 
   // Загрузка доступных услуг
   const { data: pricesData = [], isLoading: isPricesLoading } = useGetPrices();
@@ -38,6 +42,9 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
       setIsSelectedPackage(order.is_selected_package || false);
       setSelectedServices([]);
       setMovingOrders([]);
+      // Инициализация новых полей
+      setIsPunct33Selected(!!order.punct33);
+      setPunct33Text(order.punct33 || '');
     }
   }, [isOpen, order]);
 
@@ -61,7 +68,8 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
   const addMovingOrder = () => {
     setMovingOrders([...movingOrders, { 
       moving_date: '', 
-      status: 'PENDING_FROM' 
+      status: 'PENDING_FROM',
+      address: '' // Добавляем поле address
     }]);
   };
 
@@ -76,6 +84,14 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
     setMovingOrders(updated);
   };
 
+  // Обработчики для Пункт 3.3
+  const handlePunct33Change = (checked) => {
+    setIsPunct33Selected(checked);
+    if (!checked) {
+      setPunct33Text(''); // Обнуляем текст когда чекбокс отключен
+    }
+  };
+
   // Обработчик финального подтверждения
   const handleConfirmOrder = async () => {
     // Для расширенного подтверждения заказов INACTIVE -> APPROVED
@@ -85,14 +101,16 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
         const orderData = {
           status: 'APPROVED',
           is_selected_moving: isSelectedMoving,
-          is_selected_package: isSelectedPackage
+          is_selected_package: isSelectedPackage,
+          punct33: isPunct33Selected ? (punct33Text || null) : null // Новое поле
         };
 
         // Добавляем moving_orders если есть
         if (movingOrders.length > 0) {
           orderData.moving_orders = movingOrders.filter(mo => mo.moving_date).map(mo => ({
             moving_date: new Date(mo.moving_date).toISOString(),
-            status: mo.status
+            status: mo.status,
+            address: mo.address || null // Добавляем address
           }));
         }
 
@@ -464,6 +482,44 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
                   </div>
                 </div>
 
+                {/* Новый чекбокс Пункт 3.3 */}
+                <Card className="bg-indigo-50 border-indigo-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="font-medium text-indigo-700">Пункт 3.3</span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isPunct33Selected}
+                          onChange={(e) => handlePunct33Change(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                      </label>
+                    </div>
+                  </CardHeader>
+                  
+                  {/* Условное текстовое поле */}
+                  {isPunct33Selected && (
+                    <CardContent className="pt-0">
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          value={punct33Text}
+                          onChange={(e) => setPunct33Text(e.target.value)}
+                          placeholder="👉 Введите текст..."
+                          className="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:outline-none focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-500"
+                        />
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+
                 {/* Блок управления услугами (показывается только если Moving включён) */}
                 {isSelectedMoving && (
                   <Card className="bg-blue-50 border-blue-200">
@@ -545,28 +601,46 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
                       {movingOrders.length > 0 ? (
                         <div className="space-y-3">
                           {movingOrders.map((movingOrder, index) => (
-                            <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                              <input
-                                type="datetime-local"
-                                value={movingOrder.moving_date}
-                                onChange={(e) => updateMovingOrder(index, 'moving_date', e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
-                              />
-                              <select
-                                value={movingOrder.status}
-                                onChange={(e) => updateMovingOrder(index, 'status', e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
-                              >
-                                <option value="PENDING_FROM">PENDING_FROM</option>
-                                <option value="PENDING_TO">PENDING_TO</option>
-                              </select>
-                              <Button
-                                onClick={() => removeMovingOrder(index)}
-                                size="sm"
-                                variant="destructive"
-                              >
-                                Удалить
-                              </Button>
+                            <div key={index} className="p-3 bg-white rounded-lg border space-y-3">
+                              {/* Поля даты и статуса */}
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="datetime-local"
+                                  value={movingOrder.moving_date}
+                                  onChange={(e) => updateMovingOrder(index, 'moving_date', e.target.value)}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+                                />
+                                <select
+                                  value={movingOrder.status}
+                                  onChange={(e) => updateMovingOrder(index, 'status', e.target.value)}
+                                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+                                >
+                                  <option value="PENDING_FROM">PENDING_FROM</option>
+                                  <option value="PENDING_TO">PENDING_TO</option>
+                                </select>
+                                <Button
+                                  onClick={() => removeMovingOrder(index)}
+                                  size="sm"
+                                  variant="destructive"
+                                >
+                                  Удалить
+                                </Button>
+                              </div>
+                              
+                              {/* Новое поле address */}
+                              <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <input
+                                  type="text"
+                                  value={movingOrder.address || ''}
+                                  onChange={(e) => updateMovingOrder(index, 'address', e.target.value)}
+                                  placeholder="Введите адрес..."
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+                                />
+                              </div>
                             </div>
                           ))}
                         </div>
