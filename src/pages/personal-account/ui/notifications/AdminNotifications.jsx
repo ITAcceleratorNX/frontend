@@ -89,16 +89,16 @@ const AdminNotifications = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <div>
+        <div>
               <h1 className="text-2xl font-bold mb-1">Система уведомлений</h1>
               <p className="text-white/80">
                 Управление уведомлениями и коммуникацией с пользователями
-              </p>
+          </p>
             </div>
           </div>
         </div>

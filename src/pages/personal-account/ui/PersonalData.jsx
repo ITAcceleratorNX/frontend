@@ -9,6 +9,7 @@ import shadowImg from '../../../assets/personal_account_shadow.png';
 import cameraIcon from '../../../assets/personal_camera.svg';
 import Input from '../../../shared/ui/Input';
 import Button from '../../../shared/ui/Button';
+import DatePicker from '../../../shared/ui/DatePicker';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
@@ -28,12 +29,16 @@ const PersonalData = memo(() => {
     email: user?.email || '',
     phone: user?.phone || '',
     iin: user?.iin || '',
-    address: user?.address || ''
+    address: user?.address || '',
+    bday: user?.bday || ''
   }), [user]);
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors }, setError, clearErrors } = useForm({
     defaultValues
   });
+
+  // Получаем текущие значения формы для валидации
+  const formValues = watch();
 
   // Заполняем форму данными пользователя, когда они доступны, используя зависимость от объекта user
   useEffect(() => {
@@ -42,13 +47,15 @@ const PersonalData = memo(() => {
       email: user.email || '',
       phone: user.phone || '',
       iin: user.iin || '',
-      address: user.address || ''
+      address: user.address || '',
+      bday: user.bday || ''
     })) {
       setValue('name', user.name || '');
       setValue('email', user.email || '');
       setValue('phone', user.phone || '');
       setValue('iin', user.iin || '');
       setValue('address', user.address || '');
+      setValue('bday', user.bday || '');
     }
   }, [user, setValue, defaultValues]);
 
@@ -59,15 +66,70 @@ const PersonalData = memo(() => {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
+  // Функция валидации всех полей
+  const validateFields = () => {
+    let isValid = true;
+    clearErrors(); // Очищаем предыдущие ошибки
+
+    // Проверяем каждое поле
+    if (!formValues.name?.trim()) {
+      setError('name', { message: 'Имя и фамилия обязательны для заполнения' });
+      isValid = false;
+    }
+
+    if (!formValues.email?.trim()) {
+      setError('email', { message: 'Email обязателен для заполнения' });
+      isValid = false;
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formValues.email)) {
+      setError('email', { message: 'Некорректный email адрес' });
+      isValid = false;
+    }
+
+    if (!formValues.phone?.trim()) {
+      setError('phone', { message: 'Телефон обязателен для заполнения' });
+      isValid = false;
+    } else if (!/^\+?[0-9]{10,15}$/.test(formValues.phone.replace(/[\s\-\(\)]/g, ''))) {
+      setError('phone', { message: 'Некорректный номер телефона' });
+      isValid = false;
+    }
+
+    if (!formValues.iin?.trim()) {
+      setError('iin', { message: 'ИИН обязателен для заполнения' });
+      isValid = false;
+    } else if (!/^[0-9]{12}$/.test(formValues.iin)) {
+      setError('iin', { message: 'ИИН должен содержать 12 цифр' });
+      isValid = false;
+    }
+
+    if (!formValues.address?.trim()) {
+      setError('address', { message: 'Адрес обязателен для заполнения' });
+      isValid = false;
+    }
+
+    if (!formValues.bday?.trim()) {
+      setError('bday', { message: 'Дата рождения обязательна для заполнения' });
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   // Мемоизируем функцию обработки обновления данных пользователя
   const onSubmit = async (formData) => {
+    // Выполняем валидацию перед отправкой
+    if (!validateFields()) {
+      toast.error('Пожалуйста, заполните все обязательные поля');
+      return;
+    }
+
     // Проверяем, изменились ли данные, чтобы избежать ненужных запросов
     const hasChanges = !isEqual(formData, {
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
       iin: user?.iin || '',
-      address: user?.address || ''
+      address: user?.address || '',
+      bday: user?.bday || ''
     });
     
     if (!hasChanges) {
@@ -112,6 +174,9 @@ const PersonalData = memo(() => {
   // Мемоизируем функцию переключения режима редактирования
   const toggleEdit = () => {
     setIsEditing(!isEditing);
+    if (!isEditing) {
+      clearErrors(); // Очищаем ошибки при переходе в режим редактирования
+    }
   };
 
   // Отображение состояния загрузки
@@ -185,13 +250,14 @@ const PersonalData = memo(() => {
               placeholder="+7 (XXX) XXX-XX-XX"
               disabled={!isEditing}
               {...register('phone', { 
+                required: 'Телефон обязателен для заполнения',
                 pattern: {
                   value: /^\+?[0-9]{10,15}$/,
                   message: 'Некорректный номер телефона'
                 }
               })}
               error={errors.phone?.message}
-              className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
+              className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunit Sans']"
             />
           </div>
           
@@ -201,6 +267,7 @@ const PersonalData = memo(() => {
               placeholder="XXXXXXXXXXXX"
               disabled={!isEditing}
               {...register('iin', { 
+                required: 'ИИН обязателен для заполнения',
                 pattern: {
                   value: /^[0-9]{12}$/,
                   message: 'ИИН должен содержать 12 цифр'
@@ -212,16 +279,28 @@ const PersonalData = memo(() => {
           </div>
         </div>
 
-        {/* Поле адреса по центру */}
-        <div className="flex justify-center mb-6">
-          <div className="w-full max-w-md">
+        {/* Поля адреса и даты рождения */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="w-full">
             <Input
               label="Адрес"
               placeholder="г. Алматы, ул. Примерная, д. 123"
               disabled={!isEditing}
-              {...register('address')}
+              {...register('address', { required: 'Адрес обязателен для заполнения' })}
               error={errors.address?.message}
               className="bg-[#F5F6FA] text-[#222] placeholder-[#A6A6A6] font-['Nunito Sans']"
+            />
+          </div>
+          
+          <div className="w-full">
+            <DatePicker
+              label="Дата рождения"
+              placeholder="ДД.ММ.ГГГГ"
+              disabled={!isEditing}
+              value={formValues.bday}
+              onChange={(value) => setValue('bday', value)}
+              error={errors.bday?.message}
+              className="font-['Nunito Sans']"
             />
           </div>
         </div>

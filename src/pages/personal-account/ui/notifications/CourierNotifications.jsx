@@ -120,10 +120,10 @@ const CourierNotifications = () => {
           </div>
         ) : (
           <div className="p-6">
-                    <UserNotifications 
-          notifications={notifications || []}
-          onMarkAsRead={markAsRead}
-        />
+            <UserNotifications 
+              notifications={notifications || []}
+              onMarkAsRead={markAsRead}
+            />
           </div>
         )}
       </div>
