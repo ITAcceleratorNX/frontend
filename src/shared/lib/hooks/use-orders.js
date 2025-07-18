@@ -192,3 +192,15 @@ export const useUpdateOrderWithServices = () => {
     }
   });
 }; 
+
+/**
+ * Хук для получения договоров пользователя
+ */
+export const useContracts = (options = {}) => {
+  return useQuery({
+    queryKey: ['contracts', 'user'],
+    queryFn: ordersApi.getContracts,
+    staleTime: 5 * 60 * 1000, // 5 минут
+    ...options
+  });
+}; 

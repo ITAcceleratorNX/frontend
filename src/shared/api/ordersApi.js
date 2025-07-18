@@ -86,5 +86,22 @@ export const ordersApi = {
       console.error('OrdersAPI: Ошибка при удалении заказа:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Получение контрактов пользователя
+  getContracts: async () => {
+    try {
+      if (isDevelopment) {
+        console.log('OrdersAPI: Отправка запроса на получение договоров');
+      }
+      const response = await api.get('/orders/contracts');
+      if (isDevelopment) {
+        console.log('OrdersAPI: Получены договоры:', response.data?.length || 0, 'договоров');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при получении договоров:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 
