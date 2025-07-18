@@ -1,32 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import smallBox from '../../../assets/small_box.png';
-import { useContracts } from '../../../shared/lib/hooks/use-orders';
+import { useContracts, useCancelContract } from '../../../shared/lib/hooks/use-orders';
 import { Check } from 'lucide-react';
 import image46 from '../../../assets/image_46.png';
 import documentImg from '../../../assets/Document.png';
 import zavoz1 from '../../../assets/zavoz1.png';
 import zavoz2 from '../../../assets/zavoz2.png';
 
-const getContractStatusInfo = (status) => {
+const getContractStatusStyleKey = (statusText) => {
   const statusMap = {
-    0: { text: 'Не подписан', styleKey: 'warning' },
-    1: { text: 'Подписан компанией', styleKey: 'warning' },
-    2: { text: 'Подписан клиентом', styleKey: 'warning' },
-    3: { text: 'Полностью подписан', styleKey: 'success' },
-    4: { text: 'Отозван компанией', styleKey: 'danger' },
-    5: { text: 'Компания инициировала расторжение', styleKey: 'warning' },
-    6: { text: 'Клиент инициировал расторжение', styleKey: 'warning' },
-    7: { text: 'Клиент отказался от расторжения', styleKey: 'warning' },
-    8: { text: 'Расторгнут', styleKey: 'danger' },
-    9: { text: 'Клиент отказался подписывать договор', styleKey: 'danger' },
+    'Не подписан': 'warning',
+    'Подписан компанией': 'info',
+    'Подписан клиентом': 'info',
+    'Полностью подписан': 'success',
+    'Отозван компанией': 'danger',
+    'Компания инициировала расторжение': 'danger',
+    'Клиент инициировал расторжение': 'danger',
+    'Клиент отказался от расторжения': 'danger',
+    'Расторгнут': 'danger',
+    'Клиент отказался подписывать договор': 'danger',
   };
-  return statusMap[status] || { text: `Неизвестный статус (${status})`, styleKey: 'default' };
+  return statusMap[statusText] || 'default';
 };
 
 const statusStyles = {
   success: 'bg-[#00B69B] text-[#FFFFFF]',
   danger: 'bg-[#FD5454] text-[#FFFFFF]',
   warning: 'bg-[#FCBE2D] text-[#FFFFFF]',
+  info: 'bg-blue-500 text-white',
   default: 'bg-gray-500 text-white',
 };
 
@@ -81,6 +82,11 @@ function MonthSelector() {
 
 const Contracts = () => {
   const { data: contracts, isLoading, error } = useContracts();
+  const cancelContractMutation = useCancelContract();
+
+  const handleCancelContract = (orderId, documentId) => {
+    cancelContractMutation.mutate({ orderId, documentId });
+  };
 
   const formatDate = (date) => {
     if (!date) return '';
@@ -115,12 +121,13 @@ const Contracts = () => {
                 <th className="text-left px-6 py-3 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
                 <th className="text-left px-6 py-3 font-medium">ВРЕМЯ</th>
                 <th className="text-left px-6 py-3 font-medium">ЦЕНА</th>
-                <th className="text-left px-6 py-3 text-center font-medium rounded-br-2xl rounded-tr-2xl">СТАТУС</th>
+                <th className="text-left px-6 py-3 text-center font-medium">СТАТУС</th>
+                <th className="text-left px-6 py-3 text-center font-medium rounded-br-2xl rounded-tr-2xl">ДЕЙСТВИЯ</th>
               </tr>
             </thead>
             <tbody>
               {contracts && contracts.map((row, idx) => {
-                const statusInfo = getContractStatusInfo(row.contract_status);
+                const styleKey = getContractStatusStyleKey(row.contract_status);
                 return (
                   <tr key={idx} className="border-b last:border-b-1 hover:bg-[#979797] transition-colors">
                     <td className="flex items-center gap-3 px-6 py-4 font-normal text-[#222] text-[16px]">
@@ -131,7 +138,18 @@ const Contracts = () => {
                     <td className="px-6 py-4 text-[#222] text-[14px] font-normal">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
                     <td className="px-6 py-4 text-[#222] text-[14px] font-normal">{'$12,295'}</td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`px-6 py-1 rounded-2xl text-center text-[14px] font-normal ${statusStyles[statusInfo.styleKey]}`}>{statusInfo.text}</span>
+                      <span className={`px-6 py-1 rounded-2xl text-center text-[14px] font-normal ${statusStyles[styleKey]}`}>{row.contract_status}</span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {row.order_status === 'ACTIVE' && (
+                        <button
+                          onClick={() => handleCancelContract(row.order_id, row.contract_data.document_id)}
+                          disabled={cancelContractMutation.isPending}
+                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                        >
+                          {cancelContractMutation.isPending ? 'Отмена...' : 'Отменить договор'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

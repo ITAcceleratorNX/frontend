@@ -103,5 +103,22 @@ export const ordersApi = {
       console.error('OrdersAPI: Ошибка при получении договоров:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Отмена договора
+  cancelContract: async (orderId, documentId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Отмена договора для заказа ${orderId} с документом ${documentId}`);
+      }
+      const response = await api.put(`/orders/${orderId}/cancel`, { document_id: documentId });
+      if (isDevelopment) {
+        console.log('OrdersAPI: Договор успешно отменен:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при отмене договора:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

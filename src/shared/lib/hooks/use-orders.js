@@ -204,3 +204,22 @@ export const useContracts = (options = {}) => {
     ...options
   });
 }; 
+
+/**
+ * Хук для отмены договора
+ */
+export const useCancelContract = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, documentId }) => ordersApi.cancelContract(orderId, documentId),
+    onSuccess: () => {
+      showGenericSuccess('Договор успешно отменен');
+      queryClient.invalidateQueries({ queryKey: ['contracts', 'user'] });
+    },
+    onError: (error) => {
+      console.error('Ошибка при отмене договора:', error);
+      showGenericError(error.response?.data?.message || 'Не удалось отменить договор');
+    }
+  });
+}; 
