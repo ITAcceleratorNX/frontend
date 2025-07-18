@@ -12,7 +12,7 @@ import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { getOrderStatusText, getCargoMarkText } from '../../../shared/lib/types/orders';
 import { useGetPrices } from '../../../shared/lib/hooks/use-payments';
-import { useUpdateOrderWithServices, useUpdateOrder } from '../../../shared/lib/hooks/use-orders';
+import { useUpdateOrderWithServices } from '../../../shared/lib/hooks/use-orders';
 
 const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
   if (!order) return null;
@@ -30,8 +30,7 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
 
   // Загрузка доступных услуг
   const { data: pricesData = [], isLoading: isPricesLoading } = useGetPrices();
-  const updateOrderWithServicesMutation = useUpdateOrderWithServices();
-  const updateOrderMutation = useUpdateOrder();
+  const updateOrderMutation = useUpdateOrderWithServices();
 
   // Фильтруем услуги начиная с id >= 5
   const availableServices = pricesData.filter(service => service.id >= 5);
@@ -99,37 +98,28 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
     if (action === 'approve' && order.status === 'INACTIVE') {
       setIsSubmitting(true);
       try {
-        // 1. Обновляем статус и основные услуги
-        const statusUpdateData = {
+        const orderData = {
           status: 'APPROVED',
           is_selected_moving: isSelectedMoving,
           is_selected_package: isSelectedPackage,
+          punct33: isPunct33Selected ? (punct33Text || null) : null // Новое поле
         };
 
         // Добавляем moving_orders если есть
         if (movingOrders.length > 0) {
-          statusUpdateData.moving_orders = movingOrders.filter(mo => mo.moving_date).map(mo => ({
+          orderData.moving_orders = movingOrders.filter(mo => mo.moving_date).map(mo => ({
             moving_date: new Date(mo.moving_date).toISOString(),
             status: mo.status,
-            address: mo.address || null
+            address: mo.address || null // Добавляем address
           }));
         }
 
         // Добавляем services если есть
         if (selectedServices.length > 0) {
-          statusUpdateData.services = selectedServices.filter(s => s.service_id && s.count > 0);
+          orderData.services = selectedServices.filter(s => s.service_id && s.count > 0);
         }
 
-        await updateOrderWithServicesMutation.mutateAsync({ orderId: order.id, orderData: statusUpdateData });
-
-        // 2. Отдельно обновляем поле punct33, если оно было изменено
-        if (isPunct33Selected || order.punct33) {
-          const punct33UpdateData = {
-            punct33: isPunct33Selected ? (punct33Text || null) : null
-          };
-          await updateOrderMutation.mutateAsync({ orderId: order.id, orderData: punct33UpdateData });
-        }
-        
+        await updateOrderMutation.mutateAsync({ orderId: order.id, orderData });
         onClose(); // Закрываем модал после успешного выполнения
       } catch (error) {
         console.error('Ошибка при подтверждении заказа:', error);

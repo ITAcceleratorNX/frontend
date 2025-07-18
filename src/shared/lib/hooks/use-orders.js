@@ -191,27 +191,4 @@ export const useUpdateOrderWithServices = () => {
       showGenericError(`Не удалось обновить заказ #${variables.orderId} с услугами`);
     }
   });
-};
-
-/**
- * Хук для обновления данных заказа (например, punct33)
- */
-export const useUpdateOrder = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ orderId, orderData }) => ordersApi.updateOrder(orderId, orderData),
-    onSuccess: (data, variables) => {
-      // Инвалидируем кеш конкретного заказа и общие списки
-      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ORDER_BY_ID(variables.orderId) });
-      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
-      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
-      
-      showGenericSuccess(`Данные заказа #${variables.orderId} успешно обновлены!`);
-    },
-    onError: (error, variables) => {
-      console.error('Ошибка при обновлении данных заказа:', error);
-      showGenericError(`Не удалось обновить данные заказа #${variables.orderId}`);
-    }
-  });
 }; 

@@ -71,23 +71,6 @@ export const ordersApi = {
     }
   },
 
-  // Обновление данных заказа (для MANAGER и ADMIN)
-  updateOrder: async (orderId, orderData) => {
-    try {
-      if (isDevelopment) {
-        console.log(`OrdersAPI: Обновление заказа ${orderId} с данными:`, orderData);
-      }
-      const response = await api.put(`/orders/${orderId}`, orderData);
-      if (isDevelopment) {
-        console.log('OrdersAPI: Заказ успешно обновлен:', response.data);
-      }
-      return response.data;
-    } catch (error) {
-      console.error(`OrdersAPI: Ошибка при обновлении заказа ${orderId}:`, error.response?.data || error.message);
-      throw error;
-    }
-  },
-
   // Удаление заказа (для MANAGER и ADMIN)
   deleteOrder: async (orderId) => {
     try {

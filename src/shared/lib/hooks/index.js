@@ -19,7 +19,6 @@ export {
   useAllOrders, 
   useUserOrders, 
   useUpdateOrderStatus, 
-  useUpdateOrder,
   useDeleteOrder, 
   useApproveOrder, 
   useBulkUpdateOrders, 
