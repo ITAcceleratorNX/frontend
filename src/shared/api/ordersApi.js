@@ -1,4 +1,5 @@
 import api from './axios';
+import axios from 'axios';
 
 const isDevelopment = import.meta.env.DEV;
 
@@ -120,5 +121,25 @@ export const ordersApi = {
       console.error('OrdersAPI: Ошибка при отмене договора:', error.response?.data || error.message);
       throw error;
     }
-  }
+  },
+
+  // Скачивание файла договора
+  downloadContractFile: async (documentId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Запрос на скачивание договора ${documentId}`);
+      }
+      // Используем axios напрямую, чтобы избежать interceptors и withCredentials из нашего 'api' инстанса
+      const response = await axios.get(`https://test.trustme.kz/trust_contract_public_apis/doc/DownloadContractFile/${documentId}`, {
+        responseType: 'blob', // Важно для получения файла
+      });
+      if (isDevelopment) {
+        console.log('OrdersAPI: Файл договора успешно получен');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при скачивании файла договора:', error);
+      throw error;
+    }
+  },
 }; 

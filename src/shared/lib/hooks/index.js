@@ -23,7 +23,10 @@ export {
   useApproveOrder, 
   useBulkUpdateOrders, 
   useOrdersStats,
-  ORDERS_QUERY_KEYS
+  ORDERS_QUERY_KEYS,
+  useContracts,
+  useCancelContract,
+  useDownloadContract
 } from './use-orders';
 export { 
   useUserPayments, 

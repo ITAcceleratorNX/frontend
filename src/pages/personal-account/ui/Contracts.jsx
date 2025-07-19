@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import smallBox from '../../../assets/small_box.png';
-import { useContracts, useCancelContract } from '../../../shared/lib/hooks/use-orders';
-import { Check } from 'lucide-react';
+import { useContracts, useCancelContract, useDownloadContract } from '../../../shared/lib/hooks/use-orders';
+import { Check, Download } from 'lucide-react';
 import image46 from '../../../assets/image_46.png';
 import documentImg from '../../../assets/Document.png';
 import zavoz1 from '../../../assets/zavoz1.png';
@@ -24,9 +24,9 @@ const getContractStatusStyleKey = (statusText) => {
 };
 
 const statusStyles = {
-  success: 'bg-[#00B69B] text-[#FFFFFF]',
-  danger: 'bg-[#FD5454] text-[#FFFFFF]',
-  warning: 'bg-[#FCBE2D] text-[#FFFFFF]',
+  success: 'bg-[#00B69B] text-white',
+  danger: 'bg-[#FD5454] text-white',
+  warning: 'bg-[#FCBE2D] text-white',
   info: 'bg-blue-500 text-white',
   default: 'bg-gray-500 text-white',
 };
@@ -56,18 +56,18 @@ function MonthSelector() {
       <h2 className="text-2xl font-medium text-[#273655] font-['Nunito Sans']">ДОГОВОРЫ</h2>
       <div className="relative flex items-center" ref={ref}>
         <button
-          className="flex items-center border border-[#D5D5D5] rounded-sm px-5 py-1 text-[#A6A6A6] text-[14px] font-normal font-['Nunito Sans'] bg-white hover:bg-[#F5F5F5] transition"
+          className="flex items-center justify-between w-40 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
           onClick={() => setIsOpen((v) => !v)}
         >
           {selected}
           <svg className="ml-2 w-4 h-4 text-[#A6A6A6]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
         </button>
         {isOpen && (
-          <div className="absolute right-0 mt-14 w-32 bg-white border border-[#D5D5D5] rounded shadow-lg z-50">
+          <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
             {months.map((m) => (
               <button
                 key={m}
-                className={`w-full text-left px-4 py-1 text-[#222] text-[12px] hover:bg-[#F5F5F5] ${selected === m ? 'bg-[#F5F5F5] font-bold' : ''}`}
+                className={`w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 ${selected === m ? 'bg-blue-50 text-blue-600 font-medium' : 'font-normal'}`}
                 onClick={() => { setSelected(m); setIsOpen(false); }}
               >
                 {m}
@@ -83,9 +83,14 @@ function MonthSelector() {
 const Contracts = () => {
   const { data: contracts, isLoading, error } = useContracts();
   const cancelContractMutation = useCancelContract();
+  const downloadContractMutation = useDownloadContract();
 
   const handleCancelContract = (orderId, documentId) => {
     cancelContractMutation.mutate({ orderId, documentId });
+  };
+
+  const handleDownloadContract = (documentId) => {
+    downloadContractMutation.mutate(documentId);
   };
 
   const formatDate = (date) => {
@@ -110,46 +115,58 @@ const Contracts = () => {
   }
 
   return (
-    <div className="w-full flex flex-col items-center px-8 pt-8 mt-[-50px]">
-      <div className="w-full max-w-[1100px] bg-white rounded-2xl shadow-lg p-8" style={{boxShadow:'0 8px 32px 0 rgba(40,40,80,0.10)'}}>
+    <div className="w-full flex flex-col items-center px-4 sm:px-6 lg:px-8 pt-8 mt-[-50px]">
+      <div className="w-full max-w-7xl bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100">
         <MonthSelector />
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-100">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-[#F1F4F9] text-[#202224] text-[15px] font-['Nunito Sans']">
-                <th className="text-left px-6 py-3 font-medium rounded-tl-2xl rounded-bl-2xl">НАЗВАНИЕ</th>
-                <th className="text-left px-6 py-3 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
-                <th className="text-left px-6 py-3 font-medium">ВРЕМЯ</th>
-                <th className="text-left px-6 py-3 font-medium">ЦЕНА</th>
-                <th className="text-left px-6 py-3 text-center font-medium">СТАТУС</th>
-                <th className="text-left px-6 py-3 text-center font-medium rounded-br-2xl rounded-tr-2xl">ДЕЙСТВИЯ</th>
+              <tr className="bg-gray-50 text-gray-700 text-sm font-medium font-['Nunito Sans']">
+                <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
+                <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
+                <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>
+                <th className="text-left px-6 py-4 font-medium">ЦЕНА</th>
+                <th className="text-left px-6 py-4 text-center font-medium">СТАТУС</th>
+                <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
               </tr>
             </thead>
             <tbody>
               {contracts && contracts.map((row, idx) => {
                 const styleKey = getContractStatusStyleKey(row.contract_status);
                 return (
-                  <tr key={idx} className="border-b last:border-b-1 hover:bg-[#979797] transition-colors">
-                    <td className="flex items-center gap-3 px-6 py-4 font-normal text-[#222] text-[16px]">
-                      <img src={smallBox} alt="box" className="w-8 h-8" />
-                      <span className="underline underline-offset-2 cursor-pointer">{`Individual Storage (${row.total_volume} м²)`}</span>
+                  <tr key={idx} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/80 transition-colors duration-200">
+                    <td className="flex items-center gap-3 px-6 py-5 font-medium text-gray-900 text-base">
+                      <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
+                      <span className="text-blue-600 hover:text-blue-800 transition-colors cursor-pointer">{`Individual Storage (${row.total_volume} м²)`}</span>
                     </td>
-                    <td className="px-6 py-4 text-[#222] text-[14px] font-normal">{row.warehouse_address}</td>
-                    <td className="px-6 py-4 text-[#222] text-[14px] font-normal">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
-                    <td className="px-6 py-4 text-[#222] text-[14px] font-normal">{'$12,295'}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-6 py-1 rounded-2xl text-center text-[14px] font-normal ${statusStyles[styleKey]}`}>{row.contract_status}</span>
+                    <td className="px-6 py-5 text-gray-600 text-sm">{row.warehouse_address}</td>
+                    <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
+                    <td className="px-6 py-5 text-gray-900 font-medium">{'$12,295'}</td>
+                    <td className="px-6 py-5 text-center">
+                      <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-sm font-medium leading-5 ${statusStyles[styleKey]} min-w-[120px]`}>
+                        {row.contract_status}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      {row.order_status === 'ACTIVE' && (
+                    <td className="px-6 py-5 text-center">
+                      <div className="flex items-center justify-center space-x-3">
                         <button
-                          onClick={() => handleCancelContract(row.order_id, row.contract_data.document_id)}
-                          disabled={cancelContractMutation.isPending}
-                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                          onClick={() => handleDownloadContract(row.contract_data.document_id)}
+                          disabled={downloadContractMutation.isPending}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                         >
-                          {cancelContractMutation.isPending ? 'Отмена...' : 'Отменить договор'}
+                          <Download size={16} className="mr-2" />
+                          {downloadContractMutation.isPending ? 'Загрузка...' : 'Скачать'}
                         </button>
-                      )}
+                        {row.order_status === 'ACTIVE' && (
+                          <button
+                            onClick={() => handleCancelContract(row.order_id, row.contract_data.document_id)}
+                            disabled={cancelContractMutation.isPending}
+                            className="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md shadow-sm text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                          >
+                            {cancelContractMutation.isPending ? 'Отмена...' : 'Отменить'}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

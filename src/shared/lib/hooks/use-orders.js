@@ -222,4 +222,30 @@ export const useCancelContract = () => {
       showGenericError(error.response?.data?.message || 'Не удалось отменить договор');
     }
   });
+};
+
+/**
+ * Хук для скачивания файла договора
+ */
+export const useDownloadContract = () => {
+  return useMutation({
+    mutationFn: async (documentId) => {
+      const blob = await ordersApi.downloadContractFile(documentId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contract-${documentId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onSuccess: () => {
+      showGenericSuccess('Файл договора успешно скачан');
+    },
+    onError: (error) => {
+      console.error('Ошибка при скачивании файла договора:', error);
+      showGenericError('Не удалось скачать файл договора');
+    },
+  });
 }; 
