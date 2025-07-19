@@ -13,8 +13,7 @@ import DatePicker from '../../../shared/ui/DatePicker';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
-import { isEqual } from 'lodash-es';
-import {NextUIProvider} from "@nextui-org/react";
+
 
 // Мемоизированный компонент личных данных с дополнительной оптимизацией
 const PersonalData = memo(() => {
