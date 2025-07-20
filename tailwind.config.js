@@ -6,6 +6,10 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
+    fontFamily: {
+      sans: ['Roboto', 'sans-serif'],
+      orbitron: ['Orbitron', 'sans-serif'],
+    },
   	extend: {
   		colors: {
   			background: 'var(--background)',

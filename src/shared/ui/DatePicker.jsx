@@ -59,14 +59,12 @@ const DatePicker = forwardRef(({
             "group-data-[invalid=true]:border-red-500",
           ],
           input: [
-            "font-['Nunito Sans']",
             "text-base",
             "text-[#222]",
             "placeholder:text-[#A6A6A6]",
           ],
           label: "hidden",
           errorMessage: [
-            "font-['Nunito Sans']",
             "text-xs",
             "text-red-500",
             "ml-0",

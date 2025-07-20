@@ -184,7 +184,7 @@ const PersonalData = memo(() => {
 
   return (
    
-      <div className="w-full max-w-[700px] flex flex-col items-center mx-auto font-['Nunito Sans']">
+      <div className="w-full max-w-[700px] flex flex-col items-center mx-auto">
         <ToastContainer position="top-right" autoClose={3000} />
           
           {/* Аватар */}
