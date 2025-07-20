@@ -10,6 +10,13 @@ import {
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
 
+const getStorageTypeText = (type) => {
+  if (type === 'INDIVIDUAL') {
+    return 'Индивидуальное';
+  }
+  return type;
+};
+
 const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
   // Функции для форматирования
   const formatDate = (dateString) => {
@@ -212,7 +219,7 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Тип:</span>
-                  <span className="text-gray-700">{order.storage?.storage_type || 'Не указан'}</span>
+                  <span className="text-gray-700">{getStorageTypeText(order.storage?.storage_type) || 'Не указан'}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Объем:</span>

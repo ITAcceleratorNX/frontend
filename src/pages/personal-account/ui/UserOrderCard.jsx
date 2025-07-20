@@ -7,6 +7,13 @@ import {
   getCargoMarkText 
 } from '../../../shared/lib/types/orders';
 
+const getStorageTypeText = (type) => {
+  if (type === 'INDIVIDUAL') {
+    return 'Индивидуальное';
+  }
+  return type;
+};
+
 const UserOrderCard = ({ order, onPayOrder }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -175,7 +182,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             <h4 className="font-medium text-gray-900 mb-2">Хранилище</h4>
             <div className="space-y-1 text-sm text-gray-600">
               <p><span className="font-medium">Бокс:</span> {order.storage.name}</p>
-              <p><span className="font-medium">Тип:</span> {order.storage.storage_type}</p>
+              <p><span className="font-medium">Тип:</span> {getStorageTypeText(order.storage.storage_type)}</p>
               <p><span className="font-medium">Объем:</span> {order.storage.total_volume} м³</p>
               {order.storage.description && (
                 <p><span className="font-medium">Описание:</span> {order.storage.description}</p>
