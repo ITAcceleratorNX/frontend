@@ -22,7 +22,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#0A142F] w-full h-[550px] text-white font-['Assistant'] mt-48">
+    <footer className="bg-[#0A142F] w-full h-[550px] text-white font-['Montserrat'] mt-14">
       <div className="container mx-auto px-4">
         <hr className="border-t border-[#FFFFFF] mt-20 mb-10 ml-20 mr-20 opacity-50"/>
         <div className="flex flex-col md:flex-row items-start justify-between py-8">
@@ -45,7 +45,7 @@ const Footer = () => {
             </Link>
           </div>
           <div className="flex flex-col mr-[100px] mt-[40px] space-y-2">
-            <p className="text-base text-white font-['Assistant']">Свяжитесь с нами — поможем!</p>
+            <p className="text-base text-white font-['Montserrat']">Свяжитесь с нами — поможем!</p>
             <Input
               type="text"
               placeholder="Ваше имя"
@@ -72,7 +72,7 @@ const Footer = () => {
           <nav className="flex space-x-8 uppercase text-xs ml-20">
             <p className="font-['Montserrat'] mt-[-120px] w-[350px] mb-7 text-[#A6A6A6]">Мы предлагаем аренду складов в Алматы с круглосуточной охраной, удобным доступом и комфортными условиями хранения.</p>
           </nav>
-          <div className="text-xs text-right py-2 text-[#A6A6A6] font-['Assistant'] mb-[-15px] mr-[130px]">Copyright © 2025 · Lift Media Inc.</div>
+          <div className="text-xs text-right py-2 text-[#A6A6A6] font-['Montserrat'] mb-[-15px] mr-[130px]">Copyright © 2025 · Lift Media Inc.</div>
         </div>
         <hr className="border-t border-[#FFFFFF] my-4 ml-20 mr-20 opacity-50"/>
       </div>

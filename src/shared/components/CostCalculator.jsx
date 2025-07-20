@@ -67,13 +67,13 @@ const CostCalculator = () => {
       <div className="w-full max-w-[1100px] mx-auto flex flex-row items-start gap-[60px] bg-transparent px-4">
         {/* Левая колонка: калькулятор */}
         <div className="flex flex-col flex-[0_0_440px] items-start font-['Montserrat']">
-          <label className="text-[22px] text-[#6B6B6B] font-bold mb-4 font-['Montserrat']" htmlFor="area">Площадь:</label>
+          <label className="text-[18px] text-[#6B6B6B] font-bold mb-4 font-['Montserrat']" htmlFor="area">Площадь:</label>
           <div className="w-full flex flex-col mb-8">
             <div className="relative w-full h-[56px] flex items-center bg-white" style={{borderRadius:'8px 8px 8px 0', boxShadow:'4px 4px 8px 0 #B0B0B0'}}>
               <span className="absolute left-4 flex items-center h-full">
                 <img src={housePlanIcon} alt="house plan" className="w-6 h-6" />
               </span>
-              <span className="ml-12 text-[#C7C7C7] text-[18px] font-['Montserrat']">— {area} кв.м</span>
+              <span className="ml-12 text-[#C7C7C7] text-[14px] font-['Montserrat']">— {area} кв.м</span>
             </div>
             <div className="w-full relative" style={{marginTop:'-22px'}}>
               <div className="absolute left-0 bottom-0 h-[2px] bg-[#0062D3] rounded-full" style={{width: `${area}%`, zIndex:1}}></div>
@@ -93,7 +93,7 @@ const CostCalculator = () => {
               />
             </div>
           </div>
-          <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (месяцы):</label>
+          <label className="text-[18px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']" htmlFor="period">Срок аренды (месяцы):</label>
           <div className="relative w-full mb-8">
             <select 
               value={month}
@@ -114,7 +114,7 @@ const CostCalculator = () => {
               <ArrowDownIcon />
             </div>
           </div>
-          <label className="text-[22px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']">Тип услуги:</label>
+          <label className="text-[18px] text-[#9C9C9C] font-bold mb-4 font-['Montserrat']">Тип услуги:</label>
           <div className="flex flex-row gap-4 mb-4 w-full">
             <div className="flex flex-col gap-4 w-1/2">
               <button
@@ -176,10 +176,10 @@ const CostCalculator = () => {
           </button>
         </div>
         {/* Правая колонка: заголовок и картинка */}
-        <div className="flex flex-col items-start flex-1 pt-16 pl-20">
-          <h2 className="text-[28px] md:text-[32px] font-bold text-[#273655] mb-4 ml-40 mt-4 text-left tracking-tight leading-tight">
+        <div className="flex flex-col items-start flex-1 pt-4 pl-20">
+          <h2 className="text-[18px] md:text-[30px] font-bold text-[#273655] mb-4 ml-40 text-left tracking-tight leading-tight">
             КАЛЬКУЛЯТОР<br />
-            <span style={{marginLeft: '40px', display: 'inline-block'}}>СТОИМОСТИ</span>
+            <span style={{marginLeft: '30px', display: 'inline-block'}}>СТОИМОСТИ</span>
           </h2>
           <img src={warehouseImg} alt="Склад warehouse" className="w-full max-w-[500px] object-contain" style={{transform:'scaleX(-1)'}} />
         </div>

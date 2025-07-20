@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+import defaultTheme from 'tailwindcss/defaultTheme';
 export default {
     darkMode: ["class"],
     content: [
@@ -6,11 +7,10 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    fontFamily: {
-      sans: ['Roboto', 'sans-serif'],
-      orbitron: ['Orbitron', 'sans-serif'],
-    },
-  	extend: {
+	extend: {
+		fontFamily: {
+			serif: ['Montserrat', ...defaultTheme.fontFamily.serif],
+		},
   		colors: {
   			background: 'var(--background)',
   			foreground: 'var(--foreground)',
