@@ -36,14 +36,14 @@ const FAQ = memo(() => {
     if (isLoading) {
   return (
         <div className="w-full max-w-[800px] flex justify-center py-8">
-          <div className="animate-spin rounded-full h-9 w-9 border-t-2 border-b-2 "></div>
+          <div className="animate-spin rounded-full h-9 w-9 border-t-2 border-b-2 border-[#273655]"></div>
         </div>
       );
     }
       
     if (error) {
       return (
-        <div className="w-full max-w-[820px] text-center text-red-500 py-4">
+        <div className="w-full max-w-[820px] text-center text-red-500 font-['Montserrat'] py-4">
           Не удалось загрузить вопросы. Пожалуйста, попробуйте позже.
         </div>
       );
@@ -58,10 +58,10 @@ const FAQ = memo(() => {
                 onClick={() => toggleItem(faq.id)}
               >
                 <div className="flex items-center min-w-[100px] flex-1">
-                  <span className="text-xl text-[#000000] mr-4" style={{fontFamily: 'Montserrat', fontWeight: 400, lineHeight: '100%', letterSpacing: 0}}>
+                  <span className="text-xl text-[#000000] font-['Montserrat'] font-normal leading-[100%] mr-4">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="text-['32px'] text-[#222] font-normal font-['Montserrat']">
+                  <span className="text-[18px] text-[#222] font-normal font-['Montserrat'] leading-tight">
                     {faq.question}
                   </span>
                 </div>
@@ -72,7 +72,7 @@ const FAQ = memo(() => {
                 </div>
               </div>
               {openItems[faq.id] && (
-                <div className="px-4 py-2 ml-6 text-['32px'] mt-2 mb-2 bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out">
+                <div className="px-4 py-2 ml-6 text-[16px] font-['Montserrat'] text-[#666] leading-relaxed mt-2 mb-2 bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out">
                   {faq.answer}
                 </div>
               )}
@@ -86,7 +86,7 @@ const FAQ = memo(() => {
     <section className="w-full flex flex-col items-center justify-center mb-24 font-['Montserrat']">
       {/* Заголовок секции */}
      
-      <h2 className="text-[30px] md:text-[30px] font-bold text-[#273655] text-center mb-10">Часто задаваемые вопросы:</h2>
+      <h2 className="text-[30px] md:text-[30px] font-bold font-['Montserrat'] text-[#273655] text-center mb-10">Часто задаваемые вопросы:</h2>
       
       {faqContent}
     </section>
@@ -95,4 +95,4 @@ const FAQ = memo(() => {
 
 FAQ.displayName = 'FAQ';
 
-export default FAQ; 
+export default FAQ;
