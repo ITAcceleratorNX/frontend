@@ -185,131 +185,131 @@ const PersonalData = memo(() => {
   return (
    
       <div className="w-full max-w-[700px] flex flex-col items-center mx-auto">
-        <ToastContainer position="top-right" autoClose={3000} />
-          
-          {/* Аватар */}
-          <div className="relative mb-4 w-[120px] h-[120px] rounded-full overflow-hidden">
-            <img
-              src={personalImg}
-              alt="Аватар"
+      <ToastContainer position="top-right" autoClose={3000} />
+      
+      {/* Аватар */}
+      <div className="relative mb-4 w-[120px] h-[120px] rounded-full overflow-hidden">
+        <img
+          src={personalImg}
+          alt="Аватар"
               className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
-            />
-            <img
-              src={shadowImg}
-              alt="Тень"
-              className="absolute left-1 top-20 w-[120px] h-[40px] pointer-events-none"
-              style={{mixBlendMode:'multiply', opacity:1}}
-            />
+        />
+        <img
+          src={shadowImg}
+          alt="Тень"
+          className="absolute left-1 top-20 w-[120px] h-[40px] pointer-events-none"
+          style={{mixBlendMode:'multiply', opacity:1}}
+        />
             <button className="absolute left-1/2 bottom-1.5 -translate-x-1/2 z-10 p-0 m-0 bg-transparent border-none">
-              <img src={cameraIcon} alt="Загрузить фото" className="w-8 h-8" />
-            </button>
-          </div>
-          <span className="text-[#3B5B7C] text-xs mb-8 cursor-pointer hover:underline">Загрузите фото</span>
-          
-          {/* Форма личных данных */}
-          <form className="w-full mb-8" onSubmit={handleSubmit(onSubmit)}>
-            {/* Основные поля в 2 колонки */}
+          <img src={cameraIcon} alt="Загрузить фото" className="w-8 h-8" />
+        </button>
+      </div>
+      <span className="text-[#3B5B7C] text-xs mb-8 cursor-pointer hover:underline">Загрузите фото</span>
+      
+      {/* Форма личных данных */}
+      <form className="w-full mb-8" onSubmit={handleSubmit(onSubmit)}>
+        {/* Основные поля в 2 колонки */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <Input
-                label="Имя и фамилия"
-                placeholder="Иван Иванов"
-                disabled={!isEditing}
-                {...register('name', { required: 'Имя обязательно для заполнения' })}
-                error={errors.name?.message}
+            <Input
+              label="Имя и фамилия"
+              placeholder="Иван Иванов"
+              disabled={!isEditing}
+              {...register('name', { required: 'Имя обязательно для заполнения' })}
+              error={errors.name?.message}
                 className="bg-slate-50 rounded-md"
-              />
-              <Input
-                label="Электронная почта"
-                placeholder="email@example.com"
-                disabled={!isEditing}
-                {...register('email', { 
-                  required: 'Email обязателен для заполнения',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Некорректный email адрес'
-                  }
-                })}
-                error={errors.email?.message}
+            />
+            <Input
+              label="Электронная почта"
+              placeholder="email@example.com"
+              disabled={!isEditing}
+              {...register('email', { 
+                required: 'Email обязателен для заполнения',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Некорректный email адрес'
+                }
+              })}
+              error={errors.email?.message}
                 className="bg-slate-50 rounded-md"
-              />
-              <Input
-                label="Телефон"
-                placeholder="+7 (XXX) XXX-XX-XX"
-                disabled={!isEditing}
-                {...register('phone', { 
-                  required: 'Телефон обязателен для заполнения',
-                  pattern: {
-                    value: /^\+?[0-9]{10,15}$/,
-                    message: 'Некорректный номер телефона'
-                  }
-                })}
-                error={errors.phone?.message}
+            />
+            <Input
+              label="Телефон"
+              placeholder="+7 (XXX) XXX-XX-XX"
+              disabled={!isEditing}
+              {...register('phone', { 
+                required: 'Телефон обязателен для заполнения',
+                pattern: {
+                  value: /^\+?[0-9]{10,15}$/,
+                  message: 'Некорректный номер телефона'
+                }
+              })}
+              error={errors.phone?.message}
                 className="bg-slate-50 rounded-md"
-              />
-              <Input
-                label="ИИН"
-                placeholder="XXXXXXXXXXXX"
-                disabled={!isEditing}
-                {...register('iin', { 
-                  required: 'ИИН обязателен для заполнения',
-                  pattern: {
-                    value: /^[0-9]{12}$/,
-                    message: 'ИИН должен содержать 12 цифр'
-                  }
-                })}
-                error={errors.iin?.message}
+            />
+            <Input
+              label="ИИН"
+              placeholder="XXXXXXXXXXXX"
+              disabled={!isEditing}
+              {...register('iin', { 
+                required: 'ИИН обязателен для заполнения',
+                pattern: {
+                  value: /^[0-9]{12}$/,
+                  message: 'ИИН должен содержать 12 цифр'
+                }
+              })}
+              error={errors.iin?.message}
                 className="bg-slate-50 rounded-md"
-              />
-              <Input
-                label="Адрес"
-                placeholder="г. Алматы, ул. Примерная, д. 123"
-                disabled={!isEditing}
-                {...register('address', { required: 'Адрес обязателен для заполнения' })}
-                error={errors.address?.message}
+            />
+            <Input
+              label="Адрес"
+              placeholder="г. Алматы, ул. Примерная, д. 123"
+              disabled={!isEditing}
+              {...register('address', { required: 'Адрес обязателен для заполнения' })}
+              error={errors.address?.message}
                 className="bg-slate-50 rounded-md"
-              />
-              <DatePicker
-                label="Дата рождения"
-                placeholder="ДД.ММ.ГГГГ"
-                disabled={!isEditing}
-                value={formValues.bday}
-                onChange={(value) => setValue('bday', value)}
-                error={errors.bday?.message}
+            />
+            <DatePicker
+              label="Дата рождения"
+              placeholder="ДД.ММ.ГГГГ"
+              disabled={!isEditing}
+              value={formValues.bday}
+              onChange={(value) => setValue('bday', value)}
+              error={errors.bday?.message}
                 className="w-full"
-              />
-            </div>
-          </form>
-          
-          {isEditing ? (
-            <div className="flex gap-4">
-              <Button 
-                type="button"
-                variant="secondary" 
-                onClick={toggleEdit}
-                className="w-[120px] bg-[#C3C3C3] text-white hover:bg-[#A3A3A3] border-none rounded-md"
-              >
-                Отмена
-              </Button>
-              <Button 
-                type="submit"
-                variant="primary" 
-                onClick={handleSubmit(onSubmit)}
-                disabled={saving}
-                className="w-[120px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
-              >
-                {saving ? 'Сохранение...' : 'Сохранить'}
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="secondary" 
-              onClick={toggleEdit}
-              className="w-[240px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
-            >
-              Изменить
-            </Button>
-          )}
+            />
         </div>
+      </form>
+      
+      {isEditing ? (
+        <div className="flex gap-4">
+          <Button 
+            type="button"
+            variant="secondary" 
+            onClick={toggleEdit}
+                className="w-[120px] bg-[#C3C3C3] text-white hover:bg-[#A3A3A3] border-none rounded-md"
+          >
+            Отмена
+          </Button>
+          <Button 
+            type="submit"
+            variant="primary" 
+            onClick={handleSubmit(onSubmit)}
+            disabled={saving}
+                className="w-[120px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
+          >
+            {saving ? 'Сохранение...' : 'Сохранить'}
+          </Button>
+        </div>
+      ) : (
+        <Button 
+          variant="secondary" 
+          onClick={toggleEdit}
+              className="w-[240px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
+        >
+          Изменить
+        </Button>
+      )}
+    </div>
   
   );
 });

@@ -193,8 +193,8 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   };
 
   return (
-    <aside className="w-[220px] min-h-screen bg-white flex flex-col py-12 px-5 font-['Nunito Sans']">
-      <nav className="flex flex-col gap-1 mb-2 font-['Nunito Sans']">
+    <aside className="w-[236px] min-h-screen bg-white flex flex-col py-12 px-5 flex-shrink-0">
+      <nav className="flex flex-col gap-1 mb-2">
         {navItems.map((item, idx) => {
           if (item.divider) {
             return <hr key={idx} className="my-3 border-t border-[#F0F0F0]" />;
@@ -204,19 +204,19 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
               key={item.key}
               onClick={() => handleNavClick(item.key)}
               className={clsx(
-                'flex items-center gap-3 px-4 py-2 rounded-sm font-normal text-[16px] transition-all relative',
+                'flex items-center gap-3 px-4 py-2 rounded-sm text-[16px] font-normal leading-normal transition-all relative whitespace-nowrap',
                 activeNav === item.key
                   ? 'bg-[#273655] text-white shadow-md'
                   : 'text-[#222] hover:bg-[#F5F5F5]',
                 'group'
               )}
-              style={{marginBottom: idx === navItems.length - 1 ? 0 : 4, fontFamily: 'Nunito Sans'}}
+              style={{marginBottom: idx === navItems.length - 1 ? 0 : 4}}
             >
               {activeNav === item.key && item.key !== 'logout' && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-sm bg-[#273655]" style={{marginLeft: '-16px'}}></span>
               )}
-              <img src={item.icon} alt="icon" className={clsx('w-5 h-5', activeNav === item.key ? 'filter invert' : 'filter brightness-0')} />
-              <span className="font-['Nunito Sans'] font-normal">{item.label}</span>
+              <img src={item.icon} alt="icon" className={clsx('w-5 h-5 flex-shrink-0', activeNav === item.key ? 'filter invert' : 'filter brightness-0')} />
+              <span className="text-[16px] font-normal leading-normal">{item.label}</span>
             </button>
           );
         })}
@@ -225,4 +225,4 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   );
 };
 
-export default Sidebar; 
+export default Sidebar;

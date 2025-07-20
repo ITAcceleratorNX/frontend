@@ -53,7 +53,7 @@ function MonthSelector() {
 
   return (
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-2xl font-medium text-[#273655] font-['Nunito Sans']">ДОГОВОРЫ</h2>
+      <h2 className="text-2xl font-medium text-[#273655]">ДОГОВОРЫ</h2>
       <div className="relative flex items-center" ref={ref}>
         <button
           className="flex items-center justify-between w-40 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
@@ -121,7 +121,7 @@ const Contracts = () => {
         <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-100">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-700 text-sm font-medium font-['Nunito Sans']">
+              <tr className="bg-gray-50 text-gray-700 text-sm font-medium">
                 <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
                 <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
                 <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>

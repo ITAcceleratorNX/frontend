@@ -48,6 +48,7 @@ NotificationContainer.displayName = 'NotificationContainer';
 
 // Основной компонент приложения с мемоизацией
 const App = memo(() => {
+  // Применяем шрифт Montserrat ко всему приложению через Tailwind класс font-sans
   if (import.meta.env.DEV) {
     console.log('Рендеринг корневого компонента App');
   }
@@ -56,9 +57,11 @@ const App = memo(() => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <ResponseInterceptor />
-          <Routing />
-          <NotificationContainer />
+          <div className="font-sans">
+            <ResponseInterceptor />
+            <Routing />
+            <NotificationContainer />
+          </div>
         </BrowserRouter>
       </AuthProvider>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />}
@@ -68,4 +71,4 @@ const App = memo(() => {
 
 App.displayName = 'App';
 
-export default App; 
+export default App;

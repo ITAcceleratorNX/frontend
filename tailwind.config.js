@@ -9,6 +9,7 @@ export default {
   theme: {
 	extend: {
 		fontFamily: {
+			sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
 			serif: ['Montserrat', ...defaultTheme.fontFamily.serif],
 		},
   		colors: {
@@ -124,4 +125,4 @@ export default {
   	}
   },
   plugins: [],
-} 
+}

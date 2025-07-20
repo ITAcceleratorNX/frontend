@@ -191,7 +191,7 @@ const HomePage = memo(() => {
             {/* Верхний левый — текстовый блок */}
             <div className="flex flex-col h-[255px] w-[560px] pl-2 pt-6">
               <div
-                className="text-[28px] font-bold text-[#273655] leading-tight mb-6"
+                className="text-[28px] font-bold font-['Montserrat'] text-[#273655] leading-tight mb-6"
                 style={{ maxWidth: 560 }}
               >
                 мы предоставляем{" "}
@@ -202,7 +202,7 @@ const HomePage = memo(() => {
                 для хранения вещей.
               </div>
               <div
-                className="font-bold text-[#273655] text-[28px] leading-tight"
+                className="font-bold font-['Montserrat'] text-[#273655] text-[28px] leading-tight"
                 style={{ maxWidth: 560 }}
               >
                 современные складские системы, оборудования и инфраструктура.
@@ -211,10 +211,10 @@ const HomePage = memo(() => {
             {/* Верхний правый — бежевый с замком */}
             <div className="relative rounded-3xl bg-[#F3EEDD] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] overflow-hidden">
               <div className="z-10 relative">
-                <div className="text-[24px] font-bold text-[#273655] mb-3">
+                <div className="text-[24px] font-bold font-['Montserrat'] text-[#273655] mb-3">
                   Безопасность и надежность
                 </div>
-                <div className="text-[#717171] text-[16px] leading-snug max-w-[340px]">
+                <div className="text-[#717171] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
                   Наши склады оборудованы современными системами безопасности,
                   включая видеонаблюдение, охрану и контроль доступа.
                 </div>
@@ -228,10 +228,10 @@ const HomePage = memo(() => {
             {/* Посередине левый — зеленый с процентами */}
             <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-between items-end p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
               <div className="z-10 relative text-right">
-                <div className="text-[24px] font-bold text-white mb-3">
+                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Конкурентные цены
                 </div>
-                <div className="text-[#313131B2] text-[16px] leading-snug max-w-[340px]">
+                <div className="text-[#313131B2] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
                   Мы предлагаем конкурентоспособные цены на аренду, чтобы помочь
                   вам сэкономить на затратах и улучшить вашу рентабельность.
                 </div>
@@ -246,10 +246,10 @@ const HomePage = memo(() => {
             {/* Посередине правый — оранжевый с рукой */}
             <div className="relative rounded-3xl bg-[#EA9938] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
               <div className="z-10 relative">
-                <div className="text-[24px] font-bold text-white mb-3">
+                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Репутация
                 </div>
-                <div className="text-[#423131B2] text-[16px] leading-snug max-w-[340px]">
+                <div className="text-[#423131B2] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
                   Мы имеем прочную репутацию, основанную на долгосрочных
                   отношениях с нашими клиентами и их полной удовлетворенности
                   нашими услугами.
@@ -265,7 +265,7 @@ const HomePage = memo(() => {
             <div className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
               {/* Подробнее кнопка – верхняя левая часть */}
               <button
-                className="absolute top-4 left-4 px-6 py-1 bg-[#2a3c64] text-white rounded-full text-sm font-medium hover:bg-[#1a2a4c] transition-colors z-20"
+                className="absolute top-4 left-4 px-6 py-1 bg-[#2a3c64] text-white font-['Montserrat'] rounded-full text-sm font-medium hover:bg-[#1a2a4c] transition-colors z-20"
                 onClick={() => navigate("/online-payment")}
               >
                 Подробнее
@@ -273,10 +273,10 @@ const HomePage = memo(() => {
 
               {/* Текстовый блок */}
               <div className="z-10 relative text-right max-w-[310px]">
-                <div className="text-[24px] font-bold text-white mb-3">
+                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Оплата банковской картой онлайн
                 </div>
-                <div className="text-[#00000094] text-[16px] leading-snug max-w-[410px]">
+                <div className="text-[#00000094] font-['Montserrat'] text-[16px] leading-snug max-w-[410px]">
                   Наш сайт подключен к интернет-эквайрингу, и Вы можете оплатить
                   услугу банковской картой Visa или Mastercard, а также с
                   помощью Apple Pay и Google Pay.
@@ -294,10 +294,10 @@ const HomePage = memo(() => {
             {/* Нижний правый — Гарантии безопасности */}
             <div className="relative rounded-3xl bg-[#0181D3] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
               <div className="z-10 relative">
-                <div className="text-[24px] font-bold text-white mb-3">
+                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Гарантии безопасности
                 </div>
-                <div className="text-[#00000073] text-[16px] leading-snug max-w-[340px]">
+                <div className="text-[#00000073] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
                   OneVision не передает данные Вашей карты третьим лицам. Ввод
                   данных осуществляется в защищенном окне на платежной странице
                   OneVision.

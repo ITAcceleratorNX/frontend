@@ -1,7 +1,7 @@
 /* Стили для ChatWidget в соответствии с designchat.txt */
 
 .chat-widget {
-  font-family: 'Nunito Sans', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .chat-widget .header-title {
@@ -9,11 +9,11 @@
 }
 
 .chat-widget .quick-action-btn {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .chat-widget .send-btn {
-  font-family: 'Nunito Sans', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Анимация для загрузки */

@@ -73,7 +73,7 @@ export const Header = memo(() => {
       return (
         <button
           onClick={handleCabinetClick}
-          className="flex items-center justify-center bg-[#273551] hover:bg-[#1e2c4f] text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
+          className="flex items-center justify-center bg-[#273551] hover:bg-[#1e2c4f] text-white px-4 py-2 rounded-full font-medium font-['Montserrat'] text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
         >
           <User size={16} className="mr-2" />
           <span className="hidden sm:inline">ЛИЧНЫЙ КАБИНЕТ</span>
@@ -83,7 +83,7 @@ export const Header = memo(() => {
   return (
         <button
           onClick={handleStartAuth}
-          className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
+          className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium font-['Montserrat'] text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
         >
           <User size={16} className="mr-2" />
           <span className="hidden sm:inline">Войти</span>
@@ -115,7 +115,7 @@ export const Header = memo(() => {
             className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 mr-3 sm:mr-4 lg:mr-6" 
             onClick={handleLogoClick}
           >
-            <div className="text-[#273551] font-['Orbitron'] text-[27px] leading-[100%] tracking-[0.05em] capitalize">
+            <div className="text-[#273551] font-['Montserrat'] font-bold text-[27px] leading-[100%] tracking-[0.05em] capitalize">
               ExtraSpace
             </div>
           </div>
@@ -141,8 +141,8 @@ export const Header = memo(() => {
               </button>
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-800">Телефон</p>
-                  <p className="text-sm text-[#1e2c4f] font-bold">+7 (776) 572-19-27</p>
+                  <p className="text-sm font-medium font-['Montserrat'] text-gray-800">Телефон</p>
+                  <p className="text-sm text-[#1e2c4f] font-bold font-['Montserrat']">+7 (776) 572-19-27</p>
                 </div>
               </div>
             </div>
@@ -153,8 +153,8 @@ export const Header = memo(() => {
               </button>
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-800">Email</p>
-                  <p className="text-sm text-[#1e2c4f] font-bold">extraspace@gmail.com</p>
+                  <p className="text-sm font-medium font-['Montserrat'] text-gray-800">Email</p>
+                  <p className="text-sm text-[#1e2c4f] font-bold font-['Montserrat']">extraspace@gmail.com</p>
                 </div>
               </div>
             </div>
@@ -176,4 +176,4 @@ export const Header = memo(() => {
 
 Header.displayName = 'Header';
 
-export default Header; 
+export default Header;
