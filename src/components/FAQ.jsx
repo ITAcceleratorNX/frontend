@@ -1,6 +1,7 @@
 import React, { useState, memo, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../shared/api/axios';
+import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
 
 // Ключ для запроса FAQ
 const FAQ_QUERY_KEY = 'faq';
@@ -34,8 +35,8 @@ const FAQ = memo(() => {
   const faqContent = useMemo(() => {
     if (isLoading) {
   return (
-        <div className="w-full max-w-[820px] flex justify-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#273655]"></div>
+        <div className="w-full max-w-[800px] flex justify-center py-8">
+          <div className="animate-spin rounded-full h-9 w-9 border-t-2 border-b-2 "></div>
         </div>
       );
     }
@@ -57,21 +58,21 @@ const FAQ = memo(() => {
                 onClick={() => toggleItem(faq.id)}
               >
                 <div className="flex items-center min-w-[100px] flex-1">
-                  <span className="text-4xl text-[#000000] mr-4" style={{fontFamily: 'Space Grotesk', fontWeight: 400, lineHeight: '100%', letterSpacing: 0}}>
+                  <span className="text-xl text-[#000000] mr-4" style={{fontFamily: 'Montserrat', fontWeight: 400, lineHeight: '100%', letterSpacing: 0}}>
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="text-xl text-[#222] font-normal font-['Space_Grotesk']">
+                  <span className="text-['32px'] text-[#222] font-normal font-['Montserrat']">
                     {faq.question}
                   </span>
                 </div>
-                <div className="flex items-center justify-center w-11 h-11 border border-[#3E4958] rounded-full text-[#3E4958] text-3xl font-bold transition bg-[#F3F3F3] hover:bg-[#E0E0E0]">
-                  <span className="mt-[-2px] font-extrabold" style={{color:'#191A23', fontWeight:900}}>
-                    {openItems[faq.id] ? '−' : '+'}
-                  </span>
+                <div className="flex items-center justify-center w-9 h-9 border rounded-full bg-[#273655] hover:bg-[#273655] transition">
+                  {openItems[faq.id]
+                      ? <MinusIcon className="w-5 h-5 stroke-2 text-[#E0E0E0]" />
+                      : <PlusIcon  className="w-5 h-5 stroke-2 text-[#E0E0E0]" />}
                 </div>
               </div>
               {openItems[faq.id] && (
-                <div className="px-8 py-6 ml-16 text-[#3E4958] text-lg mt-2 mb-2 bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out">
+                <div className="px-4 py-2 ml-6 text-['32px'] mt-2 mb-2 bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out">
                   {faq.answer}
                 </div>
               )}
@@ -85,7 +86,7 @@ const FAQ = memo(() => {
     <section className="w-full flex flex-col items-center justify-center mb-24 font-['Montserrat']">
       {/* Заголовок секции */}
      
-      <h2 className="text-4xl md:text-5xl font-medium text-[#273655] text-center mb-10">Часто задаваемые вопросы:</h2>
+      <h2 className="text-[30px] md:text-[30px] font-bold text-[#273655] text-center mb-10">Часто задаваемые вопросы:</h2>
       
       {faqContent}
     </section>

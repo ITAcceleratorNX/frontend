@@ -86,7 +86,7 @@ export const Header = memo(() => {
           className="flex items-center justify-center bg-[#C73636] hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
         >
           <User size={16} className="mr-2" />
-          <span className="hidden sm:inline">ВОЙТИ</span>
+          <span className="hidden sm:inline">Войти</span>
         </button>
       );
     }

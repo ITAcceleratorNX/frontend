@@ -232,34 +232,43 @@ const WarehouseMap = ({ warehouses = [] }) => {
   }, [warehouses]);
 
   return (
-    <div className="relative w-full h-full">
-      <div 
-        id="warehouse-map" 
-        ref={mapContainer} 
-        className="absolute inset-0 rounded-3xl shadow-lg overflow-hidden"
-        style={{ width: '100%', height: '100%' }}
-      />
-      
-      {/* Map loading indicator */}
-      {warehouses.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#f3f3f3] rounded-3xl">
-          <div className="flex flex-col items-center justify-center w-full h-full p-8">
-            <svg width="80" height="80" fill="none" viewBox="0 0 100 100" className="mb-4 opacity-40">
-              <rect width="100" height="100" rx="24" fill="#E5E7EB"/>
-              <path d="M30 70V40a10 10 0 0 1 10-10h20a10 10 0 0 1 10 10v30" stroke="#A6A6A6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="50" cy="55" r="8" stroke="#A6A6A6" strokeWidth="4"/>
-            </svg>
-            <div className="text-[#A6A6A6] text-lg font-semibold text-center">Загрузка карты...</div>
+      <div className="relative w-full h-full">
+        <div
+            id="warehouse-map"
+            ref={mapContainer}
+            className="absolute inset-0 rounded-3xl shadow-lg overflow-hidden"
+            style={{width: '100%', height: '100%'}}
+        />
+
+        {/* Map loading indicator */}
+        {warehouses.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#f3f3f3] rounded-3xl">
+              <div className="flex flex-col items-center justify-center w-full h-full p-8">
+                <svg width="80" height="80" fill="none" viewBox="0 0 100 100" className="mb-4 opacity-40">
+                  <rect width="100" height="100" rx="24" fill="#E5E7EB"/>
+                  <path d="M30 70V40a10 10 0 0 1 10-10h20a10 10 0 0 1 10 10v30" stroke="#A6A6A6" strokeWidth="4"
+                        strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="50" cy="55" r="8" stroke="#A6A6A6" strokeWidth="4"/>
+                </svg>
+                <div className="text-[#A6A6A6] text-lg font-semibold text-center">Загрузка карты...</div>
+              </div>
+            </div>
+        )}
+
+        {/* Map controls overlay */}
+        <div
+            className="absolute top-4 left-4 bg-white/35 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-sm z-10"
+        >
+          <div className="text-sm font-bold text-[#273655] font-montserrat">Алматы</div>
+          <div className="text-xs text-[#6B6B6B] font-montserrat">
+            Складские помещения
+          </div>
+          <div className="text-xs text-[#6B6B6B] font-montserrat">
+            ExtraSpace
           </div>
         </div>
-      )}
-      
-      {/* Map controls overlay */}
-      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-sm">
-        <div className="text-sm font-bold text-[#273655] font-['Montserrat']">Алматы</div>
-        <div className="text-xs text-[#6B6B6B] font-['Montserrat']">Складские помещения ExtraSpace</div>
+
       </div>
-    </div>
   );
 };
 

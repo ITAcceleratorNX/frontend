@@ -130,31 +130,31 @@ const HomePage = memo(() => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="font-['Montserrat'] min-h-screen bg-white flex flex-col">
       <Header />
 
       <div className="flex-1 relative overflow-hidden">
         <div className="container mx-auto tracking-[0.1em] px-2 py-8">
           <div className="text-center relative flex flex-col items-center">
-            <h1 className="text-[40px] md:text-[55px] font-bold text-[#273655] mb-2 flex flex-col items-center leading-[1.0] font-['Montserrat']">
+            <h1 className="text-[30px] md:text-[45px] font-bold text-[#273655] mb-2 flex flex-col items-center leading-[1.0] font-['Montserrat']">
               <span className="mb-1">БЕРЕЖНОЕ ХРАНЕНИЕ</span>
               <div className="flex justify-center items-center gap-2">
                 <img
                   src={vectorImg}
                   alt="Декоративный элемент"
-                  className="w-10 h-10"
+                  className="w-8 h-8"
                 />
                 <span>ВАШИХ ВЕЩЕЙ</span>
                 <img
                   src={vectorImg}
                   alt="Декоративный элемент"
-                  className="w-10 h-10"
+                  className="w-8 h-8"
                 />
               </div>
             </h1>
 
             <div className="mt-3">
-              <button className="bg-[#273655] text-white px-10 py-1 rounded-[30px] text-lg font-medium hover:bg-[#2a3c64] transition-colors font-['Montserrat']">
+              <button className="bg-[#273655] text-white px-10 py-1 rounded-[15px] text-lg font-medium hover:bg-[#2a3c64] transition-colors font-['Montserrat']">
                 Теплые склады с охраной от 3 м²
               </button>
             </div>
@@ -312,8 +312,16 @@ const HomePage = memo(() => {
           </div>
         </div>
       </section>
+      <div className="flex justify-center w-full px-5 my-5 mb-24">
+        <button
+            onClick={() => navigate("/warehouse-order")}
+            className="w-[290px] h-[50px] bg-[#273655] text-white text-[18px] font-bold rounded-[20px] hover:bg-[#273655] transition-colors font-['Montserrat'] disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_4px_0_#B0B0B0]"
+        >
+          ЗАБРОНИРОВАТЬ БОКС
+        </button>
+      </div>
       {/* Третий фрейм: карточка склада */}
-      <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
+      <section className="w-full flex justify-center items-center font-['Montserrat']">
         <div className="flex w-[1100px] min-h-[420px] bg-white rounded-3xl">
           {/* Левая часть: текст и кнопки */}
           <div className="flex-1 flex flex-col justify-between py-8 pr-10 pl-8">
@@ -321,49 +329,49 @@ const HomePage = memo(() => {
 
             {/* Кнопки выбора объёма */}
             <div className="flex gap-4 mb-8">
-              <button className="px-8 py-3 rounded-full bg-[#273655] text-white text-[22px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none">
+              <button className="px-6 py-3 rounded-[15px] bg-[#273655] text-white text-[16px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none">
                 3 м³
               </button>
-              <button className="px-8 py-3 rounded-full bg-white text-[#273655] text-[22px] font-medium border-2 border-[#273655] focus:outline-none">
+              <button className="px-6 py-3 rounded-[15px] bg-white text-[#273655] text-[16px] font-medium border-2 border-[#273655] focus:outline-none">
                 5 м³
               </button>
-              <button className="px-8 py-3 rounded-full bg-white text-[#273655] text-[22px] font-medium border-2 border-[#273655] focus:outline-none">
+              <button className="px-6 py-3 rounded-[15px] bg-white text-[#273655] text-[16px] font-medium border-2 border-[#273655] focus:outline-none">
                 10 м³
               </button>
             </div>
             {/* Описание */}
             <div className="mb-6">
-              <div className="text-[#A3A3A3] text-[20px] font-medium leading-snug mb-2">
+              <div className="text-[#A3A3A3] text-[18px] font-medium leading-snug mb-2">
                 Такой объём подходит для хранения части мебели и бытовой техники
                 из небольшой комнаты.
               </div>
-              <div className="text-[#A3A3A3] text-[20px] font-medium leading-snug mb-2">
+              <div className="text-[#A3A3A3] text-[18px] font-medium leading-snug mb-2">
                 Примерно столько занимает багаж из однокомнатной квартиры при
                 переезде.
               </div>
-              <div className="text-[#A3A3A3] text-[20px] font-medium leading-snug mb-6">
+              <div className="text-[#A3A3A3] text-[18px] font-medium leading-snug mb-6">
                 Когда нужно спрятать всё лишнее, но пока не расставаться.
               </div>
-              <div className="text-[#273655] text-[18px] font-medium leading-snug mb-1">
+              <div className="text-[#273655] text-[14px] font-medium leading-snug mb-1">
                 Вмещает до X коробок или Y предметов мебели
               </div>
-              <div className="text-[#273655] text-[18px] font-medium leading-snug mb-1">
+              <div className="text-[#273655] text-[14px] font-medium leading-snug mb-1">
                 Примеры:
               </div>
-              <div className="text-[#273655] text-[18px] font-medium leading-snug">
+              <div className="text-[#273655] text-[14px] font-medium leading-snug">
                 - Матрас, стиральная машина, пылесос, тумбочка, чемодан и
                 несколько коробок с вещами
               </div>
             </div>
             {/* Кнопка Подробнее */}
-            <button className="mt-6 w-[260px] h-[56px] bg-[#273655] text-white text-[22px] font-medium rounded-full flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors">
+            <button className="mt-6 w-[165px] h-[40px] bg-[#273655] text-white text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors">
               Подробнее
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 fill="none"
-                viewBox="0 0 24 24"
+                viewBox="0 0 20 20"
                 stroke="currentColor"
                 strokeWidth="2"
                 className="ml-1"
@@ -381,29 +389,22 @@ const HomePage = memo(() => {
             <img
               src={chatgptImg}
               alt="Склад с мебелью"
-              className="w-[420px] h-[420px] object-contain rounded-2xl mt-10"
+              className="w-[360px] h-[360px] object-contain rounded-2xl mt-10"
             />
           </div>
         </div>
       </section>
-      <div className="flex justify-center w-full px-10 my-10">
-        <button 
-          onClick={() => navigate("/warehouse-order")} 
-          className="w-[320px] h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-[28px] hover:bg-[#d87d1c] transition-colors font-['Montserrat'] disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_8px_0_#B0B0B0]"
-        >
-          ЗАБРОНИРОВАТЬ БОКС
-        </button>
-      </div>
+
 
       {/* Четвертый фрейм: калькулятор стоимости */}
       <CostCalculator />
       {/* Пятый фрейм: как работает облачное хранение */}
-      <section className="w-full flex flex-col items-center justify-center mt-1 mb-10 font-['Montserrat']">
+      <section className="w-full flex flex-col items-center justify-center mt-1 font-['Montserrat']">
         <div className="w-full max-w-[1100px] mx-auto">
           {/* Верхняя строка с иконкой и надписью */}
 
           {/* Заголовок */}
-          <h2 className="text-[32px] md:text-[35px] font-bold text-[#273655] text-center mb-10">
+          <h2 className="text-[30px] md:text-[30px] font-bold text-[#273655] text-center mb-10">
             Как работает облачное хранение?
           </h2>
           {/* Видео */}
@@ -423,7 +424,7 @@ const HomePage = memo(() => {
             </div>
           </div>
           {/* Подпись жирная */}
-          <div className="text-[24px] md:text-[24px] font-bold text-[#273655] text-center mb-10">
+          <div className="text-2xl md:text-16px font-medium text-[#273655] text-center mb-10">
             Платите только за объем ваших вещей, а не за весь склад
           </div>
           {/* Блок шагов */}
@@ -505,18 +506,18 @@ const HomePage = memo(() => {
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full flex flex-col items-center justify-center mt-28 mb-24 font-['Montserrat']">
         <div className="w-full max-w-[1300px] flex flex-col items-start mx-auto mb-10 px-20 md:px-24">
-          <h2 className="text-[48px] md:text-[56px] font-bold text-[#273655] ml-2 mt-0">
+          <h2 className="text-[28px] md:text-[28px] font-bold text-[#273655] ml-2 mt-0">
             ФИЛИАЛЫ
           </h2>
         </div>
         <div className="w-full max-w-[1300px] flex flex-row gap-12 items-start mx-auto px-20 md:px-24">
           {/* Левая часть: интерактивная карта 2ГИС */}
           <div
-            className="rounded-3xl overflow-hidden bg-[#f3f3f3]"
+            className="rounded-2xl overflow-hidden bg-[#f3f3f3]"
             style={{
               width: 480,
-              height: 480,
-              boxShadow: "4px 4px 8px 0 #B0B0B0",
+              height: 340,
+              boxShadow: "2px 2px 2px 0 #B0B0B0",
             }}
           >
             <WarehouseMap warehouses={warehouses} />
@@ -538,15 +539,15 @@ const HomePage = memo(() => {
               maxHeight: 320,
               maxWidth: 600,
               width: 560,
-              boxShadow: "4px 4px 8px 0 #B0B0B0",
+              boxShadow: "2px 2px 2px 0 #B0B0B0",
             }}
           >
               {/* Левая часть: логотип */}
-            <div className="flex items-center justify-center w-[270px] h-[270px] p-2">
+            <div className="flex items-center justify-center w-[200px] h-[200px] p-2">
               <img
                   src={selectedWarehouse?.image || extraspaceLogo}
                 alt="logo"
-                className="w-[270px] h-[270px] rounded-lg object-cover bg-[#273655]"
+                className="w-[200px] h-[200px] rounded-lg object-cover bg-[#273655]"
               />
             </div>
               {/* Правая часть: информация о складе */}
@@ -606,9 +607,9 @@ const HomePage = memo(() => {
                 )}
 
                 {/* Кнопка выбора склада с выпадающим списком */}
-                <div className="relative w-full max-w-[240px] mt-0 warehouse-dropdown">
+                <div className="relative w-[190] max-w-[240px] mt-0 warehouse-dropdown">
               <button
-                    className="px-2 py-3 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full flex items-center justify-center gap-2"
+                    className="px-2 py-0 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full flex items-center justify-center gap-2"
                     onClick={toggleWarehouseDropdown}
                     disabled={warehousesLoading}
                   >
@@ -662,7 +663,7 @@ const HomePage = memo(() => {
                 {/* Кнопка бронирования */}
                 {selectedWarehouse && selectedWarehouse.status === 'AVAILABLE' && (
                   <button
-                    className="px-2 py-2 bg-[#F86812] text-white rounded-full text-sm font-medium hover:bg-[#d87d1c] transition-colors w-full max-w-[240px] mt-2"
+                    className="px-2 py-1 bg-[#F86812] text-white rounded-full text-sm font-medium hover:bg-[#d87d1c] transition-colors w-full max-w-[170px] mt-2"
                     onClick={() => navigate("/warehouse-order")}
                   >
                     Забронировать бокс
