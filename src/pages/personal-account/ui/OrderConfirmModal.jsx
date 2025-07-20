@@ -615,8 +615,8 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
                                 onChange={(e) => updateMovingOrder(index, 'status', e.target.value)}
                                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
                               >
-                                <option value="PENDING_FROM">PENDING_FROM</option>
-                                <option value="PENDING_TO">PENDING_TO</option>
+                                <option value="PENDING_FROM">Ожидает забора</option>
+                                <option value="PENDING_TO">Ожидает доставки</option>
                               </select>
                               <Button
                                 onClick={() => removeMovingOrder(index)}

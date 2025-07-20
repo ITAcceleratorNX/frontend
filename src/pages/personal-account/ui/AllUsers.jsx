@@ -311,7 +311,7 @@ const AllUsers = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Модальное окно подтверждения удаления */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
@@ -325,10 +325,10 @@ const AllUsers = () => {
       <div className="bg-gradient-to-r from-[#273655] to-[#1e2c4f] rounded-xl p-6 text-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
+            <h2 className="text-xl font-bold mb-1">
               Управление пользователями
-            </h1>
-            <p className="text-white/80">
+            </h2>
+            <p className="text-sm text-white/80">
               Просматривайте и управляйте всеми пользователями системы
             </p>
           </div>
@@ -533,10 +533,10 @@ const AllUsers = () => {
                   disabled={currentPage === totalPages}
                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Вперед
                   <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
+                  Вперед
                 </button>
               </nav>
             </div>
@@ -581,4 +581,4 @@ const AllUsers = () => {
   );
 };
 
-export default AllUsers; 
+export default AllUsers;

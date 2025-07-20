@@ -89,7 +89,7 @@ const PersonalAccountPage = memo(() => {
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex flex-1">
         <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-        <main className="flex-1 flex flex-col items-start justify-center py-12 px-10 bg-white">
+        <main className="flex-1 flex flex-col items-start justify-center py-10 px-4 bg-white">
 
 
           {activeNav === 'personal' && <PersonalData />}

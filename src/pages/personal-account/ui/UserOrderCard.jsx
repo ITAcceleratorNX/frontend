@@ -276,11 +276,14 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-green-700">Перемещение #{index + 1}</span>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          movingOrder.status === 'PENDING_FROM' 
+                          movingOrder.status === 'PENDING_FROM'
                             ? 'bg-blue-100 text-blue-700'
                             : 'bg-yellow-100 text-yellow-700'
                         }`}>
-                          {movingOrder.status}
+                          {{  IN_PROGRESS: 'В процессе',
+                              PENDING_FROM: 'Ожидает забора',
+                              PENDING_TO: 'Ожидает доставки',
+                            }[movingOrder.status] || movingOrder.status}
                         </span>
                       </div>
                       

@@ -151,7 +151,7 @@ const UserPayments = () => {
                 <Clock className="w-8 h-8 text-orange-600" />
             </div>
               <div>
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Неоплачено</p>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide text-center">Неоплачено</p>
                 <p className="text-3xl font-bold text-orange-600">{unpaidOrders.length}</p>
         </div>
             </div>
@@ -165,7 +165,7 @@ const UserPayments = () => {
                 <TrendingUp className="w-8 h-8 text-emerald-600" />
             </div>
               <div>
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Оплачено</p>
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide text-center">Оплачено</p>
                 <p className="text-3xl font-bold text-emerald-600">{paidOrders.length}</p>
         </div>
             </div>

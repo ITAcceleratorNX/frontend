@@ -7,7 +7,8 @@ export const ORDER_STATUSES = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE',
   APPROVED: 'APPROVED',
-  PROCESSING: 'PROCESSING'
+  PROCESSING: 'PROCESSING',
+  CANCELED: 'CANCELED'
 };
 
 /**
@@ -60,6 +61,7 @@ export const getOrderStatusText = (status) => {
     [ORDER_STATUSES.INACTIVE]: 'Неактивный',
     [ORDER_STATUSES.APPROVED]: 'Подтвержден',
     [ORDER_STATUSES.PROCESSING]: 'В обработке',
+    [ORDER_STATUSES.CANCELED]: 'Отменен',
     [ORDER_STATUSES.ACTIVE]: 'Активный'
   };
   return texts[status] || status;
@@ -90,7 +92,8 @@ export const getOrderStatusClass = (status) => {
     [ORDER_STATUSES.INACTIVE]: 'bg-red-100 text-red-700 border-red-200',
     [ORDER_STATUSES.APPROVED]: 'bg-green-100 text-green-700 border-green-200',
     [ORDER_STATUSES.PROCESSING]: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    [ORDER_STATUSES.ACTIVE]: 'bg-blue-100 text-blue-700 border-blue-200'
+    [ORDER_STATUSES.ACTIVE]: 'bg-blue-100 text-blue-700 border-blue-200',
+    [ORDER_STATUSES.CANCELED]: 'bg-red-100 text-red-700 border-red-200'
   };
   return classes[status] || 'bg-gray-100 text-gray-700 border-gray-200';
 };

@@ -125,7 +125,7 @@ const Contracts = () => {
                 <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
                 <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
                 <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>
-                <th className="text-left px-6 py-4 font-medium">ЦЕНА</th>
+              
                 <th className="text-left px-6 py-4 text-center font-medium">СТАТУС</th>
                 <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
               </tr>
@@ -141,7 +141,7 @@ const Contracts = () => {
                     </td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{row.warehouse_address}</td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
-                    <td className="px-6 py-5 text-gray-900 font-medium">{'$12,295'}</td>
+                   
                     <td className="px-6 py-5 text-center">
                       <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-sm font-medium leading-5 ${statusStyles[styleKey]} min-w-[120px]`}>
                         {row.contract_status}

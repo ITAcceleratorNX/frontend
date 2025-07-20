@@ -490,7 +490,6 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
             </CardContent>
           </Card>
         )}
-
         {/* Moving Orders - отображение с адресами */}
         {order.moving_orders && order.moving_orders.length > 0 && (
           <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
@@ -513,8 +512,12 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-green-700">#{index + 1}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {movingOrder.status}
+                          <Badge variant="outline" className="text-xs" >
+                            {{
+                              PENDING_FROM: 'Ожидает забора',
+                              PENDING_TO: 'Ожидает доставки',
+                              IN_PROGRESS: 'В процессе',
+                            }[movingOrder.status] || movingOrder.status}
                           </Badge>
                         </div>
                         

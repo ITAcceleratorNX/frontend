@@ -22,11 +22,11 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#0A142F] w-full h-[550px] text-white font-['Montserrat'] mt-14">
+    <footer className="bg-[#0A142F] w-full h-[450px] text-white font-['Montserrat'] mt-14">
       <div className="container mx-auto px-4">
         <hr className="border-t border-[#FFFFFF] mt-20 mb-10 ml-20 mr-20 opacity-50"/>
         <div className="flex flex-col md:flex-row items-start justify-between py-8">
-          <h2 className="text-7xl py-6 ml-20 font-bold font-['Audiowide'] mt-[-4px]">ExtraSpace</h2>
+          <h2 className="text-7xl py-6 ml-20 font-bold font-['Audiowide'] mt-[-26px]">ExtraSpace</h2>
           <div className="flex flex-col font-['Montserrat'] space-y-6 md:items-start md:text-left mt-[-25px] mr-[10px] flex-shrink-0">
             <Link to="/" className="flex items-center mb-2 hover:text-gray-300 transition-colors">
               <span className="whitespace-nowrap">ГЛАВНАЯ</span>

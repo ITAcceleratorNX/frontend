@@ -193,7 +193,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   };
 
   return (
-    <aside className="w-[236px] min-h-screen bg-white flex flex-col py-12 px-5 flex-shrink-0">
+    <aside className="w-[230px] min-h-screen bg-white flex flex-col py-12 px-4 flex-shrink-0">
       <nav className="flex flex-col gap-1 mb-2">
         {navItems.map((item, idx) => {
           if (item.divider) {
