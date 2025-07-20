@@ -61,7 +61,7 @@ const FAQ = memo(() => {
                   <span className="text-xl text-[#000000] font-['Montserrat'] font-normal leading-[100%] mr-4">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="text-[18px] text-[#222] font-normal font-['Montserrat'] leading-tight">
+                  <span className="text-[16px] text-[#222] font-normal font-['Montserrat'] leading-tight">
                     {faq.question}
                   </span>
                 </div>
