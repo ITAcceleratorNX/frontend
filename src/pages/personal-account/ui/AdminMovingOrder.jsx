@@ -19,7 +19,9 @@ import {
   Loader2,
   AlertCircle,
   FileText,
-  Box
+  Box,
+  UserRound,
+  Phone
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -181,6 +183,26 @@ const AdminMovingOrder = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <UserRound className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Имя клиента</p>
+                        <p className="text-gray-700">{order.userName || 'Не указано'}</p>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-start gap-2">
+                      <Phone className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Телефон</p>
+                        <p className="text-gray-700">{order.phone || 'Не указан'}</p>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
                     <div className="flex items-start gap-2">
                       <User className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                       <div>
