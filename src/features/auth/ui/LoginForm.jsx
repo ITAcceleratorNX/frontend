@@ -69,7 +69,7 @@ export const LoginForm = () => {
         queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
         
         // Получаем целевой маршрут для перенаправления
-        const redirectTo = location.state?.from?.pathname || '/';
+        const redirectTo = location.state?.from?.pathname || '/personal-account';
         
         // Небольшая задержка перед перенаправлением
         setTimeout(() => {

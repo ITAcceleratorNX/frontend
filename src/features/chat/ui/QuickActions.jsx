@@ -10,27 +10,6 @@ const QuickActions = memo(({ onStart, canStart = false, className = '' }) => {
       action: onStart,
       primary: true,
       disabled: !canStart
-    },
-    {
-      id: 'support',
-      label: 'Поддержка',
-      icon: HelpCircle,
-      action: () => console.log('Открыть раздел поддержки'),
-      disabled: true // Пока неактивно
-    },
-    {
-      id: 'call',
-      label: 'Звонок',
-      icon: Phone,
-      action: () => console.log('Инициировать звонок'),
-      disabled: true // Пока неактивно
-    },
-    {
-      id: 'email',
-      label: 'Email',
-      icon: Mail,
-      action: () => window.open('mailto:support@extraspace.com'),
-      disabled: false
     }
   ];
 
@@ -46,11 +25,11 @@ const QuickActions = memo(({ onStart, canStart = false, className = '' }) => {
           Как мы можем помочь?
         </h3>
         <p className="text-gray-600 text-sm">
-          Выберите удобный способ связи с нашей службой поддержки
+          
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-1">
         {quickActionButtons.map((button) => {
           const Icon = button.icon;
           const isPrimary = button.primary && !button.disabled;
