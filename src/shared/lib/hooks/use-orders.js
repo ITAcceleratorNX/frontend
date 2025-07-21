@@ -250,6 +250,39 @@ export const useDownloadContract = () => {
   });
 }; 
 
+/**
+ * Хук для скачивания файла предмета заказа
+ */
+export const useDownloadItemFile = () => {
+  return useMutation({
+    mutationFn: async (itemId) => {
+      const blob = await ordersApi.downloadItemFile(itemId);
+      const url = window.URL.createObjectURL(blob);
+      
+      // Получаем имя файла из Content-Disposition или используем стандартное имя
+      const fileName = `order_item_${itemId}.docx`;
+      
+      // Создаем ссылку для скачивания и автоматически кликаем по ней
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Удаляем ссылку и освобождаем URL
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onSuccess: () => {
+      showGenericSuccess('Файл предмета успешно скачан');
+    },
+    onError: (error) => {
+      console.error('Ошибка при скачивании файла предмета:', error);
+      showGenericError('Не удалось скачать файл предмета');
+    },
+  });
+}; 
+
 export const useExtendOrder = () => {
   const queryClient = useQueryClient();
 

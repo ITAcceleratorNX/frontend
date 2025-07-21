@@ -22,9 +22,11 @@ import {
   Play,
   FileText,
   Box,
-  Phone
+  Phone,
+  Download
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 
 const CourierRequestOrder = () => {
   const { orderId } = useParams();
@@ -33,6 +35,7 @@ const CourierRequestOrder = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const downloadItemFile = useDownloadItemFile();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -51,6 +54,10 @@ const CourierRequestOrder = () => {
     };
     fetchOrder();
   }, [orderId]);
+
+  const handleDownloadItem = (itemId) => {
+    downloadItemFile.mutate(itemId);
+  };
 
   const handleActionClick = async () => {
     if (!order) return;
@@ -345,6 +352,7 @@ const CourierRequestOrder = () => {
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Название</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Объём</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Маркировка</th>
+                          <th className="text-right py-3 px-4 font-medium text-gray-900">Действия</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -368,6 +376,18 @@ const CourierRequestOrder = () => {
                               >
                                 {item.cargo_mark}
                               </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
+                                onClick={() => handleDownloadItem(item.id)}
+                                disabled={downloadItemFile.isPending}
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                <span>Скачать</span>
+                              </Button>
                             </td>
                             </tr>
                         ))}

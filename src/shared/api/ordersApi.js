@@ -159,4 +159,24 @@ export const ordersApi = {
       throw error;
     }
   },
+
+  // Скачивание файла предмета заказа
+  downloadItemFile: async (itemId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Запрос на скачивание документа для предмета ${itemId}`);
+      }
+      // Используем axios напрямую для получения файла
+      const response = await axios.get(`https://extraspace-backend.onrender.com/moving/download/item/${itemId}`, {
+        responseType: 'blob', // Важно для получения файла
+      });
+      if (isDevelopment) {
+        console.log('OrdersAPI: Файл предмета успешно получен');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при скачивании файла предмета:', error);
+      throw error;
+    }
+  },
 }; 
