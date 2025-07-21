@@ -142,4 +142,21 @@ export const ordersApi = {
       throw error;
     }
   },
+  
+  // Продление заказа или отмена продления
+  extendOrder: async (data) => {
+    try {
+      if (isDevelopment) {
+        console.log('OrdersAPI: Отправка запроса на продление заказа:', data);
+      }
+      const response = await api.post('/orders/extend', data);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Продление заказа успешно обработано:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при обработке продления заказа:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 }; 

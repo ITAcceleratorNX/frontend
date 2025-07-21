@@ -59,3 +59,15 @@ export const updateToast = (toastId, message, type = 'success') => {
     autoClose: 3000
   });
 }; 
+
+export const showExtendOrderSuccess = () => {
+  toast.success('Заказ успешно продлен', { autoClose: 3000 });
+};
+
+export const showCancelExtensionSuccess = () => {
+  toast.success('Продление заказа отменено', { autoClose: 3000 });
+};
+
+export const showExtendOrderError = () => {
+  toast.error('Ошибка при обработке продления заказа', { autoClose: 3000 });
+}; 

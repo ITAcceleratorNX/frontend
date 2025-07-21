@@ -249,3 +249,15 @@ export const useDownloadContract = () => {
     },
   });
 }; 
+
+export const useExtendOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (extendData) => ordersApi.extendOrder(extendData),
+    onSuccess: () => {
+      // Инвалидируем кеш заказов пользователя, чтобы они загрузились заново
+      queryClient.invalidateQueries({ queryKey: ['userOrders'] });
+    },
+  });
+}; 
