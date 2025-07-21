@@ -22,7 +22,6 @@ import {
   Play,
   FileText,
   Box,
-  UserRound,
   Phone
 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -248,8 +247,9 @@ const CourierRequestOrder = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
+                    {/* Информация о клиенте */}
                     <div className="flex items-start gap-2">
-                      <UserRound className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                      <User className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">Имя клиента</p>
                         <p className="text-gray-700">{order.userName || 'Не указано'}</p>
@@ -262,14 +262,14 @@ const CourierRequestOrder = () => {
                       <Phone className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">Телефон</p>
-                        <p className="text-gray-700">{order.phone || 'Не указан'}</p>
+                        <p className="text-gray-700">{order.userPhone || 'Не указан'}</p>
                       </div>
                     </div>
                     
                     <Separator />
                     
                     <div className="flex items-start gap-2">
-                      <User className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                      <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">Адрес клиента</p>
                         <p className="text-gray-700">{order.userAddress || 'Не указан'}</p>
