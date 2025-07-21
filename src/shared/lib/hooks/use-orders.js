@@ -294,3 +294,16 @@ export const useExtendOrder = () => {
     },
   });
 }; 
+
+/**
+ * Хук для получения деталей договора по order_id
+ */
+export const useContractDetails = (orderId, options = {}) => {
+  return useQuery({
+    queryKey: ['contracts', 'details', orderId],
+    queryFn: () => ordersApi.getContractDetails(orderId),
+    enabled: !!orderId,
+    staleTime: 5 * 60 * 1000, // 5 минут
+    ...options
+  });
+}; 

@@ -179,4 +179,21 @@ export const ordersApi = {
       throw error;
     }
   },
+
+  // Получение деталей договора по order_id
+  getContractDetails: async (orderId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Запрос деталей договора для заказа ${orderId}`);
+      }
+      const response = await api.get(`/orders/items/${orderId}`);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Получены детали договора:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при получении деталей договора:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 }; 
