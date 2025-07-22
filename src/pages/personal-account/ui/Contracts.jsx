@@ -151,10 +151,7 @@ function MonthSelector() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const months = [
-    'ЯНВАРЬ', 'ФЕВРАЛЬ', 'МАРТ', 'АПРЕЛЬ', 'МАЙ', 'ИЮНЬ',
-    'ИЮЛЬ', 'АВГУСТ', 'СЕНТЯБРЬ', 'ОКТЯБРЬ', 'НОЯБРЬ', 'ДЕКАБРЬ'
-  ];
+
 
   return (
     <div className="flex items-center justify-between mb-6">

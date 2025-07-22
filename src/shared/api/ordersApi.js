@@ -38,39 +38,7 @@ export const ordersApi = {
     }
   },
 
-  // Обновление статуса заказа (для MANAGER и ADMIN)
-  updateOrderStatus: async (orderId, status) => {
-    try {
-      if (isDevelopment) {
-        console.log(`OrdersAPI: Обновление статуса заказа ${orderId} на ${status}`);
-      }
-      const response = await api.put(`/orders/${orderId}/status`, { status });
-      if (isDevelopment) {
-        console.log('OrdersAPI: Статус заказа успешно обновлен:', response.data);
-      }
-      return response.data;
-    } catch (error) {
-      console.error('OrdersAPI: Ошибка при обновлении статуса заказа:', error.response?.data || error.message);
-      throw error;
-    }
-  },
 
-  // Расширенное обновление заказа с услугами и moving_orders (для MANAGER и ADMIN)
-  updateOrderWithServices: async (orderId, orderData) => {
-    try {
-      if (isDevelopment) {
-        console.log(`OrdersAPI: Расширенное обновление заказа ${orderId}:`, orderData);
-      }
-      const response = await api.put(`/orders/${orderId}/status`, orderData);
-      if (isDevelopment) {
-        console.log('OrdersAPI: Заказ успешно обновлен с услугами:', response.data);
-      }
-      return response.data;
-    } catch (error) {
-      console.error('OrdersAPI: Ошибка при расширенном обновлении заказа:', error.response?.data || error.message);
-      throw error;
-    }
-  },
 
   // Удаление заказа (для MANAGER и ADMIN)
   deleteOrder: async (orderId) => {

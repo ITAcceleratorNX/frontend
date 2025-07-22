@@ -17,7 +17,7 @@ const getStorageTypeText = (type) => {
   return type;
 };
 
-const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
+const OrderCard = ({ order, onDelete, isLoading = false }) => {
   // Функции для форматирования
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -586,22 +586,6 @@ const OrderCard = ({ order, onApprove, onDelete, isLoading = false }) => {
 
         {/* Кнопки действий */}
         <div className="flex gap-3 pt-4 border-t border-gray-200">
-          {order.status === 'INACTIVE' && (
-            <Button
-              onClick={onApprove}
-              disabled={isLoading}
-              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-            >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              Подтвердить заказ
-            </Button>
-          )}
           <Button
             onClick={onDelete}
             disabled={isLoading}

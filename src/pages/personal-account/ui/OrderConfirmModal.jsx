@@ -94,42 +94,8 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
 
   // Обработчик финального подтверждения
   const handleConfirmOrder = async () => {
-    // Для расширенного подтверждения заказов INACTIVE -> APPROVED
-    if (action === 'approve' && order.status === 'INACTIVE') {
-      setIsSubmitting(true);
-      try {
-        const orderData = {
-          status: 'APPROVED',
-          is_selected_moving: isSelectedMoving,
-          is_selected_package: isSelectedPackage,
-          punct33: isPunct33Selected ? (punct33Text || null) : null // Новое поле
-        };
-
-        // Добавляем moving_orders если есть
-        if (movingOrders.length > 0) {
-          orderData.moving_orders = movingOrders.filter(mo => mo.moving_date).map(mo => ({
-            moving_date: new Date(mo.moving_date).toISOString(),
-            status: mo.status,
-            address: mo.address || null // Добавляем address
-          }));
-        }
-
-        // Добавляем services если есть
-        if (selectedServices.length > 0) {
-          orderData.services = selectedServices.filter(s => s.service_id && s.count > 0);
-        }
-
-        await updateOrderMutation.mutateAsync({ orderId: order.id, orderData });
-        onClose(); // Закрываем модал после успешного выполнения
-      } catch (error) {
-        console.error('Ошибка при подтверждении заказа:', error);
-      } finally {
-        setIsSubmitting(false);
-      }
-    } else {
-      // Для всех остальных действий (удаление, другие подтверждения) используем старую логику
-      onConfirm();
-    }
+    // Для всех действий используем стандартную логику
+    onConfirm();
   };
 
   const formatDate = (dateString) => {
@@ -204,23 +170,7 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
   };
 
   const getActionConfig = () => {
-    if (action === 'approve') {
-      return {
-        title: 'Подтвердить заказ',
-        message: 'Вы уверены, что хотите подтвердить этот заказ?',
-        description: 'После подтверждения пользователь сможет произвести оплату заказа.',
-        confirmText: 'Подтвердить',
-        confirmVariant: 'default',
-        confirmClass: 'bg-green-600 hover:bg-green-700',
-        icon: (
-          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        ),
-        bgColor: 'from-green-50 to-emerald-50',
-        borderColor: 'border-green-200'
-      };
-    } else if (action === 'delete') {
+    if (action === 'delete') {
       return {
         title: 'Удалить заказ',
         message: 'Вы уверены, что хотите удалить этот заказ?',

@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { useAllOrders, useUpdateOrderStatus, useDeleteOrder } from '../../../shared/lib/hooks/use-orders';
-import { showOrderStatusUpdate, showOrderDeleteSuccess, showOrderLoadError } from '../../../shared/lib/utils/notifications';
+import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
 import OrderConfirmModal from './OrderConfirmModal';
 
@@ -54,20 +54,12 @@ const OrderManagement = () => {
   // Статистика заказов
   const statistics = useMemo(() => ({
     total: orders.length,
-    inactive: orders.filter(o => o.status === 'INACTIVE').length,
     approved: orders.filter(o => o.status === 'APPROVED').length,
     processing: orders.filter(o => o.status === 'PROCESSING').length,
     active: orders.filter(o => o.status === 'ACTIVE').length,
   }), [orders]);
 
-  // Обработчики действий с использованием React Query мутаций
-  const handleApproveOrder = async (orderId) => {
-    try {
-      await updateOrderStatus.mutateAsync({ orderId, status: 'APPROVED' });
-    } catch (error) {
-      // Ошибка обрабатывается в хуке
-    }
-  };
+
 
   const handleDeleteOrder = async (orderId) => {
     try {
@@ -154,7 +146,7 @@ const OrderManagement = () => {
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-r from-[#1e2c4f] to-blue-600 text-white hover:shadow-lg transition-shadow">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -164,18 +156,6 @@ const OrderManagement = () => {
               <span className="text-2xl font-bold">{statistics.total}</span>
             </div>
             <div className="text-sm opacity-90">Всего заказов</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <span className="text-2xl font-bold">{statistics.inactive}</span>
-            </div>
-            <div className="text-sm opacity-90">Требует внимания</div>
           </CardContent>
         </Card>
 
@@ -252,18 +232,12 @@ const OrderManagement = () => {
                 Фильтр по статусу заказа
               </label>
               <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="ALL" className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7l2 2-2 2m0 10l2-2-2-2" />
                     </svg>
                     Все
-                  </TabsTrigger>
-                  <TabsTrigger value="INACTIVE" className="flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    Неактивные
                   </TabsTrigger>
                   <TabsTrigger value="APPROVED" className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
