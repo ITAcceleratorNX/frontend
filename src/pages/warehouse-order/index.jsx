@@ -4,10 +4,27 @@ import { toast } from 'react-toastify';
 import { Header } from '../../widgets';
 import Footer from '../../widgets/Footer';
 import { warehouseApi } from '../../shared/api/warehouseApi';
+import { paymentsApi } from '../../shared/api/paymentsApi';
 import { useAuth } from '../../shared/context/AuthContext';
 import ChatButton from '../../shared/components/ChatButton';
 import InteractiveWarehouseCanvas from '../../components/InteractiveWarehouseCanvas';
 import MainWarehouseCanvas from '../../components/MainWarehouseCanvas';
+
+// Импорт компонентов UI
+import { 
+  Button, 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  Switch, 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue
+} from '../../components/ui';
+import { Trash2, Plus, CalendarIcon, MapPin, Package, Truck } from 'lucide-react';
 
 const WarehouseOrderPage = memo(() => {
   const navigate = useNavigate();
@@ -27,9 +44,15 @@ const WarehouseOrderPage = memo(() => {
   const [months, setMonths] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Новые состояния для дополнительных услуг
+  // Состояния для дополнительных услуг
   const [isSelectedMoving, setIsSelectedMoving] = useState(false);
   const [isSelectedPackage, setIsSelectedPackage] = useState(false);
+  
+  // Состояния для услуг и дат перевозки
+  const [services, setServices] = useState([]);
+  const [movingOrders, setMovingOrders] = useState([]);
+  const [prices, setPrices] = useState([]);
+  const [isPricesLoading, setIsPricesLoading] = useState(false);
 
   // Проверяем роль пользователя - функции заказа доступны только для USER
   const isUserRole = user?.role === 'USER';
@@ -71,6 +94,32 @@ const WarehouseOrderPage = memo(() => {
     fetchWarehouses();
   }, []);
 
+  // Загрузка цен услуг при выборе услуги перевозки
+  useEffect(() => {
+    if (isSelectedMoving) {
+      const fetchPrices = async () => {
+        try {
+          setIsPricesLoading(true);
+          const pricesData = await paymentsApi.getPrices();
+          // Фильтруем услуги с id > 4, как указано в задаче
+          const filteredPrices = pricesData.filter(price => price.id > 4);
+          setPrices(filteredPrices);
+          
+          if (import.meta.env.DEV) {
+            console.log('Цены услуг загружены:', filteredPrices);
+          }
+        } catch (error) {
+          console.error('Ошибка при загрузке цен услуг:', error);
+          toast.error('Не удалось загрузить цены услуг');
+        } finally {
+          setIsPricesLoading(false);
+        }
+      };
+
+      fetchPrices();
+    }
+  }, [isSelectedMoving]);
+
   // Функция добавления товара
   const addOrderItem = () => {
     setOrderItems([...orderItems, { name: '', volume: '', cargo_mark: 'NO' }]);
@@ -91,6 +140,86 @@ const WarehouseOrderPage = memo(() => {
     setOrderItems(updatedItems);
   };
 
+  // Функция добавления услуги
+  const addService = () => {
+    setServices([...services, { service_id: '', count: 1 }]);
+  };
+
+  // Функция удаления услуги
+  const removeService = (index) => {
+    setServices(services.filter((_, i) => i !== index));
+  };
+
+  // Функция обновления услуги
+  const updateService = (index, field, value) => {
+    const updatedServices = services.map((service, i) => 
+      i === index ? { ...service, [field]: field === 'count' ? Number(value) : value } : service
+    );
+    setServices(updatedServices);
+  };
+
+  // Функция добавления даты перевозки
+  const addMovingOrder = () => {
+    setMovingOrders([...movingOrders, { 
+      moving_date: new Date().toISOString(), 
+      status: 'PENDING_FROM', 
+      address: '' 
+    }]);
+  };
+
+  // Функция удаления даты перевозки
+  const removeMovingOrder = (index) => {
+    setMovingOrders(movingOrders.filter((_, i) => i !== index));
+  };
+
+  // Функция обновления даты перевозки
+  const updateMovingOrder = (index, field, value) => {
+    const updatedMovingOrders = movingOrders.map((order, i) => 
+      i === index ? { ...order, [field]: value } : order
+    );
+    setMovingOrders(updatedMovingOrders);
+  };
+
+  // Функция для получения русского названия типа услуги
+  const getServiceTypeName = (type) => {
+    switch (type) {
+      case 'LOADER':
+        return 'Грузчик';
+      case 'PACKER':
+        return 'Упаковщик';
+      case 'FURNITURE_SPECIALIST':
+        return 'Мебельщик';
+      case 'GAZELLE':
+        return 'Газель';
+      case 'STRETCH_FILM':
+        return 'Стрейч-пленка';
+      case 'BOX_SIZE':
+        return 'Коробка';
+      case 'MARKER':
+        return 'Маркер';
+      case 'UTILITY_KNIFE':
+        return 'Канцелярский нож';
+      case 'BUBBLE_WRAP_1':
+        return 'Воздушно-пузырчатая пленка 10м';
+      case 'BUBBLE_WRAP_2':
+        return 'Воздушно-пузырчатая пленка 120м';
+      default:
+        return 'Услуга';
+    }
+  };
+
+  // Функция форматирования даты для отображения
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   // Функция создания заказа
   const handleCreateOrder = async () => {
     if (!selectedStorage) {
@@ -108,6 +237,17 @@ const WarehouseOrderPage = memo(() => {
       return;
     }
 
+    // Валидация перевозок, если выбрана услуга перевозки
+    if (isSelectedMoving && movingOrders.length === 0) {
+      setError('Добавьте хотя бы одну дату перевозки');
+      return;
+    }
+
+    // Валидация услуг, если выбрана услуга перевозки
+    const validServices = services.filter(service => 
+      service.service_id && service.count > 0
+    );
+
     try {
       setIsSubmitting(true);
       setError(null);
@@ -123,6 +263,27 @@ const WarehouseOrderPage = memo(() => {
         is_selected_moving: isSelectedMoving,
         is_selected_package: isSelectedPackage
       };
+
+      // Добавляем данные о перевозке, если выбрана соответствующая услуга
+      if (isSelectedMoving) {
+        orderData.moving_orders = movingOrders.map(order => ({
+          moving_date: order.moving_date,
+          status: order.status,
+          address: order.address.trim()
+        }));
+
+        // Добавляем услуги, если они есть
+        if (validServices.length > 0) {
+          orderData.services = validServices.map(service => ({
+            service_id: Number(service.service_id),
+            count: service.count
+          }));
+        }
+      }
+
+      if (import.meta.env.DEV) {
+        console.log('Отправляем данные заказа:', orderData);
+      }
 
       const result = await warehouseApi.createOrder(orderData);
       
@@ -145,21 +306,21 @@ const WarehouseOrderPage = memo(() => {
         navigate('/personal-account');
       }, 1500);
 
-          } catch (error) {
-        console.error('Ошибка при создании заказа:', error);
-        const errorMessage = error.response?.data?.message || 'Не удалось создать заказ. Попробуйте позже.';
-        setError(errorMessage);
-        
-        // Показываем уведомление об ошибке
-        toast.error(errorMessage, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      } finally {
+    } catch (error) {
+      console.error('Ошибка при создании заказа:', error);
+      const errorMessage = error.response?.data?.message || 'Не удалось создать заказ. Попробуйте позже.';
+      setError(errorMessage);
+      
+      // Показываем уведомление об ошибке
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -182,7 +343,7 @@ const WarehouseOrderPage = memo(() => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-['Montserrat']">
+    <div className="min-h-screen bg-white flex flex-col font-[Montserrat]">
       <Header />
       
       <div className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
@@ -253,8 +414,9 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
         </div>
-
+        
         {/* Список боксов выбранного склада */}
+
         {selectedWarehouse && selectedWarehouse.storage && (
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
@@ -289,13 +451,16 @@ const WarehouseOrderPage = memo(() => {
           </div>
         )}
 
-        {/* Форма добавления товаров */}
+       
+        
+        {/* Форма добавления товаров428 */}
+
         {selectedStorage && isUserRole && (
-          <div className="mb-8">
-            <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-              3. Добавьте ваши вещи
-            </h2>
-            
+           <div className="mb-8">
+           <h2 className="text-[24px] font-bold text-[#273655] mb-4">
+             3. Добавьте ваши вещи
+           </h2>
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="bg-gray-50 rounded-lg p-6 mb-4">
               <p className="text-[#6B6B6B] mb-2">
                 Выбранный бокс: <span className="font-medium text-[#273655]">{selectedStorage.name}</span>
@@ -313,43 +478,43 @@ const WarehouseOrderPage = memo(() => {
               )}
             </div>
 
-            <div className="space-y-4">
-              {orderItems.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-[#273655] mb-1">
-                        Название вещи
-                      </label>
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => updateOrderItem(index, 'name', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                        placeholder="Например: Диван"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-[#273655] mb-1">
-                        Объем (м³)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        min="0.1"
-                        value={item.volume}
-                        onChange={(e) => updateOrderItem(index, 'volume', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                        placeholder="1.5"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-[#273655] mb-1">
-                        Тип груза
-                      </label>
-                      <select
+              <div className="space-y-4">
+                {orderItems.map((item, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-[#273655] mb-1">
+                          Название вещи
+                        </label>
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => updateOrderItem(index, 'name', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                          placeholder="Например: Диван"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-[#273655] mb-1">
+                          Объем (м³)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          value={item.volume}
+                          onChange={(e) => updateOrderItem(index, 'volume', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                          placeholder="1.5"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-[#273655] mb-1">
+                          Тип груза
+                        </label>
+                        <select
                         value={item.cargo_mark}
                         onChange={(e) => updateOrderItem(index, 'cargo_mark', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
@@ -358,166 +523,255 @@ const WarehouseOrderPage = memo(() => {
                         <option value="HEAVY">Тяжелый</option>
                         <option value="FRAGILE">Хрупкий</option>
                       </select>
-                    </div>
-                    
-                    <div className="flex items-end">
+                      </div>
+                      
+                      <div className="flex items-end">
                       {orderItems.length > 1 && (
                         <button
                           onClick={() => removeOrderItem(index)}
-                          className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                          className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                         >
-                          Удалить
+                          <Trash2 className="w-5 h-6" />
                         </button>
                       )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
               
-              <button
+              <div className="mt-4">
+                              <button
                 onClick={addOrderItem}
                 className="w-full px-4 py-2 border-2 border-dashed border-[#273655] text-[#273655] rounded-lg hover:bg-blue-50 transition-colors"
               >
                 + Добавить еще вещь
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Информация о выбранном боксе для ADMIN/MANAGER */}
-        {selectedStorage && isAdminOrManager && (
-          <div className="mb-8">
-            <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-              Информация о выбранном боксе
-            </h2>
-            
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Название бокса:</span>
-                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.name}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Тип хранения:</span>
-                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.storage_type}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Статус:</span>
-                  <p className={`text-lg font-semibold ${selectedStorage.status === 'VACANT' ? 'text-green-600' : selectedStorage.status === 'OCCUPIED' ? 'text-red-600' : 'text-yellow-600'}`}>
-                    {selectedStorage.status === 'VACANT' ? 'Свободен' : selectedStorage.status === 'OCCUPIED' ? 'Занят' : 'Ожидает'}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Общий объем:</span>
-                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.total_volume} м³</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Доступный объем:</span>
-                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.available_volume} м³</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Высота:</span>
-                  <p className="text-lg font-semibold text-[#273655]">{selectedStorage.height} м</p>
-                </div>
               </div>
-              {selectedStorage.description && (
-                <div className="mt-4">
-                  <span className="text-sm font-medium text-gray-600">Описание:</span>
-                  <p className="text-gray-700 mt-1">{selectedStorage.description}</p>
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {/* Дополнительные услуги */}
+        {/* Переключатель услуг */}
         {selectedStorage && isUserRole && (
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
               5. Дополнительные услуги
             </h2>
-            
             <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
-              {/* Moving услуга */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex-1">
-                  <h3 className="text-[18px] font-semibold text-[#273655] mb-2">
-                    Услуга перевозки (Moving)
-                  </h3>
-                  <p className="text-[#6B6B6B] text-sm">
-                    Профессиональная перевозка ваших вещей на склад и обратно с использованием специального транспорта и грузчиков
+              {/* Услуга перевозки */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-5 h-5 text-[#273655]" />
+                    <h3 className="text-lg font-semibold text-[#273655]">
+                      Услуга перевозки
+                    </h3>
+                  </div>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Мы поможем перевезти ваши вещи в наш склад
                   </p>
                 </div>
-                <div className="ml-4">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isSelectedMoving}
-                      onChange={(e) => setIsSelectedMoving(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#273655]"></div>
-                  </label>
+                <div>
+                  <Switch 
+                    checked={isSelectedMoving} 
+                    onCheckedChange={setIsSelectedMoving}
+                    className=" bg-gray-200 data-[state=checked]:bg-[#273655]"
+                  />
                 </div>
               </div>
 
-              {/* Package услуга */}
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex-1">
-                  <h3 className="text-[18px] font-semibold text-[#273655] mb-2">
-                    Услуга упаковки (Package)
-                  </h3>
-                  <p className="text-[#6B6B6B] text-sm">
-                    Профессиональная упаковка ваших вещей в специальные материалы для безопасного хранения
+              {/* Услуга упаковки */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Package className="w-5 h-5 text-[#273655]" />
+                    <h3 className="text-lg font-semibold text-[#273655]">
+                      Услуга упаковки
+                    </h3>
+                  </div>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Мы упакуем ваши вещи для безопасного хранения
                   </p>
                 </div>
-                <div className="ml-4">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isSelectedPackage}
-                      onChange={(e) => setIsSelectedPackage(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#273655]"></div>
-                  </label>
+                <div>
+                  <Switch 
+                    checked={isSelectedPackage} 
+                    onCheckedChange={setIsSelectedPackage}
+                    className=" bg-gray-200 data-[state=checked]:bg-[#273655]"
+                  />
                 </div>
               </div>
-
-              {/* Информация о выбранных услугах */}
-              {(isSelectedMoving || isSelectedPackage) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-[16px] font-semibold text-[#273655] mb-2">
-                    Выбранные дополнительные услуги:
-                  </h4>
-                  <ul className="space-y-1 text-sm text-[#6B6B6B]">
-                    {isSelectedMoving && (
-                      <li className="flex items-center">
-                        <span className="w-2 h-2 bg-[#273655] rounded-full mr-2"></span>
-                        Услуга перевозки (Moving)
-                      </li>
-                    )}
-                    {isSelectedPackage && (
-                      <li className="flex items-center">
-                        <span className="w-2 h-2 bg-[#273655] rounded-full mr-2"></span>
-                        Услуга упаковки (Package)
-                      </li>
-                    )}
-                  </ul>
-                  <p className="text-xs text-[#6B6B6B] mt-2">
-                    * Стоимость дополнительных услуг будет рассчитана после создания заказа
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {/* Срок аренды и кнопка заказа */}
+        {/* Услуги перевозки (если выбраны) */}
+        {selectedStorage && isUserRole && isSelectedMoving && (
+          <>
+            {/* Блок добавления услуг */}
+            <div className="mb-8">
+              <h2 className="text-[24px] font-bold text-[#273655] mb-4">
+                6. Добавить услуги для перевозки
+              </h2>
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                {isPricesLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
+                  </div>
+                ) : (
+                  <>
+                    {services.length > 0 && (
+                      <div className="mb-6 space-y-4">
+                        {services.map((service, index) => (
+                          <div key={index} className="border border-gray-200 rounded-lg p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-[#273655] mb-1">
+                                  Выберите услугу
+                                </label>
+                                <Select
+                                  value={service.service_id.toString()}
+                                  onValueChange={(value) => updateService(index, 'service_id', value)}
+                                >
+                                  <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <SelectValue placeholder="Выберите услугу" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {prices.map((price) => (
+                                      <SelectItem key={price.id} value={price.id.toString()}>
+                                        {getServiceTypeName(price.type) || price.description}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-[#273655] mb-1">
+                                  Количество
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={service.count}
+                                  onChange={(e) => updateService(index, 'count', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                                />
+                              </div>
+                              
+                              <div className="flex items-end">
+                                <button
+                                  onClick={() => removeService(index)}
+                                  className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={addService}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Добавить услугу
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {/* Блок добавления дат перевозки */}
+            <div className="mb-8">
+              <h2 className="text-[24px] font-bold text-[#273655] mb-4">
+                7. Добавить даты перевозки
+              </h2>
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                {movingOrders.length > 0 && (
+                  <div className="mb-6 space-y-4">
+                    {movingOrders.map((order, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-[#273655] mb-1">
+                              Дата перевозки
+                            </label>
+                            <input
+                              type="datetime-local"
+                              value={order.moving_date.slice(0, 16)} // Форматирование для input datetime-local
+                              onChange={(e) => updateMovingOrder(index, 'moving_date', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-[#273655] mb-1">
+                              Тип перевозки
+                            </label>
+                            <Select
+                              value={order.status}
+                              onValueChange={(value) => updateMovingOrder(index, 'status', value)}
+                            >
+                              <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                <SelectValue placeholder="Выберите тип перевозки" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="PENDING_FROM">Забрать вещи (От клиента на склад)</SelectItem>
+                                <SelectItem value="PENDING_TO">Доставить вещи (Со склада к клиенту)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="grid grid-cols-[1fr_auto] gap-2">
+                            <div>
+                              <label className="block text-sm font-medium text-[#273655] mb-1">
+                                Адрес
+                              </label>
+                              <input
+                                type="text"
+                                value={order.address}
+                                onChange={(e) => updateMovingOrder(index, 'address', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                                placeholder="Ваш адрес"
+                              />
+                            </div>
+                            <div className="flex items-end">
+                              <button
+                                onClick={() => removeMovingOrder(index)}
+                                className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <button
+                  onClick={addMovingOrder}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Добавить дату перевозки
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Блок выбора срока аренды и кнопки создания заказа */}
         {selectedStorage && isUserRole && (
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-              {(isSelectedMoving || isSelectedPackage) ? '6' : '4'}. Укажите срок аренды
+              {(isSelectedMoving || isSelectedPackage) ? '8' : '5'}. Укажите срок аренды
             </h2>
             
             <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -526,17 +780,21 @@ const WarehouseOrderPage = memo(() => {
                   <label className="block text-sm font-medium text-[#273655] mb-2">
                     Срок аренды (месяцы)
                   </label>
-                  <select
-                    value={months}
-                    onChange={(e) => setMonths(Number(e.target.value))}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655] text-lg"
+                  <Select
+                    value={months.toString()}
+                    onValueChange={(value) => setMonths(Number(value))}
                   >
-                    <option value={1}>1 месяц</option>
-                    <option value={2}>2 месяца</option>
-                    <option value={3}>3 месяца</option>
-                    <option value={6}>6 месяцев</option>
-                    <option value={12}>12 месяцев</option>
-                  </select>
+                    <SelectTrigger className="w-full h-[56px] text-lg">
+                      <SelectValue placeholder="Выберите срок аренды" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 месяц</SelectItem>
+                      <SelectItem value="2">2 месяца</SelectItem>
+                      <SelectItem value="3">3 месяца</SelectItem>
+                      <SelectItem value="6">6 месяцев</SelectItem>
+                      <SelectItem value="12">12 месяцев</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <button
@@ -545,7 +803,8 @@ const WarehouseOrderPage = memo(() => {
                     isSubmitting || 
                     !selectedStorage || 
                     orderItems.filter(item => item.name.trim() && item.volume).length === 0 ||
-                    totalVolume > parseFloat(selectedStorage.available_volume)
+                    totalVolume > parseFloat(selectedStorage.available_volume) ||
+                    (isSelectedMoving && movingOrders.length === 0)
                   }
                   className="w-full h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ boxShadow: "4px 4px 8px 0 #B0B0B0" }}

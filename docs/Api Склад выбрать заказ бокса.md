@@ -47,18 +47,50 @@
 2. Создать новый заказ!
   POST:/orders:
   Request body -> Example Value
-  {
-  "storage_id": 0,
-  "months": 1,
+POST /orders
+{
+  "storage_id": 7,
+  "months": 2,
   "order_items": [
     {
-      "name": "string",
-      "volume": 0,
-      "cargo_mark": "NO"  //есть три разных cargo_mark:[NO,HEAVY,FRAGILE]
+      "name": "Wooden Crate",
+      "volume": 2,
+      "cargo_mark": "HEAVY"
+    },
+    {
+      "name": "Glass Vase",
+      "volume": 1,
+      "cargo_mark": "FRAGILE" //есть три разных cargo_mark:[NO,HEAVY,FRAGILE].
+    }
+  ],
+  "is_selected_moving": false, //есть дви разных: false и true.
+  "is_selected_package": true, //есть дви разных: false и true
+  "moving_orders": [
+    {
+      "moving_date": "2025-07-15T00:00:00.000Z",
+      "status": "PENDING_FROM", //есть дви разных status:PENDING_FROM и PENDING_TO.
+      "address": "almaty"
+    },
+    {
+      "moving_date": "2025-07-20T00:00:00.000Z",
+      "status": "PENDING_TO",
+      "address": "astana"
+    }
+  ],
+  "services": [
+    {
+      "service_id": 9,
+      "count": 1
+    },
+    {
+      "service_id": 10,
+      "count": 1
     }
   ]
-}
+}  
 
+
+--
 Responses: 201 Заказ успешно создан:
  Example Value:
   {

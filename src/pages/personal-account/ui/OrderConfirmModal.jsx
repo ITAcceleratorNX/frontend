@@ -178,8 +178,6 @@ const OrderConfirmModal = ({ isOpen, onClose, onConfirm, action, order }) => {
   // Функция для получения русского названия типа услуги
   const getServiceTypeName = (type) => {
     switch (type) {
-      case 'DEPOSIT':
-        return 'Залог';
       case 'LOADER':
         return 'Грузчик';
       case 'PACKER':
