@@ -81,6 +81,8 @@ export const authApi = {
       throw error;
     }
   },
+
+
   
   // Проверка статуса аутентификации (более легкий вызов)
   checkAuth: async () => {

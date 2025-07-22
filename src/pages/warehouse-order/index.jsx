@@ -9,6 +9,7 @@ import { useAuth } from '../../shared/context/AuthContext';
 import ChatButton from '../../shared/components/ChatButton';
 import InteractiveWarehouseCanvas from '../../components/InteractiveWarehouseCanvas';
 import MainWarehouseCanvas from '../../components/MainWarehouseCanvas';
+import ProfileValidationGuard from '../../shared/components/ProfileValidationGuard';
 
 // Импорт компонентов UI
 import { 
@@ -343,8 +344,9 @@ const WarehouseOrderPage = memo(() => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-[Montserrat]">
-      <Header />
+    <ProfileValidationGuard>
+      <div className="min-h-screen bg-white flex flex-col font-[Montserrat]">
+        <Header />
       
       <div className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
         {/* Заголовок */}
@@ -817,9 +819,10 @@ const WarehouseOrderPage = memo(() => {
         )}
       </div>
 
-      <ChatButton />
-      <Footer />
-    </div>
+        <ChatButton />
+        <Footer />
+      </div>
+    </ProfileValidationGuard>
   );
 });
 

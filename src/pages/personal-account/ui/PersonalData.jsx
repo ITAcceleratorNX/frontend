@@ -1,5 +1,5 @@
 import React, { useEffect, useState, memo, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useForm } from 'react-hook-form';
@@ -21,6 +21,7 @@ const PersonalData = memo(() => {
   const [isEditing, setIsEditing] = useState(false);
   const { user, isAuthenticated, isLoading, refetchUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   // Используем мемоизацию для defaultValues, чтобы предотвратить повторное создание объекта
@@ -58,6 +59,26 @@ const PersonalData = memo(() => {
       navigate('/login');
     }
   }, [isAuthenticated, isLoading, navigate]);
+
+  // Показываем сообщение валидации, если пользователь пришёл с проверки профиля
+  useEffect(() => {
+    if (location.state?.message) {
+      toast.warning(location.state.message, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      // Автоматически включаем режим редактирования
+      setIsEditing(true);
+      
+      // Очищаем state, чтобы сообщение не показывалось повторно
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   // Функция валидации всех полей
   const validateFields = () => {
