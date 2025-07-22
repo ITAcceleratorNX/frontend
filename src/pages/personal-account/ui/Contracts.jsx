@@ -33,39 +33,39 @@ const getContractStatusInfo = (statusText) => {
     'Подписан компанией': { 
       style: 'success',
       icon: <Clock className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'Ожидает подписи клиента'
+      message: 'Подписан компанией'
     },
     'Подписан клиентом': { 
       style: 'success',
       icon: <Clock className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'Ожидает подписи компании'
+      message: 'Подписан клиентом'
     },
     'Полностью подписан': { 
       style: 'success',
       icon: <Check className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'Активен'
+      message: 'Полностью подписан'
     },
     // Ожидающие подтверждения
     'Не подписан': { 
       style: 'info',
       icon: <Clock className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'Ожидается подтверждение'
+      message: 'Не подписан'
     },
     // Процесс расторжения
     'Компания инициировала расторжение': { 
       style: 'warning',
       icon: <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'В процессе расторжения'
+      message: 'Компания инициировала расторжение'
     },
     'Клиент инициировал расторжение': { 
       style: 'warning',
       icon: <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'В процессе расторжения'
+      message: 'Клиент инициировал расторжение'
     },
     'Клиент отказался от расторжения': { 
       style: 'info',
       icon: <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'Возобновлен'
+      message: 'Клиент отказался от расторжения'
     },
     // Отрицательные статусы
     'Отозван компанией': { 
@@ -81,7 +81,7 @@ const getContractStatusInfo = (statusText) => {
     'Клиент отказался подписывать договор': { 
       style: 'danger',
       icon: <X className="mr-1.5 h-3.5 w-3.5" />,
-      message: 'Отказ клиента'
+      message: 'Клиент отказался подписывать договор'
     },
     // Завершенные статусы
     'Завершён': { 
@@ -437,7 +437,7 @@ const Contracts = () => {
                           <Download size={16} className="mr-2" />
                           {downloadContractMutation.isPending ? 'Загрузка...' : 'Скачать'}
                         </button>
-                        {row.order_status === 'ACTIVE' && (
+                        {row.order_status === 'ACTIVE' && row.contract_status === 'Полностью подписан' && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // Предотвращаем срабатывание onClick на родительском tr
