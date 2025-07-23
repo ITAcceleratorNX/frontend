@@ -82,16 +82,16 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
-    
+
     try {
       // Простой вызов API для создания платежа
       const result = await createPaymentMutation.mutateAsync(order.id);
-      
+
       // Получаем URL для оплаты из ответа API
       if (result.payment_page_url) {
-        // Открываем страницу оплаты в новом окне/вкладке
-        window.open(result.payment_page_url, '_blank');
-        
+        // Перенаправляем пользователя на страницу оплаты
+        window.location.href = result.payment_page_url;
+
         // Закрываем модальное окно и обновляем данные
         onSuccess();
       }
