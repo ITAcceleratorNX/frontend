@@ -14,6 +14,8 @@ import CourierRequest from './ui/CourierRequest';
 import CourierRequestOrder from './ui/CourierRequestOrder';
 import OrderManagement from './ui/OrderManagement';
 import UserPayments from './ui/UserPayments';
+import { Menu, X } from 'lucide-react';
+import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
 
 import { 
   UserNotificationsPage, 
@@ -31,6 +33,9 @@ const PersonalAccountPage = memo(() => {
   const [activeNav, setActiveNav] = useState('personal');
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
+  const { isMobile } = useDeviceType();
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+
 
   // Проверяем состояние навигации при загрузке компонента
   useEffect(() => {
@@ -88,7 +93,23 @@ const PersonalAccountPage = memo(() => {
       <Header />
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex flex-1">
-        <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
+      {isMobile ? (
+          <>
+            <button
+              className="fixed top-20 left-4 z-50 p-2 bg-white rounded-full shadow-md"
+              onClick={() => setSidebarOpen(!isSidebarOpen)}
+            >
+              {isSidebarOpen ? <X /> : <Menu />}
+            </button>
+            {isSidebarOpen && (
+              <div className="fixed inset-0 z-40">
+                <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
+              </div>
+            )}
+          </>
+        ) : (
+          <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
+        )}
         <main className="flex-1 flex flex-col items-start justify-center py-10 px-4 bg-white">
 
 
@@ -111,7 +132,7 @@ const PersonalAccountPage = memo(() => {
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated, user]);
+  }, [activeNav, isLoading, isAuthenticated, user, isMobile, isSidebarOpen]);
 
   if (import.meta.env.DEV) {
     console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 
