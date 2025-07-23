@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://extraspace-backend.onrender.com';
+const API_URL = 'https://backend.shakyrty.kz';
 
 // Создаем настроенный экземпляр axios для всех запросов
 const axiosApi = axios.create({

@@ -135,7 +135,7 @@ export const ordersApi = {
         console.log(`OrdersAPI: Запрос на скачивание документа для предмета ${itemId}`);
       }
       // Используем axios напрямую для получения файла
-      const response = await axios.get(`https://extraspace-backend.onrender.com/moving/download/item/${itemId}`, {
+      const response = await axios.get(`https://backend.shakyrty.kz/moving/download/item/${itemId}`, {
         responseType: 'blob', // Важно для получения файла
       });
       if (isDevelopment) {

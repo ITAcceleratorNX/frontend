@@ -22,7 +22,7 @@ const ChangeManagerModal = memo(({
       
       try {
         setIsLoading(true);
-        const response = await fetch('https://extraspace-backend.onrender.com/users/manager', {
+        const response = await fetch('https://backend.shakyrty.kz/users/manager', {
           credentials: 'include'
         });
         const data = await response.json();
