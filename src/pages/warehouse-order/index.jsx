@@ -343,7 +343,7 @@ const WarehouseOrderPage = memo(() => {
       );
 
       setTimeout(() => {
-        navigate("/personal-account/payments");
+        navigate("/personal-account", { state: { activeSection: "payments" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
