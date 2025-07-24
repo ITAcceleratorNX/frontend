@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import smallBox from '../../../assets/small_box.png';
-import { useContracts, useCancelContract, useDownloadContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
+import { useContracts, useCancelContract, useDownloadContract, useContractDetails, useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 import { 
   Check, 
   Download, 
@@ -136,6 +136,42 @@ const getCargoMarkText = (mark) => {
   return markMap[mark] || mark;
 };
 
+// Функция для получения информации о статусе заказа
+const getOrderStatusInfo = (status) => {
+  const statusMap = {
+    'APPROVED': { 
+      style: 'success',
+      message: 'Одобрен'
+    },
+    'PROCESSING': { 
+      style: 'warning',
+      message: 'В обработке'
+    },
+    'ACTIVE': { 
+      style: 'info',
+      message: 'Активный'
+    }
+  };
+  
+  return statusMap[status] || { style: 'default', message: status };
+};
+
+// Функция для получения информации о статусе оплаты
+const getPaymentStatusInfo = (status) => {
+  const statusMap = {
+    'PAID': { 
+      style: 'success',
+      message: 'Оплачен'
+    },
+    'UNPAID': { 
+      style: 'danger',
+      message: 'Не оплачен'
+    }
+  };
+  
+  return statusMap[status] || { style: 'default', message: status };
+};
+
 function MonthSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState('АВГУСТ');
@@ -160,7 +196,7 @@ function MonthSelector() {
   );
 }
 
-const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error }) => {
+const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error, onDownloadItemFile, isDownloadingItem }) => {
   if (!contract) return null;
   
   // Форматируем дату для переездов
@@ -192,6 +228,47 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
             </div>
           </DialogDescription>
         </DialogHeader>
+
+        {/* Блок статусов */}
+        <Card className="bg-gray-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#273655]" />
+              Статусы
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-600">Статус договора:</p>
+                <Badge 
+                  className={`${statusStyles[getContractStatusInfo(contract.contract_status).style]} justify-center py-2 px-3`}
+                >
+                  {getContractStatusInfo(contract.contract_status).icon}
+                  {contract.contract_status}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-600">Статус заказа:</p>
+                <Badge 
+                  className={`${statusStyles[getOrderStatusInfo(contract.order_status).style]} justify-center py-2 px-3`}
+                >
+                  {getOrderStatusInfo(contract.order_status).message}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-600">Статус оплаты:</p>
+                <Badge 
+                  className={`${statusStyles[getPaymentStatusInfo(contract.payment_status).style]} justify-center py-2 px-3`}
+                >
+                  {getPaymentStatusInfo(contract.payment_status).message}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -231,6 +308,7 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                           <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Название</th>
                           <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Объём (м³)</th>
                           <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Маркировка</th>
+                          <th className="text-center py-3 px-4 text-sm font-medium text-gray-600">Скачать</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -248,6 +326,20 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                               >
                                 {getCargoMarkText(item.cargo_mark)}
                               </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <button
+                                onClick={() => onDownloadItemFile(item.id)}
+                                disabled={isDownloadingItem}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                                title="Скачать файл предмета"
+                              >
+                                {isDownloadingItem ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-600"></div>
+                                ) : (
+                                  <Download className="w-4 h-4 text-gray-600" />
+                                )}
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -343,6 +435,7 @@ const Contracts = () => {
   const { data: contracts, isLoading, error } = useContracts();
   const cancelContractMutation = useCancelContract();
   const downloadContractMutation = useDownloadContract();
+  const downloadItemFileMutation = useDownloadItemFile();
   
   // Состояние для модального окна деталей договора
   const [selectedContract, setSelectedContract] = useState(null);
@@ -364,6 +457,10 @@ const Contracts = () => {
 
   const handleDownloadContract = (documentId) => {
     downloadContractMutation.mutate(documentId);
+  };
+
+  const handleDownloadItemFile = (itemId) => {
+    downloadItemFileMutation.mutate(itemId);
   };
   
   const handleRowClick = (contract) => {
@@ -399,13 +496,11 @@ const Contracts = () => {
                 <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
                 <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
                 <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>
-                <th className="text-left px-6 py-4 text-center font-medium">СТАТУС</th>
                 <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
               </tr>
             </thead>
             <tbody>
               {contracts && contracts.map((row, idx) => {
-                const statusInfo = getContractStatusInfo(row.contract_status);
                 return (
                   <tr 
                     key={idx} 
@@ -418,12 +513,6 @@ const Contracts = () => {
                     </td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{row.warehouse_address}</td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
-                    <td className="px-6 py-5 text-center">
-                      <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-sm font-medium leading-5 ${statusStyles[statusInfo.style]} min-w-[120px] transition-all duration-200`}>
-                        {statusInfo.icon}
-                        {statusInfo.message}
-                      </span>
-                    </td>
                     <td className="px-6 py-5 text-center">
                       <div className="flex items-center justify-center space-x-3">
                         <button
@@ -467,6 +556,8 @@ const Contracts = () => {
         details={contractDetails}
         isLoading={isLoadingDetails}
         error={detailsError}
+        onDownloadItemFile={handleDownloadItemFile}
+        isDownloadingItem={downloadItemFileMutation.isPending}
       />
     </div>
   );
