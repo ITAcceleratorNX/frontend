@@ -12,12 +12,11 @@ const MovingPricingCards = () => {
         setIsLoading(true);
         setError(null);
         const data = await paymentsApi.getPrices();
-        // Фильтруем только нужные тарифы для мувинга
-        const movingPrices = data.filter(price => 
-          ['LIGHT', 'STANDARD', 'HARD'].includes(price.type)
+        const movingPrices = data.filter(price =>
+            ['LIGHT', 'STANDARD', 'HARD'].includes(price.type)
         );
         setPrices(movingPrices);
-        
+
         if (import.meta.env.DEV) {
           console.log('MovingPricingCards: Загружены тарифы мувинга:', movingPrices);
         }
@@ -32,13 +31,9 @@ const MovingPricingCards = () => {
     fetchPrices();
   }, []);
 
-  const formatPrice = (price) => {
-    const numPrice = parseFloat(price);
-    return numPrice.toLocaleString('ru-RU');
-  };
+  const formatPrice = (price) => parseFloat(price).toLocaleString('ru-RU');
 
   const getOldPrice = (currentPrice) => {
-    // Старая цена примерно на 20% выше текущей
     const oldPrice = parseFloat(currentPrice) * 1.2;
     return Math.round(oldPrice).toLocaleString('ru-RU');
   };
@@ -88,129 +83,100 @@ const MovingPricingCards = () => {
     if (import.meta.env.DEV) {
       console.log('MovingPricingCards: Заказ тарифа:', tariffType);
     }
-    // Здесь можно добавить логику перехода на страницу заказа или открытие модального окна
+    // Навигация или логика открытия модалки
   };
 
-  if (isLoading) {
-    return (
+  const renderStatus = (message, spinner = false) => (
       <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
         <div className="w-full max-w-[1100px] mx-auto px-4">
-          <h2 className="text-[32px] md:text-[35px] font-bold text-[#1e2c4f] text-center mb-10">
+          <h2 className="text-[28px] md:text-[35px] font-bold text-[#1e2c4f] text-center mb-10">
             ТАРИФНЫЕ ПАКЕТЫ
           </h2>
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1e2c4f]"></div>
-            <span className="ml-4 text-[#1e2c4f] text-lg">Загрузка тарифов...</span>
+            {spinner ? (
+                <>
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#1e2c4f]"></div>
+                  <span className="ml-4 text-[#1e2c4f] text-base md:text-lg">Загрузка тарифов...</span>
+                </>
+            ) : (
+                <div className="text-[#666] text-base md:text-lg">{message}</div>
+            )}
           </div>
         </div>
       </section>
-    );
-  }
+  );
 
-  if (error) {
-    return (
-      <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
-        <div className="w-full max-w-[1100px] mx-auto px-4">
-          <h2 className="text-[32px] md:text-[35px] font-bold text-[#1e2c4f] text-center mb-10">
-            ТАРИФНЫЕ ПАКЕТЫ
-          </h2>
-          <div className="flex justify-center items-center py-12">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-              <div className="text-red-600 text-lg">{error}</div>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (prices.length === 0) {
-    return (
-      <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
-        <div className="w-full max-w-[1100px] mx-auto px-4">
-          <h2 className="text-[32px] md:text-[35px] font-bold text-[#1e2c4f] text-center mb-10">
-            ТАРИФНЫЕ ПАКЕТЫ
-          </h2>
-          <div className="flex justify-center items-center py-12">
-            <div className="text-[#666] text-lg">Тарифы временно недоступны</div>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  if (isLoading) return renderStatus('Загрузка тарифов...', true);
+  if (error) return renderStatus(error);
+  if (prices.length === 0) return renderStatus('Тарифы временно недоступны');
 
   return (
-    <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
-      <div className="w-full max-w-[1100px] mx-auto px-4">
-        <h2 className="text-[32px] md:text-[35px] font-bold text-[#1e2c4f] text-center mb-10">
-          ТАРИФНЫЕ ПАКЕТЫ
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
-          {prices.map((priceItem) => {
-            const details = getPricingDetails(priceItem.type);
-            const currentPrice = formatPrice(priceItem.price);
-            const oldPrice = getOldPrice(priceItem.price);
-            
-            return (
-              <div
-                key={priceItem.id}
-                className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 w-full max-w-[320px] hover:shadow-xl transition-all duration-300 hover:scale-105"
-                style={{ boxShadow: '4px 4px 12px 0 rgba(0,0,0,0.1)' }}
-              >
-                {/* Заголовок тарифа */}
-                <div className="text-center mb-6">
-                  <h3 className="text-[28px] font-bold text-[#1e2c4f] mb-4">
-                    {details.name}
-                  </h3>
-                </div>
+      <section className="w-full flex justify-center items-center mb-24 font-['Montserrat']">
+        <div className="w-full max-w-[1100px] mx-auto px-4">
+          <h2 className="text-[28px] md:text-[35px] font-bold text-[#1e2c4f] text-center mb-10">
+            ТАРИФНЫЕ ПАКЕТЫ
+          </h2>
 
-                {/* Цена */}
-                <div className="mb-6 text-center">
-                  <div className="text-[16px] text-[#666] mb-2">Цена:</div>
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-[24px] font-bold text-[#1e2c4f]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 justify-items-center">
+            {prices.map((priceItem) => {
+              const details = getPricingDetails(priceItem.type);
+              const currentPrice = formatPrice(priceItem.price);
+              const oldPrice = getOldPrice(priceItem.price);
+
+              return (
+                  <div
+                      key={priceItem.id}
+                      className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 sm:p-6 w-full max-w-[320px] hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  >
+                    <div className="text-center mb-5 sm:mb-6">
+                      <h3 className="text-[24px] sm:text-[28px] font-bold text-[#1e2c4f] mb-2 sm:mb-4">
+                        {details.name}
+                      </h3>
+                    </div>
+
+                    <div className="mb-5 text-center">
+                      <div className="text-[14px] sm:text-[16px] text-[#666] mb-1">Цена:</div>
+                      <div className="flex items-center justify-center gap-2 sm:gap-3">
+                    <span className="text-[20px] sm:text-[24px] font-bold text-[#1e2c4f]">
                       {currentPrice} тг
                     </span>
-                    <span className="text-[16px] text-[#999] line-through">
+                        <span className="text-[14px] sm:text-[16px] text-[#999] line-through">
                       {oldPrice} тг
                     </span>
-                  </div>
-                </div>
-
-                {/* Описание услуг */}
-                <div className="mb-6 space-y-3 text-center">
-                  <div className="text-[16px] text-[#1e2c4f] font-medium">
-                    {details.workers}
-                  </div>
-                  <div className="text-[16px] text-[#1e2c4f] font-medium">
-                    {details.vehicle}
-                  </div>
-                  <div className="text-[16px] text-[#1e2c4f] font-medium">
-                    {details.hours}
-                  </div>
-                  {priceItem.description && (
-                    <div className="text-[14px] text-[#666] mt-4 leading-relaxed px-2">
-                      {priceItem.description}
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Кнопка заказа */}
-                <button
-                  onClick={() => handleOrderClick(priceItem.type)}
-                  className={`w-full h-[50px] rounded-lg font-bold text-[16px] transition-all duration-300 hover:shadow-lg hover:scale-105 ${details.buttonClass}`}
-                  style={{ boxShadow: '2px 2px 6px 0 rgba(0,0,0,0.15)' }}
-                >
-                  {details.buttonText}
-                </button>
-              </div>
-            );
-          })}
+                    <div className="mb-6 space-y-2 text-center">
+                      <div className="text-[15px] sm:text-[16px] text-[#1e2c4f] font-medium">
+                        {details.workers}
+                      </div>
+                      <div className="text-[15px] sm:text-[16px] text-[#1e2c4f] font-medium">
+                        {details.vehicle}
+                      </div>
+                      <div className="text-[15px] sm:text-[16px] text-[#1e2c4f] font-medium">
+                        {details.hours}
+                      </div>
+                      {priceItem.description && (
+                          <div className="text-[13px] text-[#666] mt-2 leading-relaxed px-1">
+                            {priceItem.description}
+                          </div>
+                      )}
+                    </div>
+
+                    <button
+                        onClick={() => handleOrderClick(priceItem.type)}
+                        className={`w-full h-[45px] sm:h-[50px] rounded-lg font-bold text-[15px] sm:text-[16px] transition-all duration-300 hover:shadow-lg hover:scale-105 ${details.buttonClass}`}
+                        style={{ boxShadow: '2px 2px 6px 0 rgba(0,0,0,0.15)' }}
+                    >
+                      {details.buttonText}
+                    </button>
+                  </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 };
 
-export default MovingPricingCards; 
+export default MovingPricingCards;

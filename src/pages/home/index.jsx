@@ -134,47 +134,36 @@ const HomePage = memo(() => {
       <Header />
 
       <div className="flex-1 relative overflow-hidden">
-        <div className="container mx-auto tracking-[0.1em] px-2 py-8">
+        <div className="container mx-auto tracking-[0.1em] px-4 py-8">
           <div className="text-center relative flex flex-col items-center">
-            <h1 className="text-[30px] md:text-[45px] font-bold text-[#273655] mb-2 flex flex-col items-center leading-[1.0] font-['Montserrat']">
+            <h1 className="text-[22px] sm:text-[28px] md:text-[45px] font-bold text-[#273655] mb-2 flex flex-col items-center leading-[1.0] font-['Montserrat']">
               <span className="mb-1">БЕРЕЖНОЕ ХРАНЕНИЕ</span>
               <div className="flex justify-center items-center gap-2">
-                <img
-                  src={vectorImg}
-                  alt="Декоративный элемент"
-                  className="w-8 h-8"
-                />
+                <img src={vectorImg} alt="Декор" className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" />
                 <span>ВАШИХ ВЕЩЕЙ</span>
-                <img
-                  src={vectorImg}
-                  alt="Декоративный элемент"
-                  className="w-8 h-8"
-                />
+                <img src={vectorImg} alt="Декор" className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" />
               </div>
             </h1>
 
             <div className="mt-3">
-              <button className="bg-[#273655] text-white px-10 py-1 rounded-[15px] text-lg font-medium hover:bg-[#2a3c64] transition-colors font-['Montserrat']">
+              <button className="bg-[#273655] text-white px-6 sm:px-8 md:px-10 py-1 sm:py-1.5 rounded-[15px] text-base sm:text-lg font-medium hover:bg-[#2a3c64] transition-colors font-['Montserrat']">
                 Теплые склады с охраной от 3 м²
               </button>
             </div>
 
-            <div className="relative mt-5 w-full h-[470px]">
-              {/* Фоновый текст */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 w-[126%] max-w-none z-0 h-full flex items-center justify-center">
+            <div className="relative mt-5 w-full h-[280px] sm:h-[350px] md:h-[470px]">
+              <div className="absolute left-1/2 transform -translate-x-1/2 w-[200%] sm:w-[126%] max-w-none z-0 h-full flex items-center justify-center">
                 <img
-                  src={backgroundTextImg}
-                  alt="Background"
-                  className="w-full h-auto object-contain mix-blend-normal opacity-[0.9] brightness-[0] contrast-[100%] scale-90"
+                    src={backgroundTextImg}
+                    alt="Background"
+                    className="w-full h-auto object-contain opacity-[0.6] sm:opacity-[0.8] md:opacity-[0.9] brightness-[0] contrast-[100%] scale-90"
                 />
               </div>
-
-              {/* Коробки поверх текста */}
               <div className="absolute inset-0 z-10 flex items-center justify-center">
                 <img
-                  src={boxesImg}
-                  alt="Storage boxes"
-                  className="w-full max-w-6xl object-contain transform scale-105"
+                    src={boxesImg}
+                    alt="Коробки"
+                    className="w-[120%] sm:w-full max-w-4xl object-contain transform scale-100 sm:scale-105"
                 />
               </div>
             </div>
@@ -182,131 +171,109 @@ const HomePage = memo(() => {
         </div>
       </div>
       {/* Второй фрейм: преимущества */}
-      <section className="w-full flex flex-col items-center justify-center mt-24 mb-24">
-        <div className="w-full flex flex-col items-center">
-          <div
-            className="grid grid-cols-2 grid-rows-3 gap-x-6 gap-y-2"
-            style={{ width: 1144 }}
-          >
-            {/* Верхний левый — текстовый блок */}
-            <div className="flex flex-col h-[255px] w-[560px] pl-2 pt-6">
-              <div
-                className="text-[28px] font-bold font-['Montserrat'] text-[#273655] leading-tight mb-6"
-                style={{ maxWidth: 560 }}
-              >
-                мы предоставляем{" "}
-                <span className="text-[#C73636]">
-                  автоматизированные склады
-                </span>
-                <br />
+      <section className="w-full flex flex-col items-center justify-center mt-16 mb-16 px-4">
+        <div className="w-full max-w-[1144px] flex flex-col items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+
+            {/* Верхний левый — текст */}
+            <div className="flex flex-col w-full md:w-[560px] md:h-[255px] pl-2 pt-6">
+              <div className="text-[20px] sm:text-[24px] md:text-[28px] font-bold font-['Montserrat'] text-[#273655] leading-tight mb-4">
+                мы предоставляем <span className="text-[#C73636]">автоматизированные склады</span><br />
                 для хранения вещей.
               </div>
-              <div
-                className="font-bold font-['Montserrat'] text-[#273655] text-[28px] leading-tight"
-                style={{ maxWidth: 560 }}
-              >
+              <div className="font-bold font-['Montserrat'] text-[#273655] text-[20px] sm:text-[24px] md:text-[28px] leading-tight">
                 современные складские системы, оборудования и инфраструктура.
               </div>
             </div>
-            {/* Верхний правый — бежевый с замком */}
-            <div className="relative rounded-3xl bg-[#F3EEDD] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] overflow-hidden">
+
+            {/* Верхний правый */}
+            <div className="relative rounded-3xl bg-[#F3EEDD] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
               <div className="z-10 relative">
-                <div className="text-[24px] font-bold font-['Montserrat'] text-[#273655] mb-3">
+                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-[#273655] mb-3">
                   Безопасность и надежность
                 </div>
-                <div className="text-[#717171] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
-                  Наши склады оборудованы современными системами безопасности,
-                  включая видеонаблюдение, охрану и контроль доступа.
+                <div className="text-[#717171] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
+                  Наши склады оборудованы современными системами безопасности, включая видеонаблюдение, охрану и контроль доступа.
                 </div>
               </div>
               <img
-                src={key2}
-                alt="key"
-                className="absolute right-[-40px] bottom-[-120px] w-[320px] rotate-[20deg] select-none pointer-events-none z-0"
+                  src={key2}
+                  alt="key"
+                  className="absolute right-[-40px] bottom-[-120px] w-[200px] md:w-[320px] rotate-[20deg] select-none pointer-events-none z-0"
               />
             </div>
-            {/* Посередине левый — зеленый с процентами */}
-            <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-between items-end p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
+
+            {/* Зелёный блок */}
+            <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
               <div className="z-10 relative text-right">
-                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
+                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Конкурентные цены
                 </div>
-                <div className="text-[#313131B2] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
-                  Мы предлагаем конкурентоспособные цены на аренду, чтобы помочь
-                  вам сэкономить на затратах и улучшить вашу рентабельность.
+                <div className="text-[#313131B2] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
+                  Мы предлагаем конкурентоспособные цены на аренду, чтобы помочь вам сэкономить на затратах и улучшить вашу рентабельность.
                 </div>
               </div>
               <img
-                src={procent2}
-                alt="procent"
-                className="absolute left-[-80px] bottom-[-120px] w-[320px] rotate-[-1deg] select-none pointer-events-none z-0"
+                  src={procent2}
+                  alt="procent"
+                  className="absolute left-[-60px] bottom-[-100px] w-[200px] md:w-[320px] rotate-[-1deg] select-none pointer-events-none z-0"
               />
             </div>
-            {/* Нижний правый — оранжевый с рукой */}
-            {/* Посередине правый — оранжевый с рукой */}
-            <div className="relative rounded-3xl bg-[#EA9938] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
+
+            {/* Оранжевый — Репутация */}
+            <div className="relative rounded-3xl bg-[#EA9938] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
               <div className="z-10 relative">
-                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
+                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Репутация
                 </div>
-                <div className="text-[#423131B2] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
-                  Мы имеем прочную репутацию, основанную на долгосрочных
-                  отношениях с нашими клиентами и их полной удовлетворенности
-                  нашими услугами.
+                <div className="text-[#423131B2] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
+                  Мы имеем прочную репутацию, основанную на долгосрочных отношениях с нашими клиентами и их полной удовлетворенности нашими услугами.
                 </div>
               </div>
               <img
-                src={good2}
-                alt="good"
-                className="absolute right-[-80px] bottom-[-120px] w-[320px] rotate-[-20deg] select-none pointer-events-none z-0"
+                  src={good2}
+                  alt="good"
+                  className="absolute right-[-60px] bottom-[-100px] w-[200px] md:w-[320px] rotate-[-20deg] select-none pointer-events-none z-0"
               />
             </div>
-            {/* Нижний левый — Оплата банковской картой онлайн */}
-            <div className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
-              {/* Подробнее кнопка – верхняя левая часть */}
+
+            {/* Жёлтый — Оплата */}
+            <div className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
               <button
-                className="absolute top-4 left-4 px-6 py-1 bg-[#2a3c64] text-white font-['Montserrat'] rounded-full text-sm font-medium hover:bg-[#1a2a4c] transition-colors z-20"
-                onClick={() => navigate("/online-payment")}
+                  className="absolute top-4 left-4 px-4 py-1 bg-[#2a3c64] text-white font-['Montserrat'] rounded-full text-xs md:text-sm font-medium hover:bg-[#1a2a4c] transition-colors z-20"
+                  onClick={() => navigate("/online-payment")}
               >
                 Подробнее
               </button>
-
-              {/* Текстовый блок */}
-              <div className="z-10 relative text-right max-w-[310px]">
-                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
+              <div className="z-10 relative text-right">
+                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Оплата банковской картой онлайн
                 </div>
-                <div className="text-[#00000094] font-['Montserrat'] text-[16px] leading-snug max-w-[410px]">
-                  Наш сайт подключен к интернет-эквайрингу, и Вы можете оплатить
-                  услугу банковской картой Visa или Mastercard, а также с
-                  помощью Apple Pay и Google Pay.
+                <div className="text-[#00000094] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
+                  Вы можете оплатить услугу банковской картой Visa / Mastercard, а также с помощью Apple Pay и Google Pay.
                 </div>
               </div>
-
-              {/* Картинка */}
               <img
-                src={image85}
-                alt="bank card"
-                className="absolute right-[360px] bottom-[-10px] w-[220px] select-none pointer-events-none z-0"
+                  src={image85}
+                  alt="bank card"
+                  className="absolute right-[180px] bottom-[-10px] w-[150px] md:w-[220px] select-none pointer-events-none z-0"
               />
             </div>
 
-            {/* Нижний правый — Гарантии безопасности */}
-            <div className="relative rounded-3xl bg-[#0181D3] shadow-md flex flex-col justify-between p-8 w-[560px] h-[255px] mt-2 overflow-hidden">
+            {/* Синий — Гарантии */}
+            <div className="relative rounded-3xl bg-[#0181D3] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
               <div className="z-10 relative">
-                <div className="text-[24px] font-bold font-['Montserrat'] text-white mb-3">
+                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Гарантии безопасности
                 </div>
-                <div className="text-[#00000073] font-['Montserrat'] text-[16px] leading-snug max-w-[340px]">
-                  OneVision не передает данные Вашей карты третьим лицам. Ввод
-                  данных осуществляется в защищенном окне на платежной странице
-                  OneVision.
+                <div className="text-[#00000073] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
+                  OneVision не передает данные Вашей карты третьим лицам. Ввод данных осуществляется в защищенном окне на платежной странице.
                 </div>
               </div>
               <img
-                src={group1010}
-                alt="security"
-                className="absolute right-[40px] bottom-[20px] w-[150px] select-none pointer-events-none z-0"
+                  src={group1010}
+                  alt="security"
+                  className="absolute right-[20px] bottom-[10px] w-[120px] md:w-[150px] select-none pointer-events-none z-0"
               />
             </div>
           </div>
@@ -321,353 +288,252 @@ const HomePage = memo(() => {
         </button>
       </div>
       {/* Третий фрейм: карточка склада */}
-      <section className="w-full flex justify-center items-center font-['Montserrat']">
-        <div className="flex w-[1100px] min-h-[420px] bg-white rounded-3xl">
-          {/* Левая часть: текст и кнопки */}
-          <div className="flex-1 flex flex-col justify-between py-8 pr-10 pl-8">
-            {/* Заголовок */}
+      <section className="w-full flex justify-center items-center px-4 py-8 font-['Montserrat']">
+        <div className="flex flex-col md:flex-row-reverse w-full max-w-[1100px] bg-white rounded-3xl overflow-hidden shadow-md">
+
+          {/* Фото сверху (правая часть на десктопе) */}
+          <div className="w-full md:w-1/2 flex items-center justify-center px-4 py-6 md:py-0 md:px-0">
+            <img
+                src={chatgptImg}
+                alt="Склад с мебелью"
+                className="w-full max-w-[360px] object-contain rounded-2xl"
+            />
+          </div>
+
+          {/* Левая часть: объемы и описание */}
+          <div className="w-full md:w-1/2 flex flex-col justify-start py-6 px-4 sm:px-6 md:px-8">
 
             {/* Кнопки выбора объёма */}
-            <div className="flex gap-4 mb-8">
-              <button className="px-6 py-3 rounded-[15px] bg-[#273655] text-white text-[16px] font-medium shadow-sm border-2 border-[#273655] focus:outline-none">
+            <div className="flex gap-3 sm:gap-4 mb-6 flex-wrap justify-center md:justify-start">
+              <button className="px-5 py-2 sm:px-6 sm:py-3 rounded-[15px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium border-2 border-[#273655]">
                 3 м³
               </button>
-              <button className="px-6 py-3 rounded-[15px] bg-white text-[#273655] text-[16px] font-medium border-2 border-[#273655] focus:outline-none">
+              <button className="px-5 py-2 sm:px-6 sm:py-3 rounded-[15px] bg-white text-[#273655] text-[14px] sm:text-[16px] font-medium border-2 border-[#273655]">
                 5 м³
               </button>
-              <button className="px-6 py-3 rounded-[15px] bg-white text-[#273655] text-[16px] font-medium border-2 border-[#273655] focus:outline-none">
+              <button className="px-5 py-2 sm:px-6 sm:py-3 rounded-[15px] bg-white text-[#273655] text-[14px] sm:text-[16px] font-medium border-2 border-[#273655]">
                 10 м³
               </button>
             </div>
+
             {/* Описание */}
-            <div className="mb-6">
-              <div className="text-[#A3A3A3] text-[18px] font-medium leading-snug mb-2">
-                Такой объём подходит для хранения части мебели и бытовой техники
-                из небольшой комнаты.
-              </div>
-              <div className="text-[#A3A3A3] text-[18px] font-medium leading-snug mb-2">
-                Примерно столько занимает багаж из однокомнатной квартиры при
-                переезде.
-              </div>
-              <div className="text-[#A3A3A3] text-[18px] font-medium leading-snug mb-6">
+            <div className="mb-6 text-[14px] sm:text-[16px] leading-snug">
+              <p className="text-[#A3A3A3] font-medium mb-2">
+                Такой объём подходит для хранения части мебели и бытовой техники из небольшой комнаты.
+              </p>
+              <p className="text-[#A3A3A3] font-medium mb-2">
+                Примерно столько занимает багаж из однокомнатной квартиры при переезде.
+              </p>
+              <p className="text-[#A3A3A3] font-medium mb-4">
                 Когда нужно спрятать всё лишнее, но пока не расставаться.
-              </div>
-              <div className="text-[#273655] text-[14px] font-medium leading-snug mb-1">
+              </p>
+              <p className="text-[#273655] text-[13px] sm:text-[14px] font-medium mb-1">
                 Вмещает до X коробок или Y предметов мебели
-              </div>
-              <div className="text-[#273655] text-[14px] font-medium leading-snug mb-1">
+              </p>
+              <p className="text-[#273655] text-[13px] sm:text-[14px] font-medium mb-1">
                 Примеры:
-              </div>
-              <div className="text-[#273655] text-[14px] font-medium leading-snug">
-                - Матрас, стиральная машина, пылесос, тумбочка, чемодан и
-                несколько коробок с вещами
-              </div>
+              </p>
+              <p className="text-[#273655] text-[13px] sm:text-[14px] font-medium">
+                – Матрас, стиральная машина, пылесос, тумбочка, чемодан и несколько коробок с вещами
+              </p>
             </div>
-            {/* Кнопка Подробнее */}
-            <button className="mt-6 w-[165px] h-[40px] bg-[#273655] text-white text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors">
-              Подробнее
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 20 20"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="ml-1"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
-          {/* Правая часть: картинка с мебелью и размерами */}
-          <div className="flex-1 flex items-center justify-center">
-            <img
-              src={chatgptImg}
-              alt="Склад с мебелью"
-              className="w-[360px] h-[360px] object-contain rounded-2xl mt-10"
-            />
+
+            {/* Кнопка "Подробнее" */}
+            <div className="flex justify-center md:justify-start">
+              <button className="mt-2 sm:mt-4 w-full sm:w-[165px] h-[40px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors">
+                Подробнее
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    viewBox="0 0 20 20"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="ml-1"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-
       {/* Четвертый фрейм: калькулятор стоимости */}
       <CostCalculator />
       {/* Пятый фрейм: как работает облачное хранение */}
-      <section className="w-full flex flex-col items-center justify-center mt-1 font-['Montserrat']">
+      <section className="w-full flex flex-col items-center justify-center mt-1 font-['Montserrat'] px-4">
         <div className="w-full max-w-[1100px] mx-auto">
-          {/* Верхняя строка с иконкой и надписью */}
-
           {/* Заголовок */}
-          <h2 className="text-[30px] md:text-[30px] font-bold text-[#273655] text-center mb-10">
+          <h2 className="text-[24px] md:text-[30px] font-bold text-[#273655] text-center mb-8">
             Как работает облачное хранение?
           </h2>
+
           {/* Видео */}
-          <div className="w-full flex justify-center mb-7">
-            <div className="w-full max-w-[900px] shadow-lg">
+          <div className="w-full flex justify-center mb-6">
+            <div className="w-full max-w-[900px] aspect-video shadow-lg rounded-lg overflow-hidden">
               <iframe
-                width="100%"
-                height="506"
-                src="https://www.youtube.com/embed/nW1yLTEeLWc?si=4O4dNpCsmMSlLY0x"
-                title="Как работает облачное хранение"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-                className="rounded-lg"
+                  src="https://www.youtube.com/embed/nW1yLTEeLWc?si=4O4dNpCsmMSlLY0x"
+                  title="Как работает облачное хранение"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  className="w-full h-full"
               />
             </div>
           </div>
-          {/* Подпись жирная */}
-          <div className="text-2xl md:text-16px font-medium text-[#273655] text-center mb-10">
+
+          {/* Подпись */}
+          <div className="text-[18px] md:text-[20px] font-medium text-[#273655] text-center mb-10 px-2">
             Платите только за объем ваших вещей, а не за весь склад
           </div>
+
           {/* Блок шагов */}
-          <div className="relative flex flex-row items-end justify-center gap-x-16 w-full max-w-[900px] mx-auto mt-4 pb-2">
-            {/* Одна соединяющая линия под всеми шагами */}
-            <div
-              className="absolute left-[130px] right-[130px] top-[60%] h-[2px] bg-[#273655] z-0"
-              style={{ transform: "translateY(-50%)" }}
+          <div className="relative flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 w-full max-w-[900px] mx-auto mt-4 pb-2">
+            {/* Соединяющая линия для desktop */}
+            <div className="hidden md:block absolute left-[130px] right-[130px] top-[60%] h-[2px] bg-[#273655] z-0"
+                 style={{ transform: "translateY(-50%)" }}
             />
-            {/* Шаг 1: Заявка */}
-            <div className="flex flex-col items-center z-10">
-              <span className="text-[#000000] text-[18px] font-little mb-1">
-                Заявка
-              </span>
-              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
-                <img
-                  src={FileCheckIcon}
-                  alt="Заявка"
-                  className="w-[36px] h-[36px]"
-                />
-              </div>
-            </div>
-            {/* Шаг 2: Упаковка */}
-            <div className="flex flex-col items-center z-10">
-              <span className="text-[#000000] text-[18px] font-little mb-1">
-                Упаковка
-              </span>
-              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
-                <img
-                  src={BoxTickIcon}
-                  alt="Упаковка"
-                  className="w-[36px] h-[36px]"
-                />
-              </div>
-            </div>
-            {/* Шаг 3: Доставка */}
-            <div className="flex flex-col items-center z-10">
-              <span className="text-[#000000] text-[18px] font-little mb-1">
-                Доставка
-              </span>
-              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
-                <img
-                  src={GroupIcon}
-                  alt="Доставка"
-                  className="w-[36px] h-[36px]"
-                />
-              </div>
-            </div>
-            {/* Шаг 4: Хранение */}
-            <div className="flex flex-col items-center z-10">
-              <span className="text-[#000000] text-[18px] font-little mb-1">
-                Хранение
-              </span>
-              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
-                <img
-                  src={ShieldTickIcon}
-                  alt="Хранение"
-                  className="w-[36px] h-[36px]"
-                />
-              </div>
-            </div>
-            {/* Шаг 5: Возврат */}
-            <div className="flex flex-col items-center z-10">
-              <span className="text-[#000000] text-[18px] font-little mb-1">
-                Возврат
-              </span>
-              <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
-                <img
-                  src={GroupIcon}
-                  alt="Возврат"
-                  className="w-[36px] h-[36px]"
-                  style={{ transform: "scaleX(-1)" }}
-                />
-              </div>
-            </div>
+
+            {/* Шаги */}
+            {[{
+              title: 'Заявка',
+              icon: FileCheckIcon
+            }, {
+              title: 'Упаковка',
+              icon: BoxTickIcon
+            }, {
+              title: 'Доставка',
+              icon: GroupIcon
+            }, {
+              title: 'Хранение',
+              icon: ShieldTickIcon
+            }, {
+              title: 'Возврат',
+              icon: GroupIcon,
+              flipped: true
+            }].map((step, index) => (
+                <div key={index} className="flex flex-col items-center z-10 text-center">
+          <span className="text-[#000] text-[16px] md:text-[18px] mb-1">
+            {step.title}
+          </span>
+                  <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
+                    <img
+                        src={step.icon}
+                        alt={step.title}
+                        className="w-[36px] h-[36px]"
+                        style={step.flipped ? { transform: "scaleX(-1)" } : {}}
+                    />
+                  </div>
+                </div>
+            ))}
           </div>
         </div>
       </section>
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full flex flex-col items-center justify-center mt-28 mb-24 font-['Montserrat']">
-        <div className="w-full max-w-[1300px] flex flex-col items-start mx-auto mb-10 px-20 md:px-24">
-          <h2 className="text-[28px] md:text-[28px] font-bold text-[#273655] ml-2 mt-0">
-            ФИЛИАЛЫ
-          </h2>
+        <div className="w-full max-w-6xl mx-auto mb-10 px-4 md:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#273655]">ФИЛИАЛЫ</h2>
         </div>
-        <div className="w-full max-w-[1300px] flex flex-row gap-12 items-start mx-auto px-20 md:px-24">
-          {/* Левая часть: интерактивная карта 2ГИС */}
-          <div
-            className="rounded-2xl overflow-hidden bg-[#f3f3f3]"
-            style={{
-              width: 480,
-              height: 340,
-              boxShadow: "2px 2px 2px 0 #B0B0B0",
-            }}
-          >
-            <WarehouseMap warehouses={warehouses} />
-          </div>
-          {/* Правая часть: карточка выбранного склада */}
-          <div className="relative">
-            {warehousesLoading && (
-              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
-              </div>
-            )}
-            
-          <div
-            className="bg-white rounded-lg flex flex-row items-center justify-start pr- py-8 self-center"
-            style={{
-              minWidth: 540,
-              minHeight: 300,
-              height: 300,
-              maxHeight: 320,
-              maxWidth: 600,
-              width: 560,
-              boxShadow: "2px 2px 2px 0 #B0B0B0",
-            }}
-          >
-              {/* Левая часть: логотип */}
-            <div className="flex items-center justify-center w-[200px] h-[200px] p-2">
-              <img
-                  src={selectedWarehouse?.image || extraspaceLogo}
-                alt="logo"
-                className="w-[200px] h-[200px] rounded-lg object-cover bg-[#273655]"
-              />
+
+        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-8 px-4 md:px-8">
+          {/* Карта */}
+          <div className="w-full md:w-[45%] rounded-2xl overflow-hidden bg-[#f3f3f3] shadow-md">
+            <div style={{ width: '100%', height: 340 }}>
+              <WarehouseMap warehouses={warehouses} />
             </div>
-              {/* Правая часть: информация о складе */}
-            <div className="flex flex-col items-start justify-center flex-1 h-full gap-y-2 ml-6">
-              <div
-                className="text-[#3E4958] text-[20px] font-medium leading-tight"
-                style={{ lineHeight: 1.1 }}
-              >
-                  {selectedWarehouse?.name || "Загрузка..."}
+          </div>
+
+          {/* Карточка склада */}
+          <div className="relative w-full md:w-[55%] bg-white rounded-2xl shadow-md p-6">
+            {warehousesLoading && (
+                <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10 rounded-2xl">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]" />
+                </div>
+            )}
+
+            <div className="flex flex-col md:flex-row items-start gap-6">
+              {/* Логотип */}
+              <div className="w-full md:w-[200px] h-[200px] flex-shrink-0">
+                <img
+                    src={selectedWarehouse?.image || extraspaceLogo}
+                    alt="logo"
+                    className="w-full h-full rounded-xl object-cover bg-[#273655]"
+                />
               </div>
-                
+
+              {/* Инфо */}
+              <div className="flex flex-col flex-1 gap-2">
+                <h3 className="text-xl font-semibold text-[#273655]">
+                  {selectedWarehouse?.name || 'Загрузка...'}
+                </h3>
+
                 {selectedWarehouse && (
-                  <>
-              <div className="text-[#3E4958] text-[15px] font-normal leading-tight">
-                      Статус: <span className={`font-medium ${selectedWarehouse.status === 'AVAILABLE' ? 'text-green-600' : 'text-red-600'}`}>
-                        {selectedWarehouse.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}
-                      </span>
-              </div>
-              <div className="text-[#3E4958] text-[15px] font-normal">
-                      {selectedWarehouse.work_start && selectedWarehouse.work_end ? 
-                        `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}` : 
-                        "Режим работы уточняется"
-                      }
-              </div>
-              <div className="flex items-center mt-1 mb-2">
-                <span
-                  className="relative inline-block"
-                  style={{ width: 24, height: 24 }}
-                >
-                  <img
-                    src={beigeCircle}
-                    alt="beige circle"
-                    className="absolute left-0 top-0 w-full h-full"
-                  />
-                  <img
-                    src={houseOnBeigeCircle}
-                    alt="house on beige"
-                    className="absolute left-1/2 top-1/2"
-                    style={{
-                      width: "15px",
-                      height: "15px",
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  />
+                    <>
+                      <p className="text-sm text-[#3E4958]">
+                        Статус: <span className={`font-medium ${selectedWarehouse.status === 'AVAILABLE' ? 'text-green-600' : 'text-red-600'}`}>{selectedWarehouse.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}</span>
+                      </p>
+                      <p className="text-sm text-[#3E4958]">
+                        {selectedWarehouse.work_start && selectedWarehouse.work_end ? `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}` : 'Режим работы уточняется'}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-[#273655] mt-2">
+                <span className="relative w-6 h-6">
+                  <img src={beigeCircle} alt="" className="absolute w-full h-full" />
+                  <img src={houseOnBeigeCircle} alt="" className="absolute w-4 h-4 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
                 </span>
-                <span className="text-[#273655] text-[15px] font-normal ml-2">
-                        {selectedWarehouse.address || "Адрес уточняется"}
-                </span>
-              </div>
-                  </>
+                        {selectedWarehouse.address || 'Адрес уточняется'}
+                      </div>
+                    </>
                 )}
 
                 {warehousesError && (
-                  <div className="text-red-600 text-sm mb-2">
-                    {warehousesError}
-                  </div>
+                    <p className="text-sm text-red-600">{warehousesError}</p>
                 )}
 
-                {/* Кнопка выбора склада с выпадающим списком */}
-                <div className="relative w-[190] max-w-[240px] mt-0 warehouse-dropdown">
-              <button
-                    className="px-2 py-0 bg-[#273655] text-white rounded-full text-lg font-medium hover:bg-[#193A7E] transition-colors w-full flex items-center justify-center gap-2"
-                    onClick={toggleWarehouseDropdown}
-                    disabled={warehousesLoading}
+                {/* Dropdown */}
+                <div className="relative mt-4 w-full max-w-xs">
+                  <button
+                      className="w-full flex items-center justify-between px-4 py-2 bg-[#273655] text-white rounded-full text-base hover:bg-[#193A7E]"
+                      onClick={toggleWarehouseDropdown}
+                      disabled={warehousesLoading}
                   >
                     Выбрать склад
-                    <svg 
-                      className={`w-4 h-4 transition-transform ${isWarehouseDropdownOpen ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className={`w-4 h-4 transition-transform ${isWarehouseDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-              </button>
+                  </button>
 
-                  {/* Выпадающий список */}
                   {isWarehouseDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-                      {apiWarehouses.length > 0 ? (
-                        apiWarehouses.map((warehouse) => (
-                          <button
-                            key={warehouse.id}
-                            className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 text-sm"
-                            onClick={() => handleWarehouseSelect(warehouse)}
-                          >
-                            <div className="font-medium text-[#273655]">
-                              {warehouse.name}
-            </div>
-                            <div className="text-gray-600 text-xs mt-1">
-                              {warehouse.address}
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className={`text-xs px-2 py-1 rounded-full ${
-                                warehouse.status === 'AVAILABLE' 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-red-100 text-red-700'
-                              }`}>
-                                {warehouse.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}
-                              </span>
-                            </div>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-4 py-3 text-gray-500 text-center">
-                          Нет доступных складов
-                        </div>
-                      )}
-                    </div>
+                      <div className="absolute z-20 w-full mt-2 bg-white border rounded-lg shadow max-h-60 overflow-y-auto">
+                        {apiWarehouses.length > 0 ? apiWarehouses.map((w) => (
+                            <button
+                                key={w.id}
+                                onClick={() => handleWarehouseSelect(w)}
+                                className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-b last:border-b-0"
+                            >
+                              <div className="font-medium text-[#273655]">{w.name}</div>
+                              <div className="text-gray-600 text-xs">{w.address}</div>
+                              <span className={`text-xs px-2 py-1 rounded-full mt-1 inline-block ${w.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {w.status === 'AVAILABLE' ? 'Доступен' : 'Недоступен'}
+                    </span>
+                            </button>
+                        )) : (
+                            <p className="px-4 py-3 text-center text-gray-500">Нет доступных складов</p>
+                        )}
+                      </div>
                   )}
                 </div>
 
-                {/* Кнопка бронирования */}
-                {selectedWarehouse && selectedWarehouse.status === 'AVAILABLE' && (
-                  <button
-                    className="px-2 py-1 bg-[#F86812] text-white rounded-full text-sm font-medium hover:bg-[#d87d1c] transition-colors w-full max-w-[170px] mt-2"
-                    onClick={() => navigate("/warehouse-order")}
-                  >
-                    Забронировать бокс
-                  </button>
+                {/* Бронирование */}
+                {selectedWarehouse?.status === 'AVAILABLE' && (
+                    <button
+                        onClick={() => navigate("/warehouse-order")}
+                        className="mt-4 px-4 py-2 bg-[#F86812] text-white rounded-full text-sm hover:bg-[#d87d1c] max-w-[170px]"
+                    >
+                      Забронировать бокс
+                    </button>
                 )}
               </div>
             </div>
