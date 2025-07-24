@@ -31,7 +31,7 @@ server: {
   port: PORT,
   proxy: {
     '/api': {
-      target: 'https://backend.shakyrty.kz',
+      target: 'https://api.extraspace.kz',
       changeOrigin: true,
       rewrite: (path) => path.replace(/^\/api/, ''),
       secure: false,

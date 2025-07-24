@@ -117,7 +117,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         if (isProd) {
           // В production используем подход с перенаправлением на страницу выхода
           // и сразу возвращаемся на главную страницу через параметр redirect
-          const logoutUrl = 'https://backend.shakyrty.kz/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
+          const logoutUrl = 'https://api.extraspace.kz/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
           
           // Обновляем уведомление
           toast.update(logoutToast, {
