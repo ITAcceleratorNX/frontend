@@ -58,7 +58,7 @@ const PendingChatsList = memo(({ className = '' }) => {
 
   // WebSocket для принятия чатов
   const { sendMessage } = useWebSocket(
-    `wss://extraspace-backend.onrender.com?userId=${user?.id}`,
+    `wss://api.extraspace.kz?userId=${user?.id}`,
     {
       enabled: isManagerOrAdmin,
       reconnectAttempts: 5,
