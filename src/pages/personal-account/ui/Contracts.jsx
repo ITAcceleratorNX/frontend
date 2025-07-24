@@ -437,7 +437,7 @@ const Contracts = () => {
                           <Download size={16} className="mr-2" />
                           {downloadContractMutation.isPending ? 'Загрузка...' : 'Скачать'}
                         </button>
-                        {row.order_status === 'ACTIVE' && row.contract_status === 'Полностью подписан' && (
+                        {row.order_status === 'ACTIVE' && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // Предотвращаем срабатывание onClick на родительском tr

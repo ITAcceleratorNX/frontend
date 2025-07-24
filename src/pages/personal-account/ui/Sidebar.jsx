@@ -24,7 +24,6 @@ const userNavItems = [
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { label: 'Платежи', icon: icon4, key: 'payments' },
   { divider: true },
-  { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
@@ -38,7 +37,6 @@ const managerNavItems = [
   { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
-  { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
@@ -51,7 +49,6 @@ const adminNavItems = [
   { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
-  { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
@@ -61,7 +58,6 @@ const courierNavItems = [
   { label: 'Запросы', icon: icon8, key: 'courierrequests' },
   { label: 'Уведомления', icon: icon10, key: 'couriernotifications' },
   { divider: true },
-  { label: 'Настройки', icon: icon5, key: 'settings' },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 

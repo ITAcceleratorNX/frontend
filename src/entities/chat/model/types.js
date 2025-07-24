@@ -33,4 +33,4 @@ export const PAGINATION = {
 };
 
 // WebSocket URL
-export const WS_URL = 'wss://extraspace-backend.onrender.com'; 
+export const WS_URL = 'wss://api.extraspace.kz'; 

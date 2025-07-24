@@ -31,7 +31,7 @@ export const useWebSocket = () => {
     }
 
     try {
-      const socketUrl = `wss://extraspace-backend.onrender.com?userId=${user.id}`;
+      const socketUrl = `wss://api.extraspace.kz?userId=${user.id}`;
       if (import.meta.env.DEV) {
         console.log('WebSocket: Подключение к', socketUrl);
       }

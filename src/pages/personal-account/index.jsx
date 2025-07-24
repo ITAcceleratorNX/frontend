@@ -4,7 +4,6 @@ import { Header } from '../../widgets';
 import Sidebar from './ui/Sidebar';
 import PersonalData from './ui/PersonalData';
 import Contracts from './ui/Contracts';
-import Settings from './ui/Settings';
 import ChatSection from './ui/ChatSection';
 import AllUsers from './ui/AllUsers';
 import AdminMoving from './ui/AdminMoving';
@@ -127,7 +126,6 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'courierrequests' && <CourierRequest />}
           {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
           {activeNav === 'payments' && <UserPayments />}
-          {activeNav === 'settings' && <Settings />}
         </main>
       </div>
     </div>
