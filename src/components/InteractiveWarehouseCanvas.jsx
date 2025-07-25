@@ -233,8 +233,11 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                   strokeWidth={strokeWidth}
                   cornerRadius={4}
                   onClick={() => handleBoxClick(box.name)}
+                  onTap={() => handleBoxClick(box.name)} // Добавлено для мобильных
                   onMouseEnter={() => handleMouseEnter(box.name)}
                   onMouseLeave={handleMouseLeave}
+                  onTouchStart={() => handleMouseEnter(box.name)} // Для hover эффекта на мобильных
+                  onTouchEnd={handleMouseLeave}
                   style={{
                     cursor: cursorStyle
                   }}

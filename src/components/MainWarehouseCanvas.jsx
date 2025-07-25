@@ -270,8 +270,11 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
                     strokeWidth={strokeWidth}
                     closed={true}
                     onClick={() => handleBoxClick(box.name)}
+                    onTap={() => handleBoxClick(box.name)} // Добавлено
                     onMouseEnter={() => handleMouseEnter(box.name)}
                     onMouseLeave={handleMouseLeave}
+                    onTouchStart={() => handleMouseEnter(box.name)} // Для hover эффекта
+                    onTouchEnd={handleMouseLeave}
                     listening={true}
                     cursor={cursorStyle}
                   />
@@ -287,8 +290,11 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
                     strokeWidth={strokeWidth}
                     cornerRadius={4}
                     onClick={() => handleBoxClick(box.name)}
+                    onTap={() => handleBoxClick(box.name)} // Добавлено
                     onMouseEnter={() => handleMouseEnter(box.name)}
                     onMouseLeave={handleMouseLeave}
+                    onTouchStart={() => handleMouseEnter(box.name)} // Для hover эффекта на мобильных
+                    onTouchEnd={handleMouseLeave}
                     listening={true}
                     cursor={cursorStyle}
                   />
