@@ -39,29 +39,6 @@ const Footer = () => {
                 <Link to="/privacy-policy" className="hover:text-gray-300 transition-colors">ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</Link>
               </div>
             </div>
-
-            {/* Форма */}
-            <div className="flex-1">
-              <h4 className="text-lg font-semibold mb-4">Свяжитесь с нами</h4>
-              <p className="text-sm mb-3">Мы вам поможем!</p>
-              <Input
-                  type="text"
-                  placeholder="Ваше имя"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="mb-3 bg-white text-[#0A142F] placeholder-gray-500"
-              />
-              <Input
-                  type="text"
-                  placeholder="+7(___)___-__"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="mb-3 bg-white text-[#0A142F] placeholder-gray-500"
-              />
-              <Button className="w-full bg-white text-[#0A142F] font-bold hover:bg-gray-200 text-sm py-2 rounded-full">
-                ОТПРАВИТЬ
-              </Button>
-            </div>
           </div>
 
           {/* Нижняя линия и копирайт */}

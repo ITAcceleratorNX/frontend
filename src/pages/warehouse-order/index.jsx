@@ -1,3 +1,4 @@
+// src/pages/warehouse-order/index.jsx
 import React, { useState, useEffect, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -10,7 +11,6 @@ import ChatButton from "../../shared/components/ChatButton";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
 import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
 import ProfileValidationGuard from "../../shared/components/ProfileValidationGuard";
-
 // Импорт компонентов UI
 import {
   Button,
@@ -37,34 +37,28 @@ import {
 const WarehouseOrderPage = memo(() => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-
   // Состояния для данных
   const [warehouses, setWarehouses] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [selectedStorage, setSelectedStorage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
   // Состояния для формы заказа
   const [orderItems, setOrderItems] = useState([
     { name: "", volume: "", cargo_mark: "NO" },
   ]);
   const [months, setMonths] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   // Состояния для дополнительных услуг
   const [isSelectedMoving, setIsSelectedMoving] = useState(false);
   const [isSelectedPackage, setIsSelectedPackage] = useState(false);
-
   // Состояния для услуг и дат перевозки
   const [services, setServices] = useState([]);
   const [movingOrders, setMovingOrders] = useState([]);
   const [prices, setPrices] = useState([]);
   const [isPricesLoading, setIsPricesLoading] = useState(false);
-  
   // Состояния для валидации
   const [movingOrderErrors, setMovingOrderErrors] = useState([]);
-
   // Проверяем роль пользователя - функции заказа доступны только для USER
   const isUserRole = user?.role === "USER";
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -77,7 +71,6 @@ const WarehouseOrderPage = memo(() => {
         setError(null);
         const data = await warehouseApi.getAllWarehouses();
         setWarehouses(Array.isArray(data) ? data : []);
-
         if (import.meta.env.DEV) {
           console.log("Склады загружены:", data);
         }
@@ -89,7 +82,6 @@ const WarehouseOrderPage = memo(() => {
         setIsLoading(false);
       }
     };
-
     fetchWarehouses();
   }, []);
 
@@ -102,7 +94,6 @@ const WarehouseOrderPage = memo(() => {
           const pricesData = await paymentsApi.getPrices();
           const filteredPrices = pricesData.filter((price) => price.id > 4);
           setPrices(filteredPrices);
-
           if (import.meta.env.DEV) {
             console.log("Цены услуг загружены:", filteredPrices);
           }
@@ -113,7 +104,6 @@ const WarehouseOrderPage = memo(() => {
           setIsPricesLoading(false);
         }
       };
-
       fetchPrices();
     }
   }, [isSelectedPackage]);
@@ -161,11 +151,9 @@ const WarehouseOrderPage = memo(() => {
   // Функция валидации даты перевозки
   const validateMovingOrder = (order) => {
     const errors = {};
-    
     if (!order.address || order.address.trim() === "") {
       errors.address = "Пожалуйста, укажите адрес";
     }
-    
     return errors;
   };
 
@@ -176,7 +164,6 @@ const WarehouseOrderPage = memo(() => {
       status: "PENDING_FROM",
       address: "",
     };
-    
     setMovingOrders([...movingOrders, newOrder]);
     setMovingOrderErrors([...movingOrderErrors, {}]);
   };
@@ -193,12 +180,10 @@ const WarehouseOrderPage = memo(() => {
       i === index ? { ...order, [field]: value } : order
     );
     setMovingOrders(updatedMovingOrders);
-    
     // Валидация при изменении поля адреса
     if (field === "address") {
       const updatedOrder = updatedMovingOrders[index];
       const errors = validateMovingOrder(updatedOrder);
-      
       const updatedErrors = [...movingOrderErrors];
       updatedErrors[index] = errors;
       setMovingOrderErrors(updatedErrors);
@@ -239,58 +224,47 @@ const WarehouseOrderPage = memo(() => {
       setError("Пожалуйста, выберите бокс для аренды");
       return;
     }
-
     // Валидация товаров
     const validItems = orderItems.filter(
       (item) => item.name.trim() && item.volume && parseFloat(item.volume) > 0
     );
-
     if (validItems.length === 0) {
       setError("Добавьте хотя бы один товар с указанием названия и объема");
       return;
     }
-
     // Валидация перевозок, если выбрана услуга перевозки
     if (isSelectedMoving && movingOrders.length === 0) {
       setError("Добавьте хотя бы одну дату перевозки");
       return;
     }
-
     // Валидация адресов в датах перевозки
     if (isSelectedMoving) {
       const invalidOrders = [];
       const newErrors = [];
-      
       movingOrders.forEach((order, index) => {
         const errors = validateMovingOrder(order);
         newErrors[index] = errors;
-        
         if (Object.keys(errors).length > 0) {
           invalidOrders.push(index + 1);
         }
       });
-      
       if (invalidOrders.length > 0) {
         setMovingOrderErrors(newErrors);
         setError(`Пожалуйста, заполните все обязательные поля в датах перевозки (${invalidOrders.join(", ")})`);
         return;
       }
     }
-
     // Валидация услуг, если выбрана услуга упаковки
     const validServices = services.filter(
       (service) => service.service_id && service.count > 0
     );
-
     if (isSelectedPackage && validServices.length === 0) {
       setError("Добавьте хотя бы одну услугу для упаковки");
       return;
     }
-
     try {
       setIsSubmitting(true);
       setError(null);
-
       const orderData = {
         storage_id: selectedStorage.id,
         months: months,
@@ -302,7 +276,6 @@ const WarehouseOrderPage = memo(() => {
         is_selected_moving: isSelectedMoving,
         is_selected_package: isSelectedPackage,
       };
-
       // Добавляем данные о перевозке, если выбрана соответствующая услуга
       if (isSelectedMoving) {
         orderData.moving_orders = movingOrders.map((order) => ({
@@ -311,7 +284,6 @@ const WarehouseOrderPage = memo(() => {
           address: order.address.trim(),
         }));
       }
-
       // Добавляем услуги, если выбрана упаковка и есть услуги
       if (isSelectedPackage && validServices.length > 0) {
         orderData.services = validServices.map((service) => ({
@@ -319,17 +291,13 @@ const WarehouseOrderPage = memo(() => {
           count: service.count,
         }));
       }
-
       if (import.meta.env.DEV) {
         console.log("Отправляем данные заказа:", orderData);
       }
-
       const result = await warehouseApi.createOrder(orderData);
-
       if (import.meta.env.DEV) {
         console.log("Заказ создан:", result);
       }
-
       toast.success(
         "Заказ успешно создан! Перенаправляем в личный кабинет...",
         {
@@ -341,7 +309,6 @@ const WarehouseOrderPage = memo(() => {
           draggable: true,
         }
       );
-
       setTimeout(() => {
         navigate("/personal-account", { state: { activeSection: "payments" } });
       }, 1500);
@@ -351,7 +318,6 @@ const WarehouseOrderPage = memo(() => {
         error.response?.data?.message ||
         "Не удалось создать заказ. Попробуйте позже.";
       setError(errorMessage);
-
       toast.error(errorMessage, {
         position: "top-right",
         autoClose: 5000,
@@ -386,7 +352,6 @@ const WarehouseOrderPage = memo(() => {
     <ProfileValidationGuard>
       <div className="min-h-screen bg-white flex flex-col font-[Montserrat]">
         <Header />
-
         <div className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
           {/* Заголовок */}
           <div className="text-center mb-8">
@@ -399,20 +364,17 @@ const WarehouseOrderPage = memo(() => {
                 : "Просмотр состояния складов и боксов"}
             </p>
           </div>
-
           {/* Ошибка */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
               <div className="text-red-600 text-center">{error}</div>
             </div>
           )}
-
           {/* Список складов */}
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
               1. Выберите склад
             </h2>
-
             {warehouses.length === 0 ? (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
                 <div className="text-gray-500">
@@ -459,7 +421,6 @@ const WarehouseOrderPage = memo(() => {
               </div>
             )}
           </div>
-
           {/* Список боксов выбранного склада */}
           {selectedWarehouse && selectedWarehouse.storage && (
             <div className="mb-8">
@@ -467,31 +428,37 @@ const WarehouseOrderPage = memo(() => {
                 {isUserRole ? "2. Выберите бокс в складе" : "2. Боксы в складе"}{" "}
                 "{selectedWarehouse.name}"
               </h2>
-
-              {selectedWarehouse.name === "EXTRA SPACE Мега" ? (
-                <div className="flex justify-center">
-                  <InteractiveWarehouseCanvas
-                    storageBoxes={selectedWarehouse.storage}
-                    onBoxSelect={setSelectedStorage}
-                    selectedStorage={selectedStorage}
-                    userRole={user?.role}
-                    isViewOnly={isAdminOrManager}
-                  />
+              {/* Адаптивная обертка для схемы склада */}
+              <div className="rsm-map-content overflow-x-auto touch-pan-x touch-pan-y w-full max-w-full mx-auto">
+                {/* Контейнер для центрирования с фиксированной шириной */}
+                <div 
+                  className="min-w-max mx-auto relative"
+                  style={{
+                    minWidth: selectedWarehouse.name === "EXTRA SPACE Мега" ? '615px' : 
+                              selectedWarehouse.name === "EXTRA SPACE Главный склад" ? '1120px' : 'auto'
+                  }}
+                >
+                  {selectedWarehouse.name === "EXTRA SPACE Мега" ? (
+                    <InteractiveWarehouseCanvas
+                      storageBoxes={selectedWarehouse.storage}
+                      onBoxSelect={setSelectedStorage}
+                      selectedStorage={selectedStorage}
+                      userRole={user?.role}
+                      isViewOnly={isAdminOrManager}
+                    />
+                  ) : selectedWarehouse.name === "EXTRA SPACE Главный склад" ? (
+                    <MainWarehouseCanvas
+                      storageBoxes={selectedWarehouse.storage}
+                      onBoxSelect={setSelectedStorage}
+                      selectedStorage={selectedStorage}
+                      userRole={user?.role}
+                      isViewOnly={isAdminOrManager}
+                    />
+                  ) : null}
                 </div>
-              ) : selectedWarehouse.name === "EXTRA SPACE Главный склад" ? (
-                <div className="flex justify-center">
-                  <MainWarehouseCanvas
-                    storageBoxes={selectedWarehouse.storage}
-                    onBoxSelect={setSelectedStorage}
-                    selectedStorage={selectedStorage}
-                    userRole={user?.role}
-                    isViewOnly={isAdminOrManager}
-                  />
-                </div>
-              ) : null}
+              </div>
             </div>
           )}
-
           {/* Форма добавления товаров */}
           {selectedStorage && isUserRole && (
             <div className="mb-8">
@@ -525,7 +492,6 @@ const WarehouseOrderPage = memo(() => {
                     </p>
                   )}
                 </div>
-
                 <div className="space-y-4">
                   {orderItems.map((item, index) => (
                     <div
@@ -547,7 +513,6 @@ const WarehouseOrderPage = memo(() => {
                             placeholder="Например: Диван"
                           />
                         </div>
-
                         <div>
                           <label className="block text-sm font-medium text-[#273655] mb-1">
                             Объем (м³)
@@ -564,7 +529,6 @@ const WarehouseOrderPage = memo(() => {
                             placeholder="1.5"
                           />
                         </div>
-
                         <div>
                           <label className="block text-sm font-medium text-[#273655] mb-1">
                             Тип груза
@@ -585,7 +549,6 @@ const WarehouseOrderPage = memo(() => {
                             <option value="FRAGILE">Хрупкий</option>
                           </select>
                         </div>
-
                         <div className="flex items-end">
                           {orderItems.length > 1 && (
                             <button
@@ -600,7 +563,6 @@ const WarehouseOrderPage = memo(() => {
                     </div>
                   ))}
                 </div>
-
                 <div className="mt-4">
                   <button
                     onClick={addOrderItem}
@@ -612,7 +574,6 @@ const WarehouseOrderPage = memo(() => {
               </div>
             </div>
           )}
-
           {/* Дополнительные услуги */}
           {selectedStorage && isUserRole && (
             <div className="mb-8">
@@ -649,7 +610,6 @@ const WarehouseOrderPage = memo(() => {
                     />
                   </div>
                 </div>
-
                 {/* Услуга упаковки - показывается только если включена перевозка */}
                 {isSelectedMoving && (
                   <div className="flex items-center justify-between">
@@ -681,7 +641,6 @@ const WarehouseOrderPage = memo(() => {
               </div>
             </div>
           )}
-
           {/* Блок добавления дат перевозки - показывается если включена перевозка */}
           {selectedStorage && isUserRole && isSelectedMoving && (
             <div className="mb-8">
@@ -714,7 +673,6 @@ const WarehouseOrderPage = memo(() => {
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
                             />
                           </div>
-
                           <div>
                             <label className="block text-sm font-medium text-[#273655] mb-1">
                               Тип перевозки
@@ -738,7 +696,6 @@ const WarehouseOrderPage = memo(() => {
                               </SelectContent>
                             </Select>
                           </div>
-
                           <div className="grid grid-cols-[1fr_auto] gap-2">
                             <div>
                               <label className="block text-sm font-medium text-[#273655] mb-1">
@@ -784,7 +741,6 @@ const WarehouseOrderPage = memo(() => {
                     ))}
                   </div>
                 )}
-
                 <button
                   onClick={addMovingOrder}
                   className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
@@ -795,7 +751,6 @@ const WarehouseOrderPage = memo(() => {
               </div>
             </div>
           )}
-
           {/* Блок добавления услуг - показывается если включена упаковка */}
           {selectedStorage && isUserRole && isSelectedPackage && (
             <div className="mb-8">
@@ -843,7 +798,6 @@ const WarehouseOrderPage = memo(() => {
                                   </SelectContent>
                                 </Select>
                               </div>
-
                               <div>
                                 <label className="block text-sm font-medium text-[#273655] mb-1">
                                   Количество
@@ -862,7 +816,6 @@ const WarehouseOrderPage = memo(() => {
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
                                 />
                               </div>
-
                               <div className="flex items-end">
                                 <button
                                   onClick={() => removeService(index)}
@@ -876,7 +829,6 @@ const WarehouseOrderPage = memo(() => {
                         ))}
                       </div>
                     )}
-
                     <button
                       onClick={addService}
                       className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
@@ -889,7 +841,6 @@ const WarehouseOrderPage = memo(() => {
               </div>
             </div>
           )}
-
           {/* Блок выбора срока аренды и кнопки создания заказа */}
           {selectedStorage && isUserRole && (
             <div className="mb-8">
@@ -901,7 +852,6 @@ const WarehouseOrderPage = memo(() => {
                   return stepNumber;
                 })()}. Укажите срок аренды
               </h2>
-
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                   <div>
@@ -924,7 +874,6 @@ const WarehouseOrderPage = memo(() => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <button
                     onClick={handleCreateOrder}
                     disabled={
@@ -949,7 +898,6 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
         </div>
-
         <ChatButton />
         <Footer />
       </div>
@@ -958,5 +906,4 @@ const WarehouseOrderPage = memo(() => {
 });
 
 WarehouseOrderPage.displayName = "WarehouseOrderPage";
-
 export default WarehouseOrderPage;
