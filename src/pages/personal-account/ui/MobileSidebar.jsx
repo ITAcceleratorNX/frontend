@@ -184,8 +184,8 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
       position="auto"
       viewScroll="auto"
       arrow={true}
-      gap={12}
-      shift={12}
+      gap={10}
+      shift={2}
       menuClassName="!bg-white !border !border-gray-200 !shadow-2xl !rounded-2xl !p-2 !min-w-[280px] !max-w-[320px]"
       arrowClassName="!fill-white !stroke-gray-200"
       transition={{

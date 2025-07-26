@@ -181,4 +181,57 @@ export const ordersApi = {
       throw error;
     }
   },
+
+  // Получение всех доставок пользователя
+  getUserDeliveries: async () => {
+    try {
+      if (isDevelopment) {
+        console.log('OrdersAPI: Отправка запроса на получение доставок пользователя');
+      }
+      const response = await api.get('/moving/me/all');
+      if (isDevelopment) {
+        console.log('OrdersAPI: Получены доставки пользователя:', response.data?.length || 0, 'доставок');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при получении доставок пользователя:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Обновление доставки
+  updateDelivery: async (movingOrderId, data) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Обновление доставки ${movingOrderId}:`, data);
+      }
+      const response = await api.put(`/moving/${movingOrderId}`, data);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Доставка успешно обновлена:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при обновлении доставки:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Подтверждение доставки
+  confirmDelivery: async (movingOrderId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Подтверждение доставки ${movingOrderId}`);
+      }
+      const response = await api.put(`/moving/${movingOrderId}`, {
+        availability: 'AVAILABLE'
+      });
+      if (isDevelopment) {
+        console.log('OrdersAPI: Доставка успешно подтверждена:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при подтверждении доставки:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 }; 
