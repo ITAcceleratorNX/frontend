@@ -1,23 +1,27 @@
 import React from 'react';
-import clsx from 'clsx';
+import { Menu as ReactMenu, MenuButton, MenuItem } from '@szhsin/react-menu';
+import { Menu, X } from 'lucide-react';
+import { useAuth } from '../../../shared/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
+import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
+import clsx from 'clsx';
+import './mobile-menu.css';
+
+// Import icons
 import icon1 from '../../../assets/1.svg';
 import icon2 from '../../../assets/2.svg';
 import icon3 from '../../../assets/3.svg';
 import icon4 from '../../../assets/4.svg';
-import icon5 from '../../../assets/5.svg';
 import icon6 from '../../../assets/6.svg';
 import icon8 from '../../../assets/8.svg';
 import icon9 from '../../../assets/9.svg';
 import icon10 from '../../../assets/10.svg';
 import icon11 from '../../../assets/11.svg';
 import icon12 from '../../../assets/12.svg';
-import { toast } from 'react-toastify';
-import { useQueryClient } from '@tanstack/react-query';
-import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
-import { useAuth } from '../../../shared/context/AuthContext';
 
-// Разделы для обычных пользователей
+// Navigation items for different roles
 const userNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Договоры', icon: icon2, key: 'contracts' },
@@ -29,7 +33,6 @@ const userNavItems = [
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
-// Разделы для менеджеров
 const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
@@ -42,7 +45,6 @@ const managerNavItems = [
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
-// Разделы для администраторов
 const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
@@ -54,7 +56,6 @@ const adminNavItems = [
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
-// Разделы для грузчиков
 const courierNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Запросы', icon: icon8, key: 'courierrequests' },
@@ -63,32 +64,20 @@ const courierNavItems = [
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
 
-const Sidebar = ({ activeNav, setActiveNav }) => {
+const MobileSidebar = ({ activeNav, setActiveNav }) => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const location = useLocation();
 
-   // Добавляем отладочную информацию
-   console.log('Sidebar: текущий пользователь:', { 
-    role: user?.role,
-    isAuth: !!user,
-    activeNav
-  });
-
-   // Определяем, какие разделы показать в зависимости от роли
-   const getNavItemsByRole = (role) => {
-    console.log('getNavItemsByRole вызван с ролью:', role);
-    
-    switch (role?.toUpperCase()) {  
+  const getNavItemsByRole = (role) => {
+    switch (role?.toUpperCase()) {
       case 'ADMIN':
         return adminNavItems;
       case 'MANAGER':
         return managerNavItems;
-      case 'COURIER':  
+      case 'COURIER':
         return courierNavItems;
       default:
-        console.log('Используются userNavItems для роли:', role);
         return userNavItems;
     }
   };
@@ -97,36 +86,27 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
 
   const handleNavClick = async (key) => {
     if (key === 'delivery') {
-      // Устанавливаем активный раздел доставки
       setActiveNav('delivery');
-      // Обновляем URL без перезагрузки страницы
       window.history.pushState(null, '', '/user/delivery');
       return;
     }
-    
+
     if (key === 'logout') {
       try {
-        // Показываем уведомление о начале процесса выхода
         const logoutToast = toast.loading("Выполняется выход из системы...");
         
-        // Очищаем куки и данные пользователя
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         
-        // Инвалидируем кеш данных пользователя
         queryClient.setQueryData([USER_QUERY_KEY], null);
         queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
         
-        // Определяем, находимся ли мы в production или dev режиме
         const isProd = !import.meta.env.DEV;
         
         if (isProd) {
-          // В production используем подход с перенаправлением на страницу выхода
-          // и сразу возвращаемся на главную страницу через параметр redirect
           const logoutUrl = 'https://api.extraspace.kz/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
           
-          // Обновляем уведомление
           toast.update(logoutToast, {
             render: "Выход выполнен успешно!", 
             type: "success", 
@@ -134,24 +114,19 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
             autoClose: 2000
           });
           
-          // Делаем небольшую задержку перед перенаправлением
           setTimeout(() => {
-            // Перенаправляем на страницу выхода
             window.location.href = logoutUrl;
           }, 300);
         } else {
-          // В режиме разработки используем API
           try {
             await fetch('/api/auth/logout', {
               method: 'GET',
-              credentials: 'include' // Отправляем куки для аутентификации
+              credentials: 'include'
             });
           } catch (error) {
             console.log('Ошибка при запросе на выход:', error);
-            // Игнорируем ошибку, т.к. куки уже очищены на клиенте
           }
           
-          // Обновляем уведомление
           toast.update(logoutToast, {
             render: "Выход выполнен успешно!", 
             type: "success", 
@@ -159,15 +134,13 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
             autoClose: 2000
           });
           
-          // Перенаправляем пользователя на главную страницу
           setTimeout(() => {
-          navigate('/');
+            navigate('/');
           }, 300);
         }
       } catch (error) {
         console.error('Ошибка при выходе из системы:', error);
         
-        // Даже при ошибке очищаем куки и кеш
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -175,24 +148,19 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         queryClient.setQueryData([USER_QUERY_KEY], null);
         queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
         
-        // Показываем уведомление об ошибке
         toast.error("Произошла ошибка при выходе, но вы были успешно разлогинены");
         
-        // При неожиданной ошибке также перенаправляем на главную
         setTimeout(() => {
-        navigate('/');
+          navigate('/');
         }, 300);
       }
     } else {
-      // Для всех остальных разделов
       setActiveNav(key);
       
-      // Проверяем, находимся ли мы на странице WarehouseData или других внешних страницах
       const currentPath = window.location.pathname;
       const isOnWarehouseDataPage = currentPath.includes('/warehouses/') && !currentPath.endsWith('/warehouses');
       const isOnDetailPage = currentPath.includes('/users/') || currentPath.includes('/moving/order/');
       
-      // Если мы на странице деталей (не в основном личном кабинете), перенаправляем в личный кабинет
       if (isOnWarehouseDataPage || isOnDetailPage) {
         navigate('/personal-account', { state: { activeSection: key } });
       } else {
@@ -205,36 +173,74 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   };
 
   return (
-    <aside className="w-[230px] min-h-screen bg-white flex flex-col py-12 px-4 flex-shrink-0">
-      <nav className="flex flex-col gap-1 mb-2">
+    <ReactMenu
+      menuButton={
+        <MenuButton className="mobile-menu-button fixed top-20 left-4 z-50 p-3 bg-white rounded-full shadow-lg hover:shadow-xl border border-gray-200">
+          <Menu className="w-6 h-6 text-[#273655]" />
+        </MenuButton>
+      }
+      direction="top"
+      align="start"
+      position="auto"
+      viewScroll="auto"
+      arrow={true}
+      gap={12}
+      shift={12}
+      menuClassName="!bg-white !border !border-gray-200 !shadow-2xl !rounded-2xl !p-2 !min-w-[280px] !max-w-[320px]"
+      arrowClassName="!fill-white !stroke-gray-200"
+      transition={{
+        open: true,
+        close: true,
+        item: true
+      }}
+    >
+      <div className="py-2">
+        <div className="px-4 py-3 border-b border-gray-100 mb-2">
+          <h3 className="text-lg font-semibold text-[#273655]">Меню</h3>
+          <p className="text-sm text-gray-500">
+            {user?.role === 'USER' ? 'Пользователь' : 
+             user?.role === 'ADMIN' ? 'Администратор' :
+             user?.role === 'MANAGER' ? 'Менеджер' :
+             user?.role === 'COURIER' ? 'Курьер' : 'Пользователь'}
+          </p>
+        </div>
+        
         {navItems.map((item, idx) => {
           if (item.divider) {
-            return <hr key={idx} className="my-3 border-t border-[#F0F0F0]" />;
+            return <div key={idx} className="my-2 border-t border-gray-100" />;
           }
+          
           return (
-            <button
+            <MenuItem
               key={item.key}
               onClick={() => handleNavClick(item.key)}
               className={clsx(
-                'flex items-center gap-3 px-4 py-2 rounded-sm text-[16px] font-normal leading-normal transition-all relative whitespace-nowrap',
+                '!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all !duration-200 !mx-1 !my-1',
                 activeNav === item.key
-                  ? 'bg-[#273655] text-white shadow-md'
-                  : 'text-[#222] hover:bg-[#F5F5F5]',
-                'group'
+                  ? '!bg-[#273655] !text-white !shadow-md'
+                  : '!text-gray-700 hover:!bg-gray-50 hover:!text-[#273655]',
+                item.key === 'logout' && '!text-red-600 hover:!bg-red-50 hover:!text-red-700'
               )}
-              style={{marginBottom: idx === navItems.length - 1 ? 0 : 4}}
             >
-              {activeNav === item.key && item.key !== 'logout' && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-sm bg-[#273655]" style={{marginLeft: '-16px'}}></span>
+              <img 
+                src={item.icon} 
+                alt="icon" 
+                className={clsx(
+                  'w-5 h-5 flex-shrink-0 transition-all duration-200',
+                  activeNav === item.key ? 'filter invert' : 
+                  item.key === 'logout' ? 'filter brightness-0 saturate-100 hue-rotate-0' : 'filter brightness-0'
+                )} 
+              />
+              <span className="flex-1">{item.label}</span>
+              {activeNav === item.key && (
+                <div className="w-2 h-2 bg-white rounded-full"></div>
               )}
-              <img src={item.icon} alt="icon" className={clsx('w-5 h-5 flex-shrink-0', activeNav === item.key ? 'filter invert' : 'filter brightness-0')} />
-              <span className="text-[16px] font-normal leading-normal">{item.label}</span>
-            </button>
+            </MenuItem>
           );
         })}
-      </nav>
-    </aside>
+      </div>
+    </ReactMenu>
   );
 };
 
-export default Sidebar;
+export default MobileSidebar;

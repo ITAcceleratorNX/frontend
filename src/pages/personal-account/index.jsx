@@ -13,8 +13,10 @@ import CourierRequest from './ui/CourierRequest';
 import CourierRequestOrder from './ui/CourierRequestOrder';
 import OrderManagement from './ui/OrderManagement';
 import UserPayments from './ui/UserPayments';
-import { Menu, X } from 'lucide-react';
+import UserDelivery from './ui/UserDelivery';
 import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
+import MobileSidebar from './ui/MobileSidebar';
+import '@szhsin/react-menu/dist/index.css';
 
 import { 
   UserNotificationsPage, 
@@ -33,7 +35,7 @@ const PersonalAccountPage = memo(() => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const { isMobile } = useDeviceType();
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+
 
 
   // Проверяем состояние навигации при загрузке компонента
@@ -44,6 +46,32 @@ const PersonalAccountPage = memo(() => {
       navigate(location.pathname, { replace: true });
     }
   }, [location.state, navigate, location.pathname]);
+
+  // Проверяем URL для установки активного раздела
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/user/delivery') {
+      setActiveNav('delivery');
+    }
+  }, [location.pathname]);
+
+  // Обработка навигации браузера (назад/вперед)
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/user/delivery') {
+        setActiveNav('delivery');
+      } else if (path === '/personal-account') {
+        // Если возвращаемся на основную страницу личного кабинета, сбрасываем на personal
+        if (activeNav === 'delivery') {
+          setActiveNav('personal');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeNav]);
 
   // Отслеживаем изменение статуса аутентификации для перенаправления
   useEffect(() => {
@@ -92,20 +120,8 @@ const PersonalAccountPage = memo(() => {
       <Header />
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex flex-1">
-      {isMobile ? (
-          <>
-            <button
-              className="fixed top-20 left-4 z-50 p-2 bg-white rounded-full shadow-md"
-              onClick={() => setSidebarOpen(!isSidebarOpen)}
-            >
-              {isSidebarOpen ? <X /> : <Menu />}
-            </button>
-            {isSidebarOpen && (
-              <div className="fixed inset-0 z-40">
-                <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-              </div>
-            )}
-          </>
+        {isMobile ? (
+          <MobileSidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         ) : (
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         )}
@@ -126,11 +142,12 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'courierrequests' && <CourierRequest />}
           {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
           {activeNav === 'payments' && <UserPayments />}
+          {activeNav === 'delivery' && <UserDelivery />}
         </main>
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated, user, isMobile, isSidebarOpen]);
+  }, [activeNav, isLoading, isAuthenticated, user, isMobile]);
 
   if (import.meta.env.DEV) {
     console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 

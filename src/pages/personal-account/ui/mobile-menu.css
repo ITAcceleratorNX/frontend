@@ -1,0 +1,73 @@
+/* Custom styles for @szhsin/react-menu */
+.szh-menu {
+  animation: slideInFromRight 0.3s ease-out;
+  transform-origin: left center;
+}
+
+.szh-menu--state-closing {
+  animation: slideOutToRight 0.2s ease-in;
+}
+
+.szh-menu__item {
+  transition: all 0.2s ease-in-out;
+}
+
+.szh-menu__item:hover {
+  transform: translateX(2px);
+}
+
+.szh-menu__arrow {
+  transition: all 0.2s ease-in-out;
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.95);
+  }
+}
+
+/* Backdrop overlay */
+.szh-menu__backdrop {
+  background-color: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Menu button hover effect */
+.mobile-menu-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.mobile-menu-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-menu-button:active {
+  transform: scale(0.98);
+}

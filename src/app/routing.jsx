@@ -131,7 +131,10 @@ const Routing = memo(() => {
   ], []);
 
   const userOnlyRoutes = useMemo(() => [
-    // Убираем /warehouse-order отсюда - теперь доступно всем авторизованным пользователям
+    { 
+      path: "/user/delivery", 
+      element: <Navigate to="/personal-account" state={{ activeSection: 'delivery' }} replace />
+    },
   ], []);
   // Мемоизируем маппинг маршрутов для предотвращения повторного создания элементов
   const publicRouteElements = useMemo(() => 
