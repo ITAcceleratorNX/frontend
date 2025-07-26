@@ -40,7 +40,7 @@ export const ordersApi = {
 
 
 
-  // Удаление заказа (для MANAGER и ADMIN)
+  // Удаление заказа (для MANAGER и ADMIN и Пользователей)
   deleteOrder: async (orderId) => {
     try {
       if (isDevelopment) {
@@ -53,6 +53,23 @@ export const ordersApi = {
       return response.data;
     } catch (error) {
       console.error('OrdersAPI: Ошибка при удалении заказа:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Подтверждение заказа пользователем
+  approveOrder: async (orderId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Подтверждение заказа ${orderId}`);
+      }
+      const response = await api.patch(`/orders/${orderId}/approve`);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Заказ успешно подтвержден');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при подтверждении заказа:', error.response?.data || error.message);
       throw error;
     }
   },

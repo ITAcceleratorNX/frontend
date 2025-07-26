@@ -90,14 +90,18 @@ export const useDeleteOrder = () => {
 };
 
 /**
- * Хук для подтверждения заказа (изменение статуса на APPROVED)
+ * Хук для подтверждения заказа пользователем (PATCH /orders/:id/approve)
  */
 export const useApproveOrder = () => {
-  const updateOrderStatus = useUpdateOrderStatus();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (orderId) => updateOrderStatus.mutateAsync({ orderId, status: 'APPROVED' }),
+    mutationFn: (orderId) => ordersApi.approveOrder(orderId),
     onSuccess: (data, orderId) => {
+      // Инвалидируем кеш заказов
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      
       showGenericSuccess(`Заказ #${orderId} успешно подтвержден!`);
     },
     onError: (error, orderId) => {
