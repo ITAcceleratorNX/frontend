@@ -21,6 +21,8 @@ export const useChat = () => {
     setActiveChat,
     messages,
     addMessage,
+    removeMessage,
+    replaceTemporaryMessage,
     setManagerId,
     addNewChatNotification,
     removeNewChatNotification,
@@ -90,23 +92,34 @@ export const useChat = () => {
         break;
 
       case WS_MESSAGE_TYPES.NEW_MESSAGE:
-        // Реализация realtime доставки сообщений
         if (data.message) {
-          // ВСЕГДА добавляем сообщение (и для отправителя, и для других)
-          const messageWithTime = {
-            ...data.message,
-            created_at: data.message.created_at || new Date().toISOString(),
-            isTemporary: false
-          };
-          addMessage(messageWithTime);
-          if (import.meta.env.DEV) {
-            console.log('Chat: Добавлено realtime сообщение:', messageWithTime);
-          }
-          // Показываем уведомление если сообщение не от текущего пользователя
-          if (user?.role === USER_ROLES.USER && !data.message.is_from_user) {
-            toast.info('Новое сообщение от менеджера');
-          } else if (user?.role === USER_ROLES.MANAGER && data.message.is_from_user) {
-            toast.info('Новое сообщение от пользователя');
+          // Проверяем, не является ли это подтверждением нашего временного сообщения
+          const tempMessages = messages.filter(m => m.isTemporary);
+          const matchingTempMessage = tempMessages.find(
+              m => m.sender_id === user?.id && m.text === data.message.text
+          );
+
+          if (matchingTempMessage) {
+            // Заменяем временное сообщение на постоянное
+            replaceTemporaryMessage(matchingTempMessage.id, {
+              ...data.message,
+              created_at: data.message.created_at || new Date().toISOString(),
+              isTemporary: false
+            });
+          } else if (data.message.sender_id !== user?.id) {
+            // Добавляем новое сообщение от другого пользователя
+            addMessage({
+              ...data.message,
+              created_at: data.message.created_at || new Date().toISOString(),
+              isTemporary: false
+            });
+
+            // Показываем уведомление
+            if (user?.role === USER_ROLES.USER && !data.message.is_from_user) {
+              toast.info('Новое сообщение от менеджера');
+            } else if (user?.role === USER_ROLES.MANAGER && data.message.is_from_user) {
+              toast.info('Новое сообщение от пользователя');
+            }
           }
         }
         break;
@@ -146,7 +159,18 @@ export const useChat = () => {
           console.log('Chat: Неизвестный тип WebSocket сообщения:', data.type);
         }
     }
-  }, [setChatStatus, setActiveChat, setManagerId, addMessage, addNewChatNotification, user?.role, user?.id, setManagerName]);
+  }, [
+    setChatStatus,
+    setActiveChat,
+    setManagerId,
+    addMessage,
+    replaceTemporaryMessage,
+    addNewChatNotification,
+    user?.role,
+    user?.id,
+    setManagerName,
+    messages
+  ]);
 
   // Подключение обработчика сообщений
   useEffect(() => {
@@ -203,17 +227,21 @@ export const useChat = () => {
           return false;
         }
 
+        // Генерируем уникальный ID для временного сообщения
+        const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Создаем временное сообщение
         const tempMessage = {
-          id: `temp-${Date.now()}`,
+          id: tempId,
           chat_id: activeChat.id,
           sender_id: user.id,
           text: messageText.trim(),
           is_from_user: user.role !== USER_ROLES.MANAGER,
           created_at: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
           isTemporary: true
         };
 
+        // Оптимистично добавляем сообщение
         addMessage(tempMessage);
 
         const success = sendWebSocketMessage({
@@ -224,16 +252,16 @@ export const useChat = () => {
           isFromUser: user.role !== USER_ROLES.MANAGER
         });
 
-        if (import.meta.env.DEV && success) {
-          console.log('Chat: Сообщение отправлено:', messageText.trim());
-        }
-
         if (!success) {
+          // Если отправка не удалась, удаляем временное сообщение
+          removeMessage(tempId);
           toast.error('Не удалось отправить сообщение');
         }
 
         return success;
-      }, [isConnected, sendWebSocketMessage, activeChat?.id, user?.id, user?.role]);
+      },
+      [isConnected, sendWebSocketMessage, activeChat?.id, user?.id, user?.role, addMessage, removeMessage]
+  );
 
   // Принять чат (для менеджеров)
   const acceptChat = useCallback((chatId) => {
@@ -275,17 +303,6 @@ export const useChat = () => {
   const chatData = useMemo(() => {
     const canSendMessage = isAuthenticated && isConnected && activeChat && chatStatus === CHAT_STATUS.ACTIVE;
 
-    if (import.meta.env.DEV && activeChat) {
-      console.log('useChat: Проверка canSendMessage:', {
-        isAuthenticated,
-        isConnected,
-        hasActiveChat: !!activeChat,
-        chatStatus,
-        expectedStatus: CHAT_STATUS.ACTIVE,
-        canSendMessage
-      });
-    }
-
     return {
       // Состояние
       chatStatus,
@@ -320,4 +337,4 @@ export const useChat = () => {
   ]);
 
   return chatData;
-}; 
+};
