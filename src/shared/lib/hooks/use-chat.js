@@ -92,13 +92,6 @@ export const useChat = () => {
       case WS_MESSAGE_TYPES.NEW_MESSAGE:
         // Реализация realtime доставки сообщений
         if (data.message) {
-          // Удаляем временное сообщение, если оно есть (по совпадению текста и isTemporary)
-          const tempMsgIndex = messages.findIndex(
-              (msg) => msg.isTemporary && msg.message === data.message.message && msg.sender_id === data.message.sender_id
-          );
-          if (tempMsgIndex !== -1) {
-            messages.splice(tempMsgIndex, 1);
-          }
           // ВСЕГДА добавляем сообщение (и для отправителя, и для других)
           const messageWithTime = {
             ...data.message,
@@ -210,31 +203,18 @@ export const useChat = () => {
           return false;
         }
 
-        const trimmedMessage = messageText.trim();
+
+
         const success = sendWebSocketMessage({
           type: WS_MESSAGE_TYPES.SEND_MESSAGE,
           chatId: activeChat.id,
           senderId: user.id,
-          message: trimmedMessage,
+          message: messageText.trim(),
           isFromUser: user.role !== USER_ROLES.MANAGER
         });
 
         if (import.meta.env.DEV && success) {
-          console.log('Chat: Сообщение отправлено:', trimmedMessage);
-        }
-
-        if (success) {
-          // Оптимистично добавляем временное сообщение
-          const tempMessage = {
-            id: `temp-${Date.now()}`,
-            chat_id: activeChat.id,
-            sender_id: user.id,
-            message: trimmedMessage,
-            is_from_user: user.role !== USER_ROLES.MANAGER,
-            created_at: new Date().toISOString(),
-            isTemporary: true
-          };
-          addMessage(tempMessage);
+          console.log('Chat: Сообщение отправлено:', messageText.trim());
         }
 
         if (!success) {
