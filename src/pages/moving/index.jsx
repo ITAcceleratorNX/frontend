@@ -7,11 +7,8 @@ import bottomOverlay from '../../assets/Vector 2.png';
 import autoLayout from '../../assets/Auto Layout Horizontal.png';
 import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
 import Footer from '../../widgets/Footer';
-import warehouseImg from '../../assets/warehouse.png';
-import api from '../../shared/api/axios';
 
-import CostCalculator from '../../shared/components/CostCalculator';
-import MovingPricingCards from '../../shared/components/MovingPricingCards';
+import MovingPricingTable from '../../shared/components/MovingPricingTable';
 
 const ProgressCircle = ({ step }) => {
     const total = 5;
@@ -316,11 +313,8 @@ const MovingPage = () => {
                 </div>
             </section>
 
-            {/* Калькулятор стоимости — локально для мувинга */}
-            <CostCalculator />
-
-            {/* Тарифные карточки мувинга */}
-            <MovingPricingCards />
+            {/* Тарифные пакеты мувинга */}
+            <MovingPricingTable />
 
             <StepperForm />
 
