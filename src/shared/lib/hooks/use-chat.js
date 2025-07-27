@@ -203,7 +203,8 @@ export const useChat = () => {
           return false;
         }
 
-
+        // Удаляем оптимистичное добавление сообщения
+        // addMessage(tempMessage); // <-- УДАЛЕНО
 
         const success = sendWebSocketMessage({
           type: WS_MESSAGE_TYPES.SEND_MESSAGE,
