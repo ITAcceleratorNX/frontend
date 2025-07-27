@@ -203,8 +203,18 @@ export const useChat = () => {
           return false;
         }
 
-        // Удаляем оптимистичное добавление сообщения
-        // addMessage(tempMessage); // <-- УДАЛЕНО
+        const tempMessage = {
+          id: `temp-${Date.now()}`,
+          chat_id: activeChat.id,
+          sender_id: user.id,
+          text: messageText.trim(),
+          is_from_user: user.role !== USER_ROLES.MANAGER,
+          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          isTemporary: true
+        };
+
+        addMessage(tempMessage);
 
         const success = sendWebSocketMessage({
           type: WS_MESSAGE_TYPES.SEND_MESSAGE,
