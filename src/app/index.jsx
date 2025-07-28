@@ -8,7 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
-import ScrollToTop from "src/components/ScrollToTop.jsx";
+import ScrollToTop from "../components/ScrollToTop.jsx";
 
 // Полностью отключаем рефетчинг при фокусе окна
 focusManager.setEventListener(() => {
