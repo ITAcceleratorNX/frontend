@@ -7,7 +7,6 @@ import boxesImg from "../../assets/boxes.png";
 import good2 from "../../assets/good2.png";
 import procent2 from "../../assets/procent2.png";
 import key2 from "../../assets/key2.png";
-import chatgptImg from "../../assets/chatgpt.png";
 
 import FileCheckIcon from "../../assets/File_Check.png";
 import GroupIcon from "../../assets/group.png";
@@ -15,7 +14,6 @@ import ShieldTickIcon from "../../assets/shield-tick.png";
 import BoxTickIcon from "../../assets/box-tick.png";
 import beigeCircle from "../../assets/beige_circle.svg";
 import houseOnBeigeCircle from "../../assets/house_on_beige_circle.svg";
-import extraOldLogo from "../../assets/extra_old_logo.jpg";
 import extraspaceLogo from "../../assets/extraspace_logo.png";
 import image85 from "../../assets/image 85.png";
 import group1010 from "../../assets/Group 1010.png";
@@ -25,6 +23,7 @@ import WarehouseMap from "../../components/WarehouseMap";
 import ChatButton from "../../shared/components/ChatButton";
 import CostCalculator from "../../shared/components/CostCalculator";
 import { warehouseApi } from "../../shared/api/warehouseApi";
+import VolumeSelector from "../../components/VolumeSelector.jsx";
 
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
@@ -238,13 +237,10 @@ const HomePage = memo(() => {
             </div>
 
             {/* Жёлтый — Оплата */}
-            <div className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
-              <button
-                  className="absolute top-4 left-4 px-4 py-1 bg-[#2a3c64] text-white font-['Montserrat'] rounded-full text-xs md:text-sm font-medium hover:bg-[#1a2a4c] transition-colors z-20"
-                  onClick={() => navigate("/online-payment")}
-              >
-                Подробнее
-              </button>
+            <div
+                className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden cursor-pointer"
+                onClick={() => navigate("/online-payment")}
+            >
               <div className="z-10 relative text-right">
                 <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Оплата банковской картой онлайн
@@ -253,7 +249,7 @@ const HomePage = memo(() => {
                   Вы можете оплатить услугу банковской картой Visa / Mastercard, а также с помощью Apple Pay и Google Pay.
                 </div>
               </div>
-              <img
+            <img
                   src={image85}
                   alt="bank card"
                   className="absolute right-[180px] bottom-[-10px] w-[150px] md:w-[220px] select-none pointer-events-none z-0"
@@ -289,75 +285,7 @@ const HomePage = memo(() => {
       </div>
       {/* Третий фрейм: карточка склада */}
       <section className="w-full flex justify-center items-center px-4 py-8 font-['Montserrat']">
-        <div className="flex flex-col md:flex-row-reverse w-full max-w-[1100px] bg-white rounded-3xl overflow-hidden shadow-md">
-
-          {/* Фото сверху (правая часть на десктопе) */}
-          <div className="w-full md:w-1/2 flex items-center justify-center px-4 py-6 md:py-0 md:px-0">
-            <img
-                src={chatgptImg}
-                alt="Склад с мебелью"
-                className="w-full max-w-[360px] object-contain rounded-2xl"
-            />
-          </div>
-
-          {/* Левая часть: объемы и описание */}
-          <div className="w-full md:w-1/2 flex flex-col justify-start py-6 px-4 sm:px-6 md:px-8">
-
-            {/* Кнопки выбора объёма */}
-            <div className="flex gap-3 sm:gap-4 mb-6 flex-wrap justify-center md:justify-start">
-              <button className="px-5 py-2 sm:px-6 sm:py-3 rounded-[15px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium border-2 border-[#273655]">
-                3 м³
-              </button>
-              <button className="px-5 py-2 sm:px-6 sm:py-3 rounded-[15px] bg-white text-[#273655] text-[14px] sm:text-[16px] font-medium border-2 border-[#273655]">
-                5 м³
-              </button>
-              <button className="px-5 py-2 sm:px-6 sm:py-3 rounded-[15px] bg-white text-[#273655] text-[14px] sm:text-[16px] font-medium border-2 border-[#273655]">
-                10 м³
-              </button>
-            </div>
-
-            {/* Описание */}
-            <div className="mb-6 text-[14px] sm:text-[16px] leading-snug">
-              <p className="text-[#A3A3A3] font-medium mb-2">
-                Такой объём подходит для хранения части мебели и бытовой техники из небольшой комнаты.
-              </p>
-              <p className="text-[#A3A3A3] font-medium mb-2">
-                Примерно столько занимает багаж из однокомнатной квартиры при переезде.
-              </p>
-              <p className="text-[#A3A3A3] font-medium mb-4">
-                Когда нужно спрятать всё лишнее, но пока не расставаться.
-              </p>
-              <p className="text-[#273655] text-[13px] sm:text-[14px] font-medium mb-1">
-                Вмещает до X коробок или Y предметов мебели
-              </p>
-              <p className="text-[#273655] text-[13px] sm:text-[14px] font-medium mb-1">
-                Примеры:
-              </p>
-              <p className="text-[#273655] text-[13px] sm:text-[14px] font-medium">
-                – Матрас, стиральная машина, пылесос, тумбочка, чемодан и несколько коробок с вещами
-              </p>
-            </div>
-
-            {/* Кнопка "Подробнее" */}
-            <div className="flex justify-center md:justify-start">
-              <button className="mt-2 sm:mt-4 w-full sm:w-[165px] h-[40px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors">
-                Подробнее
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    viewBox="0 0 20 20"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="ml-1"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+        <VolumeSelector/>
       </section>
 
       {/* Четвертый фрейм: калькулятор стоимости */}
