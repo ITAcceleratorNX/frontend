@@ -513,22 +513,62 @@ const WarehouseOrderPage = memo(() => {
                             placeholder="Например: Диван"
                           />
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-[#273655] mb-1">
-                            Объем (м³)
-                          </label>
+                        <div className="grid grid-cols-3 gap-2">
                           <input
-                            type="number"
-                            step="0.1"
-                            min="0.1"
-                            value={item.volume}
-                            onChange={(e) =>
-                              updateOrderItem(index, "volume", e.target.value)
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                            placeholder="1.5"
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              placeholder="Длина (м)"
+                              onChange={(e) => {
+                                const length = parseFloat(e.target.value) || 0;
+                                const width = item.width || 0;
+                                const height = item.height || 0;
+                                const volume = length * width * height;
+
+                                updateOrderItem(index, "length", length);
+                                updateOrderItem(index, "volume", volume.toFixed(2));
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
+                          />
+
+                          <input
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              placeholder="Ширина (м)"
+                              onChange={(e) => {
+                                const width = parseFloat(e.target.value) || 0;
+                                const length = item.length || 0;
+                                const height = item.height || 0;
+                                const volume = length * width * height;
+
+                                updateOrderItem(index, "width", width);
+                                updateOrderItem(index, "volume", volume.toFixed(2));
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
+                          />
+
+                          <input
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              placeholder="Высота (м)"
+                              onChange={(e) => {
+                                const height = parseFloat(e.target.value) || 0;
+                                const length = item.length || 0;
+                                const width = item.width || 0;
+                                const volume = length * width * height;
+
+                                updateOrderItem(index, "height", height);
+                                updateOrderItem(index, "volume", volume.toFixed(2));
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                           />
                         </div>
+
+                        <p className="mt-2 text-sm text-gray-700">
+                          Объем: <strong>{item.volume || 0}</strong> м³
+                        </p>
                         <div>
                           <label className="block text-sm font-medium text-[#273655] mb-1">
                             Тип груза
