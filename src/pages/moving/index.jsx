@@ -313,7 +313,7 @@ const MovingPage = () => {
             {/* Тарифные пакеты мувинга */}
             <MovingPricingTable />
 
-            <StepperForm />
+            {/*<StepperForm />*/}
 
             <Footer />
         </div>
