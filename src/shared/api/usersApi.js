@@ -13,6 +13,17 @@ export const usersApi = {
       throw error;
     }
   },
+  getCountAllUsers: async () => {
+    try {
+      console.log('Отправка запроса на получение всех пользователей');
+      const response = await api.get('/users/count');
+      console.log('Пользователи загружены:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при загрузке пользователей:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   // Обновление роли пользователя (только для ADMIN)
   updateUserRole: async (userId, role) => {

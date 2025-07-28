@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {useQuery, useMutation, useQueryClient, useInfiniteQuery} from '@tanstack/react-query';
 import { notificationApi } from '../../api/notificationApi';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -33,15 +33,18 @@ export const useAllNotifications = () => {
   const { user } = useAuth();
   const isManagerOrAdmin = user?.role === 'MANAGER' || user?.role === 'ADMIN';
 
-  return useQuery({
-    queryKey: NOTIFICATION_QUERY_KEYS.all,
-    queryFn: () => notificationApi.getAllNotifications(),
+  return useInfiniteQuery({
+    queryKey: ['notifications'],
+    queryFn: ({ pageParam = 1 }) =>
+        notificationApi.getAllNotifications(pageParam, 10),
+    getNextPageParam: (lastPage) =>
+        lastPage.hasMore ? lastPage.page + 1 : undefined,
     enabled: isManagerOrAdmin,
-    select: (data) => data.data,
-    staleTime: 2 * 60 * 1000, // 2 минуты
-    cacheTime: 5 * 60 * 1000, // 5 минут
+    staleTime: 2 * 60 * 1000,
+    cacheTime: 5 * 60 * 1000,
   });
 };
+
 
 // Хук для получения списка пользователей
 export const useNotificationUsers = () => {
@@ -156,47 +159,56 @@ export const useNotificationStats = () => {
 export const useNotifications = () => {
   const { user } = useAuth();
   const userRole = user?.role;
-  
-  // Мемоизируем роль для предотвращения ненужных ререндеров
+
   const memoizedUserRole = useMemo(() => userRole, [userRole]);
-  
+
   const userNotifications = useUserNotifications();
-  const allNotifications = useAllNotifications();
+  const allNotifications = useAllNotifications(); // теперь useInfiniteQuery
   const users = useNotificationUsers();
   const stats = useNotificationStats();
-  
+
   const sendNotification = useSendNotification();
   const markAsRead = useMarkAsRead();
 
-  // Мемоизируем результат для предотвращения ненужных ререндеров
   return useMemo(() => {
-  // Возвращаем данные в зависимости от роли
-    if (memoizedUserRole === 'USER' || memoizedUserRole === 'COURIER') { // Добавляем поддержку курьеров
+    // --- Для USER / COURIER ---
+    if (memoizedUserRole === 'USER' || memoizedUserRole === 'COURIER') {
+      return {
+        notifications: userNotifications.data || [],
+        isLoading: userNotifications.isLoading,
+        error: userNotifications.error,
+        markAsRead: markAsRead.mutate,
+        isMarkingAsRead: markAsRead.isPending,
+        users: [],
+        sendNotification: null,
+        stats: null,
+        fetchNextPage: null,
+        hasNextPage: false,
+        isFetchingNextPage: false,
+      };
+    }
+
+    // --- Для MANAGER / ADMIN ---
+    const notifications =
+        allNotifications.data?.pages?.flatMap((page) => page.notifications || []) ||
+        [];
+
+    const total = allNotifications.data?.pages?.[0]?.total || 0;
     return {
-      notifications: userNotifications.data || [],
-      isLoading: userNotifications.isLoading,
-      error: userNotifications.error,
+      notifications,
+      total,
+      users: users.data || null,
+      stats: stats.data || null,
+      isLoading: allNotifications.isLoading || users.isLoading,
+      error: allNotifications.error || users.error,
+      sendNotification: sendNotification.mutate,
+      isSending: sendNotification.isPending,
       markAsRead: markAsRead.mutate,
       isMarkingAsRead: markAsRead.isPending,
-      // Для пользователей и курьеров не нужны эти функции
-      users: [],
-      sendNotification: null,
-      stats: null
+      fetchNextPage: allNotifications.fetchNextPage,
+      hasNextPage: allNotifications.hasNextPage,
+      isFetchingNextPage: allNotifications.isFetchingNextPage,
     };
-  }
-
-  // Для менеджеров и админов
-  return {
-    notifications: allNotifications.data || [],
-    users: users.data || [],
-    stats: stats.data || null,
-    isLoading: allNotifications.isLoading || users.isLoading,
-    error: allNotifications.error || users.error,
-    sendNotification: sendNotification.mutate,
-    isSending: sendNotification.isPending,
-    markAsRead: markAsRead.mutate,
-    isMarkingAsRead: markAsRead.isPending
-  };
   }, [
     memoizedUserRole,
     userNotifications.data,
@@ -205,12 +217,15 @@ export const useNotifications = () => {
     allNotifications.data,
     allNotifications.isLoading,
     allNotifications.error,
+    allNotifications.fetchNextPage,
+    allNotifications.hasNextPage,
+    allNotifications.isFetchingNextPage,
     users.data,
     users.isLoading,
     stats.data,
     sendNotification.mutate,
     sendNotification.isPending,
     markAsRead.mutate,
-    markAsRead.isPending
+    markAsRead.isPending,
   ]);
-}; 
+};
