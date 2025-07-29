@@ -4,7 +4,15 @@ import { toast } from 'react-toastify';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
+import items from '../../../assets/items.png';
+import { Alert, AlertDescription, AlertTitle } from "../../../components/ui/alert";
+import {
+  InputButton,
+  InputButtonAction,
+  InputButtonProvider,
+  InputButtonSubmit,
+  InputButtonInput,
+} from '../../../components/animate-ui/buttons/input';
 
 const ItemSearch = () => {
   const [itemId, setItemId] = useState('');
@@ -56,26 +64,19 @@ const ItemSearch = () => {
       const result = await ordersApi.searchItemById(itemId.trim());
       setSearchResult(result);
       setIsSearched(true);
-      toast.success('Вещь найдена!');
+      if(result) toast.success('Вещь найдена!');
     } catch (error) {
       console.error('Ошибка при поиске вещи:', error);
       setSearchResult(null);
       setIsSearched(true);
       
       if (error.response?.status === 404) {
-        toast.error('Вещь с таким ID не найдена');
+        // Error handled via Alert component
       } else {
         toast.error('Произошла ошибка при поиске вещи');
       }
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Обработчик нажатия Enter
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
     }
   };
 
@@ -89,60 +90,30 @@ const ItemSearch = () => {
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
       {/* Форма поиска */}
-      <div className={`transition-all duration-500 ease-in-out ${isSearched && searchResult ? 'transform -translate-y-20 mb-8' : 'min-h-screen flex items-center justify-center'}`}>
-        <div className="w-full max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#273655] rounded-full mb-4">
-              <Search className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-[#273655] mb-2">Поиск вещи</h1>
-            <p className="text-gray-600">Введите ID вещи для получения информации</p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Введите ID вещи..."
-                value={itemId}
-                onChange={(e) => setItemId(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="pl-12 pr-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-[#273655] focus:ring-[#273655] transition-colors"
-                disabled={isLoading}
-              />
-              <Package className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={handleSearch}
-                disabled={isLoading}
-                className="flex-1 bg-[#273655] hover:bg-[#1e2a47] text-white py-3 text-lg rounded-xl transition-colors disabled:opacity-50"
-              >
+      <div className={`transition-all duration-700 ease-in-out ${isSearched ? 'transform -translate-y-16' : 'min-h-screen flex items-center justify-center'}`}>
+        <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
+        <img src={items} alt="items" className="w-1/2 h-1/2 mb-16"/>
+          <InputButtonProvider className="w-full">
+            <InputButton color="#273655">
+              <InputButtonAction color="#273655" className="text-black">Найти вещь по ID</InputButtonAction>
+              <InputButtonSubmit color="#273655" onClick={handleSearch} disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Поиск...
                   </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 mr-2" />
-                    Найти
-                  </>
-                )}
-              </Button>
-
-              {isSearched && (
-                <Button
-                  onClick={handleReset}
-                  variant="outline"
-                  className="px-6 py-3 text-lg rounded-xl border-2 border-gray-200 hover:border-[#273655] hover:text-[#273655] transition-colors"
-                >
-                  Сбросить
-                </Button>
-              )}
-            </div>
-          </div>
+                ) : "Найти"}
+              </InputButtonSubmit>
+            </InputButton >
+            <InputButtonInput 
+              type="text" 
+              placeholder="Введите ID..." 
+              value={itemId}
+              onChange={(e) => setItemId(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              disabled={isLoading}
+            />
+          </InputButtonProvider>
         </div>
       </div>
 
@@ -269,12 +240,17 @@ const ItemSearch = () => {
 
       {/* Сообщение о том, что ничего не найдено */}
       {isSearched && !searchResult && (
-        <div className="animate-fadeIn text-center py-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-            <Search className="w-8 h-8 text-red-600" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Вещь не найдена</h3>
-          <p className="text-gray-600">Вещь с ID "{itemId}" не найдена в системе</p>
+        <div className="animate-fadeIn text-center py-12 max-w-md mx-auto">
+          <Alert variant="destructive">
+            <Search className="w-4 h-4" />
+            <AlertTitle>Вещь не найдена</AlertTitle>
+            <AlertDescription>
+              Вещь с ID "{itemId}" не найдена в системе. Пожалуйста, проверьте правильность ID и попробуйте снова.
+            </AlertDescription>
+          </Alert>
+          <Button onClick={handleReset} variant="outline" className="mt-6">
+            Новый поиск
+          </Button>
         </div>
       )}
     </div>
