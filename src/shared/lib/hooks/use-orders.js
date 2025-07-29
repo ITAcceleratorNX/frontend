@@ -26,7 +26,14 @@ export const useAllOrders = (options = {}) => {
     ...options
   });
 };
-
+export const useSearchOrders = (query) => {
+  return useQuery({
+    queryKey: ['orders', 'search', query],
+        queryFn: () => ordersApi.searchOrders(query),
+    enabled: false,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
+};
 /**
  * Хук для получения заказов текущего пользователя
  */
