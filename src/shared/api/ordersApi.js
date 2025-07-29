@@ -217,20 +217,35 @@ export const ordersApi = {
   },
 
   // Подтверждение доставки
-  confirmDelivery: async (movingOrderId) => {
+  confirmDelivery: async (deliveryId) => {
     try {
       if (isDevelopment) {
-        console.log(`OrdersAPI: Подтверждение доставки ${movingOrderId}`);
+        console.log(`OrdersAPI: Подтверждение доставки ${deliveryId}`);
       }
-      const response = await api.put(`/moving/${movingOrderId}`, {
-        availability: 'AVAILABLE'
-      });
+      const response = await api.patch(`/moving/confirm/${deliveryId}`);
       if (isDevelopment) {
-        console.log('OrdersAPI: Доставка успешно подтверждена:', response.data);
+        console.log('OrdersAPI: Доставка успешно подтверждена');
       }
       return response.data;
     } catch (error) {
       console.error('OrdersAPI: Ошибка при подтверждении доставки:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Поиск вещи по ID (для MANAGER и ADMIN)
+  searchItemById: async (itemId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Поиск вещи с ID ${itemId}`);
+      }
+      const response = await api.get(`/orders/item/${itemId}`);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Найдена вещь:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при поиске вещи:', error.response?.data || error.message);
       throw error;
     }
   },

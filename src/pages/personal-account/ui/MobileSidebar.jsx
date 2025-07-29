@@ -20,6 +20,7 @@ import icon9 from '../../../assets/9.svg';
 import icon10 from '../../../assets/10.svg';
 import icon11 from '../../../assets/11.svg';
 import icon12 from '../../../assets/12.svg';
+import icon13 from '../../../assets/13.svg';
 
 // Navigation items for different roles
 const userNavItems = [
@@ -39,6 +40,7 @@ const managerNavItems = [
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Мувинг', icon: icon9, key: 'managermoving' },
   { label: 'Запрос', icon: icon11, key: 'request' },
+  { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
   { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
@@ -51,6 +53,7 @@ const adminNavItems = [
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
   { label: 'Запрос', icon: icon11, key: 'request' },
+  { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
   { label: 'Выйти', icon: icon6, key: 'logout' },

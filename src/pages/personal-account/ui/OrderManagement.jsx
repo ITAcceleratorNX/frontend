@@ -220,7 +220,7 @@ const OrderManagement = () => {
           {/* Поиск */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Поиск по ID заказа, ID предмета, имени, email или телефону
+              Поиск по ID заказа, ID предмета, имени
             </label>
               <div className="relative">
                 <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
