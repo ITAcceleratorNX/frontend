@@ -262,12 +262,12 @@ const OrderManagement = () => {
 
 
             {/* Фильтр по статусу через Tabs */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Фильтр по статусу заказа
               </label>
               <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
                   <TabsTrigger value="ALL" className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7l2 2-2 2m0 10l2-2-2-2" />
