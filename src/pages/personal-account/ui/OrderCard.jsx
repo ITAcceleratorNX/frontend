@@ -549,6 +549,7 @@ const OrderCard = ({ order, onDelete, isLoading = false }) => {
                               PENDING_FROM: 'Ожидает забора',
                               PENDING_TO: 'Ожидает доставки',
                               IN_PROGRESS: 'В процессе',
+                              DELIVERED: 'Доставлено на склад'
                             }[movingOrder.status] || movingOrder.status}
                           </Badge>
                         </div>
@@ -589,7 +590,9 @@ const OrderCard = ({ order, onDelete, isLoading = false }) => {
 
 
         {/* Кнопки действий */}
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
+        {order.status !== 'ACTIVE' && (
+
+            <div className="flex gap-3 pt-4 border-t border-gray-200">
           <Button
             onClick={onDelete}
             disabled={isLoading}
@@ -605,7 +608,7 @@ const OrderCard = ({ order, onDelete, isLoading = false }) => {
             )}
             Удалить заказ
           </Button>
-        </div>
+        </div> )}
       </CardContent>
     </Card>
   );

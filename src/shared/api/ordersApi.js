@@ -38,6 +38,17 @@ export const ordersApi = {
     }
   },
 
+  searchOrders: async (query) => {
+    if (!query || query.length < 2) return [];
+
+    try {
+      const response = await api.get('/orders/search', { params: { query } });
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error("Ошибка при поиске заказов:", error);
+      return [];
+    }
+  },
 
 
   // Удаление заказа (для MANAGER и ADMIN и Пользователей)

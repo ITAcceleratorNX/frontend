@@ -1,80 +1,86 @@
-import { useState, useMemo } from 'react';
+import React from 'react';
+import {useState, useMemo} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
-import { useAllOrders, useUpdateOrderStatus, useDeleteOrder } from '../../../shared/lib/hooks/use-orders';
+import {
+  useAllOrders,
+  useUpdateOrderStatus,
+  useDeleteOrder,
+  useSearchOrders
+} from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
 import OrderConfirmModal from './OrderConfirmModal';
 
 const OrderManagement = () => {
-  // React Query хуки с обработкой ошибок
-  const { data: orders = [], isLoading, error, refetch } = useAllOrders({
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [modalData, setModalData] = useState(null);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+
+  // Хуки для данных
+  const {
+    data: allOrders = [],
+    isLoading: isAllLoading,
+    error: allError,
+    refetch
+  } = useAllOrders({
     onError: (error) => {
       showOrderLoadError();
       console.error('Ошибка загрузки заказов:', error);
     }
   });
+
+  const {
+    data: searchedOrders = [],
+    isLoading: isSearchLoading,
+    refetch: refetchSearch
+  } = useSearchOrders(searchQuery);
+
+
+
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
-  
+
   // Проверяем загрузку мутаций
   const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading;
-  
-  // Локальное состояние
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [modalData, setModalData] = useState(null);
 
-  // Фильтрация и поиск с useMemo для оптимизации
+  // Определяем какие данные показывать
+  const ordersToShow = isSearchActive ? searchedOrders : allOrders;
+
+  // Фильтрация по статусу
   const filteredOrders = useMemo(() => {
-    let filtered = [...orders];
+    if (statusFilter === 'ALL') return ordersToShow;
+    return ordersToShow.filter(order => order.status === statusFilter);
+  }, [ordersToShow, statusFilter]);
 
-    // Фильтр по статусу
-    if (statusFilter !== 'ALL') {
-      filtered = filtered.filter(order => order.status === statusFilter);
-    }
-
-    // Поиск
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(order => {
-        // Поиск по основным полям заказа
-        const basicMatch = 
-          order.id.toString().includes(query) ||
-          order.user?.name?.toLowerCase().includes(query) ||
-          order.user?.email?.toLowerCase().includes(query) ||
-          order.user?.phone?.includes(query);
-
-        // Поиск по ID предметов заказа
-        const itemsMatch = order.items?.some(item => 
-          item.id.toString().includes(query)
-        );
-
-        return basicMatch || itemsMatch;
-      });
-    }
-
-    return filtered;
-  }, [orders, statusFilter, searchQuery]);
-
-  // Статистика заказов
+  // Статистика заказов (используем allOrders для точных цифр)
   const statistics = useMemo(() => ({
-    total: orders.length,
-    approved: orders.filter(o => o.status === 'APPROVED').length,
-    processing: orders.filter(o => o.status === 'PROCESSING').length,
-    active: orders.filter(o => o.status === 'ACTIVE').length,
-  }), [orders]);
+    total: allOrders.length,
+    approved: allOrders.filter(o => o.status === 'APPROVED').length,
+    processing: allOrders.filter(o => o.status === 'PROCESSING').length,
+    active: allOrders.filter(o => o.status === 'ACTIVE').length,
+  }), [allOrders]);
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      setIsSearchActive(true);
+      refetchSearch();
+    } else {
+      setIsSearchActive(false);
+    }
+  };
 
-
-
+  const resetSearch = () => {
+    setSearchQuery('');
+    setIsSearchActive(false);
+  };
   const handleDeleteOrder = async (orderId) => {
     try {
       await deleteOrder.mutateAsync(orderId);
     } catch (error) {
-      // Ошибка обрабатывается в хуке
     }
   };
 
@@ -90,15 +96,15 @@ const OrderManagement = () => {
     if (!modalData) return;
 
     const { action, order } = modalData;
-    
-    // Для действий удаления используем старую логику
+
     if (action === 'delete') {
       await handleDeleteOrder(order.id);
       closeModal();
     }
-    // Для подтверждения заказов теперь используется внутренняя логика модала
-    // closeModal() будет вызван из модала после успешного подтверждения
   };
+
+  const isLoading = isAllLoading || isSearchLoading;
+  const error = allError;
 
   if (isLoading) {
     return (
@@ -155,7 +161,7 @@ const OrderManagement = () => {
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-r from-[#1e2c4f] to-blue-600 text-white hover:shadow-lg transition-shadow">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -218,22 +224,42 @@ const OrderManagement = () => {
         <CardContent>
           <div className="space-y-6">
           {/* Поиск */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Поиск по ID заказа, ID предмета, имени
-            </label>
-              <div className="relative">
-                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-              placeholder="Введите ID заказа, ID предмета, имя, email или телефон..."
-            />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Поиск по имени или телефону
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                      placeholder="Введите имя или телефон..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                </div>
+                <Button
+                    onClick={handleSearch}
+                    disabled={!searchQuery.trim()}
+                    className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90"
+                >
+                  Найти
+                </Button>
+                {isSearchActive && (
+                    <Button
+                        variant="outline"
+                        onClick={resetSearch}
+                    >
+                      Сбросить</Button>
+                )}
               </div>
             </div>
+
+
 
             {/* Фильтр по статусу через Tabs */}
             <div>
@@ -276,7 +302,7 @@ const OrderManagement = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Показано {filteredOrders.length} из {orders.length} заказов
+                Показано {filteredOrders.length} из {allOrders.length} заказов
                 {searchQuery && (
                   <Badge variant="outline" className="ml-2">
                     Поиск: "{searchQuery}"
