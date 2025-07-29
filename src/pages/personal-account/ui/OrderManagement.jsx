@@ -161,7 +161,7 @@ const OrderManagement = () => {
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-r from-[#1e2c4f] to-blue-600 text-white hover:shadow-lg transition-shadow">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -262,7 +262,7 @@ const OrderManagement = () => {
 
 
             {/* Фильтр по статусу через Tabs */}
-            <div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Фильтр по статусу заказа
               </label>
