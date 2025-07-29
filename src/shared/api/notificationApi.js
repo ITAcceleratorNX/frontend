@@ -23,18 +23,30 @@ export const notificationApi = {
   },
 
   // Получение всех уведомлений (для менеджеров/админов)
-  async getAllNotifications() {
+  async getAllNotifications(page = 1, limit = 10) {
     try {
-      const response = await api.get('/notifications');
+      const response = await api.get(`/notifications?page=${page}&limit=${limit}`);
+
       if (isDevelopment) {
         console.log('Ответ с сервера (все уведомления):', response.data);
       }
-      
-      // Проверяем структуру ответа и извлекаем массив уведомлений
-      const notifications = Array.isArray(response.data) ? response.data : 
-                          (response.data.notifications || []);
-      
-      return { data: notifications };
+
+      const data = response.data;
+
+      // Проверка структуры
+      if (!data || !Array.isArray(data.notifications)) {
+        throw new Error('Некорректный формат ответа API');
+      }
+
+      // Возвращаем весь объект, а не только notifications!
+      return {
+        notifications: data.notifications,
+        total: data.total,
+        page: data.page,
+        limit: data.limit,
+        totalPages: data.totalPages,
+        hasMore: data.hasMore
+      };
     } catch (error) {
       console.error('Error fetching all notifications:', error);
       throw error;

@@ -40,12 +40,21 @@ const OrderManagement = () => {
     // Поиск
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(order =>
-        order.id.toString().includes(query) ||
-        order.user?.name?.toLowerCase().includes(query) ||
-        order.user?.email?.toLowerCase().includes(query) ||
-        order.user?.phone?.includes(query)
-      );
+      filtered = filtered.filter(order => {
+        // Поиск по основным полям заказа
+        const basicMatch = 
+          order.id.toString().includes(query) ||
+          order.user?.name?.toLowerCase().includes(query) ||
+          order.user?.email?.toLowerCase().includes(query) ||
+          order.user?.phone?.includes(query);
+
+        // Поиск по ID предметов заказа
+        const itemsMatch = order.items?.some(item => 
+          item.id.toString().includes(query)
+        );
+
+        return basicMatch || itemsMatch;
+      });
     }
 
     return filtered;
@@ -211,7 +220,7 @@ const OrderManagement = () => {
           {/* Поиск */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Поиск по ID, имени, email или телефону
+              Поиск по ID заказа, ID предмета, имени, email или телефону
             </label>
               <div className="relative">
                 <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,7 +230,7 @@ const OrderManagement = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
-              placeholder="Введите поисковый запрос..."
+              placeholder="Введите ID заказа, ID предмета, имя, email или телефон..."
             />
               </div>
             </div>

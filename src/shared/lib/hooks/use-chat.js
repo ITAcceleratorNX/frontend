@@ -8,10 +8,10 @@ import { toast } from 'react-toastify';
 export const useChat = () => {
   const { user, isAuthenticated } = useAuth();
   const { isConnected, isReconnecting, sendMessage: sendWebSocketMessage, addMessageHandler, removeMessageHandler } = useWebSocket();
-  
+
   // Автоматическая загрузка чата пользователя
   const { loadUserChat } = useUserChat();
-  
+
   // Zustand store
   const {
     chatStatus,
@@ -44,11 +44,11 @@ export const useChat = () => {
         setChatStatus(CHAT_STATUS.PENDING);
         toast.info(data.message || 'Ожидаем менеджера...');
         break;
-        
+
       case WS_MESSAGE_TYPES.CHAT_ACCEPTED:
-        setActiveChat({ 
+        setActiveChat({
           id: data.chatId,
-          manager_id: data.managerId 
+          manager_id: data.managerId
         });
         setManagerId(data.managerId);
         if (data.managerName) {
@@ -56,7 +56,7 @@ export const useChat = () => {
         }
         setChatStatus(CHAT_STATUS.ACTIVE);
         toast.success('Менеджер присоединился к чату');
-        
+
         // Инвалидируем кеш чата пользователя
         import('../../api/chatApi').then(({ chatApi }) => {
           chatApi.invalidateUserChat();
@@ -66,7 +66,7 @@ export const useChat = () => {
       case WS_MESSAGE_TYPES.CHAT_ASSIGNED:
         // Новое событие: чат назначен менеджеру
         if (user?.role === USER_ROLES.MANAGER && data.managerId === user.id) {
-          setActiveChat({ 
+          setActiveChat({
             id: data.chatId,
             user_id: data.userId,
             manager_id: data.managerId
@@ -78,7 +78,7 @@ export const useChat = () => {
           setChatStatus(CHAT_STATUS.ACTIVE);
           toast.success(`Вам назначен чат #${data.chatId}`);
         }
-        
+
         // Инвалидируем кеши
         import('../../api/chatApi').then(({ chatApi }) => {
           chatApi.invalidateManagerChats();
@@ -88,14 +88,14 @@ export const useChat = () => {
           }
         });
         break;
-        
+
       case WS_MESSAGE_TYPES.NEW_MESSAGE:
         // Реализация realtime доставки сообщений
         if (data.message) {
           // Добавляем сообщение только если это не наше собственное сообщение
           // Проверяем по sender_id или временной метке
           const isOwnMessage = data.message.sender_id === user?.id;
-          
+
           if (!isOwnMessage) {
             // Добавляем сообщение с актуальным временем created_at
             const messageWithTime = {
@@ -104,13 +104,13 @@ export const useChat = () => {
               // Удаляем временные флаги если есть
               isTemporary: false
             };
-            
+
             addMessage(messageWithTime);
-            
+
             if (import.meta.env.DEV) {
               console.log('Chat: Добавлено realtime сообщение:', messageWithTime);
             }
-            
+
             // Показываем уведомление если сообщение не от текущего пользователя
             if (user?.role === USER_ROLES.USER && !data.message.is_from_user) {
               toast.info('Новое сообщение от менеджера');
@@ -126,7 +126,7 @@ export const useChat = () => {
           }
         }
         break;
-        
+
       case WS_MESSAGE_TYPES.NEW_CHAT:
         // Для менеджеров - уведомление о новом чате
         if (user?.role === USER_ROLES.MANAGER) {
@@ -136,18 +136,18 @@ export const useChat = () => {
             timestamp: Date.now()
           });
           toast.info(`Новый чат от пользователя ${data.userId}`);
-          
+
           // Инвалидируем кеш ожидающих чатов
           import('../../api/chatApi').then(({ chatApi }) => {
             chatApi.invalidatePendingChats();
           });
         }
         break;
-        
+
       case WS_MESSAGE_TYPES.CHAT_CLOSED:
         setChatStatus(CHAT_STATUS.CLOSED);
         toast.info('Чат завершен');
-        
+
         // Инвалидируем кеш чата пользователя
         import('../../api/chatApi').then(({ chatApi }) => {
           chatApi.invalidateUserChat();
@@ -156,7 +156,7 @@ export const useChat = () => {
           }
         });
         break;
-        
+
       default:
         if (import.meta.env.DEV) {
           console.log('Chat: Неизвестный тип WebSocket сообщения:', data.type);
@@ -168,7 +168,7 @@ export const useChat = () => {
   useEffect(() => {
     if (isConnected) {
       addMessageHandler(handleWebSocketMessage);
-      
+
       return () => {
         removeMessageHandler(handleWebSocketMessage);
       };
@@ -181,24 +181,24 @@ export const useChat = () => {
       toast.error('Нет соединения с сервером');
       return false;
     }
-    
+
     if (!user?.id) {
       toast.error('Пользователь не авторизован');
       return false;
     }
-    
+
     const success = sendWebSocketMessage({
       type: WS_MESSAGE_TYPES.START_CHAT,
       userId: user.id
     });
-    
+
     if (success) {
       setChatStatus(CHAT_STATUS.PENDING);
       if (import.meta.env.DEV) {
         console.log('Chat: Инициация чата для пользователя:', user.id);
       }
     }
-    
+
     return success;
   }, [isConnected, sendWebSocketMessage, user?.id, setChatStatus]);
 
@@ -207,17 +207,17 @@ export const useChat = () => {
     if (!messageText?.trim()) {
       return false;
     }
-    
+
     if (!isConnected) {
       toast.error('Нет соединения с сервером');
       return false;
     }
-    
+
     if (!activeChat?.id) {
       toast.error('Чат не активен');
       return false;
     }
-    
+
     // Создаем временное сообщение для оптимистичного обновления
     const tempMessage = {
       id: `temp-${Date.now()}`,
@@ -229,10 +229,10 @@ export const useChat = () => {
       createdAt: new Date().toISOString(), // Fallback для старых компонентов
       isTemporary: true
     };
-    
+
     // Оптимистично добавляем сообщение в UI
     addMessage(tempMessage);
-    
+
     const success = sendWebSocketMessage({
       type: WS_MESSAGE_TYPES.SEND_MESSAGE,
       chatId: activeChat.id,
@@ -240,17 +240,17 @@ export const useChat = () => {
       message: messageText.trim(),
       isFromUser: user.role !== USER_ROLES.MANAGER
     });
-    
+
     if (import.meta.env.DEV && success) {
       console.log('Chat: Сообщение отправлено:', messageText.trim());
     }
-    
+
     if (!success) {
       // Если отправка не удалась, удаляем временное сообщение
       // TODO: Реализовать логику удаления временного сообщения
       toast.error('Не удалось отправить сообщение');
     }
-    
+
     return success;
   }, [isConnected, sendWebSocketMessage, activeChat?.id, user?.id, user?.role, addMessage]);
 
@@ -260,28 +260,28 @@ export const useChat = () => {
       toast.error('Недостаточно прав');
       return false;
     }
-    
+
     if (!isConnected) {
       toast.error('Нет соединения с сервером');
       return false;
     }
-    
+
     const success = sendWebSocketMessage({
       type: WS_MESSAGE_TYPES.ACCEPT_CHAT,
       chatId: chatId,
       managerId: user.id
     });
-    
+
     if (success) {
       setActiveChat({ id: chatId });
       setChatStatus(CHAT_STATUS.ACTIVE);
       removeNewChatNotification(chatId);
-      
+
       if (import.meta.env.DEV) {
         console.log('Chat: Чат принят менеджером:', chatId);
       }
     }
-    
+
     return success;
   }, [user?.role, user?.id, isConnected, sendWebSocketMessage, setActiveChat, setChatStatus, removeNewChatNotification]);
 
@@ -293,7 +293,7 @@ export const useChat = () => {
   // Мемоизируем результат
   const chatData = useMemo(() => {
     const canSendMessage = isAuthenticated && isConnected && activeChat && chatStatus === CHAT_STATUS.ACTIVE;
-    
+
     if (import.meta.env.DEV && activeChat) {
       console.log('useChat: Проверка canSendMessage:', {
         isAuthenticated,
@@ -304,7 +304,7 @@ export const useChat = () => {
         canSendMessage
       });
     }
-    
+
     return {
       // Состояние
       chatStatus,
@@ -312,13 +312,13 @@ export const useChat = () => {
       isReconnecting,
       activeChat,
       messages,
-      
+
       // Методы
       startChat,
       sendMessage,
       acceptChat,
       resetChatState,
-      
+
       // Проверки
       canStartChat: isAuthenticated && isConnected && chatStatus === CHAT_STATUS.IDLE,
       canSendMessage,
@@ -326,7 +326,7 @@ export const useChat = () => {
     };
   }, [
     chatStatus,
-    isConnected, 
+    isConnected,
     isReconnecting,
     activeChat,
     messages,
@@ -339,4 +339,4 @@ export const useChat = () => {
   ]);
 
   return chatData;
-}; 
+};

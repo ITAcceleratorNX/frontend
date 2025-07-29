@@ -398,29 +398,33 @@ const OrderCard = ({ order, onDelete, isLoading = false }) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {order.items.slice(0, 6).map((item) => (
-                  <Card key={item.id} className="bg-white border-teal-200 hover:border-teal-300 transition-colors">
-                    <CardContent className="p-3">
-                      <div className="font-medium text-gray-900 text-sm mb-1">{item.name}</div>
-                      <div className="text-xs text-gray-600 flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs px-1 py-0">
-                          {item.volume} м³
-                        </Badge>
-                        <span>{getCargoMarkText(item.cargo_mark)}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
+              <div className="space-y-2">
+                {order.items.slice(0, 8).map((item) => (
+                  <div key={item.id} className="bg-white border border-teal-200 rounded-lg p-3 hover:border-teal-300 transition-colors">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="secondary" className="text-xs px-2 py-1 bg-teal-100 text-teal-700 border-teal-200 font-mono">
+                        ID: {item.id}
+                      </Badge>
+                      <span className="text-gray-400">|</span>
+                      <span className="font-medium text-gray-900">{item.name}</span>
+                      <span className="text-gray-400">|</span>
+                      <Badge variant="outline" className="text-xs px-2 py-1">
+                        {item.volume} м³
+                      </Badge>
+                      <span className="text-gray-400">|</span>
+                      <span className="text-gray-600">{getCargoMarkText(item.cargo_mark)}</span>
+                    </div>
+                  </div>
                 ))}
-                {order.items.length > 6 && (
-                  <Card className="bg-gray-50 border-dashed border-gray-300">
-                    <CardContent className="p-3 text-center">
-                      <div className="text-sm text-gray-500 font-medium">
-                        +{order.items.length - 6}
-                      </div>
-                      <div className="text-xs text-gray-400">ещё предметов</div>
-                    </CardContent>
-                  </Card>
+                {order.items.length > 8 && (
+                  <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-3 text-center">
+                    <div className="text-sm text-gray-500 font-medium">
+                      +{order.items.length - 8} ещё предметов
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      Всего предметов в заказе: {order.items.length}
+                    </div>
+                  </div>
                 )}
               </div>
             </CardContent>

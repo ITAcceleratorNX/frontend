@@ -292,9 +292,6 @@ const MovingPage = () => {
                         </h1>
                         <img src={vectorLeaves} alt="deco" className="w-10 h-10 ml-1" />
                     </div>
-                    <button className="bg-[#F86812] text-white px-12 md:px-20 py-1 rounded-full text-lg font-medium hover:bg-[#d87d1c] transition-colors font-['Montserrat']">
-                        заказать доставку
-                    </button>
                 </div>
             </section>
 
@@ -316,7 +313,7 @@ const MovingPage = () => {
             {/* Тарифные пакеты мувинга */}
             <MovingPricingTable />
 
-            <StepperForm />
+            {/*<StepperForm />*/}
 
             <Footer />
         </div>

@@ -3,9 +3,11 @@ import { Header } from '../../widgets';
 import bgImage from '../../assets/image_47.png';
 import combinedVector from '../../assets/Vector_1306.png';
 import leafIcon from '../../assets/Vector_038.svg';
+import Footer from "../../widgets/Footer/index.jsx";
 
 const CloudStorage = () => {
     return (
+        <>
         <div className="min-h-screen bg-white flex flex-col">
             <Header />
 
@@ -68,6 +70,8 @@ const CloudStorage = () => {
                 </div>
             </div>
         </div>
+    <Footer />
+    </>
     );
 };
 

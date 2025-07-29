@@ -45,7 +45,7 @@ const WarehouseOrderPage = memo(() => {
   const [error, setError] = useState(null);
   // Состояния для формы заказа
   const [orderItems, setOrderItems] = useState([
-    { name: "", volume: "", cargo_mark: "NO" },
+    { name: "", length: "", width: "", height: "", volume: "", cargo_mark: "NO" },
   ]);
   const [months, setMonths] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,7 +110,10 @@ const WarehouseOrderPage = memo(() => {
 
   // Функция добавления товара
   const addOrderItem = () => {
-    setOrderItems([...orderItems, { name: "", volume: "", cargo_mark: "NO" }]);
+    setOrderItems([
+      ...orderItems,
+      { name: "", length: "", width: "", height: "", volume: "", cargo_mark: "NO" }
+    ]);
   };
 
   // Функция удаления товара
@@ -122,9 +125,29 @@ const WarehouseOrderPage = memo(() => {
 
   // Функция обновления товара
   const updateOrderItem = (index, field, value) => {
-    const updatedItems = orderItems.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    );
+    const updatedItems = orderItems.map((item, i) => {
+      if (i === index) {
+        const updatedItem = { ...item, [field]: value };
+
+        // Пересчитываем объем, если изменились длина, ширина или высота
+        if (['length', 'width', 'height'].includes(field)) {
+          const length = parseFloat(updatedItem.length) || 0;
+          const width = parseFloat(updatedItem.width) || 0;
+          const height = parseFloat(updatedItem.height) || 0;
+
+          // Проверяем, что все размеры больше 0
+          if (length > 0 && width > 0 && height > 0) {
+            updatedItem.volume = (length * width * height).toFixed(2);
+          } else {
+            updatedItem.volume = "0";
+          }
+        }
+
+        return updatedItem;
+      }
+      return item;
+    });
+
     setOrderItems(updatedItems);
   };
 
@@ -364,12 +387,6 @@ const WarehouseOrderPage = memo(() => {
                 : "Просмотр состояния складов и боксов"}
             </p>
           </div>
-          {/* Ошибка */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <div className="text-red-600 text-center">{error}</div>
-            </div>
-          )}
           {/* Список складов */}
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
@@ -513,22 +530,54 @@ const WarehouseOrderPage = memo(() => {
                             placeholder="Например: Диван"
                           />
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-[#273655] mb-1">
-                            Объем (м³)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="0.1"
-                            value={item.volume}
-                            onChange={(e) =>
-                              updateOrderItem(index, "volume", e.target.value)
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                            placeholder="1.5"
-                          />
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-[#273655] mb-1">
+                              Длина(м)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={item.length}
+                                onChange={(e) => updateOrderItem(index, "length", e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-[#273655] mb-1">
+                              Ширина(м)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={item.width}
+                                onChange={(e) => updateOrderItem(index, "width", e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-[#273655] mb-1">
+                              Высота(м)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={item.height}
+                                onChange={(e) => updateOrderItem(index, "height", e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                            />
+                          </div>
                         </div>
+
+                        <p className="mt-2 text-sm text-gray-700">
+                          Объём: <strong>{item.volume || 0}</strong> м³
+                        </p>
+
                         <div>
                           <label className="block text-sm font-medium text-[#273655] mb-1">
                             Тип груза
@@ -573,6 +622,12 @@ const WarehouseOrderPage = memo(() => {
                 </div>
               </div>
             </div>
+          )}
+          {/* Ошибка */}
+          {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="text-red-600 text-center">{error}</div>
+              </div>
           )}
           {/* Дополнительные услуги */}
           {selectedStorage && isUserRole && (

@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
+import ScrollToTop from "../components/ScrollToTop.jsx";
 
 // Полностью отключаем рефетчинг при фокусе окна
 focusManager.setEventListener(() => {
@@ -57,6 +58,7 @@ const App = memo(() => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <div className="font-sans">
             <ResponseInterceptor />
             <Routing />

@@ -125,7 +125,6 @@ export const Header = memo(() => {
               </div>
               <nav className="hidden md:flex gap-3">
                 <NavLink to="/" end className={getNavLinkClass}>ГЛАВНАЯ</NavLink>
-                <NavLink to="/about-warehouse-rental" className={getNavLinkClass}>ОБ АРЕНДЕ СКЛАДОВ</NavLink>
                 <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
                 <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
               </nav>

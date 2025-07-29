@@ -6,25 +6,25 @@ export const useChatStore = create(
     // Состояние чатов
     chats: [],
     activeChat: null,
-    
+
     // Состояние сообщений
     messages: [],
     hasMoreMessages: true,
     isLoadingMessages: false,
-    
+
     // Состояние соединения
     chatStatus: 'idle', // 'idle', 'pending', 'active', 'closed'
     isConnected: false,
     managerId: null,
     managerName: null,
-    
+
     // Уведомления для менеджеров
     newChatNotifications: [],
-    
+
     // Действия для чатов
     setChats: (chats) => set({ chats }),
     setActiveChat: (chat) => set({ activeChat: chat }),
-    
+
     // Действия для сообщений
     setMessages: (messages) => set({ messages }),
     addMessage: (message) => set(state => ({
@@ -35,13 +35,13 @@ export const useChatStore = create(
     })),
     setHasMoreMessages: (hasMore) => set({ hasMoreMessages: hasMore }),
     setIsLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
-    
+
     // Действия для состояния
     setChatStatus: (status) => set({ chatStatus: status }),
     setConnectionStatus: (isConnected) => set({ isConnected }),
     setManagerId: (managerId) => set({ managerId }),
     setManagerName: (managerName) => set({ managerName }),
-    
+
     // Действия для уведомлений менеджеров
     addNewChatNotification: (notification) => set(state => ({
       newChatNotifications: [...state.newChatNotifications, notification]
@@ -50,7 +50,7 @@ export const useChatStore = create(
       newChatNotifications: state.newChatNotifications.filter(n => n.chatId !== chatId)
     })),
     clearNewChatNotifications: () => set({ newChatNotifications: [] }),
-    
+
     // Сброс состояния
     resetChat: () => set({
       activeChat: null,
@@ -61,7 +61,7 @@ export const useChatStore = create(
       hasMoreMessages: true,
       isLoadingMessages: false
     }),
-    
+
     resetAll: () => set({
       chats: [],
       activeChat: null,
@@ -74,13 +74,13 @@ export const useChatStore = create(
       managerName: null,
       newChatNotifications: []
     }),
-    
+
     // Геттеры
     getChatById: (chatId) => {
       const state = get();
       return state.chats.find(chat => chat.id === chatId);
     },
-    
+
     getUnreadMessagesCount: () => {
       const state = get();
       return state.messages.filter(msg => !msg.is_read).length;
