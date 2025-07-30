@@ -346,7 +346,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     {/* Даты */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         <div className="space-y-2">
-                            <Label className="text-sm sm:text-base">Дата начала хранения</Label>
+                            <Label className="text-sm sm:text-base">Дата начала</Label>
                             <div className="flex items-center h-10 px-3 border border-gray-300 rounded-lg bg-gray-50 text-sm sm:text-base text-gray-700">
                                 <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
                                 {format(formData.start_date, "dd.MM.yyyy", { locale: ru })}
