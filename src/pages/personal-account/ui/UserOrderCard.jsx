@@ -24,6 +24,8 @@ import {
 } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
 import { useExtendOrder } from '../../../shared/lib/hooks/use-orders';
+import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
+import { Pencil } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import OrderConfirmModal from './OrderConfirmModal';
@@ -41,7 +43,8 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   const [selectedMonths, setSelectedMonths] = useState("1");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // Хук для работы с API продления заказа
   const extendOrderMutation = useExtendOrder();
 
@@ -164,7 +167,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     }
   };
 
-  const canPay = order.status === 'APPROVED' && order.payment_status === 'UNPAID';
+  const canPay = order.status === 'PROCESSING' && order.payment_status === 'UNPAID';
 
   // Проверяем наличие дополнительных услуг (включая новый массив services)
   const hasAdditionalServices = order.is_selected_moving || order.is_selected_package || (order.services && order.services.length > 0);
@@ -458,6 +461,13 @@ const UserOrderCard = ({ order, onPayOrder }) => {
               // Кнопки для неактивных заказов
               <>
                 <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Редактировать
+                </button>
+                <button
                   onClick={() => setIsDeleteModalOpen(true)}
                   className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                 >
@@ -645,6 +655,15 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         isOpen={isConfirmModalOpen}
         order={order}
         onClose={() => setIsConfirmModalOpen(false)}
+      />
+      <EditOrderModal
+          isOpen={isEditModalOpen}
+          order={order}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            window.location.reload();
+          }}
+          onCancel={() => setIsEditModalOpen(false)}
       />
     </div>
   );
