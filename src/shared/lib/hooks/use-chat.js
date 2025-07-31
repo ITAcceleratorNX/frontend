@@ -21,11 +21,13 @@ export const useChat = () => {
     setActiveChat,
     messages,
     addMessage,
+    setMessages,
     setManagerId,
     addNewChatNotification,
     removeNewChatNotification,
     resetChat,
-    setManagerName
+    setManagerName,
+    clearUnreadMessages
   } = useChatStore();
 
   // Обновляем статус соединения в store
@@ -92,50 +94,66 @@ export const useChat = () => {
       case WS_MESSAGE_TYPES.NEW_MESSAGE:
         // Реализация realtime доставки сообщений
         if (data.message) {
-          // Добавляем сообщение только если это не наше собственное сообщение
-          // Проверяем по sender_id или временной метке
           const isOwnMessage = data.message.sender_id === user?.id;
+          const messageChatId = data.message.chat_id;
+          const isActiveChat = activeChat?.id === messageChatId;
 
           if (!isOwnMessage) {
             // Добавляем сообщение с актуальным временем created_at
             const messageWithTime = {
               ...data.message,
               created_at: data.message.created_at || new Date().toISOString(),
-              // Удаляем временные флаги если есть
               isTemporary: false
             };
 
-            addMessage(messageWithTime);
-
-            if (import.meta.env.DEV) {
-              console.log('Chat: Добавлено realtime сообщение:', messageWithTime);
+            // Проверяем, относится ли сообщение к активному чату
+            if (isActiveChat) {
+              // Добавляем в активный чат
+              addMessage(messageWithTime);
+              
+              if (import.meta.env.DEV) {
+                console.log('Chat: Добавлено realtime сообщение в активный чат:', messageWithTime);
+              }
+            } else {
+              // Сообщение из другого чата - увеличиваем счетчик непрочитанных
+              const { incrementUnreadMessages } = useChatStore.getState();
+              incrementUnreadMessages(messageChatId);
+              
+              if (import.meta.env.DEV) {
+                console.log('Chat: Получено сообщение из неактивного чата:', messageChatId, messageWithTime);
+              }
             }
 
-            // Показываем уведомление если сообщение не от текущего пользователя
+            // Показываем уведомление
             if (user?.role === USER_ROLES.USER && !data.message.is_from_user) {
               toast.info('Новое сообщение от менеджера');
             } else if (user?.role === USER_ROLES.MANAGER && data.message.is_from_user) {
-              toast.info('Новое сообщение от пользователя');
+              if (isActiveChat) {
+                toast.info('Новое сообщение от пользователя');
+              } else {
+                toast.info(`Новое сообщение в чате #${messageChatId}`);
+              }
             }
           } else {
-            // Обновляем временное сообщение на реальное
-            if (import.meta.env.DEV) {
-              console.log('Chat: Получено подтверждение отправки собственного сообщения');
+            // Обновляем временное сообщение на реальное (только для активного чата)
+            if (isActiveChat) {
+              if (import.meta.env.DEV) {
+                console.log('Chat: Получено подтверждение отправки собственного сообщения');
+              }
+              
+              const { messages } = useChatStore.getState();
+              const filteredMessages = messages.filter(msg => 
+                !msg.isTemporary || msg.sender_id !== user?.id
+              );
+              
+              const confirmedMessage = {
+                ...data.message,
+                created_at: data.message.created_at || new Date().toISOString(),
+                isTemporary: false
+              };
+              
+              setMessages([...filteredMessages, confirmedMessage]);
             }
-            
-            // Temporary хабарламаны алып тастау және нақты хабарламаны қосу
-            const { messages } = get();
-            const filteredMessages = messages.filter(msg => 
-              !msg.isTemporary || msg.sender_id !== user?.id
-            );
-            
-            const confirmedMessage = {
-              ...data.message,
-              created_at: data.message.created_at || new Date().toISOString(),
-              isTemporary: false
-            };
-            
-            setMessages([...filteredMessages, confirmedMessage]);
           }
         }
         break;
@@ -289,6 +307,8 @@ export const useChat = () => {
       setActiveChat({ id: chatId });
       setChatStatus(CHAT_STATUS.ACTIVE);
       removeNewChatNotification(chatId);
+      // Чатты таңдағанда оқылмаған хабарламаларды тазалау
+      clearUnreadMessages(chatId);
 
       if (import.meta.env.DEV) {
         console.log('Chat: Чат принят менеджером:', chatId);
@@ -296,7 +316,7 @@ export const useChat = () => {
     }
 
     return success;
-  }, [user?.role, user?.id, isConnected, sendWebSocketMessage, setActiveChat, setChatStatus, removeNewChatNotification]);
+  }, [user?.role, user?.id, isConnected, sendWebSocketMessage, setActiveChat, setChatStatus, removeNewChatNotification, clearUnreadMessages]);
 
   // Сброс состояния чата
   const resetChatState = useCallback(() => {

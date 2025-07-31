@@ -10,6 +10,8 @@ import { ChangeManagerModal } from './ChangeManagerModal';
 
 const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) => {
   const [showActions, setShowActions] = useState(false);
+  const { unreadMessages } = useChatStore();
+  const unreadCount = unreadMessages[chat.id] || 0;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -81,6 +83,13 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
         </div>
         
         <div className="flex items-center space-x-1">
+          {/* Unread messages санағышы */}
+          {unreadCount > 0 && (
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </div>
+          )}
+          
           <div className={`px-2 py-1 text-xs rounded border ${getStatusColor(chat.status)}`}>
             {getStatusText(chat.status)}
           </div>
@@ -194,6 +203,10 @@ const ManagerChatList = memo(() => {
       // Устанавливаем активный чат
       setActiveChat({ id: chat.id, user_id: chat.user_id, manager_id: chat.manager_id });
       setChatStatus(CHAT_STATUS.ACTIVE);
+      
+      // Чатты таңдағанда оқылмаған хабарламаларды тазалау
+      const { clearUnreadMessages } = useChatStore.getState();
+      clearUnreadMessages(chat.id);
       
       if (import.meta.env.DEV) {
         console.log('ManagerChatList: Активирован чат:', chat.id, 'статус:', CHAT_STATUS.ACTIVE);

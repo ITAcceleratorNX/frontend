@@ -13,7 +13,7 @@ import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { QuickActions } from './QuickActions';
 import { ManagerChatList } from './ManagerChatList';
-// import { ChatDebugInfo } from './ChatDebugInfo';
+import { ChatDebugInfo } from './ChatDebugInfo';
 import { ClearMessagesButton } from './ClearMessagesButton';
 
 const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
@@ -151,7 +151,7 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
         </div>
         
         {/* Компонент отладки */}
-        {/* <ChatDebugInfo /> */}
+        <ChatDebugInfo />
       </div>
     );
   }
@@ -260,7 +260,7 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
       )}
       
       {/* Компонент отладки */}
-      {/* <ChatDebugInfo /> */}
+      <ChatDebugInfo />
     </div>
   );
 });

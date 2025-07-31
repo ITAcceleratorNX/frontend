@@ -21,6 +21,9 @@ export const useChatStore = create(
     // Уведомления для менеджеров
     newChatNotifications: [],
 
+    // Оқылмаған хабарламалар (чат ID -> санағыш)
+    unreadMessages: {}, // { chatId: count }
+
     // Действия для чатов
     setChats: (chats) => set({ chats }),
     setActiveChat: (chat) => set({ activeChat: chat }),
@@ -51,6 +54,24 @@ export const useChatStore = create(
     })),
     clearNewChatNotifications: () => set({ newChatNotifications: [] }),
 
+    // Оқылмаған хабарламалар actions
+    incrementUnreadMessages: (chatId) => set(state => ({
+      unreadMessages: {
+        ...state.unreadMessages,
+        [chatId]: (state.unreadMessages[chatId] || 0) + 1
+      }
+    })),
+    clearUnreadMessages: (chatId) => set(state => ({
+      unreadMessages: {
+        ...state.unreadMessages,
+        [chatId]: 0
+      }
+    })),
+    getUnreadCount: (chatId) => {
+      const state = get();
+      return state.unreadMessages[chatId] || 0;
+    },
+
     // Сброс состояния
     resetChat: () => set({
       activeChat: null,
@@ -72,7 +93,8 @@ export const useChatStore = create(
       isConnected: false,
       managerId: null,
       managerName: null,
-      newChatNotifications: []
+      newChatNotifications: [],
+      unreadMessages: {}
     }),
 
     // Геттеры

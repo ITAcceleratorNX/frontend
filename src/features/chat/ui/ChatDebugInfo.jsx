@@ -18,7 +18,7 @@ const ChatDebugInfo = memo(() => {
   const { messages, groupedMessages } = useChatMessages(activeChat?.id);
   
   // Дополнительное состояние из store
-  const { managerId, managerName, newChatNotifications } = useChatStore();
+  const { managerId, managerName, newChatNotifications, unreadMessages } = useChatStore();
 
   if (!import.meta.env.DEV) {
     return null;
@@ -42,7 +42,13 @@ const ChatDebugInfo = memo(() => {
         <div><strong className="text-blue-300">Messages Count:</strong> <span className="text-green-400">{messages.length}</span></div>
         <div><strong className="text-blue-300">Grouped Count:</strong> <span className="text-green-400">{groupedMessages.length}</span></div>
         {isManager && (
-          <div><strong className="text-blue-300">Notifications:</strong> <span className="text-orange-400">{newChatNotifications.length}</span></div>
+          <>
+            <div><strong className="text-blue-300">Notifications:</strong> <span className="text-orange-400">{newChatNotifications.length}</span></div>
+            <div><strong className="text-blue-300">Unread Total:</strong> <span className="text-red-400">{Object.values(unreadMessages).reduce((sum, count) => sum + count, 0)}</span></div>
+            {activeChat && unreadMessages[activeChat.id] > 0 && (
+              <div><strong className="text-blue-300">Unread Current:</strong> <span className="text-red-400">{unreadMessages[activeChat.id]}</span></div>
+            )}
+          </>
         )}
       </div>
       
