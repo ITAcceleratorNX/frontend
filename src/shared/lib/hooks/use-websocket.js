@@ -12,6 +12,9 @@ export const useWebSocket = () => {
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+  
+  // Message handlers үшін ref
+  const messageHandlers = useRef(new Set());
 
   // Функция подключения к WebSocket
   const connectWebSocket = useCallback(() => {
@@ -94,6 +97,25 @@ export const useWebSocket = () => {
         }
       };
       
+      newSocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (import.meta.env.DEV) {
+            console.log('WebSocket: Получено сообщение:', data);
+          }
+          // Уведомляем все подписанные компоненты
+          messageHandlers.current.forEach(handler => {
+            try {
+              handler(data);
+            } catch (error) {
+              console.error('WebSocket: Ошибка в обработчике сообщений:', error);
+            }
+          });
+        } catch (error) {
+          console.error('WebSocket: Ошибка парсинга сообщения:', error);
+        }
+      };
+
       newSocket.onerror = (error) => {
         console.error('WebSocket: Ошибка соединения', error);
         if (reconnectAttempts.current === 0) {
@@ -149,26 +171,17 @@ export const useWebSocket = () => {
 
   // Добавление обработчика сообщений
   const addMessageHandler = useCallback((handler) => {
-    if (socketRef.current) {
-      // Добавляем обработчик для входящих сообщений
-      socketRef.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (import.meta.env.DEV) {
-            console.log('WebSocket: Получено сообщение', data);
-          }
-          handler(data);
-        } catch (error) {
-          console.error('WebSocket: Ошибка парсинга сообщения', error);
-        }
-      };
+    messageHandlers.current.add(handler);
+    if (import.meta.env.DEV) {
+      console.log('WebSocket: Добавлен обработчик сообщений. Всего:', messageHandlers.current.size);
     }
   }, []);
 
   // Удаление обработчика сообщений
-  const removeMessageHandler = useCallback(() => {
-    if (socketRef.current) {
-      socketRef.current.onmessage = null;
+  const removeMessageHandler = useCallback((handler) => {
+    messageHandlers.current.delete(handler);
+    if (import.meta.env.DEV) {
+      console.log('WebSocket: Удален обработчик сообщений. Всего:', messageHandlers.current.size);
     }
   }, []);
 

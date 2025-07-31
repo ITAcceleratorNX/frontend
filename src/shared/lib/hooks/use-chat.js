@@ -98,15 +98,26 @@ export const useChat = () => {
           const messageChatId = data.message.chat_id;
           const isActiveChat = activeChat?.id === messageChatId;
 
-          if (!isOwnMessage) {
-            // Добавляем сообщение с актуальным временем created_at
-            const messageWithTime = {
-              ...data.message,
-              created_at: data.message.created_at || new Date().toISOString(),
-              isTemporary: false
-            };
+          // Сообщение с правильной временной меткой
+          const messageWithTime = {
+            ...data.message,
+            created_at: data.message.created_at || new Date().toISOString(),
+            isTemporary: false
+          };
 
-            // Проверяем, относится ли сообщение к активному чату
+          if (import.meta.env.DEV) {
+            console.log('Chat: Получено WebSocket сообщение:', {
+              type: data.type,
+              isOwnMessage,
+              messageChatId,
+              isActiveChat,
+              activeChat: activeChat?.id,
+              message: messageWithTime
+            });
+          }
+
+          if (!isOwnMessage) {
+            // Сообщение от другого пользователя
             if (isActiveChat) {
               // Добавляем в активный чат
               addMessage(messageWithTime);
@@ -135,24 +146,24 @@ export const useChat = () => {
               }
             }
           } else {
-            // Обновляем временное сообщение на реальное (только для активного чата)
+            // Собственное сообщение - обновляем временное на реальное
             if (isActiveChat) {
               if (import.meta.env.DEV) {
                 console.log('Chat: Получено подтверждение отправки собственного сообщения');
               }
               
-              const { messages } = useChatStore.getState();
-              const filteredMessages = messages.filter(msg => 
+              // Удаляем временные сообщения от текущего пользователя
+              const currentMessages = messages;
+              const filteredMessages = currentMessages.filter(msg => 
                 !msg.isTemporary || msg.sender_id !== user?.id
               );
               
-              const confirmedMessage = {
-                ...data.message,
-                created_at: data.message.created_at || new Date().toISOString(),
-                isTemporary: false
-              };
+              // Заменяем все сообщения обновленным списком с подтвержденным сообщением
+              setMessages([...filteredMessages, messageWithTime]);
               
-              setMessages([...filteredMessages, confirmedMessage]);
+              if (import.meta.env.DEV) {
+                console.log('Chat: Временное сообщение заменено на подтвержденное:', messageWithTime);
+              }
             }
           }
         }

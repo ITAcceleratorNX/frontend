@@ -163,15 +163,22 @@ class MyWebSocketServer {
             is_from_user: isFromUser
         });
 
-        console.log(`Sending message from user ${senderId} in chat ${chatId}`);
-        console.log(`Chat participants: user_id=${chat.user_id}, manager_id=${chat.manager_id}`);
-        console.log(`Connected clients:`, Array.from(this.clients.keys()));
-
         // Хабарламаны екі жаққа да жіберу
         const messageData = {
             type: 'NEW_MESSAGE',
-            message: newMessage
+            message: {
+                ...newMessage.toJSON(), // Sequelize object-ті JSON-ға айналдырамын
+                chat_id: chatId // Chat ID-ді қосып қоямын
+            }
         };
+
+        console.log(`\n🚀 SENDING MESSAGE:`);
+        console.log(`  From user: ${senderId}`);
+        console.log(`  In chat: ${chatId}`);
+        console.log(`  Message text: "${message}"`);
+        console.log(`  Chat participants: user_id=${chat.user_id}, manager_id=${chat.manager_id}`);
+        console.log(`  Connected clients:`, Array.from(this.clients.keys()));
+        console.log(`  Message object:`, JSON.stringify(messageData, null, 2));
 
         // Пайдаланушыға жіберу
         const userWs = this.clients.get(String(chat.user_id));
