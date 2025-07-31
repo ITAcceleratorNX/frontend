@@ -1,11 +1,10 @@
 import React, { useEffect, useState, memo, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
-import { Phone, Mail, User } from 'lucide-react';
+import { Phone, Mail, User, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 import { Menu, X } from 'lucide-react';
-import {FaWhatsapp} from "react-icons/fa";
 
 // Мемоизированный компонент Header
 export const Header = memo(() => {
@@ -172,7 +171,7 @@ export const Header = memo(() => {
                     onClick={handleWhatsApp}
                     className="flex items-center justify-center w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 transition-all duration-300 hover:shadow-md hover:scale-110"
                 >
-                  <FaWhatsapp size={18} />
+                  <MessageCircle size={18} />
                 </button>
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
@@ -214,7 +213,7 @@ export const Header = memo(() => {
                       onClick={handleWhatsApp}
                       className="w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 flex items-center justify-center"
                   >
-                    <FaWhatsapp size={18} />
+                    <MessageCircle size={18} />
                   </button>
                 </div>
               </div>

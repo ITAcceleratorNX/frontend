@@ -19,6 +19,13 @@ const CostCalculator = () => {
     length: 1
   });
 
+  // Состояния для стеллажного хранения (RACK) - простые размеры без полок
+  const [rackDimensions, setRackDimensions] = useState({
+    width: 1,    // ширина (м)
+    height: 1, // высота (м) 
+    length: 1    // длина (м)
+  });
+
   useEffect(() => {
     const fetchPrices = async () => {
       try {
@@ -40,7 +47,12 @@ const CostCalculator = () => {
     return width * height * length;
   };
 
-  // Обработчик изменения размеров
+  // Функция для расчета объема стеллажа (RACK) - простая формула без полок
+  const calculateRackVolume = (width, height, length) => {
+    return width * height * length;
+  };
+
+  // Обработчик изменения размеров (для облачного хранения)
   const handleDimensionChange = (e, dimension) => {
     const value = Math.max(1, Number(e.target.value)); // Минимальное значение 1
     const newDimensions = {
@@ -59,13 +71,47 @@ const CostCalculator = () => {
     setTotalCost(null);
   };
 
-  const calculateCost = () => {
-    const selectedPrice = prices.find(price => price.type === type);
-    if (!selectedPrice) {
-      setError('Цена для выбранного типа услуги не найдена');
-      return;
+  // Обработчик изменения размеров стеллажа (RACK)
+  const handleRackDimensionChange = (e, dimension) => {
+    const value = Math.max(1, Number(e.target.value)); // Минимальное значение 1
+    const newRackDimensions = {
+      ...rackDimensions,
+      [dimension]: value
+    };
+
+    setRackDimensions(newRackDimensions);
+
+    // Если выбран тип RACK, пересчитываем площадь как объем стеллажа
+    if (type === 'RACK') {
+      const volume = calculateRackVolume(
+        newRackDimensions.width, 
+        newRackDimensions.height, 
+        newRackDimensions.length
+      );
+      setArea(volume);
     }
-    const price = parseFloat(selectedPrice.price);
+
+    setTotalCost(null);
+  };
+
+  const calculateCost = () => {
+    let price;
+    
+    // Для стеллажного хранения (RACK) используем особую логику
+    if (type === 'RACK') {
+      const selectedPrice = prices.find(price => price.type === 'RACK');
+      // Если тариф из API доступен - используем его, иначе дефолтный 20₸
+      price = selectedPrice ? parseFloat(selectedPrice.price) : 20;
+    } else {
+      // Для остальных типов используем обычную логику
+      const selectedPrice = prices.find(price => price.type === type);
+      if (!selectedPrice) {
+        setError('Цена для выбранного типа услуги не найдена');
+        return;
+      }
+      price = parseFloat(selectedPrice.price);
+    }
+    
     const total = price * area * month;
     setTotalCost(Math.round(total));
     setError(null);
@@ -77,7 +123,8 @@ const CostCalculator = () => {
         type,
         price,
         total,
-        ...(type === 'CLOUD' && { dimensions })
+        ...(type === 'CLOUD' && { dimensions }),
+        ...(type === 'RACK' && { rackDimensions })
       });
     }
   };
@@ -86,13 +133,22 @@ const CostCalculator = () => {
     setType(serviceType);
     setTotalCost(null);
 
-    // Если переключаемся с CLOUD на другой тип, сбрасываем area к значению по умолчанию
-    if (serviceType !== 'CLOUD') {
-      setArea(50);
-    } else {
-      // Если переключаемся на CLOUD, устанавливаем area как объем
+    // Устанавливаем area в зависимости от типа услуги
+    if (serviceType === 'CLOUD') {
+      // Для облачного хранения используем объем
       const volume = calculateVolume(dimensions.width, dimensions.height, dimensions.length);
       setArea(volume);
+    } else if (serviceType === 'RACK') {
+      // Для стеллажного хранения используем простой объем
+      const volume = calculateRackVolume(
+        rackDimensions.width, 
+        rackDimensions.height, 
+        rackDimensions.length
+      );
+      setArea(volume);
+    } else {
+      // Для индивидуального хранения используем площадь по умолчанию
+      setArea(50);
     }
   };
 
@@ -122,8 +178,8 @@ const CostCalculator = () => {
           {/* Левая колонка: калькулятор */}
           <div className="w-full max-w-[500px] flex flex-col items-start mx-auto">
 
-            {/* Площадь или размеры (для облачного хранения) */}
-            {type !== 'CLOUD' ? (
+            {/* Площадь или размеры (для облачного и стеллажного хранения) */}
+            {type === 'INDIVIDUAL' ? (
                 <>
                   <label htmlFor="area" className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Площадь:</label>
                   <div className="w-full flex flex-col mb-8">
@@ -151,7 +207,7 @@ const CostCalculator = () => {
                     </div>
                   </div>
                 </>
-            ) : (
+            ) : type === 'CLOUD' ? (
                 <>
                   <label className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Размеры (м):</label>
                   <div className="w-full flex flex-col gap-4 mb-8">
@@ -186,6 +242,51 @@ const CostCalculator = () => {
                           onChange={(e) => handleDimensionChange(e, 'length')}
                           className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
                           style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
+                      />
+                    </div>
+                    <div className="mt-2 text-[14px] text-[#6B6B6B]">
+                      Объем: {area} м³
+                    </div>
+                  </div>
+                </>
+            ) : (
+                <>
+                  <label className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Размеры стеллажа (м):</label>
+                  <div className="w-full flex flex-col gap-4 mb-8">
+                    <div className="flex items-center gap-4">
+                      <label className="text-[14px] text-[#6B6B6B] w-16">Длина:</label>
+                      <input
+                          type="number"
+                          min="1"
+                          value={rackDimensions.length}
+                          onChange={(e) => handleRackDimensionChange(e, 'length')}
+                          className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
+                          style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
+                          placeholder="2.0"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="text-[14px] text-[#6B6B6B] w-16">Ширина:</label>
+                      <input
+                          type="number"
+                          min="1"
+                          value={rackDimensions.width}
+                          onChange={(e) => handleRackDimensionChange(e, 'width')}
+                          className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
+                          style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
+                          placeholder="1.0"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="text-[14px] text-[#6B6B6B] w-16">Высота:</label>
+                      <input
+                          type="number"
+                          min="1"
+                          value={rackDimensions.height}
+                          onChange={(e) => handleRackDimensionChange(e, 'height')}
+                          className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
+                          style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
+                          placeholder="0.5"
                       />
                     </div>
                     <div className="mt-2 text-[14px] text-[#6B6B6B]">
