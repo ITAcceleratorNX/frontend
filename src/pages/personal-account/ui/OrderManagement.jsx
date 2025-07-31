@@ -13,7 +13,7 @@ import {
 } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
-import OrderConfirmModal from './OrderConfirmModal';
+import OrderDeleteModal from "./OrderDeleteModal";
 
 const OrderManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -368,7 +368,7 @@ const OrderManagement = () => {
 
       {/* Модальное окно подтверждения */}
       {modalData && (
-        <OrderConfirmModal
+        <OrderDeleteModal
           isOpen={!!modalData}
           onClose={closeModal}
           onConfirm={handleConfirmAction}

@@ -115,7 +115,8 @@ const Routing = memo(() => {
     { path: "/cloud-storage", element: <CloudStoragePage /> },
     { path: "/online-payment", element: <OnlinePaymentPage /> },
     { path: "/offer", element: <OfferPage /> },
-    { path: "/privacy-policy", element: <PrivacyPolicyPage /> }
+    { path: "/privacy-policy", element: <PrivacyPolicyPage /> },
+    { path: "/warehouse-order", element: <WarehouseOrderPage /> },
   ], []);
 
   const protectedRoutes = useMemo(() => [
@@ -127,7 +128,6 @@ const Routing = memo(() => {
     { path: "/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
     { path: "/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
     { path: "/personal-account/courier/order/:orderId", element: <CourierRequestOrder /> },
-    { path: "/warehouse-order", element: <WarehouseOrderPage /> },
   ], []);
 
   const userOnlyRoutes = useMemo(() => [

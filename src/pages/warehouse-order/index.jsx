@@ -952,6 +952,30 @@ const WarehouseOrderPage = memo(() => {
               </div>
             </div>
           )}
+          {selectedStorage && !isAuthenticated && (
+              <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <h3 className="text-xl font-bold text-[#273655] mb-2">
+                  Хотите арендовать этот бокс?
+                </h3>
+                <p className="text-[#6B6B6B] mb-4">
+                  Войдите или зарегистрируйтесь, чтобы продолжить оформление заказа
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                      onClick={() => navigate('/login', { state: { from: '/warehouse-order' } })}
+                      className="px-6 py-3 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                  >
+                    Войти
+                  </button>
+                  <button
+                      onClick={() => navigate('/register', { state: { from: '/warehouse-order' } })}
+                      className="px-6 py-3 bg-[#F86812] text-white rounded-lg hover:bg-[#d87d1c] transition-colors"
+                  >
+                    Зарегистрироваться
+                  </button>
+                </div>
+              </div>
+          )}
         </div>
         <ChatButton />
         <Footer />
