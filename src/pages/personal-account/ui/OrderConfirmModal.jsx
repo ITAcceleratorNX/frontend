@@ -14,6 +14,7 @@ import { Separator } from '../../../components/ui/separator';
 import { CheckCircle, Package } from 'lucide-react';
 import { useApproveOrder } from '../../../shared/lib/hooks/use-orders';
 import { getCargoMarkText } from '../../../shared/lib/types/orders';
+import {toast} from "react-toastify";
 
 const OrderConfirmModal = ({ isOpen, order, onClose }) => {
   const approveOrderMutation = useApproveOrder();
@@ -79,10 +80,40 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
 
   const handleConfirmOrder = async () => {
     try {
+
+      // Выполняем запрос на подтверждение заказа
       await approveOrderMutation.mutateAsync(order.id);
+
+      // Показываем успешное уведомление
+      toast.success('Договор отправлен вам в SMS. После подписания будет доступна оплата.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
       onClose();
+
+      // Обновляем страницу через 2 секунды, чтобы показать изменения
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
     } catch (error) {
       console.error('Ошибка при подтверждении заказа:', error);
+
+      // Показываем ошибку пользователю
+      toast.error('Не удалось подтвердить заказ. Пожалуйста, попробуйте позже.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
     }
   };
 
