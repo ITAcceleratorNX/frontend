@@ -119,10 +119,23 @@ export const useChat = () => {
             }
           } else {
             // Обновляем временное сообщение на реальное
-            // TODO: Реализовать замену временного сообщения
             if (import.meta.env.DEV) {
               console.log('Chat: Получено подтверждение отправки собственного сообщения');
             }
+            
+            // Temporary хабарламаны алып тастау және нақты хабарламаны қосу
+            const { messages } = get();
+            const filteredMessages = messages.filter(msg => 
+              !msg.isTemporary || msg.sender_id !== user?.id
+            );
+            
+            const confirmedMessage = {
+              ...data.message,
+              created_at: data.message.created_at || new Date().toISOString(),
+              isTemporary: false
+            };
+            
+            setMessages([...filteredMessages, confirmedMessage]);
           }
         }
         break;
