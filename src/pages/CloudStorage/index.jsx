@@ -4,6 +4,7 @@ import bgImage from '../../assets/image_47.png';
 import combinedVector from '../../assets/Vector_1306.png';
 import leafIcon from '../../assets/Vector_038.svg';
 import Footer from "../../widgets/Footer/index.jsx";
+import CostCalculator from "../../shared/components/CostCalculator.jsx";
 
 const CloudStorage = () => {
     return (
@@ -69,7 +70,9 @@ const CloudStorage = () => {
                     </p>
                 </div>
             </div>
+            <CostCalculator />
         </div>
+
     <Footer />
     </>
     );
