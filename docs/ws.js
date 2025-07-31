@@ -26,15 +26,23 @@ class MyWebSocketServer {
             const url = new URL(req.url, `https://${req.headers.host}`);
             const userId = url.searchParams.get('userId');
 
-            console.log(`WebSocket connection attempt from userId: ${userId}`);
+            console.log(`🔗 WebSocket connection attempt from userId: ${userId}`);
 
             if (userId) {
+                // Проверяем, есть ли уже подключение для этого пользователя
+                const existingWs = this.clients.get(userId);
+                if (existingWs && existingWs.readyState === WebSocket.OPEN) {
+                    console.log(`⚠️ Closing existing connection for user ${userId}`);
+                    existingWs.close();
+                }
+                
                 this.clients.set(userId, ws);
                 logger.info(`Client connected: ${userId}`);
-                console.log(`Client connected and stored: ${userId}`);
-                console.log(`Total connected clients: ${this.clients.size}`);
+                console.log(`✅ Client connected and stored: ${userId}`);
+                console.log(`📊 Total connected clients: ${this.clients.size}`);
+                console.log(`👥 Connected users: [${Array.from(this.clients.keys()).join(', ')}]`);
             } else {
-                console.log('Connection rejected: no userId provided');
+                console.log('❌ Connection rejected: no userId provided');
                 ws.close();
                 return;
             }
@@ -50,11 +58,12 @@ class MyWebSocketServer {
                 }
             });
 
-            ws.on('close', () => {
+            ws.on('close', (code, reason) => {
                 this.clients.delete(userId);
                 logger.info(`Client disconnected: ${userId}`);
-                console.log(`Client disconnected: ${userId}`);
-                console.log(`Remaining connected clients: ${this.clients.size}`);
+                console.log(`🔌 Client disconnected: ${userId} (code: ${code}, reason: ${reason})`);
+                console.log(`📊 Remaining connected clients: ${this.clients.size}`);
+                console.log(`👥 Remaining users: [${Array.from(this.clients.keys()).join(', ')}]`);
             });
         });
     }
@@ -156,6 +165,7 @@ class MyWebSocketServer {
 
         console.log(`Sending message from user ${senderId} in chat ${chatId}`);
         console.log(`Chat participants: user_id=${chat.user_id}, manager_id=${chat.manager_id}`);
+        console.log(`Connected clients:`, Array.from(this.clients.keys()));
 
         // Хабарламаны екі жаққа да жіберу
         const messageData = {
@@ -167,9 +177,9 @@ class MyWebSocketServer {
         const userWs = this.clients.get(String(chat.user_id));
         if (userWs && userWs.readyState === WebSocket.OPEN) {
             userWs.send(JSON.stringify(messageData));
-            console.log(`Message sent to user ${chat.user_id}`);
+            console.log(`✅ Message sent to user ${chat.user_id}`);
         } else {
-            console.log(`User ${chat.user_id} WebSocket not found or not open`);
+            console.log(`❌ User ${chat.user_id} WebSocket not found or not open. ReadyState: ${userWs?.readyState}`);
         }
 
         // Менеджерге жіберу
@@ -177,9 +187,9 @@ class MyWebSocketServer {
             const managerWs = this.clients.get(String(chat.manager_id));
             if (managerWs && managerWs.readyState === WebSocket.OPEN) {
                 managerWs.send(JSON.stringify(messageData));
-                console.log(`Message sent to manager ${chat.manager_id}`);
+                console.log(`✅ Message sent to manager ${chat.manager_id}`);
             } else {
-                console.log(`Manager ${chat.manager_id} WebSocket not found or not open`);
+                console.log(`❌ Manager ${chat.manager_id} WebSocket not found or not open. ReadyState: ${managerWs?.readyState}`);
             }
         }
     }

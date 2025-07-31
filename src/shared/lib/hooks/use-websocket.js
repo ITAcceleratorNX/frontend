@@ -23,9 +23,11 @@ export const useWebSocket = () => {
     }
 
     // Предотвращаем множественные подключения
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    if (socketRef.current && 
+        (socketRef.current.readyState === WebSocket.OPEN || 
+         socketRef.current.readyState === WebSocket.CONNECTING)) {
       if (import.meta.env.DEV) {
-        console.log('WebSocket: Соединение уже установлено');
+        console.log('WebSocket: Соединение уже установлено или подключается');
       }
       return;
     }
@@ -39,6 +41,9 @@ export const useWebSocket = () => {
       // Создаем новое WebSocket соединение
       const newSocket = new WebSocket(socketUrl);
       
+      // Устанавливаем socketRef сразу для предотвращения множественных подключений
+      socketRef.current = newSocket;
+      
       newSocket.onopen = () => {
         if (import.meta.env.DEV) {
           console.log('WebSocket: Соединение установлено');
@@ -46,7 +51,6 @@ export const useWebSocket = () => {
         setIsConnected(true);
         setIsReconnecting(false);
         reconnectAttempts.current = 0;
-        socketRef.current = newSocket;
         setSocket(newSocket);
         
         if (reconnectAttempts.current > 0) {
@@ -179,7 +183,7 @@ export const useWebSocket = () => {
     return () => {
       disconnectWebSocket();
     };
-  }, [isAuthenticated, user?.id, connectWebSocket, disconnectWebSocket]);
+  }, [isAuthenticated, user?.id]);
 
   // Очистка при размонтировании
   useEffect(() => {
