@@ -254,18 +254,6 @@ const CostCalculator = () => {
                   <label className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Размеры стеллажа (м):</label>
                   <div className="w-full flex flex-col gap-4 mb-8">
                     <div className="flex items-center gap-4">
-                      <label className="text-[14px] text-[#6B6B6B] w-16">Длина:</label>
-                      <input
-                          type="number"
-                          min="1"
-                          value={rackDimensions.length}
-                          onChange={(e) => handleRackDimensionChange(e, 'length')}
-                          className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
-                          style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
-                          placeholder="2.0"
-                      />
-                    </div>
-                    <div className="flex items-center gap-4">
                       <label className="text-[14px] text-[#6B6B6B] w-16">Ширина:</label>
                       <input
                           type="number"
@@ -287,6 +275,18 @@ const CostCalculator = () => {
                           className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
                           style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
                           placeholder="0.5"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="text-[14px] text-[#6B6B6B] w-16">Длина:</label>
+                      <input
+                          type="number"
+                          min="1"
+                          value={rackDimensions.length}
+                          onChange={(e) => handleRackDimensionChange(e, 'length')}
+                          className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
+                          style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
+                          placeholder="2.0"
                       />
                     </div>
                     <div className="mt-2 text-[14px] text-[#6B6B6B]">
