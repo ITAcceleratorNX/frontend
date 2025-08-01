@@ -63,6 +63,44 @@ const WarehouseOrderPage = memo(() => {
   const isUserRole = user?.role === "USER";
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
 
+  const [gazelleService, setGazelleService] = useState(null);
+
+  useEffect(() => {
+    if (isSelectedMoving && prices.length > 0 && !gazelleService) {
+      const gazelle = prices.find((price) => price.type === "GAZELLE");
+      if (gazelle) {
+        setGazelleService({
+          id: String(gazelle.id),
+          type: gazelle.type,
+          name: getServiceTypeName(gazelle.type),
+        });
+      }
+    } else if (!isSelectedMoving) {
+      setGazelleService(null);
+    }
+  }, [isSelectedMoving, prices, gazelleService]);
+
+  // Синхронизация услуги "Газель" по количеству перевозок
+  const syncGazelleService = (movingCount, currentServices) => {
+    if (!gazelleService || movingCount === 0) {
+      // Удаляем "Газель", если нет перевозок
+      return currentServices.filter((s) => s.service_id !== gazelleService.id);
+    }
+
+    const existingIndex = currentServices.findIndex((s) => s.service_id === gazelleService.id);
+    const updated = [...currentServices];
+
+    if (existingIndex >= 0) {
+      // Обновляем количество
+      updated[existingIndex] = { ...updated[existingIndex], count: movingCount };
+    } else {
+      // Добавляем "Газель" с количеством = кол-во перевозок
+      updated.push({ service_id: gazelleService.id, count: movingCount });
+    }
+
+    return updated;
+  };
+
   // Загрузка складов при монтировании
   useEffect(() => {
     const fetchWarehouses = async () => {
@@ -87,7 +125,7 @@ const WarehouseOrderPage = memo(() => {
 
   // Загрузка цен услуг при выборе услуги упаковки
   useEffect(() => {
-    if (isSelectedPackage) {
+    if ((isSelectedPackage || isSelectedMoving) && prices.length === 0) {
       const fetchPrices = async () => {
         try {
           setIsPricesLoading(true);
@@ -106,7 +144,7 @@ const WarehouseOrderPage = memo(() => {
       };
       fetchPrices();
     }
-  }, [isSelectedPackage]);
+  }, [isSelectedPackage, isSelectedMoving, prices.length]);
 
   // Функция добавления товара
   const addOrderItem = () => {
@@ -189,12 +227,26 @@ const WarehouseOrderPage = memo(() => {
     };
     setMovingOrders([...movingOrders, newOrder]);
     setMovingOrderErrors([...movingOrderErrors, {}]);
+
+    // Синхронизируем "Газель"
+    if (gazelleService) {
+      const updatedServices = syncGazelleService(movingOrders.length + 1, services);
+      setServices(updatedServices);
+      setIsSelectedPackage(true); // Упаковка становится активной, если добавлена перевозка
+    }
   };
 
   // Функция удаления даты перевозки
   const removeMovingOrder = (index) => {
-    setMovingOrders(movingOrders.filter((_, i) => i !== index));
+    const newMovingOrders = movingOrders.filter((_, i) => i !== index);
+    setMovingOrders(newMovingOrders);
     setMovingOrderErrors(movingOrderErrors.filter((_, i) => i !== index));
+
+    // Синхронизируем "Газель"
+    if (gazelleService) {
+      const updatedServices = syncGazelleService(newMovingOrders.length, services);
+      setServices(updatedServices);
+    }
   };
 
   // Функция обновления даты перевозки
@@ -288,6 +340,28 @@ const WarehouseOrderPage = memo(() => {
     try {
       setIsSubmitting(true);
       setError(null);
+
+      // Финальная синхронизация "Газели"
+      let finalServices = [...services];
+      const movingCount = movingOrders.length;
+
+      if (isSelectedMoving && movingCount > 0 && gazelleService) {
+        finalServices = syncGazelleService(movingCount, finalServices);
+      } else if (gazelleService) {
+        finalServices = finalServices.filter((s) => s.service_id !== gazelleService.id);
+      }
+
+      // Фильтрация валидных услуг
+      const validServices = finalServices.filter(
+          (service) => service.service_id && service.count > 0
+      );
+
+      // Проверка: если выбрана упаковка, но нет услуг
+      if (isSelectedPackage && validServices.length === 0) {
+        setError("Добавьте хотя бы одну услугу для упаковки");
+        return;
+      }
+
       const orderData = {
         storage_id: selectedStorage.id,
         months: months,
@@ -297,49 +371,35 @@ const WarehouseOrderPage = memo(() => {
           cargo_mark: item.cargo_mark,
         })),
         is_selected_moving: isSelectedMoving,
-        is_selected_package: isSelectedPackage,
+        is_selected_package: isSelectedPackage && validServices.length > 0,
       };
-      // Добавляем данные о перевозке, если выбрана соответствующая услуга
-      if (isSelectedMoving) {
+
+      if (isSelectedMoving && movingOrders.length > 0) {
         orderData.moving_orders = movingOrders.map((order) => ({
           moving_date: order.moving_date,
           status: order.status,
           address: order.address.trim(),
         }));
       }
-      // Добавляем услуги, если выбрана упаковка и есть услуги
+
       if (isSelectedPackage && validServices.length > 0) {
         orderData.services = validServices.map((service) => ({
           service_id: Number(service.service_id),
           count: service.count,
         }));
       }
-      if (import.meta.env.DEV) {
-        console.log("Отправляем данные заказа:", orderData);
-      }
+
+      // Отправка
       const result = await warehouseApi.createOrder(orderData);
-      if (import.meta.env.DEV) {
-        console.log("Заказ создан:", result);
-      }
-      toast.success(
-        "Заказ успешно создан! Перенаправляем в личный кабинет...",
-        {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        }
-      );
+      toast.success("Заказ успешно создан! Перенаправляем...", { autoClose: 3000 });
       setTimeout(() => {
         navigate("/personal-account", { state: { activeSection: "payments" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
       const errorMessage =
-        error.response?.data?.message ||
-        "Не удалось создать заказ. Попробуйте позже.";
+          error.response?.data?.message ||
+          "Не удалось создать заказ. Попробуйте позже.";
       setError(errorMessage);
       toast.error(errorMessage, {
         position: "top-right",
@@ -836,8 +896,9 @@ const WarehouseOrderPage = memo(() => {
                                   onValueChange={(value) =>
                                     updateService(index, "service_id", value)
                                   }
+                                  disabled={service.service_id === gazelleService.id}
                                 >
-                                  <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                  <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg" disabled={service.service_id === gazelleService.id}>
                                     <SelectValue placeholder="Выберите услугу" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -845,6 +906,7 @@ const WarehouseOrderPage = memo(() => {
                                       <SelectItem
                                         key={price.id}
                                         value={price.id.toString()}
+                                        disabled={price.type === "GAZELLE"}
                                       >
                                         {getServiceTypeName(price.type) ||
                                           price.description}
@@ -862,12 +924,9 @@ const WarehouseOrderPage = memo(() => {
                                   min="1"
                                   value={service.count}
                                   onChange={(e) =>
-                                    updateService(
-                                      index,
-                                      "count",
-                                      e.target.value
-                                    )
+                                      service.service_id !== gazelleService.id && updateService(index, "count", Number.parseInt(e.target.value) || 1)
                                   }
+                                  disabled={service.service_id === gazelleService.id}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
                                 />
                               </div>
