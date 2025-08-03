@@ -212,7 +212,7 @@ const CostCalculator = () => {
                   <label className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Размеры (м):</label>
                   <div className="w-full flex flex-col gap-4 mb-8">
                     <div className="flex items-center gap-4">
-                      <label className="text-[14px] text-[#6B6B6B]">Ширина:</label>
+                      <label className="text-[14px] text-[#6B6B6B] w-16">Ширина:</label>
                       <input
                           type="number"
                           min="1"
@@ -223,7 +223,7 @@ const CostCalculator = () => {
                       />
                     </div>
                     <div className="flex items-center gap-4">
-                      <label className="text-[14px] text-[#6B6B6B]">Высота:</label>
+                      <label className="text-[14px] text-[#6B6B6B] w-16">Высота:</label>
                       <input
                           type="number"
                           min="1"
@@ -234,7 +234,7 @@ const CostCalculator = () => {
                       />
                     </div>
                     <div className="flex items-center gap-4">
-                      <label className="text-[14px] text-[#6B6B6B]">Длина:</label>
+                      <label className="text-[14px] text-[#6B6B6B] w-16">Длина:</label>
                       <input
                           type="number"
                           min="1"
