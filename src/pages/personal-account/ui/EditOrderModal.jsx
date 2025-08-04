@@ -14,6 +14,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { toast } from "react-toastify"
 import { useUpdateOrder } from "@/shared/lib/hooks/useUpdateOrder"
 import { paymentsApi } from "@/shared/api/paymentsApi"
+import OrderConfirmModal from "@/pages/personal-account/ui/OrderConfirmModal.jsx";
 
 const ITEM_TYPES = [
     { value: "BOX", label: "Коробка" },

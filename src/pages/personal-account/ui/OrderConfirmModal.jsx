@@ -84,21 +84,12 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
       // Выполняем запрос на подтверждение заказа
       await approveOrderMutation.mutateAsync(order.id);
 
-      // Показываем успешное уведомление
-      toast.success('Договор отправлен вам в SMS. После подписания будет доступна оплата.', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
       onClose();
 
       // Обновляем страницу через 2 секунды, чтобы показать изменения
       setTimeout(() => {
         window.location.reload();
+        navigate("/personal-account", { state: { activeSection: "request" } });
       }, 2000);
 
     } catch (error) {
