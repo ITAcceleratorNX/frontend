@@ -381,6 +381,21 @@ const CostCalculator = () => {
             >
               {isLoading ? 'ЗАГРУЗКА...' : 'РАССЧИТАТЬ'}
             </button>
+            <button
+                onClick={() => {
+                  setTimeout(() => {
+                    window.scrollTo({
+                      top: document.body.scrollHeight,
+                      behavior: 'smooth'
+                    });
+                  }, 100);
+                }}
+                className="w-full h-[56px] bg-white text-[#273655] text-[14px] sm:text-[16px] font-bold rounded-lg hover:bg-gray-100 transition-colors mt-4"
+                style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
+            >
+              ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
+            </button>
+
           </div>
         </div>
       </section>

@@ -138,7 +138,21 @@ export const Header = memo(() => {
                 <NavLink to="/" end className={getNavLinkClass}>ГЛАВНАЯ</NavLink>
                 <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
                 <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
-                <NavLink to="/warehouse-order" className={getNavLinkClass}>ЗАБРОНИРОБАТЬ БОКС</NavLink>
+                <NavLink
+                    to="/warehouse-order"
+                    className={(props) =>
+                        `${getNavLinkClass(props)} border-2 text-white hover:opacity-90`
+                    }
+                    style={{
+                      backgroundColor: '#F86812',
+                      borderColor: '#F86812',
+                    }}
+                >
+                  ЗАБРОНИРОВАТЬ БОКС
+                </NavLink>
+
+
+
               </nav>
             </div>
 
@@ -200,7 +214,19 @@ export const Header = memo(() => {
                 <NavLink to="/" end className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ГЛАВНАЯ</NavLink>
                 <NavLink to="/cloud-storage" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
                 <NavLink to="/moving" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>МУВИНГ</NavLink>
-                <NavLink to="/warehouse-order" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ЗАБРОНИРОБАТЬ БОКС</NavLink>
+                <NavLink
+                    to="/warehouse-order"
+                    className={(props) =>
+                        `${getNavLinkClass(props)} border-2 text-white hover:opacity-90`
+                    }
+                    style={{
+                      backgroundColor: '#F86812',
+                      borderColor: '#F86812',
+                    }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  ЗАБРОНИРОВАТЬ БОКС
+                </NavLink>
                 {authButtons}
                 <div className="flex items-center gap-4 pt-4">
                   <button
