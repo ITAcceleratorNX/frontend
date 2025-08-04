@@ -28,6 +28,7 @@ import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import { Pencil } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
+import {useNavigate} from "react-router-dom";
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -37,6 +38,7 @@ const getStorageTypeText = (type) => {
 };
 
 const UserOrderCard = ({ order, onPayOrder }) => {
+  const navigate = useNavigate();
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
   const [isCancelExtendDialogOpen, setIsCancelExtendDialogOpen] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState("1");
@@ -647,6 +649,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           onSuccess={() => {
             setIsEditModalOpen(false);
             window.location.reload();
+            navigate("/personal-account", { state: { activeSection: "payments" } });
           }}
           onCancel={() => setIsEditModalOpen(false)}
       />

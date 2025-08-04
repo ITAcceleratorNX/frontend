@@ -14,14 +14,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { toast } from "react-toastify"
 import { useUpdateOrder } from "@/shared/lib/hooks/useUpdateOrder"
 import { paymentsApi } from "@/shared/api/paymentsApi"
-import OrderConfirmModal from "@/pages/personal-account/ui/OrderConfirmModal.jsx";
-
-const ITEM_TYPES = [
-    { value: "BOX", label: "Коробка" },
-    { value: "FURNITURE", label: "Мебель" },
-    { value: "APPLIANCE", label: "Техника" },
-    { value: "OTHER", label: "Другое" },
-]
+import dayjs from "dayjs";
 
 export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [error, setError] = useState("")
@@ -34,13 +27,23 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
         services: order.services || [],
         is_selected_moving: order.is_selected_moving || false,
         is_selected_package: order.is_selected_package || false,
-        moving_orders: order.moving_orders || [],
+        moving_orders: order.moving_orders || []
     })
     const [prices, setPrices] = useState([])
     const [isPricesLoading, setIsPricesLoading] = useState(false)
     const [movingOrderErrors, setMovingOrderErrors] = useState([])
     const [gazelleService, setGazelleService] = useState(null) // { id, type, name }
-    const [months, setMonths] = useState(1);
+
+    const startDate = dayjs(order.start_date);
+    const endDate = dayjs(order.end_date);
+    const calculateMonths = () => {
+        const yearsDiff = endDate.diff(startDate, 'year');
+        const monthsDiff = endDate.diff(startDate.add(yearsDiff, 'year'), 'month');
+        return yearsDiff * 12 + monthsDiff;
+    };
+
+    const [months, setMonths] = useState(() => calculateMonths());
+
 
     const getServiceTypeName = (type) => {
         const names = {
