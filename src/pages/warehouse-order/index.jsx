@@ -391,7 +391,19 @@ const WarehouseOrderPage = memo(() => {
 
       // Отправка
       const result = await warehouseApi.createOrder(orderData);
-      toast.success("Заказ успешно создан! ", { autoClose: 4000 });
+      toast.success(
+          <div>
+            <div><strong>Заказ успешно создан!</strong></div>
+            <div style={{ marginTop: 5 }}>
+              СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заказа менеджером.
+              <br />
+              Оплата будет доступна сразу после подписания договора.
+            </div>
+          </div>,
+          {
+            autoClose: 4000,
+          }
+      );
       setTimeout(() => {
         navigate("/personal-account", { state: { activeSection: "payments" } });
       }, 1500);
