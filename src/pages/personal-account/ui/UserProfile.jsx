@@ -412,7 +412,7 @@ const UserProfile = () => {
                           Действия администратора
                         </h3>
                         <div className="space-y-3">
-                          <button
+                          {/* <button
                             className="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-[#273655] bg-[#273655]/5 hover:bg-[#273655]/10 rounded-lg transition-colors"
                             onClick={() => {
                               // TODO: Добавить функционал просмотра заказов пользователя
@@ -438,7 +438,7 @@ const UserProfile = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                             </svg>
                             Просмотреть платежи
-                          </button>
+                          </button> */}
 
                           <div className="border-t border-gray-200 pt-3 mt-6">
                             <button
