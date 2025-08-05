@@ -33,6 +33,8 @@ import {useNavigate} from "react-router-dom";
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
     return 'Индивидуальное';
+  } else if (type === 'CLOUD') {
+    return 'Облачное'
   }
   return type;
 };
@@ -246,7 +248,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       {/* Основная информация */}
       <div className="p-6 space-y-4">
         {/* Информация о хранилище */}
-        {order.storage && (
+        {order?.storage && order?.storage?.storage_type !== 'CLOUD' && (
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-2">Хранилище</h4>
             <div className="space-y-1 text-sm text-gray-600">
@@ -258,6 +260,17 @@ const UserOrderCard = ({ order, onPayOrder }) => {
               )}
             </div>
           </div>
+        )}
+        {order?.storage && order?.storage?.storage_type === 'CLOUD' && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-2">Хранилище</h4>
+              <div className="space-y-1 text-sm text-gray-600">
+                <p><span className="font-medium">Тип:</span> {getStorageTypeText(order.storage.storage_type)}</p>
+                {order.storage.description && (
+                    <p><span className="font-medium">Описание:</span> {order.storage.description}</p>
+                )}
+              </div>
+            </div>
         )}
 
         {/* Информация о заказе */}

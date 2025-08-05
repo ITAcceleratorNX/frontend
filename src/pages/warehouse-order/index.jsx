@@ -13,11 +13,6 @@ import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
 import ProfileValidationGuard from "../../shared/components/ProfileValidationGuard";
 // Импорт компонентов UI
 import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Switch,
   Select,
   SelectContent,
@@ -28,8 +23,6 @@ import {
 import {
   Trash2,
   Plus,
-  CalendarIcon,
-  MapPin,
   Package,
   Truck,
 } from "lucide-react";
@@ -391,6 +384,9 @@ const WarehouseOrderPage = memo(() => {
 
       // Отправка
       const result = await warehouseApi.createOrder(orderData);
+
+      console.log(result);
+
       toast.success(
           <div>
             <div><strong>Заказ успешно создан!</strong></div>
@@ -482,9 +478,11 @@ const WarehouseOrderPage = memo(() => {
                       setSelectedWarehouse({
                         id: 'cloud',
                         name: 'Облачное хранение',
-                        storage: []
+                        storage: [],
                       });
-                      setSelectedStorage(null);
+                      let cloudStorage = warehouses
+                          .filter(w => w?.name === "EXTRA SPACE CLOUD")[0]?.storage[0]
+                      setSelectedStorage(cloudStorage);
                     }}
                 >
                   <h3 className="text-[20px] font-bold text-[#273655] mb-2">
@@ -495,7 +493,9 @@ const WarehouseOrderPage = memo(() => {
                     Укажите нужный объем, мы подберем место
                   </p>
                 </div>
-                {warehouses.map((warehouse) => (
+                {warehouses
+                    .filter(w => w?.name !== "EXTRA SPACE CLOUD")
+                    .map((warehouse) => (
                   <div
                     key={warehouse.id}
                     className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
@@ -590,6 +590,11 @@ const WarehouseOrderPage = memo(() => {
                           {totalVolume.toFixed(2)} м³
                         </span>
                         </p>
+                        {totalVolume > parseFloat(selectedStorage.available_volume) && (
+                            <p className="text-red-600 font-medium mt-2">
+                              ⚠️ Объем превышает доступное место в боксе!
+                            </p>
+                        )}
                       </>
                   ) : (
                       <>
