@@ -30,7 +30,7 @@ const validators = {
     const date = new Date(value);
     const now = new Date();
     const minAge = new Date(now.getFullYear() - 100, now.getMonth(), now.getDate());
-    const maxAge = new Date(now.getFullYear() - 14, now.getMonth(), now.getDate());
+    const maxAge = new Date(now.getFullYear() - 18, now.getMonth(), now.getDate());
     return date >= minAge && date <= maxAge;
   }
 };

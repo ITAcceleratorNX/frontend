@@ -110,8 +110,11 @@ const PersonalData = memo(() => {
     if (!formValues.iin?.trim()) {
       setError('iin', { message: 'ИИН обязателен для заполнения' });
       isValid = false;
-    } else if (!/^[0-9]{12}$/.test(formValues.iin)) {
+    } else if (formValues.iin.length !== 12) {
       setError('iin', { message: 'ИИН должен содержать 12 цифр' });
+      isValid = false;
+    } else if (!/^[0-9]{12}$/.test(formValues.iin)) {
+      setError('iin', { message: 'ИИН должен содержать только цифры' });
       isValid = false;
     }
 
@@ -123,6 +126,9 @@ const PersonalData = memo(() => {
     if (!formValues.bday?.trim()) {
       setError('bday', { message: 'Дата рождения обязательна для заполнения' });
       isValid = false;
+      } else if (new Date(formValues.bday) > new Date(new Date().setFullYear(new Date().getFullYear() - 18))) {
+      setError('bday', { message: 'Вам должно быть 18 лет' });
+      isValid = false;
     }
 
     return isValid;
@@ -133,6 +139,14 @@ const PersonalData = memo(() => {
     // Выполняем валидацию перед отправкой
     if (!validateFields()) {
       toast.error('Пожалуйста, заполните все обязательные поля');
+      setIsEditing(true); 
+      setValue('name', defaultValues.name);
+      setValue('email', defaultValues.email);
+      setValue('phone', defaultValues.phone);
+      setValue('iin', defaultValues.iin);
+      setValue('address', defaultValues.address);
+      setValue('bday', defaultValues.bday);
+      
       return;
     }
 
@@ -294,9 +308,23 @@ const PersonalData = memo(() => {
               placeholder="ДД.ММ.ГГГГ"
               disabled={!isEditing}
               value={formValues.bday}
-              onChange={(value) => setValue('bday', value)}
+              onChange={(value) => setValue('bday', value )}
               error={errors.bday?.message}
                 className="w-full"
+              rules={{
+                validate: (value) => {
+                  const birthDate = new Date(value);
+                  const today = new Date();
+                  const age = today.getFullYear() - birthDate.getFullYear();
+                  const monthDiff = today.getMonth() - birthDate.getMonth();
+                  const dayDiff = today.getDate() - birthDate.getDate();
+
+                  if (age < 18 || (age === 18 && (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)))) {
+                    return 'Вам должно быть 18 лет';
+                  }
+                  return true;
+                }
+              }}
             />
         </div>
       </form>
