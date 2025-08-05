@@ -391,7 +391,7 @@ const WarehouseOrderPage = memo(() => {
 
       // Отправка
       const result = await warehouseApi.createOrder(orderData);
-      toast.success("Заказ успешно создан! Перенаправляем...", { autoClose: 3000 });
+      toast.success("Заказ успешно создан! ", { autoClose: 4000 });
       setTimeout(() => {
         navigate("/personal-account", { state: { activeSection: "payments" } });
       }, 1500);
