@@ -259,7 +259,7 @@ const HomePage = memo(() => {
             {/* Жёлтый — Оплата */}
             <div
               className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden cursor-pointer"
-              onClick={() => navigate("/online-payment")}
+              
             >
               <div className="z-10 relative text-right">
                 <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
@@ -276,7 +276,16 @@ const HomePage = memo(() => {
                 className="absolute right-[180px] bottom-[-10px] w-[150px] md:w-[220px] select-none pointer-events-none z-0"
                 style={{ paddingLeft: "70px" }}
               />
+               <div className="flex justify-center md:justify-start">
+                    <button
+                        onClick={() => navigate("/online-payment")}
+                        className="mt-2 sm:mt-4 w-full sm:w-[165px] h-[36px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors"
+                    >
+                        Подробнее
+                    </button>
+                </div>
             </div>
+
 
             {/* Синий — Гарантии */}
             <div className="relative rounded-3xl bg-[#0181D3] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
@@ -284,7 +293,7 @@ const HomePage = memo(() => {
                 <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
                   Гарантии безопасности
                 </div>
-                <div className="text-[#00000073] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
+                <div className="text-[#00000073] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug" style={{ color: "white" }}>
                   OneVision не передает данные Вашей карты третьим <br />лицам. Ввод
                   данных осуществляется в <br />защищенном  окне на платежной
                   странице.
