@@ -1,5 +1,6 @@
 // frontend/src/components/Footer.jsx
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { ToastContainer, toast } from 'react-toastify';
@@ -101,9 +102,18 @@ const Footer = () => {
 
             {/* Нижняя линия и копирайт */}
             <hr className="my-8 border-white opacity-30" />
-            <div className="flex flex-col md:flex-row justify-between items-center text-xs text-[#A6A6A6]">
+            <div className="flex flex-col md:flex-row justify-between items-center text-sm text-[#A6A6A6] gap-2">
               <p>© 2025 extraspace.kz</p>
-              <p className="mt-2 md:mt-0">Все права защищены.</p>
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                <Link 
+                  to="/offer" 
+                  className="text-[#B0B0B0] hover:text-white hover:underline transition-colors duration-200 flex items-center gap-1"
+                >
+                  <span>📄</span>
+                  Публичная оферта
+                </Link>
+                <p className="mt-0">Все права защищены.</p>
+              </div>
             </div>
           </div>
         </footer>
