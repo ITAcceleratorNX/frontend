@@ -505,7 +505,7 @@ const WarehouseOrderPage = memo(() => {
                     </p>
                     <p className="text-[#6B6B6B] text-sm">
                       Статус:{" "}
-                      <span className="text-green-600">{warehouse.status}</span>
+                      <span className="text-green-600">{warehouse.status === "AVAILABLE" ? "ДОСТУПНО" : "ЗАНЯТО"}</span>
                     </p>
                     {warehouse.storage && (
                       <p className="text-[#273655] font-medium mt-2">
