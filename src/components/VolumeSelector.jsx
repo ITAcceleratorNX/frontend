@@ -45,7 +45,7 @@ const VolumeSelector = () => {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 p-4 sm:p-6">
             {/* Картинка */}
             <div className="w-full md:w-1/2 flex justify-center">
-                <div className="relative w-full max-w-[350px] aspect-[4/3] p-4 bg-white border border-gray-200 rounded-xl shadow-md flex items-center justify-center">
+                <div className="relative w-full max-w-[450px] aspect-[4/3] p-4 bg-white border border-gray-200 rounded-xl shadow-md flex items-center justify-center">
                     <img
                         src={descriptions[selectedVolume].image}
                         alt={`${selectedVolume} м³`}
