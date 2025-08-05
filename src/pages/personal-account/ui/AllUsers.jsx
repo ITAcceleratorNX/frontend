@@ -465,7 +465,7 @@ const AllUsers = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
-                    {formatDate(user.created_at)}
+                    {formatDate(user.registration_date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
                     <button
