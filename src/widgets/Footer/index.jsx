@@ -112,6 +112,13 @@ const Footer = () => {
                   <span>📄</span>
                   Публичная оферта
                 </Link>
+                <Link 
+                  to="/privacy-policy2" 
+                  className="text-[#B0B0B0] hover:text-white hover:underline transition-colors duration-200 flex items-center gap-1"
+                >
+                  <span>🔒</span>
+                  Политика конфиденциальности
+                </Link>
                 <p className="mt-0">Все права защищены.</p>
               </div>
             </div>
