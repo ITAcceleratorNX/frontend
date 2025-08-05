@@ -168,7 +168,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     }
   };
 
-  const canPay = order.status === 'PROCESSING' && order.payment_status === 'UNPAID';
+  const canPay = order.status === 'PROCESSING' && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED';
 
   // Проверяем наличие дополнительных услуг (включая новый массив services)
   const hasAdditionalServices = order.is_selected_moving || order.is_selected_package || (order.services && order.services.length > 0);
@@ -496,7 +496,16 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             )}
           </div>
         </div>
-        
+        {order.status === 'APPROVED' && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <svg className="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Оплата будет доступна после подписания договора.
+              </p>
+            </div>
+        )}
         {order.status === 'INACTIVE' && (
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700">

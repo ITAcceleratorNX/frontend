@@ -97,7 +97,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
       }
     } catch (error) {
       console.error('Ошибка создания платежа:', error);
-      toast.error('Ошибка при обработке платежа');
+      toast.error('Ошибка при обработке платежа', { autoClose: 2000 });
     } finally {
       setIsProcessing(false);
     }
