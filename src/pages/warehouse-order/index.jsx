@@ -391,7 +391,7 @@ const WarehouseOrderPage = memo(() => {
 
       // Отправка
       const result = await warehouseApi.createOrder(orderData);
-      toast.success("Заказ успешно создан! Перенаправляем...", { autoClose: 3000 });
+      toast.success("Заказ успешно создан! ", { autoClose: 4000 });
       setTimeout(() => {
         navigate("/personal-account", { state: { activeSection: "payments" } });
       }, 1500);
@@ -450,7 +450,7 @@ const WarehouseOrderPage = memo(() => {
           {/* Список складов */}
           <div className="mb-8">
             <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-              1. Выберите склад
+              1. Выберите склад или облачное хранение
             </h2>
             {warehouses.length === 0 ? (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
@@ -460,6 +460,29 @@ const WarehouseOrderPage = memo(() => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div
+                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                        selectedWarehouse?.id === 'cloud'
+                            ? "border-[#273655] bg-blue-50"
+                            : "border-gray-200 hover:border-[#273655]"
+                    }`}
+                    onClick={() => {
+                      setSelectedWarehouse({
+                        id: 'cloud',
+                        name: 'Облачное хранение',
+                        storage: []
+                      });
+                      setSelectedStorage(null);
+                    }}
+                >
+                  <h3 className="text-[20px] font-bold text-[#273655] mb-2">
+                    Облачное хранение
+                  </h3>
+                  <p className="text-[#6B6B6B] mb-2">Хранение без выделенного бокса</p>
+                  <p className="text-[#6B6B6B] text-sm">
+                    Укажите нужный объем, мы подберем место
+                  </p>
+                </div>
                 {warehouses.map((warehouse) => (
                   <div
                     key={warehouse.id}
@@ -499,11 +522,11 @@ const WarehouseOrderPage = memo(() => {
             )}
           </div>
           {/* Список боксов выбранного склада */}
-          {selectedWarehouse && selectedWarehouse.storage && (
+          {selectedWarehouse && selectedWarehouse?.id !== 'cloud' && selectedWarehouse.storage && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {isUserRole ? "2. Выберите бокс в складе" : "2. Боксы в складе"}{" "}
-                "{selectedWarehouse.name}"
+                {selectedWarehouse.name}
               </h2>
               {/* Адаптивная обертка для схемы склада */}
               <div className="rsm-map-content overflow-x-auto touch-pan-x touch-pan-y w-full max-w-full mx-auto">
@@ -537,36 +560,51 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Форма добавления товаров */}
-          {selectedStorage && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                3. Добавьте ваши вещи
+                {selectedWarehouse?.id === 'cloud' ? "2" : "3"}. Добавьте ваши вещи
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <div className="bg-gray-50 rounded-lg p-6 mb-4">
-                  <p className="text-[#6B6B6B] mb-2">
-                    Выбранный бокс:{" "}
-                    <span className="font-medium text-[#273655]">
-                      {selectedStorage.name}
-                    </span>
-                  </p>
-                  <p className="text-[#6B6B6B] mb-2">
-                    Доступный объем:{" "}
-                    <span className="font-medium text-[#273655]">
-                      {selectedStorage.available_volume} м³
-                    </span>
-                  </p>
-                  <p className="text-[#6B6B6B]">
-                    Общий объем ваших вещей:{" "}
-                    <span className="font-medium text-[#273655]">
-                      {totalVolume.toFixed(2)} м³
-                    </span>
-                  </p>
-                  {totalVolume >
-                    parseFloat(selectedStorage.available_volume) && (
-                    <p className="text-red-600 font-medium mt-2">
-                      ⚠️ Объем превышает доступное место в боксе!
-                    </p>
+                  {selectedWarehouse?.id === 'cloud' ? (
+                      <>
+                        <p className="text-[#6B6B6B] mb-2">
+                          Тип хранения: <span className="font-medium text-[#273655]">Облачное</span>
+                        </p>
+                        <p className="text-[#6B6B6B]">
+                          Общий объем ваших вещей:{" "}
+                          <span className="font-medium text-[#273655]">
+                          {totalVolume.toFixed(2)} м³
+                        </span>
+                        </p>
+                      </>
+                  ) : (
+                      <>
+                        <p className="text-[#6B6B6B] mb-2">
+                          Выбранный бокс:{" "}
+                          <span className="font-medium text-[#273655]">
+                          {selectedStorage.name}
+                        </span>
+                        </p>
+                        <p className="text-[#6B6B6B] mb-2">
+                          Доступный объем:{" "}
+                          <span className="font-medium text-[#273655]">
+                          {selectedStorage.available_volume} м³
+                        </span>
+                        </p>
+                        <p className="text-[#6B6B6B]">
+                          Общий объем ваших вещей:{" "}
+                          <span className="font-medium text-[#273655]">
+                          {totalVolume.toFixed(2)} м³
+                        </span>
+                        </p>
+                        {totalVolume > parseFloat(selectedStorage.available_volume) && (
+                            <p className="text-red-600 font-medium mt-2">
+                              ⚠️ Объем превышает доступное место в боксе!
+                            </p>
+                        )}
+                      </>
                   )}
                 </div>
                 <div className="space-y-4">
@@ -690,10 +728,10 @@ const WarehouseOrderPage = memo(() => {
               </div>
           )}
           {/* Дополнительные услуги */}
-          {selectedStorage && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                4. Дополнительные услуги
+                {selectedWarehouse?.id === 'cloud' ? "3" : "4"}. Дополнительные услуги
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
                 {/* Услуга перевозки */}
@@ -757,10 +795,10 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Блок добавления дат перевозки - показывается если включена перевозка */}
-          {selectedStorage && isUserRole && isSelectedMoving && (
+          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && isSelectedMoving && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                5. Добавить даты перевозки
+                {selectedWarehouse?.id === 'cloud' ? "4" : "5"}. Добавить даты перевозки
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 {movingOrders.length > 0 && (
@@ -867,10 +905,14 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Блок добавления услуг - показывается если включена упаковка */}
-          {selectedStorage && isUserRole && isSelectedPackage && (
+          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && isSelectedPackage && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                {isSelectedMoving ? "6" : "5"}. Добавить услуги для упаковки
+                {(() => {
+                  let stepNumber = selectedWarehouse?.id === 'cloud' ? 5 : 6;
+                  if (!isSelectedMoving) stepNumber--;
+                  return stepNumber;
+                })()}. Добавить услуги для упаковки
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 {isPricesLoading ? (
@@ -956,13 +998,13 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Блок выбора срока аренды и кнопки создания заказа */}
-          {selectedStorage && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {(() => {
-                  let stepNumber = 5;
-                  if (isSelectedMoving) stepNumber++;
-                  if (isSelectedPackage) stepNumber++;
+                  let stepNumber = selectedWarehouse?.id === 'cloud' ? 6 : 7;
+                  if (!isSelectedMoving) stepNumber--;
+                  if (!isSelectedPackage) stepNumber--;
                   return stepNumber;
                 })()}. Укажите срок аренды
               </h2>
@@ -1011,7 +1053,7 @@ const WarehouseOrderPage = memo(() => {
               </div>
             </div>
           )}
-          {selectedStorage && !isAuthenticated && (
+          {(selectedStorage || selectedWarehouse?.id === 'cloud') && !isAuthenticated && (
               <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
                 <h3 className="text-xl font-bold text-[#273655] mb-2">
                   Хотите арендовать этот бокс?

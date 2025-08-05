@@ -14,8 +14,13 @@ import {
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
 import OrderDeleteModal from "./OrderDeleteModal";
+import {toast} from "react-toastify";
+import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
+import {useNavigate} from "react-router-dom";
+import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
 
 const OrderManagement = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [modalData, setModalData] = useState(null);
@@ -60,6 +65,7 @@ const OrderManagement = () => {
   // Статистика заказов (используем allOrders для точных цифр)
   const statistics = useMemo(() => ({
     total: allOrders.length,
+    inactive: allOrders.filter(o => o.status === 'INACTIVE').length,
     approved: allOrders.filter(o => o.status === 'APPROVED').length,
     processing: allOrders.filter(o => o.status === 'PROCESSING').length,
     active: allOrders.filter(o => o.status === 'ACTIVE').length,
@@ -81,6 +87,12 @@ const OrderManagement = () => {
     try {
       await deleteOrder.mutateAsync(orderId);
     } catch (error) {
+      console.error(error);
+      toast.error('Ошибка', {
+        duration: 2000,
+        position: 'top-right',
+        description: error.message,
+      });
     }
   };
 
@@ -100,6 +112,10 @@ const OrderManagement = () => {
     if (action === 'delete') {
       await handleDeleteOrder(order.id);
       closeModal();
+    } else if (action === 'approve') {
+
+    } else if (action === 'update') {
+
     }
   };
 
@@ -161,7 +177,8 @@ const OrderManagement = () => {
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+
         <Card className="bg-gradient-to-r from-[#1e2c4f] to-blue-600 text-white hover:shadow-lg transition-shadow">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -171,6 +188,18 @@ const OrderManagement = () => {
               <span className="text-2xl font-bold">{statistics.total}</span>
             </div>
             <div className="text-sm opacity-90">Всего заказов</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-[#000] to-red-700 text-white hover:shadow-lg transition-shadow">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center mb-2">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span className="text-2xl font-bold">{statistics.inactive}</span>
+            </div>
+            <div className="text-sm opacity-90">Некативный</div>
           </CardContent>
         </Card>
 
@@ -267,12 +296,18 @@ const OrderManagement = () => {
                 Фильтр по статусу заказа
               </label>
               <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-                <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
+                <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full">
                   <TabsTrigger value="ALL" className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7l2 2-2 2m0 10l2-2-2-2" />
                     </svg>
                     Все
+                  </TabsTrigger>
+                  <TabsTrigger value="INACTIVE" className="flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7l2 2-2 2m0 10l2-2-2-2" />
+                    </svg>
+                    Некативные
                   </TabsTrigger>
                   <TabsTrigger value="APPROVED" className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,8 +393,9 @@ const OrderManagement = () => {
             <OrderCard
               key={order.id}
               order={order}
-              onApprove={() => openConfirmModal('approve', order)}
+              onUpdate={() => openConfirmModal('update', order)}
               onDelete={() => openConfirmModal('delete', order)}
+              onApprove={() => openConfirmModal('approve', order)}
               isLoading={isMutating}
             />
           ))
@@ -367,7 +403,7 @@ const OrderManagement = () => {
       </div>
 
       {/* Модальное окно подтверждения */}
-      {modalData && (
+      {modalData && modalData.action === 'delete' && (
         <OrderDeleteModal
           isOpen={!!modalData}
           onClose={closeModal}
@@ -375,6 +411,25 @@ const OrderManagement = () => {
           action={modalData.action}
           order={modalData.order}
         />
+      )}
+      {modalData && modalData.action === 'update' && (
+          <EditOrderModal
+              isOpen={!!modalData}
+              order={modalData.order}
+              onSuccess={() => {
+                closeModal();
+                window.location.reload();
+                navigate("/personal-account", { state: { activeSection: "request" } });
+              }}
+              onCancel={() => closeModal()}
+          />
+      )}
+      {modalData && modalData.action === 'approve' && (
+          <OrderConfirmModal
+              isOpen={!!modalData}
+              order={modalData.order}
+              onClose={() => closeModal()}
+          />
       )}
     </div>
   );
