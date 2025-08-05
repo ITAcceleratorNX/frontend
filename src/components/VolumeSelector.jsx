@@ -17,7 +17,8 @@ const VolumeSelector = () => {
             ],
             boxes: "Вмещает до 15 коробок или 3 предметов мебели",
             examples: "Матрас, стиральная машина, пылесос, тумбочка, чемодан и несколько коробок",
-            image: Volume3Image
+            image: Volume3Image,
+            dimensions: { width: 1, height: 2, length: 1.5 },
         },
         5: {
             text: [
@@ -27,7 +28,8 @@ const VolumeSelector = () => {
             ],
             boxes: "Вмещает до 25 коробок или 5 предметов мебели",
             examples: "Диван, шкаф, стиральная машина, стулья, коробки",
-            image: Volume5Image
+            image: Volume5Image,
+            dimensions: { width: 1.2, height: 2.2, length: 1.9 },
         },
         10: {
             text: [
@@ -37,7 +39,8 @@ const VolumeSelector = () => {
             ],
             boxes: "Вмещает до 50 коробок или 10 предметов мебели",
             examples: "2 дивана, шкаф, кровать, холодильник, стиральная машина, столы",
-            image: Volume10Image
+            image: Volume10Image,
+            dimensions: { width: 1.5, height: 2.5, length: 2.7 },
         }
     };
 
@@ -45,11 +48,29 @@ const VolumeSelector = () => {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 p-4 sm:p-6">
             {/* Картинка */}
             <div className="w-full md:w-1/2 flex justify-center">
-                <img
-                    src={descriptions[selectedVolume].image}
-                    alt={`${selectedVolume} м³`}
-                    className="max-w-full md:max-w-[400px] rounded-xl shadow-md transition-all duration-300"
-                />
+                <div className="relative w-full max-w-[400px] aspect-[4/3] border-2 border-dashed border-gray-300 rounded-xl p-4 flex items-center justify-center bg-white">
+                    {/* Картинка */}
+                    <img
+                        src={descriptions[selectedVolume].image}
+                        alt={`${selectedVolume} м³`}
+                        className="max-h-full max-w-full object-contain transition-all duration-300"
+                    />
+
+                    {/* Высота сверху по центру */}
+                    <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[12px] text-gray-600">
+                        Высота: {descriptions[selectedVolume].dimensions.height} м
+                    </div>
+
+                    {/* Ширина снизу слева */}
+                    <div className="absolute bottom-1 left-2 text-[12px] text-gray-600">
+                        Ширина: {descriptions[selectedVolume].dimensions.width} м
+                    </div>
+
+                    {/* Длина снизу справа */}
+                    <div className="absolute bottom-1 right-2 text-[12px] text-gray-600">
+                        Длина: {descriptions[selectedVolume].dimensions.length} м
+                    </div>
+                </div>
             </div>
 
             {/* Описание и кнопки */}

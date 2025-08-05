@@ -228,8 +228,14 @@ const ItemSearch = () => {
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-4 mt-4">
-                    <p className="text-sm text-gray-500 mb-1">ID заказа доставки</p>
-                    <p className="font-mono text-lg font-semibold text-[#273655]">{searchResult.movingOrderId}</p>
+                    <p className="text-sm text-gray-500 mb-1">Дата создания</p>
+                    <p className="font-mono text-lg font-semibold text-[#273655]">{new Date(searchResult.item.created_at).toLocaleString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}</p>
                   </div>
                 </div>
               </div>

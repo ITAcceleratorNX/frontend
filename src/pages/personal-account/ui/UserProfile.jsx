@@ -358,7 +358,7 @@ const UserProfile = () => {
                         </div>
                         <div className="flex justify-between py-3">
                           <span className="font-medium text-gray-600">Дата регистрации:</span>
-                          <span className="text-gray-900">{formatDate(selectedUser.created_at)}</span>
+                          <span className="text-gray-900">{formatDate(selectedUser.registration_date)}</span>
                         </div>
                       </div>
                     </div>
