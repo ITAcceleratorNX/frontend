@@ -42,11 +42,24 @@ const Footer = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await api.post('/submit-lead', formData);
+      const updatedData = {
+        ...formData,
+        name: formData.name.trim(),
+        phone: formData.phone,
+        storage_type: localStorage.getItem('prep_storage_type') || 'INDIVIDUAL',
+        duration: localStorage.getItem('prep_duration') || '1',
+        area: localStorage.getItem('prep_area') || '50',
+        price: localStorage.getItem('calculated_price') || '',
+      };
+      const response = await api.post('/submit-lead', updatedData);
 
       if (response.data.success) {
         toast.success('Данные успешно отправлены!');
-        setFormData({ name: '', phone: '' });
+        setFormData({ name: '', phone: '', storage_type: '', area: '', duration: '', price: '', });
+        localStorage.removeItem('prep_storage_type');
+        localStorage.removeItem('prep_duration');
+        localStorage.removeItem('prep_area');
+        localStorage.removeItem('calculated_price');
       } else {
         throw new Error('Ошибка при отправке');
       }

@@ -34,6 +34,7 @@ const CostCalculator = () => {
         const response = await api.get('/prices');
         setPrices(response.data);
       } catch (error) {
+        console.error(error);
         setError('Не удалось загрузить цены. Попробуйте позже.');
       } finally {
         setIsLoading(false);
@@ -66,9 +67,11 @@ const CostCalculator = () => {
     if (type === 'CLOUD') {
       const volume = calculateVolume(newDimensions.width, newDimensions.height, newDimensions.length);
       setArea(volume);
+      localStorage.setItem("prep_area", volume);
     }
 
     setTotalCost(null);
+    localStorage.setItem("calculated_price", null)
   };
 
   // Обработчик изменения размеров стеллажа (RACK)
@@ -89,9 +92,11 @@ const CostCalculator = () => {
         newRackDimensions.length
       );
       setArea(volume);
+      localStorage.setItem("prep_area", volume);
     }
 
     setTotalCost(null);
+    localStorage.setItem("calculated_price", null)
   };
 
   const calculateCost = () => {
@@ -114,6 +119,7 @@ const CostCalculator = () => {
     
     const total = price * area * month;
     setTotalCost(Math.round(total));
+    localStorage.setItem("calculated_price", Math.round(total))
     setError(null);
 
     if (import.meta.env.DEV) {
@@ -131,13 +137,16 @@ const CostCalculator = () => {
 
   const handleServiceTypeClick = (serviceType) => {
     setType(serviceType);
+    localStorage.setItem("prep_storage_type", serviceType);
     setTotalCost(null);
+    localStorage.setItem("calculated_price", null);
 
     // Устанавливаем area в зависимости от типа услуги
     if (serviceType === 'CLOUD') {
       // Для облачного хранения используем объем
       const volume = calculateVolume(dimensions.width, dimensions.height, dimensions.length);
       setArea(volume);
+      localStorage.setItem("prep_area", volume);
     } else if (serviceType === 'RACK') {
       // Для стеллажного хранения используем простой объем
       const volume = calculateRackVolume(
@@ -146,9 +155,11 @@ const CostCalculator = () => {
         rackDimensions.length
       );
       setArea(volume);
+      localStorage.setItem("prep_area", volume);
     } else {
       // Для индивидуального хранения используем площадь по умолчанию
       setArea(50);
+      localStorage.setItem('prep_area', null);
     }
   };
 
@@ -199,7 +210,9 @@ const CostCalculator = () => {
                           value={area}
                           onChange={e => {
                             setArea(Number(e.target.value));
+                            localStorage.setItem("prep_area", e.target.value);
                             setTotalCost(null);
+                            localStorage.setItem("calculated_price", null);
                           }}
                           className="w-full h-[2px] bg-transparent appearance-none relative z-10"
                           style={{ WebkitAppearance: 'none' }}
@@ -303,7 +316,9 @@ const CostCalculator = () => {
                   value={month}
                   onChange={(e) => {
                     setMonth(Number(e.target.value));
+                    localStorage.setItem("prep_duration", e.target.value);
                     setTotalCost(null);
+                    localStorage.setItem("calculated_price", null);
                   }}
                   className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[16px] sm:text-[18px] text-[#273655] font-normal focus:outline-none appearance-none"
                   style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
