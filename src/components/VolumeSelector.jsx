@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Volume3Image from "../assets/Frame 48.png";
+import Volume3Image from "../assets/Frame 50.png";
 import Volume5Image from "../assets/Frame 49.png";
-import Volume10Image from "../assets/Frame 50.png";
+import Volume10Image from "../assets/Frame 48.png";
 
 const VolumeSelector = () => {
     const [selectedVolume, setSelectedVolume] = useState(3);
@@ -45,12 +45,15 @@ const VolumeSelector = () => {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 p-4 sm:p-6">
             {/* Картинка */}
             <div className="w-full md:w-1/2 flex justify-center">
-                <img
-                    src={descriptions[selectedVolume].image}
-                    alt={`${selectedVolume} м³`}
-                    className="max-w-full md:max-w-[400px] rounded-xl shadow-md transition-all duration-300"
-                />
+                <div className="relative w-full max-w-[350px] aspect-[4/3] p-4 bg-white border border-gray-200 rounded-xl shadow-md flex items-center justify-center">
+                    <img
+                        src={descriptions[selectedVolume].image}
+                        alt={`${selectedVolume} м³`}
+                        className="max-h-full max-w-full object-contain"
+                    />
+                </div>
             </div>
+
 
             {/* Описание и кнопки */}
             <div className="w-full md:w-1/2 flex flex-col justify-start">
