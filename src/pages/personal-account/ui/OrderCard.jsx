@@ -3,10 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { 
-  getOrderStatusText, 
-  getOrderStatusClass, 
-  getPaymentStatusClass, 
-  getContractStatusClass,
+  getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
 
@@ -508,8 +505,8 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
                       Общая стоимость: <span className="font-bold text-[#1e2c4f]">
                         {formatPrice(
                           order.services.reduce((total, service) => {
-                            if (service.price && service.OrderService) {
-                              return total + (parseFloat(service.price) * service.OrderService.count);
+                            if (service.OrderService) {
+                              return total + (parseFloat(service.OrderService.total_price));
                             }
                             return total;
                           }, 0)

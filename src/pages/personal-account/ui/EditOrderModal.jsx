@@ -15,9 +15,11 @@ import { toast } from "react-toastify"
 import { useUpdateOrder } from "@/shared/lib/hooks/useUpdateOrder"
 import { paymentsApi } from "@/shared/api/paymentsApi"
 import dayjs from "dayjs";
+import {useAuth} from "@/shared/index.js";
 
 export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [error, setError] = useState("")
+    const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false)
     const updateOrderMutation = useUpdateOrder()
     const [formData, setFormData] = useState({
@@ -41,7 +43,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
         const monthsDiff = endDate.diff(startDate.add(yearsDiff, 'year'), 'month');
         return yearsDiff * 12 + monthsDiff;
     };
-
+    const [totalPrice, setTotalPrice] = useState(null);
     const [months, setMonths] = useState(() => calculateMonths());
 
 
@@ -302,10 +304,18 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             }
 
             if (payload.is_selected_package && finalServices.length > 0) {
-                payload.services = finalServices.map((s) => ({
-                    service_id: Number(s.service_id),
-                    count: s.count,
-                }))
+                payload.services = finalServices.map((s) => {
+                    const serviceObj = {
+                        service_id: Number(s.service_id),
+                        count: s.count,
+                    };
+
+                    if (totalPrice != null && totalPrice !== "") {
+                        serviceObj.total_price = Number(totalPrice);
+                    }
+
+                    return serviceObj;
+                });
             }
 
             if (formData.is_selected_moving && formData.moving_orders.length > 0) {
@@ -633,6 +643,18 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                             className="h-10 text-sm"
                                                         />
                                                     </div>
+                                                    {/* Итоговая цена для Газели (только для ADMIN или MANAGER) */}
+                                                    {(isGazelle && (user.role === "ADMIN" || user.role === "MANAGER")) && (
+                                                        <div className="w-full sm:w-32">
+                                                            <Label className="text-sm">Итог (₸)</Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={totalPrice}
+                                                                onChange={(e) => setTotalPrice(e.target.value ? Number(e.target.value) : "")}
+                                                                className="h-10 text-sm bg-gray-100"
+                                                            />
+                                                        </div>
+                                                    )}
                                                     <Button
                                                         type="button"
                                                         variant="ghost"

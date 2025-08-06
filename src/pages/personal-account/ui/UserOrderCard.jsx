@@ -109,8 +109,8 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   };
 
   const totalPriceOfServices = order.services.reduce((total, service) => {
-    if (service.price && service.OrderService) {
-      return total + (parseFloat(service.price) * service.OrderService.count);
+    if (service.OrderService) {
+      return total + (parseFloat(service.OrderService.total_price));
     }
     return total;
   }, 0)
@@ -439,7 +439,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                       <div className="text-right">
                         <p className="text-sm text-gray-500">Итого:</p>
                         <p className="font-bold text-[#273655]">
-                          {formatPrice(parseFloat(service.price) * service.OrderService.count)} ₸
+                          {formatPrice(parseFloat(service.OrderService.total_price))} ₸
                           {service.type === 'GAZELLE' ? <p className="text-xs text-gray-500">Примерная стоимость</p> : ''}
                         </p>
                       </div>
