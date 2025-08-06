@@ -434,7 +434,7 @@ const AllUsers = () => {
                           {user.name || 'Имя не указано'}
                         </div>
                         <div className="text-sm text-gray-500">
-                          ID: #{user.id}
+                          ID: #{user?.public_id}
                         </div>
                       </div>
                     </div>

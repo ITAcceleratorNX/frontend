@@ -284,6 +284,7 @@ const AdminMovingOrder = () => {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Название</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Объём</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Маркировка</th>
@@ -293,6 +294,12 @@ const AdminMovingOrder = () => {
                       <tbody>
                         {order.items.map((item) => (
                           <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Box className="w-4 h-4 text-gray-400" />
+                                <span className="font-medium text-gray-900">{item.public_id}</span>
+                              </div>
+                            </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
                                 <Box className="w-4 h-4 text-gray-400" />

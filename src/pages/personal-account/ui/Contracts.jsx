@@ -314,7 +314,7 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                       <tbody>
                         {details.items.map((item, index) => (
                           <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-4 text-sm">{index + 1}</td>
+                            <td className="py-3 px-4 text-sm">{item.public_id}</td>
                             <td className="py-3 px-4 text-sm font-medium">{item.name}</td>
                             <td className="py-3 px-4 text-sm">
                               <Badge variant="outline">{item.volume}</Badge>

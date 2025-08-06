@@ -135,7 +135,7 @@ const ItemSearch = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">ID вещи</p>
-                      <p className="font-semibold text-lg">{searchResult.item.id}</p>
+                      <p className="font-semibold text-lg">{searchResult.item.public_id}</p>
                     </div>
                   </div>
 

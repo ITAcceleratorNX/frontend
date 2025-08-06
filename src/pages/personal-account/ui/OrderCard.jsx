@@ -403,7 +403,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
                   <div key={item.id} className="bg-white border border-teal-200 rounded-lg p-3 hover:border-teal-300 transition-colors">
                     <div className="flex items-center gap-2 text-sm">
                       <Badge variant="secondary" className="text-xs px-2 py-1 bg-teal-100 text-teal-700 border-teal-200 font-mono">
-                        ID: {item.id}
+                        ID: {item.public_id}
                       </Badge>
                       <span className="text-gray-400">|</span>
                       <span className="font-medium text-gray-900">{item.name}</span>

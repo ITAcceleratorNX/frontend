@@ -342,7 +342,7 @@ const UserProfile = () => {
                       <div className="space-y-4">
                         <div className="flex justify-between py-3 border-b border-gray-100">
                           <span className="font-medium text-gray-600">ID пользователя:</span>
-                          <span className="text-gray-900">#{selectedUser.id}</span>
+                          <span className="text-gray-900">#{selectedUser.public_id}</span>
                         </div>
                         <div className="flex justify-between py-3 border-b border-gray-100">
                           <span className="font-medium text-gray-600">Имя:</span>
