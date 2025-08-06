@@ -108,6 +108,13 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     });
   };
 
+  const totalPriceOfServices = order.services.reduce((total, service) => {
+    if (service.price && service.OrderService) {
+      return total + (parseFloat(service.price) * service.OrderService.count);
+    }
+    return total;
+  }, 0)
+
   // Функция для получения иконки услуги по типу
   const getServiceIcon = (type) => {
     switch (type) {
@@ -288,6 +295,10 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             <p className="font-medium text-gray-900">{formatDate(order.start_date)}</p>
           </div>
           <div>
+            <p className="text-gray-500">Депозит</p>
+            <p className="font-medium text-gray-900">{'15 000'} ₸</p>
+          </div>
+          <div>
             <p className="text-gray-500">Дата окончания</p>
             <p className="font-medium text-gray-900">{formatDate(order.end_date)}</p>
           </div>
@@ -429,6 +440,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                         <p className="text-sm text-gray-500">Итого:</p>
                         <p className="font-bold text-[#273655]">
                           {formatPrice(parseFloat(service.price) * service.OrderService.count)} ₸
+                          {service.type === 'GAZELLE' ? <p className="text-xs text-gray-500">Примерная стоимость</p> : ''}
                         </p>
                       </div>
                     )}
@@ -445,14 +457,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                   {order.services.some(s => s.price) && (
                     <span className="text-sm text-gray-600">
                       Общая стоимость услуг: <span className="font-bold text-[#273655]">
-                        {formatPrice(
-                          order.services.reduce((total, service) => {
-                            if (service.price && service.OrderService) {
-                              return total + (parseFloat(service.price) * service.OrderService.count);
-                            }
-                            return total;
-                          }, 0)
-                        )} ₸
+                        {formatPrice(totalPriceOfServices)} ₸
                       </span>
                     </span>
                   )}
@@ -467,7 +472,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       <div className={`px-6 py-4 border-t border-gray-100 ${hasAdditionalServices ? 'bg-gradient-to-r from-blue-50 to-purple-50' : 'bg-gray-50'}`}>
         <div className="flex items-center justify-between">
           <div className="text-lg font-bold text-gray-900">
-            {formatPrice(order.total_price)} ₸
+            {formatPrice(Number(order.total_price) + 15000 + Number(totalPriceOfServices))} ₸
           </div>
           
           <div className="flex gap-3">
