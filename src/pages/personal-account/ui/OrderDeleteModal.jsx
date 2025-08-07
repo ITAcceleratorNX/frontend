@@ -23,6 +23,31 @@ const OrderDeleteModal = ({ isOpen, order, onClose }) => {
     }
   };
 
+  // Общая сумма: аренда + услуги + депозит
+  const getTotalPrice = () => {
+    const basePrice = parseFloat(order.total_price) || 0;
+    const servicesPrice = getServicesTotal();
+    const depositPrice = getDepositPrice();
+    return basePrice + servicesPrice + depositPrice;
+  };
+
+  // Расчет общей стоимости услуг
+  const getServicesTotal = () => {
+    if (!order.services || order.services.length === 0) return 0;
+
+    return order.services.reduce((total, service) => {
+      if (service.OrderService && service.OrderService.total_price) {
+        return total + (parseFloat(service.OrderService.total_price));
+      }
+      return total;
+    }, 0);
+  };
+
+  // Депозит услуг
+  const getDepositPrice = () => {
+    return 15000; // Фиксированная сумма депозита
+  };
+
   if (!isOpen || !order) return null;
 
   return (

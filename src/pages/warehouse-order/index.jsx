@@ -1042,7 +1042,7 @@ const WarehouseOrderPage = memo(() => {
                         parseFloat(selectedStorage.available_volume) ||
                       (isSelectedMoving && movingOrders.length === 0) ||
                       (isSelectedMoving && movingOrders.some(order => !order.address || order.address.trim() === "")) ||
-                      (isSelectedPackage && services.filter(s => s.service_id && s.count > 0).length === 0)
+                      (isSelectedPackage && (services.filter(s => s.service_id && s.count > 0).length === 0 && !isCloud))
                     }
                     className="w-full h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ boxShadow: "4px 4px 8px 0 #B0B0B0" }}
