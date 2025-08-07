@@ -349,7 +349,7 @@ const WarehouseOrderPage = memo(() => {
     const validServices = services.filter(
       (service) => service.service_id && service.count > 0
     );
-    if (isSelectedPackage && validServices.length === 0) {
+    if (isSelectedPackage && (validServices.length === 0 && !isCloud)) {
       setError("Добавьте хотя бы одну услугу для упаковки");
       return;
     }
