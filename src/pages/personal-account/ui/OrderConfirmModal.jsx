@@ -134,8 +134,8 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
     if (!order.services || order.services.length === 0) return 0;
     
     return order.services.reduce((total, service) => {
-      if (service.price && service.OrderService) {
-        return total + (parseFloat(service.price) * service.OrderService.count);
+      if (service.OrderService && service.OrderService.total_price) {
+        return total + (parseFloat(service.OrderService.total_price));
       }
       return total;
     }, 0);
@@ -254,9 +254,9 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                           )}
                         </div>
                       </div>
-                      {service.price && service.OrderService && (
+                      {service.OrderService && service.OrderService.total_price && (
                         <div className="text-sm font-bold text-[#1e2c4f] text-right">
-                          {formatPrice(parseFloat(service.price) * service.OrderService.count)} ₸
+                          {formatPrice(parseFloat(service.OrderService.total_price))} ₸
                         </div>
                       )}
                     </div>
