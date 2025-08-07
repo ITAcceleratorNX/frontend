@@ -26,6 +26,7 @@ import {
   Package,
   Truck,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const WarehouseOrderPage = memo(() => {
   const navigate = useNavigate();
@@ -57,6 +58,28 @@ const WarehouseOrderPage = memo(() => {
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
 
   const [gazelleService, setGazelleService] = useState(null);
+  const [isCloud, setIsCloud] = useState(false);
+
+  useEffect(() => {
+    if (selectedWarehouse) {
+      const isCloudType = selectedWarehouse.type === 'CLOUD';
+      setIsCloud(isCloudType);
+
+      // Если CLOUD — автоматически включаем перевозку и упаковку
+      if (isCloudType) {
+        setIsSelectedMoving(true);
+        setIsSelectedPackage(true);
+        // Не сбрасываем movingOrders, если уже есть
+        if (movingOrders.length === 0) {
+          setMovingOrders([
+            { moving_date: new Date().toISOString(), status: 'PENDING_FROM', address: '' },
+            { moving_date: new Date().toISOString(), status: 'PENDING_TO', address: '' }
+          ]);
+          setMovingOrderErrors([{}, {}]);
+        }
+      }
+    }
+  }, [selectedWarehouse]);
 
   useEffect(() => {
     if (isSelectedMoving && prices.length > 0 && !gazelleService) {
@@ -367,12 +390,31 @@ const WarehouseOrderPage = memo(() => {
         is_selected_package: isSelectedPackage && validServices.length > 0,
       };
 
-      if (isSelectedMoving && movingOrders.length > 0) {
-        orderData.moving_orders = movingOrders.map((order) => ({
-          moving_date: order.moving_date,
-          status: order.status,
-          address: order.address.trim(),
+// === Для CLOUD: передаём clientAddress, а в moving_orders — один адрес для всех ===
+      if (isCloud) {
+        const firstAddress = movingOrders[0]?.address?.trim();
+        if (!firstAddress) {
+          setError('Для облачного хранения требуется адрес');
+          return;
+        }
+
+        // Подставляем один адрес для всех
+        orderData.moving_orders = movingOrders.map((mo) => ({
+          ...mo,
+          address: firstAddress,
         }));
+
+        // Передаём clientAddress для бэкенда
+        orderData.clientAddress = firstAddress;
+      } else {
+        // Обычный режим
+        if (isSelectedMoving && movingOrders.length > 0) {
+          orderData.moving_orders = movingOrders.map((order) => ({
+            moving_date: order.moving_date,
+            status: order.status,
+            address: order.address.trim(),
+          }));
+        }
       }
 
       if (isSelectedPackage && validServices.length > 0) {
@@ -457,61 +499,31 @@ const WarehouseOrderPage = memo(() => {
           </div>
           {/* Список складов */}
           <div className="mb-8">
-            <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-              1. Выберите склад или облачное хранение
-            </h2>
-            {warehouses.length === 0 ? (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                <div className="text-gray-500">
-                  Склады временно недоступны. Попробуйте позже.
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                        selectedWarehouse?.id === 'cloud'
-                            ? "border-[#273655] bg-blue-50"
-                            : "border-gray-200 hover:border-[#273655]"
-                    }`}
-                    onClick={() => {
-                      setSelectedWarehouse({
-                        id: 'cloud',
-                        name: 'Облачное хранение',
-                        storage: [],
-                      });
-                      let cloudStorage = warehouses
-                          .filter(w => w?.name === "EXTRA SPACE CLOUD")[0]?.storage[0]
-                      setSelectedStorage(cloudStorage);
-                    }}
-                >
-                  <h3 className="text-[20px] font-bold text-[#273655] mb-2">
-                    Облачное хранение
-                  </h3>
-                  <p className="text-[#6B6B6B] mb-2">Хранение без выделенного бокса</p>
-                  <p className="text-[#6B6B6B] text-sm">
-                    Укажите нужный объем, мы подберем место
-                  </p>
-                </div>
-                {warehouses
-                    .filter(w => w?.name !== "EXTRA SPACE CLOUD")
-                    .map((warehouse) => (
+            <h2 className="text-[24px] font-bold text-[#273655] mb-4">1. Выберите склад или облачное хранение</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {warehouses.map((warehouse) => (
                   <div
-                    key={warehouse.id}
-                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                      selectedWarehouse?.id === warehouse.id
-                        ? "border-[#273655] bg-blue-50"
-                        : "border-gray-200 hover:border-[#273655]"
-                    }`}
-                    onClick={() => {
-                      setSelectedWarehouse(warehouse);
-                      setSelectedStorage(null);
-                    }}
+                      key={warehouse.id}
+                      onClick={() => {
+                        setSelectedWarehouse(warehouse);
+                        if (warehouse.type === "CLOUD") {
+                          let cloudStorage = warehouses
+                              .filter(w => w?.type === "CLOUD")[0]?.storage[0]
+                          setSelectedStorage(cloudStorage);
+                        } else {
+                          setSelectedStorage(null);
+                          setIsSelectedMoving(false);
+                          setIsSelectedPackage(false);
+                        }
+                      }}
+                      className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                          selectedWarehouse?.id === warehouse.id
+                              ? "border-[#273655] bg-blue-50"
+                              : "border-gray-200 hover:border-[#273655]"
+                      }`}
                   >
-                    <h3 className="text-[20px] font-bold text-[#273655] mb-2">
-                      {warehouse.name}
-                    </h3>
-                    <p className="text-[#6B6B6B] mb-2">{warehouse.address}</p>
+                    <h3 className="text-lg font-bold text-[#273655]">{warehouse.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{warehouse.address}</p>
                     <p className="text-[#6B6B6B] text-sm">
                       Время работы: {warehouse.work_start} - {warehouse.work_end}
                     </p>
@@ -519,22 +531,25 @@ const WarehouseOrderPage = memo(() => {
                       Статус:{" "}
                       <span className="text-green-600">{warehouse.status === "AVAILABLE" ? "ДОСТУПНО" : "ЗАНЯТО"}</span>
                     </p>
-                    {warehouse.storage && (
-                      <p className="text-[#273655] font-medium mt-2">
-                        Доступно боксов:{" "}
-                        {
-                          warehouse.storage.filter((s) => s.status === "VACANT")
-                            .length
-                        }
-                      </p>
+                    {warehouse.type === 'CLOUD' && (
+                        <Badge className="mt-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                          🌥️ Облачное хранение
+                        </Badge>
                     )}
                   </div>
-                ))}
-              </div>
+              ))}
+            </div>
+
+            {selectedWarehouse?.type === 'CLOUD' && (
+                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    При выборе облачного хранения доставка и упаковка предоставляются <strong>бесплатно</strong>.
+                  </p>
+                </div>
             )}
           </div>
           {/* Список боксов выбранного склада */}
-          {selectedWarehouse && selectedWarehouse?.id !== 'cloud' && selectedWarehouse.storage && (
+          {selectedWarehouse && selectedWarehouse?.type !== 'CLOUD' && selectedWarehouse.storage && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {isUserRole ? "2. Выберите бокс в складе" : "2. Боксы в складе"}{" "}
@@ -572,14 +587,14 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Форма добавления товаров */}
-          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                {selectedWarehouse?.id === 'cloud' ? "2" : "3"}. Добавьте ваши вещи
+                {selectedWarehouse?.type === 'CLOUD' ? "2" : "3"}. Добавьте ваши вещи
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <div className="bg-gray-50 rounded-lg p-6 mb-4">
-                  {selectedWarehouse?.id === 'cloud' ? (
+                  {selectedWarehouse?.type === 'CLOUD' ? (
                       <>
                         <p className="text-[#6B6B6B] mb-2">
                           Тип хранения: <span className="font-medium text-[#273655]">Облачное</span>
@@ -730,9 +745,10 @@ const WarehouseOrderPage = memo(() => {
                 <div className="mt-4">
                   <button
                     onClick={addOrderItem}
-                    className="w-full px-4 py-2 border-2 border-dashed border-[#273655] text-[#273655] rounded-lg hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
                   >
-                    + Добавить еще вещь
+                    <Plus className="w-4 h-4" />
+                    Добавить еще вещь
                   </button>
                 </div>
               </div>
@@ -745,10 +761,10 @@ const WarehouseOrderPage = memo(() => {
               </div>
           )}
           {/* Дополнительные услуги */}
-          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                {selectedWarehouse?.id === 'cloud' ? "3" : "4"}. Дополнительные услуги
+                {selectedWarehouse?.type === 'CLOUD' ? "3" : "4"}. Дополнительные услуги
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
                 {/* Услуга перевозки */}
@@ -756,177 +772,144 @@ const WarehouseOrderPage = memo(() => {
                   <div>
                     <div className="flex items-center gap-2">
                       <Truck className="w-5 h-5 text-[#273655]" />
-                      <h3 className="text-lg font-semibold text-[#273655]">
-                        Услуга перевозки
-                      </h3>
+                      <h3 className="text-lg font-semibold text-[#273655]">Перевозка вещей</h3>
                     </div>
                     <p className="text-gray-500 text-sm mt-1">
-                      Мы поможем перевезти ваши вещи в наш склад
+                      Мы заберём вещи от вас и привезём обратно
                     </p>
                   </div>
-                  <div>
-                    <Switch
-                      checked={isSelectedMoving}
-                      onCheckedChange={(checked) => {
-                        setIsSelectedMoving(checked);
-                        if (!checked) {
-                          setIsSelectedPackage(false);
-                          setServices([]);
-                          setMovingOrders([]);
-                          setMovingOrderErrors([]);
-                        }
-                      }}
-                      className="bg-gray-200 data-[state=checked]:bg-[#273655]"
-                    />
-                  </div>
+                  {!isCloud ? (
+                      <Switch
+                          checked={isSelectedMoving}
+                          onCheckedChange={(checked) => {
+                            setIsSelectedMoving(checked);
+                            if (!checked) {
+                              setIsSelectedPackage(false);
+                              setServices([]);
+                              setMovingOrders([]);
+                              setMovingOrderErrors([]);
+                            }
+                          }}
+                          className="bg-gray-200 data-[state=checked]:bg-[#273655]"
+                      />
+                  ) : (
+                      <Badge className="bg-blue-100 text-blue-800">Включено бесплатно</Badge>
+                  )}
                 </div>
                 {/* Услуга упаковки - показывается только если включена перевозка */}
                 {isSelectedMoving && (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Package className="w-5 h-5 text-[#273655]" />
-                        <h3 className="text-lg font-semibold text-[#273655]">
-                          Услуга упаковки
-                        </h3>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Package className="w-5 h-5 text-[#273655]" />
+                          <h3 className="text-lg font-semibold text-[#273655]">Услуга упаковки</h3>
+                        </div>
+                        <p className="text-gray-500 text-sm mt-1">
+                          Мы упакуем ваши вещи для безопасного хранения
+                        </p>
                       </div>
-                      <p className="text-gray-500 text-sm mt-1">
-                        Мы упакуем ваши вещи для безопасного хранения
-                      </p>
+                      {!isCloud ? (
+                          <Switch
+                              checked={isSelectedPackage}
+                              onCheckedChange={(checked) => {
+                                setIsSelectedPackage(checked);
+                                if (!checked) {
+                                  setServices([]);
+                                }
+                              }}
+                              className="bg-gray-200 data-[state=checked]:bg-[#273655]"
+                          />
+                      ) : (
+                          <Badge className="bg-blue-100 text-blue-800">Включено бесплатно</Badge>
+                      )}
                     </div>
-                    <div>
-                      <Switch
-                        checked={isSelectedPackage}
-                        onCheckedChange={(checked) => {
-                          setIsSelectedPackage(checked);
-                          if (!checked) {
-                            setServices([]);
-                          }
-                        }}
-                        className="bg-gray-200 data-[state=checked]:bg-[#273655]"
-                      />
-                    </div>
-                  </div>
                 )}
               </div>
             </div>
           )}
           {/* Блок добавления дат перевозки - показывается если включена перевозка */}
-          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && isSelectedMoving && (
-            <div className="mb-8">
-              <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                {selectedWarehouse?.id === 'cloud' ? "4" : "5"}. Добавить даты перевозки
-              </h2>
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                {movingOrders.length > 0 && (
-                  <div className="mb-6 space-y-4">
-                    {movingOrders.map((order, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && isSelectedMoving && (
+              <div className="mb-8">
+                <h2 className="text-[24px] font-bold text-[#273655] mb-4">
+                  {(() => {
+                    let stepNumber = selectedWarehouse?.type === 'CLOUD' ? 4 : 5;
+                    return stepNumber;
+                  })()}. Укажите даты и адрес доставки
+                </h2>
+                <div className="space-y-4">
+                  {movingOrders.map((order, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="block text-sm font-medium text-[#273655] mb-1">
-                              Дата перевозки
+                              {order.status === 'PENDING_FROM'
+                                  ? 'Дата забора вещей'
+                                  : 'Дата доставки вещей'}
                             </label>
                             <input
-                              type="datetime-local"
-                              value={order.moving_date.slice(0, 16)}
-                              onChange={(e) =>
-                                updateMovingOrder(
-                                  index,
-                                  "moving_date",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                                type="datetime-local"
+                                value={order.moving_date.slice(0, 16)}
+                                onChange={(e) =>
+                                    updateMovingOrder(index, 'moving_date', e.target.value + ':00')
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                             />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-[#273655] mb-1">
-                              Тип перевозки
+                              Адрес <span className="text-red-500">*</span>
                             </label>
-                            <Select
-                              value={order.status}
-                              onValueChange={(value) =>
-                                updateMovingOrder(index, "status", value)
-                              }
-                            >
-                              <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                <SelectValue placeholder="Выберите тип перевозки" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="PENDING_FROM">
-                                  Забрать вещи (От клиента на склад)
-                                </SelectItem>
-                                <SelectItem value="PENDING_TO">
-                                  Доставить вещи (Со склада к клиенту)
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="grid grid-cols-[1fr_auto] gap-2">
-                            <div>
-                              <label className="block text-sm font-medium text-[#273655] mb-1">
-                                Адрес <span className="text-red-500">*</span>
-                              </label>
-                              <input
+                            <input
                                 type="text"
                                 value={order.address}
                                 onChange={(e) =>
-                                  updateMovingOrder(
-                                    index,
-                                    "address",
-                                    e.target.value
-                                  )
+                                    updateMovingOrder(index, 'address', e.target.value)
                                 }
+                                placeholder="Улица, дом, квартира"
                                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none transition-colors ${
-                                  movingOrderErrors[index]?.address
-                                    ? "border-red-500 focus:border-red-500 bg-red-50"
-                                    : "border-gray-300 focus:border-[#273655]"
+                                    movingOrderErrors[index]?.address
+                                        ? 'border-red-500'
+                                        : 'border-gray-300'
                                 }`}
-                                placeholder="Ваш адрес"
-                              />
-                              {movingOrderErrors[index]?.address && (
-                                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  {movingOrderErrors[index].address}
+                            />
+                            {movingOrderErrors[index]?.address && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {movingOrderErrors[index]?.address}
                                 </p>
-                              )}
-                            </div>
-                            <div className="flex items-end">
-                              <button
-                                onClick={() => removeMovingOrder(index)}
-                                className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                              >
-                                <Trash2 className="w-5 h-5" />
-                              </button>
-                            </div>
+                            )}
                           </div>
                         </div>
+                        {!isCloud && (
+                            <button
+                                type="button"
+                                onClick={() => removeMovingOrder(index)}
+                                className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              Удалить
+                            </button>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
-                <button
-                  onClick={addMovingOrder}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Добавить дату перевозки
-                </button>
+                  ))}
+
+                  {!isCloud && (
+                      <button
+                          type="button"
+                          onClick={addMovingOrder}
+                          className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Добавить дату перевозки
+                      </button>
+                  )}
+                </div>
               </div>
-            </div>
           )}
           {/* Блок добавления услуг - показывается если включена упаковка */}
-          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && isSelectedPackage && (
+          {(selectedStorage && selectedWarehouse?.type !== 'CLOUD') && isUserRole && isSelectedPackage && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {(() => {
-                  let stepNumber = selectedWarehouse?.id === 'cloud' ? 5 : 6;
+                  let stepNumber = selectedWarehouse?.type === 'CLOUD' ? 5 : 6;
                   if (!isSelectedMoving) stepNumber--;
                   return stepNumber;
                 })()}. Добавить услуги для упаковки
@@ -1015,11 +998,11 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Блок выбора срока аренды и кнопки создания заказа */}
-          {(selectedStorage || selectedWarehouse?.id === 'cloud') && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {(() => {
-                  let stepNumber = selectedWarehouse?.id === 'cloud' ? 6 : 7;
+                  let stepNumber = selectedWarehouse?.type === 'CLOUD' ? 5 : 7;
                   if (!isSelectedMoving) stepNumber--;
                   if (!isSelectedPackage) stepNumber--;
                   return stepNumber;
@@ -1070,7 +1053,7 @@ const WarehouseOrderPage = memo(() => {
               </div>
             </div>
           )}
-          {(selectedStorage || selectedWarehouse?.id === 'cloud') && !isAuthenticated && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && !isAuthenticated && (
               <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
                 <h3 className="text-xl font-bold text-[#273655] mb-2">
                   Хотите арендовать этот бокс?

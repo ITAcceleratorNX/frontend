@@ -478,11 +478,11 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
                       )}
                       
                       {/* Общая стоимость */}
-                      {service.price && service.OrderService && service.OrderService.count > 1 && (
+                      {service.OrderService.total_price && service.OrderService && service.OrderService.count > 1 && (
                         <div className="flex items-center justify-between text-xs mt-1 pt-1 border-t border-gray-200">
                           <span className="text-gray-700 font-medium">Итого:</span>
                           <span className="font-bold text-[#1e2c4f]">
-                            {formatPrice(parseFloat(service.price) * service.OrderService.count)}
+                            {formatPrice(parseFloat(service.OrderService.total_price))}
                           </span>
                         </div>
                       )}

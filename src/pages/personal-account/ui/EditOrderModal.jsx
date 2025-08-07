@@ -310,7 +310,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                         count: s.count,
                     };
 
-                    if (totalPrice != null && totalPrice !== "") {
+                    if (totalPrice != null && totalPrice !== "" && Number(gazelleService.id) === Number(s.service_id)) {
                         serviceObj.total_price = Number(totalPrice);
                     }
 
