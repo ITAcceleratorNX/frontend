@@ -202,7 +202,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       )}
 
       {/* Заголовок карточки */}
-      <div className="p-6 border-b border-gray-100">
+      <div className="p-4 sm:p-6 border-b border-gray-100">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
@@ -253,7 +253,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       </div>
 
       {/* Основная информация */}
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         {/* Информация о хранилище */}
         {order?.storage && order?.storage?.storage_type !== 'CLOUD' && (
           <div className="bg-gray-50 rounded-lg p-4">
@@ -281,7 +281,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         )}
 
         {/* Информация о заказе */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-gray-500">Общий объем</p>
             <p className="font-medium text-gray-900">{order.total_volume} м³</p>
@@ -469,26 +469,26 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       </div>
 
       {/* Футер карточки с кнопками */}
-      <div className={`px-6 py-4 border-t border-gray-100 ${hasAdditionalServices ? 'bg-gradient-to-r from-blue-50 to-purple-50' : 'bg-gray-50'}`}>
-        <div className="flex items-center justify-between">
+      <div className={`p-4 sm:px-6 sm:py-4 border-t border-gray-100 ${hasAdditionalServices ? 'bg-gradient-to-r from-blue-50 to-purple-50' : 'bg-gray-50'}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div className="text-lg font-bold text-gray-900">
             {formatPrice(Number(order.total_price) + 15000 + Number(totalPriceOfServices))} ₸
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             {order.status === 'INACTIVE' ? (
               // Кнопки для неактивных заказов
               <>
                 <button
                     onClick={() => setIsEditModalOpen(true)}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <Pencil className="w-4 h-4" />
                   Редактировать
                 </button>
                 <button
                   onClick={() => setIsDeleteModalOpen(true)}
-                  className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -499,7 +499,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             ) : canPay ? (
               <button
                 onClick={() => onPayOrder(order)}
-                className="px-4 py-2 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2a4a] transition-colors"
               >
                 Оплатить
               </button>

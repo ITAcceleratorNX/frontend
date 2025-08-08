@@ -287,12 +287,12 @@ const PersonalData = memo(() => {
       </form>
 
       {isEditing ? (
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Button
             type="button"
             variant="secondary"
             onClick={toggleEdit}
-            className="w-[120px] bg-[#C3C3C3] text-white hover:bg-[#A3A3A3] border-none rounded-md"
+            className="w-full sm:w-[120px] bg-[#C3C3C3] text-white hover:bg-[#A3A3A3] border-none rounded-md"
           >
             Отмена
           </Button>
@@ -301,7 +301,7 @@ const PersonalData = memo(() => {
             variant="primary"
             onClick={handleSubmit(onSubmit)}
             disabled={saving || isSubmitting}
-            className="w-[120px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
+            className="w-full sm:w-[120px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
           >
             {(saving || isSubmitting) ? 'Сохранение...' : 'Сохранить'}
           </Button>
@@ -310,7 +310,7 @@ const PersonalData = memo(() => {
         <Button
           variant="secondary"
           onClick={toggleEdit}
-          className="w-[240px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
+          className="w-full sm:w-[240px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
         >
           Изменить
         </Button>

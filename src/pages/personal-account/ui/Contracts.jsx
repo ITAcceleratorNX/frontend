@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
+import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 
 const getContractStatusInfo = (statusText) => {
   const statusMap = {
@@ -191,12 +192,13 @@ function MonthSelector() {
 
   return (
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-2xl font-medium text-[#273655]">ДОГОВОРЫ</h2>
+      <h2 className="text-2xl font-medium text-[#273655] ml-12">ДОГОВОРЫ</h2>
     </div>
   );
 }
 
 const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error, onDownloadItemFile, isDownloadingItem }) => {
+  const { isMobile } = useDeviceType();
   if (!contract) return null;
   
   // Форматируем дату для переездов
@@ -300,52 +302,85 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                     <p>Нет информации о предметах</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">№</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Название</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Объём (м³)</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Маркировка</th>
-                          <th className="text-center py-3 px-4 text-sm font-medium text-gray-600">Скачать</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {details.items.map((item, index) => (
-                          <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-4 text-sm">{item.public_id}</td>
-                            <td className="py-3 px-4 text-sm font-medium">{item.name}</td>
-                            <td className="py-3 px-4 text-sm">
-                              <Badge variant="outline">{item.volume}</Badge>
-                            </td>
-                            <td className="py-3 px-4 text-sm">
+                  isMobile ? (
+                    <div className="space-y-3">
+                      {details.items.map((item) => (
+                        <div key={item.id} className="border rounded-xl p-4 bg-white">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-base font-semibold text-gray-900">{item.name}</div>
+                            <Badge variant="outline" className="text-sm">{item.public_id}</Badge>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                            <div className="text-gray-600">Объём: <span className="font-medium text-gray-900">{item.volume} м³</span></div>
+                            <div>
                               <Badge 
                                 variant={item.cargo_mark === 'HEAVY' ? 'destructive' : 'secondary'}
                                 className="text-xs"
                               >
                                 {getCargoMarkText(item.cargo_mark)}
                               </Badge>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <button
-                                onClick={() => onDownloadItemFile(item.id)}
-                                disabled={isDownloadingItem}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                                title="Скачать файл предмета"
-                              >
-                                {isDownloadingItem ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-600"></div>
-                                ) : (
-                                  <Download className="w-4 h-4 text-gray-600" />
-                                )}
-                              </button>
-                            </td>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => onDownloadItemFile(item.id)}
+                            disabled={isDownloadingItem}
+                            className="mt-3 w-full h-11 inline-flex items-center justify-center rounded-lg bg-[#1e2c4f] text-white font-medium hover:bg-[#162540] transition-colors disabled:opacity-50"
+                          >
+                            {isDownloadingItem ? 'Загрузка…' : (
+                              <span className="inline-flex items-center gap-2"><Download className="w-4 h-4" /> Скачать</span>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200">
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">№</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Название</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Объём (м³)</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Маркировка</th>
+                            <th className="text-center py-3 px-4 text-sm font-medium text-gray-600">Скачать</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {details.items.map((item) => (
+                            <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 px-4 text-sm">{item.public_id}</td>
+                              <td className="py-3 px-4 text-sm font-medium">{item.name}</td>
+                              <td className="py-3 px-4 text-sm">
+                                <Badge variant="outline">{item.volume}</Badge>
+                              </td>
+                              <td className="py-3 px-4 text-sm">
+                                <Badge 
+                                  variant={item.cargo_mark === 'HEAVY' ? 'destructive' : 'secondary'}
+                                  className="text-xs"
+                                >
+                                  {getCargoMarkText(item.cargo_mark)}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <button
+                                  onClick={() => onDownloadItemFile(item.id)}
+                                  disabled={isDownloadingItem}
+                                  className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                                  title="Скачать файл предмета"
+                                >
+                                  {isDownloadingItem ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-600"></div>
+                                  ) : (
+                                    <Download className="w-4 h-4 text-gray-600" />
+                                  )}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
                 )}
               </CardContent>
             </Card>
@@ -368,49 +403,80 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                     <p>Нет информации о переездах</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Дата</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Тип машины</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Статус</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Адрес</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {details.movingOrders.map((moving) => {
-                          const status = getMovingStatusText(moving.status);
-                          const statusVariant = 
-                            moving.status === 'DELIVERED' ? 'success' : 
-                            moving.status === 'CANCELLED' ? 'danger' :
-                            moving.status === 'IN_PROGRESS' ? 'info' : 'warning';
+                  isMobile ? (
+                    <div className="space-y-3">
+                      {details.movingOrders.map((moving) => {
+                        const status = getMovingStatusText(moving.status);
+                        const statusVariant = 
+                          moving.status === 'DELIVERED' ? 'success' : 
+                          moving.status === 'CANCELLED' ? 'danger' :
+                          moving.status === 'IN_PROGRESS' ? 'info' : 'warning';
 
-                          return (
-                            <tr key={moving.id} className="border-b border-gray-100 hover:bg-gray-50">
-                              <td className="py-3 px-4 text-sm">
-                                {formatDateTime(moving.moving_date)}
-                              </td>
-                              <td className="py-3 px-4 text-sm">
-                                {getVehicleTypeText(moving.vehicle_type)}
-                              </td>
-                              <td className="py-3 px-4 text-sm">
-                                <Badge 
-                                  className={statusStyles[statusVariant]}
-                                >
-                                  {status}
-                                </Badge>
-                              </td>
-                              <td className="py-3 px-4 text-sm flex items-center gap-1">
-                                <MapPin className="w-3 h-3 text-gray-500" />
-                                {moving.address || 'Не указан'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                        return (
+                          <div key={moving.id} className="border rounded-xl p-4 bg-white">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm text-gray-600">Дата</div>
+                              <div className="text-sm font-semibold text-gray-900">{formatDateTime(moving.moving_date)}</div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                              <div className="text-gray-600">Авто: <span className="font-medium text-gray-900">{getVehicleTypeText(moving.vehicle_type)}</span></div>
+                              <div>
+                                <Badge className={statusStyles[statusVariant]}>{status}</Badge>
+                              </div>
+                              <div className="flex items-start gap-1 text-gray-600">
+                                <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
+                                <span className="font-medium text-gray-900">{moving.address || 'Не указан'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200">
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Дата</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Тип машины</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Статус</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Адрес</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {details.movingOrders.map((moving) => {
+                            const status = getMovingStatusText(moving.status);
+                            const statusVariant = 
+                              moving.status === 'DELIVERED' ? 'success' : 
+                              moving.status === 'CANCELLED' ? 'danger' :
+                              moving.status === 'IN_PROGRESS' ? 'info' : 'warning';
+
+                            return (
+                              <tr key={moving.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                <td className="py-3 px-4 text-sm">
+                                  {formatDateTime(moving.moving_date)}
+                                </td>
+                                <td className="py-3 px-4 text-sm">
+                                  {getVehicleTypeText(moving.vehicle_type)}
+                                </td>
+                                <td className="py-3 px-4 text-sm">
+                                  <Badge 
+                                    className={statusStyles[statusVariant]}
+                                  >
+                                    {status}
+                                  </Badge>
+                                </td>
+                                <td className="py-3 px-4 text-sm flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-gray-500" />
+                                  {moving.address || 'Не указан'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
                 )}
               </CardContent>
             </Card>
@@ -477,6 +543,8 @@ const Contracts = () => {
     return new Date(date).toLocaleDateString('ru-RU');
   };
 
+  const { isMobile } = useDeviceType();
+
   if (isLoading) {
     return (
       <div className="w-full flex justify-center items-center h-64">
@@ -489,21 +557,23 @@ const Contracts = () => {
     <div className="w-full flex flex-col items-center px-4 sm:px-6 lg:px-8 pt-8 mt-[-50px]">
       <div className="w-full max-w-7xl bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100">
         <MonthSelector />
-        <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-100">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-50 text-gray-700 text-sm font-medium">
-                <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
-                <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
-                <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>
-                <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contracts && contracts.map((row, idx) => {
-                return (
-                  <tr 
-                    key={idx} 
+
+        {/* Desktop table */}
+        {!isMobile && (
+          <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-100">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-50 text-gray-700 text-sm font-medium">
+                  <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
+                  <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
+                  <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>
+                  <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contracts && contracts.map((row, idx) => (
+                  <tr
+                    key={idx}
                     className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/80 transition-colors duration-200 cursor-pointer"
                     onClick={() => handleRowClick(row)}
                   >
@@ -517,11 +587,11 @@ const Contracts = () => {
                       <div className="flex items-center justify-center space-x-3">
                         <button
                           onClick={(e) => {
-                            e.stopPropagation(); // Предотвращаем срабатывание onClick на родительском tr
+                            e.stopPropagation();
                             handleDownloadContract(row.contract_data.document_id);
                           }}
                           disabled={downloadContractMutation.isPending}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#1e2c4f] hover:bg-[#162540] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                         >
                           <Download size={16} className="mr-2" />
                           {downloadContractMutation.isPending ? 'Загрузка...' : 'Скачать'}
@@ -529,7 +599,7 @@ const Contracts = () => {
                         {row.order_status === 'ACTIVE' && (
                           <button
                             onClick={(e) => {
-                              e.stopPropagation(); // Предотвращаем срабатывание onClick на родительском tr
+                              e.stopPropagation();
                               handleCancelContract(row.order_id, row.contract_data.document_id);
                             }}
                             disabled={cancelContractMutation.isPending}
@@ -541,16 +611,73 @@ const Contracts = () => {
                       </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Mobile cards */}
+        {isMobile && (
+          <div className="space-y-4">
+            {contracts && contracts.map((row, idx) => (
+              <div
+                key={idx}
+                className="border rounded-2xl p-4 bg-white shadow-sm"
+                onClick={() => handleRowClick(row)}
+                role="button"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
+                  <div className="text-base font-semibold text-[#1e2c4f]">
+                    {`Individual Storage (${row.total_volume} м²)`}
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2 text-gray-700">
+                    <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
+                    <span>{row.warehouse_address}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-gray-700">
+                    <Calendar className="w-4 h-4 mt-0.5 text-gray-500" />
+                    <span>{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</span>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadContract(row.contract_data.document_id);
+                    }}
+                    disabled={downloadContractMutation.isPending}
+                    className="w-full h-11 inline-flex items-center justify-center rounded-lg bg-[#1e2c4f] text-white font-medium hover:bg-[#162540] transition-colors disabled:opacity-50"
+                  >
+                    {downloadContractMutation.isPending ? 'Загрузка…' : (
+                      <span className="inline-flex items-center gap-2"><Download className="w-4 h-4" /> Скачать</span>
+                    )}
+                  </button>
+                  {row.order_status === 'ACTIVE' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCancelContract(row.order_id, row.contract_data.document_id);
+                      }}
+                      disabled={cancelContractMutation.isPending}
+                      className="w-full h-11 inline-flex items-center justify-center rounded-lg border border-red-600 text-red-600 bg-white font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      {cancelContractMutation.isPending ? 'Отмена…' : 'Отменить'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      
+
       {/* Модальное окно с деталями договора */}
-      <ContractDetailsModal 
-        isOpen={isDetailModalOpen} 
+      <ContractDetailsModal
+        isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         contract={selectedContract}
         details={contractDetails}

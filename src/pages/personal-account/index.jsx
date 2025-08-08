@@ -121,12 +121,13 @@ const PersonalAccountPage = memo(() => {
       <Header />
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex flex-1">
-        {isMobile ? (
-          <MobileSidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-        ) : (
+        {!isMobile && (
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         )}
-        <main className="flex-1 flex flex-col items-start justify-center py-10 px-4 bg-white">
+        <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 max-w-[1200px] mx-auto bg-white">
+          {isMobile && (
+            <MobileSidebar activeNav={activeNav} setActiveNav={setActiveNav} />
+          )}
 
 
           {activeNav === 'personal' && <PersonalData />}

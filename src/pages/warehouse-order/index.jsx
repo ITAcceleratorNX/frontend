@@ -485,10 +485,10 @@ const WarehouseOrderPage = memo(() => {
     <ProfileValidationGuard>
       <div className="min-h-screen bg-white flex flex-col font-[Montserrat]">
         <Header />
-        <div className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex-1 container mx-auto px-4 py-4 sm:px-6 sm:py-6 max-w-6xl">
           {/* Заголовок */}
           <div className="text-center mb-8">
-            <h1 className="text-[48px] font-bold text-[#273655] mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-[48px] font-bold text-[#273655] mb-4">
               {isUserRole ? "ЗАКАЗ БОКСА" : "ПРОСМОТР СКЛАДОВ И БОКСОВ"}
             </h1>
             <p className="text-[18px] text-[#6B6B6B]">
@@ -745,7 +745,7 @@ const WarehouseOrderPage = memo(() => {
                 <div className="mt-4">
                   <button
                     onClick={addOrderItem}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Добавить еще вещь
@@ -895,7 +895,7 @@ const WarehouseOrderPage = memo(() => {
                       <button
                           type="button"
                           onClick={addMovingOrder}
-                          className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
                       >
                         <Plus className="w-4 h-4" />
                         Добавить дату перевозки
@@ -987,7 +987,7 @@ const WarehouseOrderPage = memo(() => {
                     )}
                     <button
                       onClick={addService}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Добавить услугу
@@ -1061,16 +1061,16 @@ const WarehouseOrderPage = memo(() => {
                 <p className="text-[#6B6B6B] mb-4">
                   Войдите или зарегистрируйтесь, чтобы продолжить оформление заказа
                 </p>
-                <div className="flex justify-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <button
                       onClick={() => navigate('/login', { state: { from: '/warehouse-order' } })}
-                      className="px-6 py-3 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                      className="w-full sm:w-auto px-6 py-3 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
                   >
                     Войти
                   </button>
                   <button
                       onClick={() => navigate('/register', { state: { from: '/warehouse-order' } })}
-                      className="px-6 py-3 bg-[#F86812] text-white rounded-lg hover:bg-[#d87d1c] transition-colors"
+                      className="w-full sm:w-auto px-6 py-3 bg-[#F86812] text-white rounded-lg hover:bg-[#d87d1c] transition-colors"
                   >
                     Зарегистрироваться
                   </button>
