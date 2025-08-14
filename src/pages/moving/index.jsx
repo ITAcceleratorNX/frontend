@@ -80,7 +80,7 @@ const StepperForm = () => {
     ];
 
     return (
-        <div className="max-w-[900px] mx-auto w-full px-4 mt-16 mb-24 flex flex-col items-center">
+        <div className="max-w-[900px] mx-auto w-full px-4 sm:px-6 mt-8 sm:mt-16 mb-16 sm:mb-24 flex flex-col items-center">
             {/* Прогресс сверху */}
             <div className="w-full max-w-[300px] mb-8">
                 <ProgressCircle step={step} />
@@ -296,7 +296,7 @@ const MovingPage = () => {
             </section>
 
             {/* Второй фрейм: Гарантия */}
-            <section className="w-full flex flex-col items-center justify-center -mt-[165px] pt-[150px] font-['DM Sans'] px-4">
+            <section className="w-full flex flex-col items-center justify-center -mt-[100px] sm:-mt-[165px] pt-[90px] sm:pt-[150px] font-['DM Sans'] px-4 sm:px-6">
                 <h2 className="text-[32px] sm:text-[42px] md:text-[44px] font-bold text-[#273655] text-center mb-4 max-w-[720px]">
                     Гарантия сохранности ваших вещей
                 </h2>

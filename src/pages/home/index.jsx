@@ -178,7 +178,7 @@ const HomePage = memo(() => {
         </div>
       </div>
       {/* Второй фрейм: преимущества */}
-      <section className="w-full flex flex-col items-center justify-center mt-16 mb-16 px-4">
+      <section className="w-full flex flex-col items-center justify-center mt-8 sm:mt-16 mb-8 sm:mb-16 px-4 sm:px-6">
         <div className="w-full max-w-[1144px] flex flex-col items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             {/* Верхний левый — текст */}

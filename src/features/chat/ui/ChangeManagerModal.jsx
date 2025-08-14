@@ -1,5 +1,6 @@
 import React, { memo, useState, useEffect } from 'react';
 import { X, Users, ArrowRight, Check } from 'lucide-react';
+import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import { chatApi } from '../../../shared/api/chatApi';
 import { toast } from 'react-toastify';
 
@@ -10,6 +11,7 @@ const ChangeManagerModal = memo(({
   currentManager,
   onManagerChanged 
 }) => {
+  const { isMobile } = useDeviceType();
   const [managers, setManagers] = useState([]);
   const [selectedManagerId, setSelectedManagerId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,42 +69,68 @@ const ChangeManagerModal = memo(({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeInUp">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+      <div className={`
+        bg-white shadow-2xl w-full
+        ${isMobile 
+          ? 'h-full max-w-full m-0 rounded-none' 
+          : 'max-w-md mx-4 rounded-xl'
+        }
+      `}>
         {/* Заголовок */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className={`
+          flex items-center justify-between border-b border-gray-200
+          ${isMobile ? 'p-4 pt-8' : 'p-6'}
+        `}>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-[#1e2c4f] rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-white" />
+            <div className={`
+              bg-[#1e2c4f] rounded-lg flex items-center justify-center
+              ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}
+            `}>
+              <Users className={`text-white ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Сменить менеджера</h2>
+            <h2 className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+              Сменить менеджера
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className={`
+              text-gray-400 hover:text-gray-600 transition-colors
+              ${isMobile ? 'p-2 min-w-[44px] min-h-[44px] flex items-center justify-center' : ''}
+            `}
           >
-            <X className="w-5 h-5" />
+            <X className={`${isMobile ? 'w-6 h-6' : 'w-5 h-5'}`} />
           </button>
         </div>
 
         {/* Содержимое */}
-        <div className="p-6">
+        <div className={`${isMobile ? 'p-4 flex-1 overflow-y-auto' : 'p-6'}`}>
           {/* Текущий менеджер */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className={`${isMobile ? 'mb-8' : 'mb-6'}`}>
+            <label className={`
+              block font-medium text-gray-700 mb-2
+              ${isMobile ? 'text-base' : 'text-sm'}
+            `}>
               Текущий менеджер:
             </label>
-            <div className="bg-[#1e2c4f]/10 border border-[#1e2c4f]/20 rounded-lg p-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-[#1e2c4f] rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">
+            <div className={`
+              bg-[#1e2c4f]/10 border border-[#1e2c4f]/20 rounded-lg
+              ${isMobile ? 'p-4' : 'p-3'}
+            `}>
+              <div className={`flex items-center ${isMobile ? 'space-x-4' : 'space-x-3'}`}>
+                <div className={`
+                  bg-[#1e2c4f] rounded-full flex items-center justify-center
+                  ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}
+                `}>
+                  <span className={`text-white font-bold ${isMobile ? 'text-base' : 'text-sm'}`}>
                     {formatManagerName(currentManager || {}).charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <div className="font-medium text-[#1e2c4f]">
+                  <div className={`font-medium text-[#1e2c4f] ${isMobile ? 'text-base' : 'text-sm'}`}>
                     {formatManagerName(currentManager || {})}
                   </div>
-                  <div className="text-sm text-[#1e2c4f]/70">
+                  <div className={`text-[#1e2c4f]/70 ${isMobile ? 'text-sm' : 'text-xs'}`}>
                     ID: {currentManager?.id || chat?.manager_id}
                   </div>
                 </div>
@@ -111,17 +139,26 @@ const ChangeManagerModal = memo(({
           </div>
 
           {/* Выбор нового менеджера */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+          <div className={`${isMobile ? 'mb-8' : 'mb-6'}`}>
+            <label className={`
+              block font-medium text-gray-700 mb-3
+              ${isMobile ? 'text-base' : 'text-sm'}
+            `}>
               Выберите нового менеджера:
             </label>
             
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
+              <div className={`flex items-center justify-center ${isMobile ? 'py-12' : 'py-8'}`}>
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1e2c4f]"></div>
               </div>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className={`
+                overflow-y-auto
+                ${isMobile 
+                  ? 'space-y-3 max-h-96' 
+                  : 'space-y-2 max-h-60'
+                }
+              `}>
                 {managers
                   .filter(manager => manager.id !== (currentManager?.id || chat?.manager_id))
                   .map((manager) => (
@@ -129,7 +166,8 @@ const ChangeManagerModal = memo(({
                     key={manager.id}
                     onClick={() => setSelectedManagerId(manager.id)}
                     className={`
-                      p-3 border rounded-lg cursor-pointer transition-all duration-200
+                      border rounded-lg cursor-pointer transition-all duration-200
+                      ${isMobile ? 'p-4 min-h-[60px]' : 'p-3'}
                       ${selectedManagerId === manager.id
                         ? 'border-[#1e2c4f] bg-[#1e2c4f]/10 shadow-sm'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -137,30 +175,31 @@ const ChangeManagerModal = memo(({
                     `}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
+                      <div className={`flex items-center ${isMobile ? 'space-x-4' : 'space-x-3'}`}>
                         <div className={`
-                          w-8 h-8 rounded-full flex items-center justify-center
+                          rounded-full flex items-center justify-center
+                          ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}
                           ${selectedManagerId === manager.id
                             ? 'bg-[#1e2c4f]'
                             : 'bg-gray-400'
                           }
                         `}>
-                          <span className="text-white text-sm font-bold">
+                          <span className={`text-white font-bold ${isMobile ? 'text-base' : 'text-sm'}`}>
                             {formatManagerName(manager).charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className={`font-medium text-gray-900 ${isMobile ? 'text-base' : 'text-sm'}`}>
                             {formatManagerName(manager)}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className={`text-gray-500 ${isMobile ? 'text-sm' : 'text-xs'}`}>
                             ID: {manager.id}
                           </div>
                         </div>
                       </div>
                       
                       {selectedManagerId === manager.id && (
-                        <Check className="w-5 h-5 text-[#1e2c4f]" />
+                        <Check className={`text-[#1e2c4f] ${isMobile ? 'w-6 h-6' : 'w-5 h-5'}`} />
                       )}
                     </div>
                   </div>

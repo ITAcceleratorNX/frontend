@@ -3,6 +3,7 @@ import { Clock, MessageSquare, User, X, Trash2, Users, MoreVertical, Settings, S
 import { useManagerChats } from '../../../shared/lib/hooks/use-manager-chats';
 import { useChat } from '../../../shared/lib/hooks/use-chat';
 import { useChatMessages } from '../../../shared/lib/hooks/use-chat-messages';
+import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import { useChatStore, CHAT_STATUS } from '../../../entities/chat/model';
 import { ClearMessagesButton } from './ClearMessagesButton';
 import { PendingChatsPanel } from './PendingChatsPanel';
@@ -11,6 +12,7 @@ import { ChangeManagerModal } from './ChangeManagerModal';
 const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) => {
   const [showActions, setShowActions] = useState(false);
   const { unreadMessages } = useChatStore();
+  const { isMobile } = useDeviceType();
   const unreadCount = unreadMessages[chat.id] || 0;
 
   const getStatusColor = (status) => {
@@ -57,8 +59,9 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
   return (
     <div 
       className={`
-        p-3 border-b border-gray-100 cursor-pointer 
+        ${isMobile ? 'p-4' : 'p-3'} border-b border-gray-100 cursor-pointer 
         transition-all duration-200 hover:bg-gray-50 relative
+        ${isMobile ? 'min-h-[72px]' : ''}
         ${isActive 
           ? 'bg-blue-50 border-l-4 border-l-[#1e2c4f]' 
           : 'border-l-4 border-l-transparent'
@@ -83,14 +86,26 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
         </div>
         
         <div className="flex items-center space-x-1">
-          {/* Unread messages санағышы */}
+          {/* Unread messages индикатор */}
           {unreadCount > 0 && (
-            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+            <div className={`
+              bg-red-500 text-white rounded-full text-center font-medium
+              ${isMobile 
+                ? 'text-xs px-2 py-1 min-w-[24px] min-h-[24px] flex items-center justify-center' 
+                : 'text-xs px-2 py-1 min-w-[20px]'
+              }
+            `}>
               {unreadCount > 99 ? '99+' : unreadCount}
             </div>
           )}
           
-          <div className={`px-2 py-1 text-xs rounded border ${getStatusColor(chat.status)}`}>
+          <div className={`
+            rounded border text-center
+            ${isMobile 
+              ? 'px-3 py-2 text-xs' 
+              : 'px-2 py-1 text-xs'
+            } ${getStatusColor(chat.status)}
+          `}>
             {getStatusText(chat.status)}
           </div>
           
@@ -102,22 +117,40 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
                   e.stopPropagation();
                   setShowActions(!showActions);
                 }}
-                className="p-1 rounded hover:bg-gray-200 transition-colors"
+                className={`
+                  rounded hover:bg-gray-200 transition-colors
+                  ${isMobile 
+                    ? 'p-2 min-w-[44px] min-h-[44px] flex items-center justify-center' 
+                    : 'p-1'
+                  }
+                `}
               >
-                <MoreVertical className="w-3 h-3 text-gray-500" />
+                <MoreVertical className={`text-gray-500 ${isMobile ? 'w-4 h-4' : 'w-3 h-3'}`} />
               </button>
               
               {showActions && (
-                <div className="absolute right-0 top-6 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                <div className={`
+                  absolute right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-lg
+                  ${isMobile 
+                    ? 'top-12 py-2 min-w-[140px]' 
+                    : 'top-6 py-1 min-w-[120px]'
+                  }
+                `}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onChangeManager(chat);
                       setShowActions(false);
                     }}
-                    className="w-full px-3 py-1 text-left text-xs hover:bg-gray-50 flex items-center space-x-2"
+                    className={`
+                      w-full text-left hover:bg-gray-50 flex items-center space-x-2
+                      ${isMobile 
+                        ? 'px-4 py-3 text-sm' 
+                        : 'px-3 py-1 text-xs'
+                      }
+                    `}
                   >
-                    <Settings className="w-3 h-3" />
+                    <Settings className={`${isMobile ? 'w-4 h-4' : 'w-3 h-3'}`} />
                     <span>Сменить</span>
                   </button>
                 </div>
@@ -133,8 +166,14 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
             e.stopPropagation();
             onAccept(chat.id);
           }}
-          className="w-full mt-1 px-3 py-1 bg-green-500 text-white text-xs font-medium rounded 
-                     hover:bg-green-600 transition-colors"
+          className={`
+            w-full bg-green-500 text-white font-medium rounded 
+            hover:bg-green-600 transition-colors
+            ${isMobile 
+              ? 'mt-3 px-4 py-3 text-sm min-h-[44px]' 
+              : 'mt-1 px-3 py-1 text-xs'
+            }
+          `}
         >
           Принять
         </button>
@@ -145,11 +184,12 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
 
 ChatItem.displayName = 'ChatItem';
 
-const ManagerChatList = memo(() => {
+const ManagerChatList = memo(({ onChatSelect }) => {
   const [activeTab, setActiveTab] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [showChangeManagerModal, setShowChangeManagerModal] = useState(false);
   const [selectedChatForManager, setSelectedChatForManager] = useState(null);
+  const { isMobile } = useDeviceType();
   
   const { 
     chats, 
@@ -208,6 +248,11 @@ const ManagerChatList = memo(() => {
       const { clearUnreadMessages } = useChatStore.getState();
       clearUnreadMessages(chat.id);
       
+      // На мобиле вызываем onChatSelect для скрытия списка чатов
+      if (isMobile && onChatSelect) {
+        onChatSelect();
+      }
+      
       if (import.meta.env.DEV) {
         console.log('ManagerChatList: Активирован чат:', chat.id, 'статус:', CHAT_STATUS.ACTIVE);
       }
@@ -245,7 +290,7 @@ const ManagerChatList = memo(() => {
       <div className="h-full flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1e2c4f] mx-auto mb-2"></div>
-          <p className="text-gray-600 text-sm">Загрузка...</p>
+          <p className={`text-gray-600 ${isMobile ? 'text-sm' : 'text-sm'}`}>Загрузка...</p>
         </div>
       </div>
     );
@@ -253,11 +298,11 @@ const ManagerChatList = memo(() => {
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-      {/* Заголовок с табами - компактный */}
-      <div className="bg-white border-b border-gray-200 p-3">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Users className="w-5 h-5 mr-2 text-[#1e2c4f]" />
+      {/* Заголовок с табами - адаптивный */}
+      <div className={`bg-white border-b border-gray-200 ${isMobile ? 'p-4' : 'p-3'}`}>
+        <div className={`flex items-center justify-between ${isMobile ? 'mb-4' : 'mb-3'}`}>
+          <h3 className={`font-semibold text-gray-900 flex items-center ${isMobile ? 'text-base' : 'text-lg'}`}>
+            <Users className={`mr-2 text-[#1e2c4f] ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
             Чаты
           </h3>
           
@@ -268,91 +313,118 @@ const ManagerChatList = memo(() => {
                 onClear={handleClearActiveChat}
                 disabled={!activeChat}
                 variant="icon"
-                className="p-1"
+                className={isMobile ? 'p-2 min-w-[44px] min-h-[44px]' : 'p-1'}
               />
             )}
             
             {newChatNotifications.length > 0 && (
               <button
                 onClick={clearNotifications}
-                className="text-gray-400 hover:text-gray-600 p-1"
+                className={`
+                  text-gray-400 hover:text-gray-600 transition-colors
+                  ${isMobile 
+                    ? 'p-2 min-w-[44px] min-h-[44px] flex items-center justify-center' 
+                    : 'p-1'
+                  }
+                `}
                 title="Очистить уведомления"
               >
-                <X size={14} />
+                <X size={isMobile ? 16 : 14} />
               </button>
             )}
           </div>
         </div>
         
-        {/* Табы - компактные */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded">
+        {/* Табы - адаптивные */}
+        <div className={`flex space-x-1 bg-gray-100 rounded ${isMobile ? 'p-2' : 'p-1'}`}>
           <button
             onClick={() => setActiveTab('pending')}
             className={`
-              flex items-center space-x-1 px-3 py-1 rounded text-xs font-medium transition-all
+              flex items-center space-x-1 rounded font-medium transition-all
+              ${isMobile 
+                ? 'px-4 py-2 text-sm min-h-[44px]' 
+                : 'px-3 py-1 text-xs'
+              }
               ${activeTab === 'pending' 
                 ? 'bg-white text-amber-600 shadow-sm' 
                 : 'text-gray-600 hover:text-gray-900'
               }
             `}
           >
-            <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+            <div className={`bg-amber-400 rounded-full ${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`}></div>
             <span>Ожидают</span>
           </button>
           <button
             onClick={() => setActiveTab('active')}
             className={`
-              flex items-center space-x-1 px-3 py-1 rounded text-xs font-medium transition-all
+              flex items-center space-x-1 rounded font-medium transition-all
+              ${isMobile 
+                ? 'px-4 py-2 text-sm min-h-[44px]' 
+                : 'px-3 py-1 text-xs'
+              }
               ${activeTab === 'active' 
                 ? 'bg-white text-green-600 shadow-sm' 
                 : 'text-gray-600 hover:text-gray-900'
               }
             `}
           >
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <div className={`bg-green-400 rounded-full ${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`}></div>
             <span>Активные ({counts.active})</span>
           </button>
         </div>
 
         {/* Поиск для активных чатов */}
         {activeTab === 'active' && (
-          <div className="mt-3 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-3 w-3 text-gray-400" />
+          <div className={`relative ${isMobile ? 'mt-4' : 'mt-3'}`}>
+            <div className={`absolute inset-y-0 left-0 flex items-center pointer-events-none ${isMobile ? 'pl-4' : 'pl-3'}`}>
+              <Search className={`text-gray-400 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
             </div>
             <input
               type="text"
-              placeholder="Поиск по имени, ID чата или пользователя..."
+              placeholder={isMobile ? "Поиск чатов..." : "Поиск по имени, ID чата или пользователя..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded text-xs placeholder-gray-400 
-                         focus:outline-none focus:ring-1 focus:ring-[#1e2c4f] focus:border-[#1e2c4f]"
+              className={`
+                w-full border border-gray-200 rounded placeholder-gray-400 
+                focus:outline-none focus:ring-1 focus:ring-[#1e2c4f] focus:border-[#1e2c4f]
+                ${isMobile 
+                  ? 'pl-12 pr-4 py-3 text-sm min-h-[44px]' 
+                  : 'pl-8 pr-3 py-2 text-xs'
+                }
+              `}
             />
           </div>
         )}
       </div>
 
-      {/* Уведомления о новых чатах - современный дизайн */}
+      {/* Уведомления о новых чатах - адаптивный дизайн */}
       {newChatNotifications.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-3">
-          <div className="space-y-2">
+        <div className={`bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 ${isMobile ? 'p-4' : 'p-3'}`}>
+          <div className={`${isMobile ? 'space-y-3' : 'space-y-2'}`}>
           {newChatNotifications.map((notification) => (
               <div 
                 key={notification.chatId} 
-                className="group relative flex items-center justify-between bg-white rounded-xl p-3 shadow-sm border border-blue-200 hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
+                className={`
+                  group relative flex items-center justify-between bg-white rounded-xl shadow-sm border border-blue-200 
+                  hover:shadow-md transition-all duration-300 hover:scale-[1.02]
+                  ${isMobile ? 'p-4' : 'p-3'}
+                `}
               >
                 {/* Индикатор нового уведомления */}
-                <div className="absolute top-2 left-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className={`absolute top-2 left-2 bg-blue-500 rounded-full animate-pulse ${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`}></div>
                 
-                <div className="flex items-center space-x-3 pl-2">
-                  <div className="w-8 h-8 bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-full flex items-center justify-center shadow-sm">
-                    <MessageSquare className="w-4 h-4 text-white" />
+                <div className={`flex items-center pl-2 ${isMobile ? 'space-x-4' : 'space-x-3'}`}>
+                  <div className={`
+                    bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-full flex items-center justify-center shadow-sm
+                    ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}
+                  `}>
+                    <MessageSquare className={`text-white ${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className={`font-semibold text-gray-900 ${isMobile ? 'text-base' : 'text-sm'}`}>
                       Новый чат #{notification.chatId}
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className={`text-gray-600 ${isMobile ? 'text-sm' : 'text-xs'}`}>
                       Пользователь ожидает ответа
                     </p>
                   </div>
@@ -360,10 +432,17 @@ const ManagerChatList = memo(() => {
                 
                 <button
                   onClick={() => handleAcceptChat(notification.chatId)}
-                  className="flex items-center space-x-1 px-3 py-2 bg-[#1e2c4f] text-white text-xs font-medium rounded-lg hover:bg-[#1e2c4f]/90 transition-all duration-200 hover:shadow-md"
+                  className={`
+                    flex items-center space-x-1 bg-[#1e2c4f] text-white font-medium rounded-lg 
+                    hover:bg-[#1e2c4f]/90 transition-all duration-200 hover:shadow-md
+                    ${isMobile 
+                      ? 'px-4 py-3 text-sm min-h-[44px]' 
+                      : 'px-3 py-2 text-xs'
+                    }
+                  `}
                   title="Принять чат"
                 >
-                  <MessageSquare className="w-3 h-3" />
+                  <MessageSquare className={`${isMobile ? 'w-4 h-4' : 'w-3 h-3'}`} />
                   <span>Принять</span>
                 </button>
 
@@ -374,14 +453,17 @@ const ManagerChatList = memo(() => {
           </div>
           
           {/* Общая информация */}
-          <div className="mt-3 pt-2 border-t border-blue-200/50">
-            <div className="flex items-center justify-between text-xs">
+          <div className={`pt-2 border-t border-blue-200/50 ${isMobile ? 'mt-4' : 'mt-3'}`}>
+            <div className={`flex items-center justify-between ${isMobile ? 'text-sm' : 'text-xs'}`}>
               <span className="text-blue-700 font-medium">
                 📢 {newChatNotifications.length} новых уведомлений
               </span>
               <button
                 onClick={clearNotifications}
-                className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                className={`
+                  text-blue-600 hover:text-blue-800 font-medium transition-colors
+                  ${isMobile ? 'py-2 px-1 min-h-[44px]' : ''}
+                `}
                 title="Очистить все уведомления"
               >
                 Очистить все
@@ -394,7 +476,7 @@ const ManagerChatList = memo(() => {
       {/* Содержимое */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'pending' ? (
-          <div className="h-full overflow-y-auto p-3">
+          <div className={`h-full overflow-y-auto ${isMobile ? 'p-4' : 'p-3'}`}>
             <PendingChatsPanel 
               onAcceptChat={handleAcceptChat}
               className="h-full"
@@ -403,15 +485,18 @@ const ManagerChatList = memo(() => {
         ) : (
           <div className="h-full overflow-y-auto bg-white">
             {filteredActiveChats.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-center p-6">
+              <div className={`h-full flex items-center justify-center text-center ${isMobile ? 'p-8' : 'p-6'}`}>
                 <div>
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <MessageSquare className="w-6 h-6 text-gray-400" />
+                  <div className={`
+                    bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3
+                    ${isMobile ? 'w-16 h-16' : 'w-12 h-12'}
+                  `}>
+                    <MessageSquare className={`text-gray-400 ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} />
                   </div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">
+                  <h3 className={`font-medium text-gray-900 mb-2 ${isMobile ? 'text-base' : 'text-sm'}`}>
                     {searchTerm ? 'Чаты не найдены' : 'Нет активных чатов'}
                   </h3>
-                  <p className="text-gray-500 text-xs">
+                  <p className={`text-gray-500 ${isMobile ? 'text-sm' : 'text-xs'}`}>
                     {searchTerm ? 'Попробуйте изменить поисковый запрос' : 'Принятые чаты будут отображаться здесь'}
                   </p>
                 </div>
@@ -432,9 +517,9 @@ const ManagerChatList = memo(() => {
         )}
       </div>
 
-      {/* Подвал с статистикой - компактный */}
-      <div className="bg-white border-t border-gray-200 px-3 py-2">
-        <div className="flex items-center justify-between text-xs">
+      {/* Подвал с статистикой - адаптивный */}
+      <div className={`bg-white border-t border-gray-200 ${isMobile ? 'px-4 py-3' : 'px-3 py-2'}`}>
+        <div className={`flex items-center justify-between ${isMobile ? 'text-sm' : 'text-xs'}`}>
           <div className="text-gray-600">
             Всего: <span className="font-medium">{counts.total}</span>
           </div>

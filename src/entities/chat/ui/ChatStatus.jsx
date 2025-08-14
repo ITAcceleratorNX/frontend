@@ -1,8 +1,10 @@
 import React, { memo } from 'react';
 import { CHAT_STATUS } from '../model';
+import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import chatIcon from '../../../assets/chat_icon.png';
 
 const ChatStatus = memo(({ status, isConnected, isReconnecting, managerName }) => {
+  const { isMobile } = useDeviceType();
   const getStatusText = () => {
     if (!isConnected) {
       return isReconnecting ? 'Переподключение...' : 'Не в сети';
@@ -39,7 +41,11 @@ const ChatStatus = memo(({ status, isConnected, isReconnecting, managerName }) =
 
   return (
     <div className="flex items-center">
-      <div className={`w-[24px] h-[24px] rounded-[12px] flex items-center justify-center mr-3 status-indicator overflow-hidden ${getStatusClass()}`}>
+      <div className={`
+        rounded-full flex items-center justify-center status-indicator overflow-hidden
+        ${isMobile ? 'w-[20px] h-[20px] mr-2' : 'w-[24px] h-[24px] mr-3'}
+        ${getStatusClass()}
+      `}>
         <img 
           src={chatIcon} 
           alt="ExtraSpace" 
@@ -47,10 +53,22 @@ const ChatStatus = memo(({ status, isConnected, isReconnecting, managerName }) =
         />
       </div>
       <div>
-        <h3 className="header-title text-[20px] font-normal leading-[26px] tracking-[1px] text-[#1e2c4f] capitalize">
+        <h3 className={`
+          header-title font-normal tracking-[1px] text-[#1e2c4f] capitalize
+          ${isMobile 
+            ? 'text-[16px] leading-[20px]' 
+            : 'text-[20px] leading-[26px]'
+          }
+        `}>
           ExtraSpace
         </h3>
-        <h3 className="text-[10px] font-normal leading-[10px] text-[#1e2c4f]">
+        <h3 className={`
+          font-normal text-[#1e2c4f]
+          ${isMobile 
+            ? 'text-[9px] leading-[9px]' 
+            : 'text-[10px] leading-[10px]'
+          }
+        `}>
           {getStatusText()}
         </h3>
       </div>

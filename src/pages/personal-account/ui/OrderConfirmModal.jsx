@@ -86,11 +86,6 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
 
       onClose();
 
-      // Обновляем страницу через 2 секунды, чтобы показать изменения
-      setTimeout(() => {
-        window.location.reload();
-        navigate("/personal-account", { state: { activeSection: "request" } });
-      }, 2000);
 
     } catch (error) {
       console.error('Ошибка при подтверждении заказа:', error);

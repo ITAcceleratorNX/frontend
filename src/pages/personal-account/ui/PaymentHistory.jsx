@@ -262,7 +262,7 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                   {order.order_payment.map((payment) => (
                     <Card key={payment.id} className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                       <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex-1">
                             <div className="flex items-center gap-4 mb-4">
                               <h5 className="text-lg font-semibold text-gray-900">
@@ -271,7 +271,7 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                               {getPaymentStatusBadge(payment.status)}
                             </div>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                               <Card className="bg-white border shadow-sm rounded-xl">
                                 <CardContent className="p-4">
                                   <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Сумма</p>
@@ -309,7 +309,7 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
                         </div>
                         
                         {/* Кнопки действий */}
-                          <div className="ml-8 flex flex-col gap-3">
+                          <div className="ml-0 sm:ml-8 flex flex-col gap-3 mt-4 sm:mt-0">
                           {payment.status === 'UNPAID' && order.status === 'APPROVED' && (
                               <Button
                               onClick={() => handleManualPayment(payment.id)}

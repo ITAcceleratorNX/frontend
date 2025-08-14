@@ -28,11 +28,11 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'payment':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />;
       case 'contract':
-        return <MessageSquare className="w-5 h-5 text-blue-600" />;
+        return <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />;
       default:
-        return <Bell className="w-5 h-5 text-[#1e2c4f]" />;
+        return <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-[#1e2c4f]" />;
     }
   };
 
@@ -68,7 +68,7 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   return (
     <div 
       className={`
-        relative group cursor-pointer border rounded-xl p-4 
+        relative group cursor-pointer border rounded-xl p-3 sm:p-4 
         transition-all duration-300 ease-in-out
         ${styles.cardClass}
         hover:shadow-lg hover:scale-[1.02]
@@ -96,10 +96,10 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between">
             <div className="flex-1 mr-4">
-              <h4 className={`font-semibold text-sm leading-tight mb-1 ${styles.titleClass}`}>
+              <h4 className={`font-semibold text-sm sm:text-base leading-tight mb-1 ${styles.titleClass}`}>
               {notification.title}
             </h4>
-              <p className={`text-sm leading-relaxed ${styles.contentClass}`}>
+              <p className={`text-sm sm:text-base leading-relaxed ${styles.contentClass}`}>
               {notification.message}
             </p>
           </div>

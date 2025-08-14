@@ -163,7 +163,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
 
       <CardContent className="space-y-6">
         {/* Основная информация */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {/* Информация о клиенте */}
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 "> 
   <CardHeader className="pb-3"> 
@@ -589,12 +589,12 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
         {/* Кнопки действий */}
         {order.status !== 'ACTIVE' && (
 
-            <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
           <Button
             onClick={onDelete}
             disabled={isLoading}
             variant="destructive"
-            className="flex items-center gap-2"
+            className="w-full sm:w-auto flex items-center justify-center gap-2"
           >
             Удалить заказ
           </Button>
@@ -603,7 +603,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
                   onClick={onUpdate}
                   disabled={isLoading}
                   variant="secondary"
-                  className="flex items-center gap-2"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2"
               >
                 Редактировать
               </Button>
@@ -613,7 +613,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
                   onClick={onApprove}
                   disabled={isLoading}
                   variant="primary"
-                  className="flex items-center gap-2"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2"
               >
                 Подтвердить
               </Button>
