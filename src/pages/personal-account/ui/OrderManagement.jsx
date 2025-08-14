@@ -5,11 +5,13 @@ import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '../../../components/ui/pagination';
 import {
   useAllOrders,
   useUpdateOrderStatus,
   useDeleteOrder,
-  useSearchOrders
+  useSearchOrders,
+  useOrdersStats
 } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
@@ -25,19 +27,24 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [modalData, setModalData] = useState(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Хуки для данных
   const {
-    data: allOrders = [],
+    data: ordersData,
     isLoading: isAllLoading,
     error: allError,
     refetch
-  } = useAllOrders({
+  } = useAllOrders(currentPage, {
     onError: (error) => {
       showOrderLoadError();
       console.error('Ошибка загрузки заказов:', error);
     }
   });
+
+  // Извлекаем данные и метаинформацию
+  const allOrders = ordersData?.data || [];
+  const meta = ordersData?.meta || { total: 0, page: 1, pageSize: 50, totalPages: 1 };
 
   const {
     data: searchedOrders = [],
@@ -62,17 +69,31 @@ const OrderManagement = () => {
     return ordersToShow.filter(order => order.status === statusFilter);
   }, [ordersToShow, statusFilter]);
 
-  // Статистика заказов (используем allOrders для точных цифр)
+  // Получаем статистику отдельно
+  const { stats: ordersStats } = useOrdersStats();
+
+  // Статистика заказов (используем отдельную статистику)
   const statistics = useMemo(() => ({
-    total: allOrders.length,
-    inactive: allOrders.filter(o => o.status === 'INACTIVE').length,
-    approved: allOrders.filter(o => o.status === 'APPROVED').length,
-    processing: allOrders.filter(o => o.status === 'PROCESSING').length,
-    active: allOrders.filter(o => o.status === 'ACTIVE').length,
-  }), [allOrders]);
+    total: ordersStats.total,
+    inactive: ordersStats.inactive,
+    approved: ordersStats.approved,
+    processing: ordersStats.processing,
+    active: ordersStats.active,
+  }), [ordersStats]);
+
+  // Функции для пагинации
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setStatusFilter('ALL'); // Сбрасываем фильтр при смене страницы
+  };
+
+  const resetToFirstPage = () => {
+    setCurrentPage(1);
+  };
   const handleSearch = () => {
     if (searchQuery.trim()) {
       setIsSearchActive(true);
+      resetToFirstPage();
       refetchSearch();
     } else {
       setIsSearchActive(false);
@@ -82,6 +103,7 @@ const OrderManagement = () => {
   const resetSearch = () => {
     setSearchQuery('');
     setIsSearchActive(false);
+    resetToFirstPage();
   };
   const handleDeleteOrder = async (orderId) => {
     try {
@@ -337,7 +359,7 @@ const OrderManagement = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Показано {filteredOrders.length} из {allOrders.length} заказов
+                Показано {filteredOrders.length} из {meta.total} заказов
                 {searchQuery && (
                   <Badge variant="outline" className="ml-2">
                     Поиск: "{searchQuery}"
@@ -401,6 +423,62 @@ const OrderManagement = () => {
           ))
         )}
       </div>
+
+      {/* Пагинация */}
+      {!isSearchActive && meta.totalPages > 1 && (
+        <Card className="border-gray-200">
+          <CardContent className="p-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {/* Номера страниц */}
+                {Array.from({ length: Math.min(5, meta.totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (meta.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= meta.totalPages - 2) {
+                    pageNum = meta.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage >= meta.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+            
+            {/* Информация о страницах */}
+            <div className="text-center text-sm text-gray-500 mt-2">
+              Страница {currentPage} из {meta.totalPages} • Всего {meta.total} заказов
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Модальное окно подтверждения */}
       {modalData && modalData.action === 'delete' && (

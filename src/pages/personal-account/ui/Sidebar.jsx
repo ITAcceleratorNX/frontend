@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
+import { useUnreadNotificationsCount, useAwaitableDeliveriesCount } from '../../../shared/lib/hooks/use-notifications';
 
 // Разделы для обычных пользователей
 const userNavItems = [
@@ -36,7 +37,7 @@ const managerNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Мувинг', icon: icon9, key: 'managermoving' },
-  { label: 'Запрос', icon: icon11, key: 'request' },
+  { label: 'Запросы', icon: icon11, key: 'request' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
   { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
@@ -50,7 +51,7 @@ const adminNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
-  { label: 'Запрос', icon: icon11, key: 'request' },
+  { label: 'Запросы', icon: icon11, key: 'request' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
@@ -71,6 +72,8 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const location = useLocation();
+  const unreadCount = useUnreadNotificationsCount();
+  const awaitableDeliveriesCount = useAwaitableDeliveriesCount();
 
    // Добавляем отладочную информацию
    console.log('Sidebar: текущий пользователь:', { 
@@ -230,7 +233,17 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
               {activeNav === item.key && item.key !== 'logout' && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-sm bg-[#273655]" style={{marginLeft: '-16px'}}></span>
               )}
-              <img src={item.icon} alt="icon" className={clsx('w-5 h-5 flex-shrink-0', activeNav === item.key ? 'filter invert' : 'filter brightness-0')} />
+              <div className="relative">
+                <img src={item.icon} alt="icon" className={clsx('w-5 h-5 flex-shrink-0', activeNav === item.key ? 'filter invert' : 'filter brightness-0')} />
+                {/* Красная точка для непрочитанных уведомлений */}
+                {item.key === 'notifications' && unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+                {/* Красная точка для доставок со статусом AWAITABLE */}
+                {item.key === 'delivery' && awaitableDeliveriesCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+              </div>
               <span className="text-[16px] font-normal leading-normal">{item.label}</span>
             </button>
           );

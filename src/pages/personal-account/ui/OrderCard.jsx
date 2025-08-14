@@ -29,6 +29,28 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
     if (!price) return '0';
     return parseFloat(price).toLocaleString('ru-RU') + ' ₸';
   };
+// --- Moving statuses helpers ---
+  const MOVING_STATUS_TEXT = {
+    PENDING_FROM:  'Ожидает забора',
+    PENDING_TO:    'Ожидает доставки',
+    IN_PROGRESS:   'В процессе (к складу)',
+    IN_PROGRESS_TO:'В процессе (к клиенту)',
+    DELIVERED:     'Доставлено на склад',
+    DELIVERED_TO:  'Доставлено клиенту',
+    CANCELLED:     'Отменено',
+  };
+
+  function getMovingStatusText(s) {
+    return MOVING_STATUS_TEXT[s] || s;
+  }
+
+  function getMovingStatusClass(s) {
+    if (s === 'CANCELLED') return 'bg-red-100 text-red-700 border-red-200';
+    if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-100 text-green-700 border-green-200';
+    if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-100 text-blue-700 border-blue-200';
+    if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-100 text-amber-800 border-amber-200';
+    return 'bg-gray-100 text-gray-700 border-gray-200';
+  }
 
   // Функция для получения иконки услуги по типу
   const getServiceIcon = (type) => {
@@ -541,13 +563,8 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-green-700">#{index + 1}</span>
-                          <Badge variant="outline" className="text-xs" >
-                            {{
-                              PENDING_FROM: 'Ожидает забора',
-                              PENDING_TO: 'Ожидает доставки',
-                              IN_PROGRESS: 'В процессе',
-                              DELIVERED: 'Доставлено на склад'
-                            }[movingOrder.status] || movingOrder.status}
+                          <Badge className={`text-xs border ${getMovingStatusClass(movingOrder.status)}`}>
+                            {getMovingStatusText(movingOrder.status)}
                           </Badge>
                         </div>
                         

@@ -68,7 +68,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       console.error('Ошибка при продлении заказа:', error);
     }
   };
-  
+
   // Обработчик отмены продления заказа
   const handleCancelExtension = async () => {
     try {
@@ -85,6 +85,28 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       console.error('Ошибка при отмене продления заказа:', error);
     }
   };
+// --- Moving statuses helpers (JS) ---
+  const MOVING_STATUS_TEXT = {
+    PENDING_FROM:  'Ожидает забора',
+    PENDING_TO:    'Ожидает доставки',
+    IN_PROGRESS:   'В процессе (к складу)',
+    IN_PROGRESS_TO:'В процессе (к клиенту)',
+    DELIVERED:     'Доставлено на склад',
+    DELIVERED_TO:  'Доставлено клиенту',
+    CANCELLED:     'Отменено',
+  };
+
+  function getMovingStatusText(s) {
+    return MOVING_STATUS_TEXT[s] || s;
+  }
+
+  function getMovingStatusBadgeClass(s) {
+    if (s === 'CANCELLED') return 'bg-red-100 text-red-700 border border-red-200';
+    if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-100 text-green-700 border border-green-200';
+    if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-100 text-blue-700 border border-blue-200';
+    if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-100 text-amber-800 border border-amber-200';
+    return 'bg-gray-100 text-gray-700 border border-gray-200';
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -353,16 +375,9 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-green-700">Перемещение #{index + 1}</span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          movingOrder.status === 'PENDING_FROM'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {{  IN_PROGRESS: 'В процессе',
-                              PENDING_FROM: 'Ожидает забора',
-                              PENDING_TO: 'Ожидает доставки',
-                            }[movingOrder.status] || movingOrder.status}
-                        </span>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getMovingStatusBadgeClass(movingOrder.status)}`}>
+  {getMovingStatusText(movingOrder.status)}
+</span>
                       </div>
                       
                       <div className="text-sm">

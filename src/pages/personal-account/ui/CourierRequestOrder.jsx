@@ -71,13 +71,19 @@ const CourierRequestOrder = () => {
       }
 
       let newStatus;
-      if (order.status === 'PENDING_FROM' || order.status === 'PENDING_TO') {
+      if (order.status === 'PENDING_FROM' ) {
         newStatus = 'IN_PROGRESS';
+        toast.success('Заказ принят в работу');
+      }else if (order.status === 'PENDING_TO') {
+        newStatus = 'IN_PROGRESS_TO';
         toast.success('Заказ принят в работу');
       } else if (order.status === 'IN_PROGRESS') {
         newStatus = 'DELIVERED';
         toast.success('Заказ завершён');
-      } else {
+      } else if (order.status === 'IN_PROGRESS_TO') {
+        newStatus = 'DELIVERED_TO';
+        toast.success('Заказ завершён');
+      }else {
         return;
       }
 
@@ -112,7 +118,7 @@ const CourierRequestOrder = () => {
         </Button>
       );
     }
-    if (order.status === 'IN_PROGRESS') {
+    if (order.status === 'IN_PROGRESS'||order.status === 'IN_PROGRESS_TO') {
       return (
         <Button {...buttonProps} className="bg-green-600 hover:bg-green-700 text-white">
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -120,7 +126,7 @@ const CourierRequestOrder = () => {
         </Button>
       );
     }
-    if (order.status === 'DELIVERED') {
+    if (order.status === 'DELIVERED' || order.status === 'DELIVERED_TO') {
       return null;
     }
     return null;

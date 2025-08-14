@@ -63,16 +63,29 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
     e.stopPropagation();
     
     try {
-      if (order.status === 'PENDING_FROM' || order.status === 'PENDING_TO') {
+      if (order.status === 'PENDING_FROM' ) {
         await api.put(`/moving/${order.movingOrderId}`, {
           id: order.movingOrderId,
           status: 'IN_PROGRESS',
         });
         toast.success('Заказ принят в работу');
-      } else if (order.status === 'IN_PROGRESS') {
+      }else if ( order.status === 'PENDING_TO') {
+        await api.put(`/moving/${order.movingOrderId}`, {
+          id: order.movingOrderId,
+          status: 'IN_PROGRESS_TO',
+        });
+        toast.success('Заказ принят в работу');
+      }
+      else if (order.status === 'IN_PROGRESS') {
         await api.put(`/moving/${order.movingOrderId}`, {
           id: order.movingOrderId,
           status: 'DELIVERED',
+        });
+        toast.success('Заказ завершён');
+      } else  if (order.status === 'IN_PROGRESS_TO') {
+        await api.put(`/moving/${order.movingOrderId}`, {
+          id: order.movingOrderId,
+          status: 'DELIVERED_TO',
         });
         toast.success('Заказ завершён');
       }
@@ -101,7 +114,7 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
         </Button>
       );
     }
-    if (order.status === 'IN_PROGRESS') {
+    if (order.status === 'IN_PROGRESS' || order.status === 'IN_PROGRESS_TO'  ) {
       return (
         <Button 
           onClick={handleAction} 
@@ -118,12 +131,17 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
   const getStatusBadge = () => {
     switch (order.status) {
       case 'PENDING_FROM':
+        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Ожидает у клиента</Badge>;
       case 'PENDING_TO':
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Ожидает</Badge>;
+        return <Badge variant="secondary" className="bg-red-100 text-red-800">Ожидает на складе</Badge>;
       case 'IN_PROGRESS':
-        return <Badge className="bg-blue-100 text-blue-800">В работе</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">В пути к складу</Badge>;
+      case 'IN_PROGRESS_TO':
+        return <Badge className="bg-blue-100 text-blue-800">В пути к клиенту</Badge>;
       case 'DELIVERED':
-        return <Badge className="bg-green-100 text-green-800">Выполнен</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Доставлено на склад</Badge>;
+      case 'DELIVERED_TO':
+        return <Badge className="bg-green-100 text-green-800">Доставлено клиенту</Badge>;
       default:
         return <Badge variant="outline">Неизвестно</Badge>;
     }
@@ -210,6 +228,7 @@ const CourierRequest = () => {
         api.get('/moving/status/PENDING_FROM'),
         api.get('/moving/status/PENDING_TO'),
         api.get('/moving/status/IN_PROGRESS'),
+        api.get('/moving/status/IN_PROGRESS_TO'),
       ]);
 
       // Фильтрация по availability
@@ -218,7 +237,7 @@ const CourierRequest = () => {
 
       const newOrders = {
         PENDING: filterAvailable([...results[0].data, ...results[1].data]),
-        IN_PROGRESS: filterAvailable(results[2].data),
+        IN_PROGRESS: filterAvailable([...results[2].data,...results[3].data]),
       };
 
       setOrders(newOrders);

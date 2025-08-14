@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
+import { useUnreadNotificationsCount, useAwaitableDeliveriesCount } from '../../../shared/lib/hooks/use-notifications';
 import clsx from 'clsx';
 import './mobile-menu.css';
 
@@ -71,6 +72,8 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const unreadCount = useUnreadNotificationsCount();
+  const awaitableDeliveriesCount = useAwaitableDeliveriesCount();
 
   const getNavItemsByRole = (role) => {
     switch (role?.toUpperCase()) {
@@ -225,15 +228,25 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
                 item.key === 'logout' && '!text-red-600 hover:!bg-red-50 hover:!text-red-700'
               )}
             >
-              <img 
-                src={item.icon} 
-                alt="icon" 
-                className={clsx(
-                  'w-5 h-5 flex-shrink-0 transition-all duration-200',
-                  activeNav === item.key ? 'filter invert' : 
-                  item.key === 'logout' ? 'filter brightness-0 saturate-100 hue-rotate-0' : 'filter brightness-0'
-                )} 
-              />
+              <div className="relative">
+                <img 
+                  src={item.icon} 
+                  alt="icon" 
+                  className={clsx(
+                    'w-5 h-5 flex-shrink-0 transition-all duration-200',
+                    activeNav === item.key ? 'filter invert' : 
+                    item.key === 'logout' ? 'filter brightness-0 saturate-100 hue-rotate-0' : 'filter brightness-0'
+                  )} 
+                />
+                {/* Красная точка для непрочитанных уведомлений */}
+                {item.key === 'notifications' && unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+                {/* Красная точка для доставок со статусом AWAITABLE */}
+                {item.key === 'delivery' && awaitableDeliveriesCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+              </div>
               <span className="flex-1">{item.label}</span>
               {activeNav === item.key && (
                 <div className="w-2 h-2 bg-white rounded-full"></div>

@@ -107,14 +107,24 @@ const statusStyles = {
 // Функция для преобразования статусов перемещения
 const getMovingStatusText = (status) => {
   const statusMap = {
-    'PENDING_FROM': 'В ожидании (отправка)',
-    'PENDING_TO': 'В ожидании (доставка)',
-    'IN_PROGRESS': 'В процессе',
-    'DELIVERED': 'Доставлено',
-    'CANCELLED': 'Отменено'
+    PENDING_FROM:  'В ожидании (от клиента)',
+    PENDING_TO:    'В ожидании (со склада)',
+    IN_PROGRESS:   'В пути к складу',
+    IN_PROGRESS_TO:'В пути к клиенту',
+    DELIVERED:     'Доставлено на склад',
+    DELIVERED_TO:  'Доставлено клиенту',
+    CANCELLED:     'Отменено',
   };
   return statusMap[status] || status;
 };
+const getMovingStatusVariant = (status) => {
+  if (status === 'CANCELLED') return 'danger';
+  if (status === 'DELIVERED' || status === 'DELIVERED_TO') return 'success';
+  if (status === 'IN_PROGRESS' || status === 'IN_PROGRESS_TO') return 'info';
+  if (status === 'PENDING_FROM' || status === 'PENDING_TO') return 'warning';
+  return 'default';
+};
+
 
 // Функция для преобразования типа транспорта
 const getVehicleTypeText = (type) => {
@@ -407,10 +417,7 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                     <div className="space-y-3">
                       {details.movingOrders.map((moving) => {
                         const status = getMovingStatusText(moving.status);
-                        const statusVariant = 
-                          moving.status === 'DELIVERED' ? 'success' : 
-                          moving.status === 'CANCELLED' ? 'danger' :
-                          moving.status === 'IN_PROGRESS' ? 'info' : 'warning';
+                        const statusVariant = getMovingStatusVariant(moving.status);
 
                         return (
                           <div key={moving.id} className="border rounded-xl p-4 bg-white">
@@ -446,10 +453,7 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                         <tbody>
                           {details.movingOrders.map((moving) => {
                             const status = getMovingStatusText(moving.status);
-                            const statusVariant = 
-                              moving.status === 'DELIVERED' ? 'success' : 
-                              moving.status === 'CANCELLED' ? 'danger' :
-                              moving.status === 'IN_PROGRESS' ? 'info' : 'warning';
+                            const statusVariant = getMovingStatusVariant(moving.status);
 
                             return (
                               <tr key={moving.id} className="border-b border-gray-100 hover:bg-gray-50">

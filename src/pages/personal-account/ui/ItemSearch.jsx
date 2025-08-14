@@ -21,12 +21,15 @@ const ItemSearch = () => {
   const [isSearched, setIsSearched] = useState(false);
 
   // Функция для получения текста статуса на русском
-  const getStatusText = (status) => {
+  const getMovingStatusText = (status) => {
     const statusMap = {
-      'PENDING_FROM': '⏳ Ожидает отправки со склада',
-      'PENDING_TO': '⏳ Ожидает доставки на склад',
-      'IN_PROGRESS': '🚚 В процессе доставки',
-      'DELIVERED': '✅ Доставлено'
+      PENDING_FROM:  'В ожидании (от клиента)',
+      PENDING_TO:    'В ожидании (со склада)',
+      IN_PROGRESS:   'В пути к складу',
+      IN_PROGRESS_TO:'В пути к клиенту',
+      DELIVERED:     'Доставлено на склад',
+      DELIVERED_TO:  'Доставлено клиенту',
+      CANCELLED:     'Отменено',
     };
     return statusMap[status] || status;
   };
@@ -173,7 +176,7 @@ const ItemSearch = () => {
                     <p className="text-sm text-gray-500 mb-2">Статус доставки</p>
                     <div className={`inline-flex items-center px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(searchResult.status)}`}>
                       <Clock className="w-4 h-4 mr-2" />
-                      {getStatusText(searchResult.status)}
+                      {getMovingStatusText(searchResult.status)}
                     </div>
                   </div>
                 </div>

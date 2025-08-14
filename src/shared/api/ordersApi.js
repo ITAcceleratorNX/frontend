@@ -5,18 +5,35 @@ const isDevelopment = import.meta.env.DEV;
 
 export const ordersApi = {
   // Получение всех заказов (для MANAGER и ADMIN)
-  getAllOrders: async () => {
+  getAllOrders: async (page = 1) => {
     try {
       if (isDevelopment) {
-        console.log('OrdersAPI: Отправка запроса на получение всех заказов');
+        console.log('OrdersAPI: Отправка запроса на получение всех заказов, страница:', page);
       }
-      const response = await api.get('/orders');
+      const response = await api.get('/orders', { params: { page } });
       if (isDevelopment) {
-        console.log('OrdersAPI: Получены все заказы:', response.data?.length || 0, 'заказов');
+        console.log('OrdersAPI: Получены все заказы:', response.data?.data?.length || 0, 'заказов');
       }
       return response.data;
     } catch (error) {
       console.error('OrdersAPI: Ошибка при получении всех заказов:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Получение статистики заказов (для MANAGER и ADMIN)
+  getOrdersStats: async () => {
+    try {
+      if (isDevelopment) {
+        console.log('OrdersAPI: Отправка запроса на получение статистики заказов');
+      }
+      const response = await api.get('/orders/status-counts');
+      if (isDevelopment) {
+        console.log('OrdersAPI: Получена статистика заказов:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при получении статистики заказов:', error.response?.data || error.message);
       throw error;
     }
   },

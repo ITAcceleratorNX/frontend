@@ -14,10 +14,10 @@ export const ORDERS_QUERY_KEYS = {
 /**
  * Хук для получения всех заказов (для MANAGER и ADMIN)
  */
-export const useAllOrders = (options = {}) => {
+export const useAllOrders = (page = 1, options = {}) => {
   return useQuery({
-    queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS,
-    queryFn: ordersApi.getAllOrders,
+    queryKey: [...ORDERS_QUERY_KEYS.ALL_ORDERS, page],
+    queryFn: () => ordersApi.getAllOrders(page),
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
     retry: 2,
@@ -59,9 +59,10 @@ export const useUpdateOrderStatus = () => {
   return useMutation({
     mutationFn: ({ orderId, status }) => ordersApi.updateOrderStatus(orderId, status),
     onSuccess: (data, variables) => {
-      // Инвалидируем кеш заказов
+      // Инвалидируем кеш заказов (все страницы) и статистики
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
       
       // Показываем уведомление через централизованную функцию
       showOrderStatusUpdate(variables.status);
@@ -82,9 +83,10 @@ export const useDeleteOrder = () => {
   return useMutation({
     mutationFn: (orderId) => ordersApi.deleteOrder(orderId),
     onSuccess: (data, orderId) => {
-      // Инвалидируем кеш заказов
+      // Инвалидируем кеш заказов (все страницы) и статистики
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
       
       // Показываем уведомление через централизованную функцию
       showOrderDeleteSuccess();
@@ -105,9 +107,10 @@ export const useApproveOrder = () => {
   return useMutation({
     mutationFn: (orderId) => ordersApi.approveOrder(orderId),
     onSuccess: (data, orderId) => {
-      // Инвалидируем кеш заказов
+      // Инвалидируем кеш заказов (все страницы) и статистики
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
       
       showGenericSuccess(`Заказ #${orderId} успешно подтвержден!`);
     },
@@ -132,9 +135,10 @@ export const useBulkUpdateOrders = () => {
       return Promise.all(promises);
     },
     onSuccess: (data, orders) => {
-      // Инвалидируем кеш заказов
+      // Инвалидируем кеш заказов (все страницы) и статистики
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
       
       showGenericSuccess(`Успешно обновлено ${orders.length} заказов`);
     },
@@ -149,10 +153,18 @@ export const useBulkUpdateOrders = () => {
  * Хук для получения статистики заказов
  */
 export const useOrdersStats = () => {
-  const { data: orders = [], isLoading, error } = useAllOrders();
+  const { data: statsData, isLoading, error } = useQuery({
+    queryKey: ['orders', 'stats'],
+    queryFn: ordersApi.getOrdersStats,
+    staleTime: 5 * 60 * 1000, // 5 минут
+    cacheTime: 10 * 60 * 1000, // 10 минут
+    retry: 2,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+  });
 
   const stats = React.useMemo(() => {
-    if (!orders.length) {
+    if (!statsData) {
       return {
         total: 0,
         inactive: 0,
@@ -165,15 +177,15 @@ export const useOrdersStats = () => {
     }
 
     return {
-      total: orders.length,
-      inactive: orders.filter(o => o.status === 'INACTIVE').length,
-      approved: orders.filter(o => o.status === 'APPROVED').length,
-      processing: orders.filter(o => o.status === 'PROCESSING').length,
-      active: orders.filter(o => o.status === 'ACTIVE').length,
-      paid: orders.filter(o => o.payment_status === 'PAID').length,
-      unpaid: orders.filter(o => o.payment_status === 'UNPAID').length
+      total: statsData.total || 0,
+      inactive: statsData.inactive || 0,
+      approved: statsData.approved || 0,
+      processing: statsData.processing || 0,
+      active: statsData.active || 0,
+      paid: statsData.paid || 0,
+      unpaid: statsData.unpaid || 0
     };
-  }, [orders]);
+  }, [statsData]);
 
   return {
     stats,
@@ -191,9 +203,10 @@ export const useUpdateOrderWithServices = () => {
   return useMutation({
     mutationFn: ({ orderId, orderData }) => ordersApi.updateOrderWithServices(orderId, orderData),
     onSuccess: (data, variables) => {
-      // Инвалидируем кеш заказов
+      // Инвалидируем кеш заказов (все страницы) и статистики
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
       
       showGenericSuccess(`Заказ #${variables.orderId} успешно подтвержден с дополнительными услугами!`);
     },

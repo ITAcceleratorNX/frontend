@@ -68,10 +68,12 @@ const UserDelivery = () => {
     // Функция для получения русского статуса
     const getStatusText = (status) => {
         const statusMap = {
-            'PENDING_FROM': '⏳ Ожидает отправки со склада',
-            'PENDING_TO': '⏳ Ожидает доставки на склад',
-            'IN_PROGRESS': '🚚 В процессе доставки',
-            'DELIVERED': '✅ Доставлено'
+            'PENDING_FROM': '⏳ Ожидает доставки на склад',
+            'PENDING_TO': '⏳ Ожидает отправки со склада',
+            'IN_PROGRESS': '🚚 В пути к складу',
+            'IN_PROGRESS_TO': '🚚 В пути к клиенту',
+            'DELIVERED': '✅ Доставлено на склад',
+            'DELIVERED_TO': '✅ Доставлено клиенту'
         };
         return statusMap[status] || status;
     };
@@ -79,27 +81,35 @@ const UserDelivery = () => {
     // Функция для получения цвета статуса
     const getStatusColor = (status) => {
         const colorMap = {
-            'PENDING_FROM': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-            'PENDING_TO': 'bg-blue-100 text-blue-700 border-blue-200',
-            'IN_PROGRESS': 'bg-orange-100 text-orange-700 border-orange-200',
-            'DELIVERED': 'bg-green-100 text-green-700 border-green-200'
+            PENDING_FROM:   'bg-yellow-100 text-yellow-700 border-yellow-200',
+            PENDING_TO:     'bg-blue-100 text-blue-700 border-blue-200',
+            IN_PROGRESS:    'bg-orange-100 text-orange-700 border-orange-200',
+            IN_PROGRESS_TO: 'bg-orange-100 text-orange-700 border-orange-200', // добавили
+            DELIVERED:      'bg-green-100 text-green-700 border-green-200',
+            DELIVERED_TO:   'bg-green-100 text-green-700 border-green-200',     // добавили
         };
         return colorMap[status] || 'bg-gray-100 text-gray-700 border-gray-200';
     };
 
+
     // Статистика доставок
     const stats = useMemo(() => {
-        if (!deliveries.length) {
-            return { total: 0, inProgress: 0, delivered: 0, addresses: 0 };
-        }
+        if (!deliveries.length) return { total: 0, inProgress: 0, delivered: 0, addresses: 0 };
 
         return {
             total: deliveries.length,
-            inProgress: deliveries.filter(d => ['PENDING_FROM', 'PENDING_TO', 'IN_PROGRESS'].includes(d.status)).length,
-            delivered: deliveries.filter(d => d.status === 'DELIVERED').length,
+            // ДО: ['PENDING_FROM', 'PENDING_TO', 'IN_PROGRESS']
+            inProgress: deliveries.filter(d =>
+                ['PENDING_FROM', 'PENDING_TO', 'IN_PROGRESS', 'IN_PROGRESS_TO'].includes(d.status)
+            ).length,
+            // ДО: только 'DELIVERED'
+            delivered: deliveries.filter(d =>
+                ['DELIVERED', 'DELIVERED_TO'].includes(d.status)
+            ).length,
             addresses: new Set(deliveries.map(d => d.address).filter(Boolean)).size
         };
     }, [deliveries]);
+
 
     // Обработчик открытия модального окна редактирования
     const handleEditClick = (delivery) => {
@@ -133,10 +143,6 @@ const UserDelivery = () => {
         });
     };
 
-    // Обработчик подтверждения доставки
-    const handleConfirmDelivery = (deliveryId) => {
-        confirmDeliveryMutation.mutate(deliveryId);
-    };
 
     // Форматирование даты
     const formatDate = (dateString) => {
@@ -308,15 +314,6 @@ const UserDelivery = () => {
                                                             className="p-2 hover:bg-blue-50 hover:border-blue-300"
                                                         >
                                                             <Edit className="w-4 h-4 text-blue-600" />
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleConfirmDelivery(delivery.id)}
-                                                            disabled={confirmDeliveryMutation.isPending}
-                                                            className="p-2 hover:bg-green-50 hover:border-green-300"
-                                                        >
-                                                            <Check className="w-4 h-4 text-green-600" />
                                                         </Button>
                                                     </div>
                                                 )}

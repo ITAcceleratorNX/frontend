@@ -229,3 +229,53 @@ export const useNotifications = () => {
     markAsRead.isPending,
   ]);
 };
+
+// Хук для подсчета непрочитанных уведомлений
+export const useUnreadNotificationsCount = () => {
+  const { user } = useAuth();
+  const userId = user?.id;
+  const isUser = user?.role === 'USER' || user?.role === 'COURIER';
+
+  const { data: notifications } = useQuery({
+    queryKey: NOTIFICATION_QUERY_KEYS.user(userId),
+    queryFn: () => notificationApi.getUserNotifications(userId),
+    enabled: !!userId && isUser,
+    select: (data) => data.data,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+  });
+
+  const unreadCount = useMemo(() => {
+    if (!notifications) return 0;
+    return notifications.filter(notification => !notification.is_read).length;
+  }, [notifications]);
+
+  return unreadCount;
+};
+
+// Хук для подсчета доставок со статусом AWAITABLE
+export const useAwaitableDeliveriesCount = () => {
+  const { user } = useAuth();
+  const userId = user?.id;
+  const isUser = user?.role === 'USER' || user?.role === 'COURIER';
+
+  const { data: deliveries } = useQuery({
+    queryKey: ['userDeliveries'],
+    queryFn: () => {
+      // Импортируем ordersApi здесь, чтобы избежать циклических зависимостей
+      const { ordersApi } = require('../../api/ordersApi');
+      return ordersApi.getUserDeliveries();
+    },
+    enabled: !!userId && isUser,
+    select: (data) => data || [],
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+  });
+
+  const awaitableCount = useMemo(() => {
+    if (!deliveries) return 0;
+    return deliveries.filter(delivery => delivery.availability === 'AWAITABLE').length;
+  }, [deliveries]);
+
+  return awaitableCount;
+};

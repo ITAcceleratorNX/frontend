@@ -5,12 +5,14 @@ import { Phone, Mail, User, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 import { Menu, X } from 'lucide-react';
+import { useUnreadNotificationsCount } from '../../shared/lib/hooks/use-notifications';
 
 // Мемоизированный компонент Header
 export const Header = memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
+  const unreadCount = useUnreadNotificationsCount();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isEmailFormOpen, setIsEmailFormOpen] = useState(false);
@@ -89,10 +91,14 @@ export const Header = memo(() => {
       return (
           <button
               onClick={handleCabinetClick}
-              className="flex items-center justify-center bg-[#273551] hover:bg-[#1e2c4f] text-white px-4 py-2 rounded-full font-medium font-['Montserrat'] text-sm transition-all duration-300 hover:shadow-lg hover:scale-105"
+              className="flex items-center justify-center bg-[#273551] hover:bg-[#1e2c4f] text-white px-4 py-2 rounded-full font-medium font-['Montserrat'] text-sm transition-all duration-300 hover:shadow-lg hover:scale-105 relative"
           >
             <User size={16} className="mr-2" />
             <span className="hidden sm:inline">ЛИЧНЫЙ КАБИНЕТ</span>
+            {/* Красная точка для непрочитанных уведомлений */}
+            {unreadCount > 0 && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+            )}
           </button>
       );
     } else {
@@ -106,7 +112,7 @@ export const Header = memo(() => {
           </button>
       );
     }
-  }, [isAuthenticated, handleCabinetClick, handleStartAuth]);
+  }, [isAuthenticated, handleCabinetClick, handleStartAuth, unreadCount]);
 
   const headerClass = useMemo(() =>
           clsx(
@@ -227,7 +233,9 @@ export const Header = memo(() => {
                 >
                   ЗАБРОНИРОВАТЬ БОКС
                 </NavLink>
-                {authButtons}
+                <div className="relative">
+                  {authButtons}
+                </div>
                 <div className="flex items-center gap-4 pt-4">
                   <button
                       onClick={handleCallClick}

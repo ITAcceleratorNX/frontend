@@ -26,7 +26,26 @@ import {
   Building
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+// --- Moving statuses helpers ---
+const MOVING_STATUS_TEXT = {
+  PENDING_FROM:   'Ожидает забора',
+  PENDING_TO:     'Ожидает доставки',
+  IN_PROGRESS:    'В работе (к складу)',
+  IN_PROGRESS_TO: 'В работе (к клиенту)',
+  DELIVERED:      'Доставлено на склад',
+  DELIVERED_TO:   'Доставлено клиенту',
+  CANCELLED:      'Отменён',
+};
 
+const getMovingStatusText = (s) => MOVING_STATUS_TEXT[s] || s;
+
+const getMovingStatusBadgeClass = (s) => {
+  if (s === 'CANCELLED') return 'bg-red-100 text-red-800 border border-red-200';
+  if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-100 text-green-800 border border-green-200';
+  if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-100 text-blue-800 border border-blue-200';
+  if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-100 text-amber-800 border border-amber-200';
+  return 'bg-gray-100 text-gray-700 border border-gray-200';
+};
 const columns = [
   { 
     title: 'Ожидает грузчика', 
@@ -63,19 +82,12 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false }) => {
     return null;
   };
 
-  const getStatusBadge = () => {
-    switch (order.status) {
-      case 'PENDING_FROM':
-      case 'PENDING_TO':
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Ожидает</Badge>;
-      case 'IN_PROGRESS':
-        return <Badge className="bg-blue-100 text-blue-800">В работе</Badge>;
-      case 'DELIVERED':
-        return <Badge className="bg-green-100 text-green-800">Выполнен</Badge>;
-      default:
-        return <Badge variant="outline">Неизвестно</Badge>;
-    }
-  };
+  const getStatusBadge = () => (
+      <Badge className={`text-xs ${getMovingStatusBadgeClass(order.status)}`}>
+        {getMovingStatusText(order.status)}
+      </Badge>
+  );
+
 
   return (
     <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 border-l-4 border-l-[#1e2c4f]">
@@ -149,6 +161,7 @@ const AdminMoving = () => {
   const [isDeliveredLoading, setIsDeliveredLoading] = useState(false);
   const [error, setError] = useState(null);
 
+
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
@@ -158,6 +171,7 @@ const AdminMoving = () => {
         api.get('/moving/status/PENDING_FROM'),
         api.get('/moving/status/PENDING_TO'),
         api.get('/moving/status/IN_PROGRESS'),
+        api.get('/moving/status/IN_PROGRESS_TO'),
       ]);
 
       // Фильтрация по availability
@@ -166,7 +180,7 @@ const AdminMoving = () => {
 
       const newOrders = {
         PENDING: filterAvailable([...results[0].data, ...results[1].data]),
-        IN_PROGRESS: filterAvailable(results[2].data),
+        IN_PROGRESS: filterAvailable([...results[2].data, ...results[3].data]),
       };
 
       setOrders(newOrders);
