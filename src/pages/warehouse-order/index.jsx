@@ -855,6 +855,31 @@ const WarehouseOrderPage = memo(() => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                             />
                           </div>
+                          {!isCloud && (
+                              <div>
+                                <label className="block text-sm font-medium text-[#273655] mb-1">
+                                  Тип перевозки
+                                </label>
+                                <Select
+                                    value={order.status}
+                                    onValueChange={(value) =>
+                                        updateMovingOrder(index, "status", value)
+                                    }
+                                >
+                                  <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <SelectValue placeholder="Выберите тип перевозки" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="PENDING_FROM">
+                                      Забрать вещи (От клиента на склад)
+                                    </SelectItem>
+                                    <SelectItem value="PENDING_TO">
+                                      Доставить вещи (Со склада к клиенту)
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                          )}
                           <div>
                             <label className="block text-sm font-medium text-[#273655] mb-1">
                               Адрес <span className="text-red-500">*</span>
