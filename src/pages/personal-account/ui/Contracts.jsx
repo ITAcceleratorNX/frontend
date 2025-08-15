@@ -27,6 +27,7 @@ import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
+import {useNavigate} from "react-router-dom";
 
 const getContractStatusInfo = (statusText) => {
   const statusMap = {
@@ -186,6 +187,7 @@ const getOrderStatusInfo = (status) => {
   
   return statusMap[status] || { style: 'default', message: status };
 };
+
 
 // Функция для получения информации о статусе оплаты
 const getPaymentStatusInfo = (status) => {
@@ -522,6 +524,9 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
 };
 
 const Contracts = () => {
+  const navigate = useNavigate(); // <— добавь
+  // ...
+  const [isDebtModalOpen, setIsDebtModalOpen] = useState(false);
   const { data: contracts, isLoading, error } = useContracts();
   const cancelContractMutation = useCancelContract();
   const downloadContractMutation = useDownloadContract();
@@ -566,6 +571,15 @@ const Contracts = () => {
     if (!date) return '';
     return new Date(date).toLocaleDateString('ru-RU');
   };
+  const handleCancelClick = (e, row) => {
+    e.stopPropagation();
+    const payment = (row?.payment_status || '').toUpperCase();
+    if (payment !== 'PAID') {
+      setIsDebtModalOpen(true); // <— показываем модалку
+      return;
+    }
+    handleCancelContract(row.order_id, row.contract_data?.document_id);
+  };
 
   const { isMobile } = useDeviceType();
 
@@ -604,7 +618,7 @@ const Contracts = () => {
                   >
                     <td className="flex items-center gap-3 px-6 py-5 font-medium text-gray-900 text-base">
                       <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
-                      <span className="text-blue-600 hover:text-blue-800 transition-colors">{`Individual Storage (${row.total_volume} м²)`}</span>
+                      <span className="text-blue-600 hover:text-blue-800 transition-colors">{`Storage (${row.total_volume} м²)`}</span>
                     </td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{row.warehouse_address}</td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
@@ -625,16 +639,13 @@ const Contracts = () => {
                           {downloadContractMutation.isPending ? 'Загрузка...' : 'Скачать'}
                         </button>
                         {row.order_status === 'ACTIVE' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelContract(row.order_id, row.contract_data.document_id);
-                            }}
-                            disabled={cancelContractMutation.isPending}
-                            className="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md shadow-sm text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                          >
-                            {cancelContractMutation.isPending ? 'Отмена...' : 'Отменить'}
-                          </button>
+                            <button
+                                onClick={(e) => handleCancelClick(e, row)}
+                                disabled={cancelContractMutation.isPending}
+                                className="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md shadow-sm text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              {cancelContractMutation.isPending ? 'Отмена...' : 'Отменить'}
+                            </button>
                         )}
                       </div>
                     </td>
@@ -658,7 +669,7 @@ const Contracts = () => {
                 <div className="flex items-center gap-3 mb-3">
                   <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
                   <div className="text-base font-semibold text-[#1e2c4f]">
-                    {`Individual Storage (${row.total_volume} м²)`}
+                    {`Storage (${row.total_volume} м²)`}
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -672,11 +683,7 @@ const Contracts = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 mb-3">
-                  <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
                   <div className="flex items-center gap-2">
-                    <div className="text-base font-semibold text-[#1e2c4f]">
-                      {`Individual Storage (${row.total_volume} м²)`}
-                    </div>
                     <StatusBadge status={row.order_status} type="order" />
                   </div>
                 </div>
@@ -694,16 +701,13 @@ const Contracts = () => {
                     )}
                   </button>
                   {row.order_status === 'ACTIVE' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCancelContract(row.order_id, row.contract_data.document_id);
-                      }}
-                      disabled={cancelContractMutation.isPending}
-                      className="w-full h-11 inline-flex items-center justify-center rounded-lg border border-red-600 text-red-600 bg-white font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
-                    >
-                      {cancelContractMutation.isPending ? 'Отмена…' : 'Отменить'}
-                    </button>
+                      <button
+                          onClick={(e) => handleCancelClick(e, row)}
+                          disabled={cancelContractMutation.isPending}
+                          className="w-full h-11 inline-flex items-center justify-center rounded-lg border border-red-600 text-red-600 bg-white font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                      >
+                        {cancelContractMutation.isPending ? 'Отмена…' : 'Отменить'}
+                      </button>
                   )}
                 </div>
               </div>
@@ -723,7 +727,35 @@ const Contracts = () => {
         onDownloadItemFile={handleDownloadItemFile}
         isDownloadingItem={downloadItemFileMutation.isPending}
       />
+      <Dialog open={isDebtModalOpen} onOpenChange={setIsDebtModalOpen}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Нельзя отменить договор
+            </DialogTitle>
+            <DialogDescription>
+              По данному заказу есть <b>неоплаченная задолженность</b>. Пожалуйста, оплатите долг, а затем повторите отмену.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsDebtModalOpen(false)}>Понятно</Button>
+            <Button
+                onClick={() => {
+                  setIsDebtModalOpen(false);
+                  // Переход к оплатам в личном кабинете
+                  navigate('/personal-account', { state: { activeSection: 'payments' } });
+                }}
+            >
+              Перейти к оплате
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
+
+
   );
 };
 
