@@ -390,31 +390,12 @@ const WarehouseOrderPage = memo(() => {
         is_selected_package: isSelectedPackage && validServices.length > 0,
       };
 
-// === Для CLOUD: передаём clientAddress, а в moving_orders — один адрес для всех ===
-      if (isCloud) {
-        const firstAddress = movingOrders[0]?.address?.trim();
-        if (!firstAddress) {
-          setError('Для облачного хранения требуется адрес');
-          return;
-        }
-
-        // Подставляем один адрес для всех
-        orderData.moving_orders = movingOrders.map((mo) => ({
-          ...mo,
-          address: firstAddress,
+      if (isSelectedMoving && movingOrders.length > 0) {
+        orderData.moving_orders = movingOrders.map((order) => ({
+          moving_date: order.moving_date,
+          status: order.status,
+          address: order.address.trim(),
         }));
-
-        // Передаём clientAddress для бэкенда
-        orderData.clientAddress = firstAddress;
-      } else {
-        // Обычный режим
-        if (isSelectedMoving && movingOrders.length > 0) {
-          orderData.moving_orders = movingOrders.map((order) => ({
-            moving_date: order.moving_date,
-            status: order.status,
-            address: order.address.trim(),
-          }));
-        }
       }
 
       if (isSelectedPackage && validServices.length > 0) {
@@ -424,7 +405,6 @@ const WarehouseOrderPage = memo(() => {
         }));
       }
 
-      // Отправка
       const result = await warehouseApi.createOrder(orderData);
 
       console.log(result);
