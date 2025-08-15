@@ -4,8 +4,6 @@ import { useUserPayments } from '../../../shared/lib/hooks/use-payments';
 import { showPaymentLoadError, showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Separator } from '../../../components/ui/separator';
 import { CreditCard, Package, CheckCircle, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import UserOrderCard from './UserOrderCard';
 import PaymentModal from './PaymentModal';

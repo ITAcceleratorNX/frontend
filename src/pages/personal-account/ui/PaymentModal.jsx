@@ -21,6 +21,8 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   const createPaymentMutation = useCreatePayment();
   const { data: prices } = useGetPrices();
 
+  const isCloud = order.storage.storage_type === "CLOUD";
+
   // Функция для получения иконки услуги по типу
   const getServiceIcon = (type) => {
     switch (type) {
@@ -126,6 +128,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
   // Расчет общей стоимости услуг
   const getServicesTotal = () => {
+    if (isCloud) return 0;
     if (!order.services || order.services.length === 0) return 0;
     
     return order.services.reduce((total, service) => {
@@ -179,19 +182,19 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 <span className="text-xs text-gray-600">Заказ:</span>
                 <Badge variant="outline" className="text-xs text-[#1e2c4f] h-5">#{order.id}</Badge>
                   </div>
-                  
+
                   {order.storage && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-600">Бокс:</span>
                   <span className="text-xs font-medium truncate max-w-[120px]">{order.storage.name}</span>
                     </div>
                   )}
-                  
+
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Объем:</span>
                 <span className="text-xs font-semibold text-[#1e2c4f]">{order.total_volume} м³</span>
                   </div>
-                  
+
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Период:</span>
                 <span className="text-xs">
@@ -265,7 +268,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
               )}
                   </div>
                   ))}
-                  
+
                   {/* Итого по услугам */}
                   <div className="pt-2 border-t border-amber-200">
                     <div className="flex justify-between items-center">
@@ -303,9 +306,9 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 <span className="text-xs text-gray-600">Депозит услуг:</span>
                 <span className="text-sm font-bold text-purple-600">{formatPrice(getDepositPrice())} ₸</span>
               </div>
-              
+
               <Separator />
-              
+
               <div className="flex justify-between items-center p-2 bg-[#1e2c4f] rounded-md text-white">
                 <span className="text-xs font-medium">Общая сумма:</span>
                 <span className="text-base font-bold">
@@ -318,9 +321,27 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
           {/* Информация */}
           <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
             <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-blue-700 leading-tight">
+              {isCloud ? (
+                  'Это общая сумма, которая будет разделена на выбранные месяцы.'
+              ) : (
+                  'В первый платеж включена стоимость услуг.'
+              )}
+            </p>
+          </div>
+
+          <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
+            <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
               <p className="text-xs text-blue-700 leading-tight">
                 После нажатия на кнопку вы будете перенаправлены на защищенную страницу для завершения оплаты. В стоимость включен депозит за дополнительные услуги.
               </p>
+          </div>
+
+          <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
+            <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-blue-700 leading-tight">
+              Депозит включен в первый платеж и будет возвращен, если хранение не будет прекращено досрочно.
+            </p>
           </div>
         </div>
 
