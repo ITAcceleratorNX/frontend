@@ -46,6 +46,11 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [totalPrice, setTotalPrice] = useState(null);
     const [months, setMonths] = useState(() => calculateMonths());
 
+    const totalVolume = formData.order_items.reduce((sum, item) => {
+        const volume = parseFloat(item.volume) || 0;
+        return sum + volume;
+    }, 0);
+    const storage_available_volume = Number(order.storage.available_volume) + Number(order.total_volume);
 
     const getServiceTypeName = (type) => {
         const names = {
@@ -376,6 +381,11 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     </div>
 
                     {/* Предметы */}
+                    {totalVolume > parseFloat(storage_available_volume) && (
+                        <p className="text-red-600 font-medium mt-2">
+                            ⚠️ Объем превышает доступное место в боксе!
+                        </p>
+                    )}
                     <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <Label className="text-base sm:text-lg font-medium text-gray-800">Ваши вещи</Label>
@@ -722,7 +732,10 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     </Button>
                     <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
+                        disabled={
+                            isSubmitting ||
+                            totalVolume > parseFloat(storage_available_volume)
+                        }
                         className="flex-1 h-10 sm:h-12 text-sm sm:text-lg bg-[#F86812] hover:bg-[#d87d1c] text-white order-1 sm:order-2"
                         style={{ boxShadow: "4px 4px 8px 0 #B0B0B0" }}
                     >
