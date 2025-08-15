@@ -241,8 +241,10 @@ export const useUnreadNotificationsCount = () => {
     queryFn: () => notificationApi.getUserNotifications(userId),
     enabled: !!userId && isUser,
     select: (data) => data.data,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: 1 * 60 * 1000, // Уменьшаем время кеширования
+    cacheTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    refetchOnMount: true, // Обновляем при монтировании компонента
   });
 
   const unreadCount = useMemo(() => {
@@ -261,15 +263,17 @@ export const useAwaitableDeliveriesCount = () => {
 
   const { data: deliveries } = useQuery({
     queryKey: ['userDeliveries'],
-    queryFn: () => {
-      // Импортируем ordersApi здесь, чтобы избежать циклических зависимостей
-      const { ordersApi } = require('../../api/ordersApi');
+    queryFn: async () => {
+      // Импортируем ordersApi динамически
+      const { ordersApi } = await import('../../api/ordersApi');
       return ordersApi.getUserDeliveries();
     },
     enabled: !!userId && isUser,
     select: (data) => data || [],
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: 1 * 60 * 1000, // Уменьшаем время кеширования
+    cacheTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    refetchOnMount: true, // Обновляем при монтировании компонента
   });
 
   const awaitableCount = useMemo(() => {
@@ -278,4 +282,33 @@ export const useAwaitableDeliveriesCount = () => {
   }, [deliveries]);
 
   return awaitableCount;
+};
+
+// Хук для подсчета заказов с pending статусом
+export const usePendingExtensionOrdersCount = () => {
+  const { user } = useAuth();
+  const userId = user?.id;
+  const isUser = user?.role === 'USER' || user?.role === 'COURIER';
+
+  const { data: orders } = useQuery({
+    queryKey: ['userOrders'],
+    queryFn: async () => {
+      // Импортируем ordersApi динамически
+      const { ordersApi } = await import('../../api/ordersApi');
+      return ordersApi.getUserOrders();
+    },
+    enabled: !!userId && isUser,
+    select: (data) => data || [],
+    staleTime: 1 * 60 * 1000,
+    cacheTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+
+  const pendingCount = useMemo(() => {
+    if (!orders) return 0;
+    return orders.filter(order => order.extension_status === 'PENDING').length;
+  }, [orders]);
+
+  return pendingCount;
 };

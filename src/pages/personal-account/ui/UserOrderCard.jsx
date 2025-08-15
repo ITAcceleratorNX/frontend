@@ -204,10 +204,11 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   // Проверяем наличие дополнительных услуг (включая новый массив services)
   const hasAdditionalServices = order.is_selected_moving || order.is_selected_package || (order.services && order.services.length > 0);
 
-  // Определяем стили карточки в зависимости от наличия дополнительных услуг
+  // Определяем стили карточки в зависимости от наличия дополнительных услуг и pending статуса
+  const isPendingExtension = order.extension_status === 'PENDING';
   const cardClasses = hasAdditionalServices
-    ? "bg-white border-2 border-[#273655] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative"
-    : "bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow";
+    ? `bg-white border-2 ${isPendingExtension ? 'border-red-500' : 'border-[#273655]'} rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative`
+    : `bg-white border ${isPendingExtension ? 'border-2 border-red-500' : 'border-gray-200'} rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow`;
 
   return (
     <div className={cardClasses}>
@@ -219,6 +220,18 @@ const UserOrderCard = ({ order, onPayOrder }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
             <span className="text-xs font-medium">Услуги+</span>
+          </div>
+        </div>
+      )}
+
+      {/* Индикатор pending статуса */}
+      {isPendingExtension && (
+        <div className="absolute top-0 left-0 bg-red-500 text-white px-3 py-1 rounded-br-lg">
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-xs font-medium">Ожидает</span>
           </div>
         </div>
       )}
@@ -248,6 +261,13 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             }`}>
               {getPaymentStatusText(order.payment_status)}
             </span>
+            
+            {/* Статус продления */}
+            {isPendingExtension && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-red-100 text-red-700 border-red-200">
+                Ожидает продления
+              </span>
+            )}
           </div>
         </div>
 

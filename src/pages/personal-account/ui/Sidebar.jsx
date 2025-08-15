@@ -17,7 +17,8 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { useUnreadNotificationsCount, useAwaitableDeliveriesCount } from '../../../shared/lib/hooks/use-notifications';
+import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
+import { useEffect } from 'react';
 
 // Разделы для обычных пользователей
 const userNavItems = [
@@ -72,11 +73,22 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const location = useLocation();
-  const unreadCount = useUnreadNotificationsCount();
+    const unreadCount = useUnreadNotificationsCount();
   const awaitableDeliveriesCount = useAwaitableDeliveriesCount();
+  const pendingExtensionCount = usePendingExtensionOrdersCount();
 
-   // Добавляем отладочную информацию
-   console.log('Sidebar: текущий пользователь:', { 
+  // Принудительно загружаем данные при входе в личный кабинет
+  useEffect(() => {
+    if (user && (user.role === 'USER' || user.role === 'COURIER')) {
+      // Принудительно обновляем данные при монтировании компонента
+      queryClient.invalidateQueries({ queryKey: ['userDeliveries'] });
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_QUERY_KEYS.user(user.id) });
+      queryClient.invalidateQueries({ queryKey: ['userOrders'] });
+    }
+  }, [user, queryClient]);
+
+  // Добавляем отладочную информацию
+  console.log('Sidebar: текущий пользователь:', { 
     role: user?.role,
     isAuth: !!user,
     activeNav
@@ -241,6 +253,10 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 )}
                 {/* Красная точка для доставок со статусом AWAITABLE */}
                 {item.key === 'delivery' && awaitableDeliveriesCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+                {/* Красная точка для платежей с pending статусом */}
+                {item.key === 'payments' && pendingExtensionCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
               </div>
