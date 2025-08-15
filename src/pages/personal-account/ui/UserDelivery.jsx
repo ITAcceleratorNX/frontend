@@ -156,6 +156,7 @@ const UserDelivery = () => {
                 minute: '2-digit'
             });
         } catch (error) {
+            console.error(error);
             return 'Некорректная дата';
         }
     };
