@@ -66,9 +66,37 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('AuthContext: Ошибка при авторизации:', error);
       
+      // Преобразуем технические ошибки в понятные пользователю сообщения
+      let userFriendlyError = 'Неизвестная ошибка';
+      
+      if (error.response) {
+        const { status, data } = error.response;
+        
+        switch (status) {
+          case 401:
+            userFriendlyError = data?.message || 'Неверный email или пароль';
+            break;
+          case 400:
+            userFriendlyError = data?.message || 'Некорректные данные';
+            break;
+          case 429:
+            userFriendlyError = 'Слишком много попыток входа. Попробуйте позже';
+            break;
+          case 500:
+            userFriendlyError = 'Ошибка сервера. Попробуйте позже';
+            break;
+          default:
+            userFriendlyError = data?.message || `Ошибка ${status}`;
+        }
+      } else if (error.request) {
+        userFriendlyError = 'Не удалось подключиться к серверу';
+      } else {
+        userFriendlyError = error.message || 'Произошла ошибка';
+      }
+      
       return { 
         success: false, 
-        error: error.response?.data?.message || error.message || 'Неизвестная ошибка'
+        error: userFriendlyError
       };
     }
   }, [queryClient, refetch]);

@@ -87,19 +87,56 @@ export const LoginForm = () => {
     } catch (error) {
       console.error('LoginForm: Ошибка при входе:', error);
       
-      if (error.response?.data?.message) {
-        if (typeof error.response.data.message === 'object') {
-          const messages = Object.values(error.response.data.message).join(', ');
-          setServerError(`Ошибка: ${messages}`);
-          toast.error(messages);
-        } else {
-          setServerError(`Ошибка: ${error.response.data.message}`);
-          toast.error(error.response.data.message);
+      // Обрабатываем различные типы ошибок
+      let errorMessage = 'Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.';
+      
+      if (error.response) {
+        const { status, data } = error.response;
+        
+        // Обрабатываем HTTP статусы
+        switch (status) {
+          case 401:
+            if (data?.message) {
+              errorMessage = data.message;
+            } else {
+              errorMessage = 'Неверный email или пароль. Пожалуйста, проверьте введенные данные.';
+            }
+            break;
+          case 400:
+            if (data?.message) {
+              if (typeof data.message === 'object') {
+                const messages = Object.values(data.message).join(', ');
+                errorMessage = messages;
+              } else {
+                errorMessage = data.message;
+              }
+            } else {
+              errorMessage = 'Некорректные данные. Пожалуйста, проверьте введенную информацию.';
+            }
+            break;
+          case 429:
+            errorMessage = 'Слишком много попыток входа. Пожалуйста, подождите немного и попробуйте снова.';
+            break;
+          case 500:
+            errorMessage = 'Ошибка сервера. Пожалуйста, попробуйте позже.';
+            break;
+          default:
+            if (data?.message) {
+              errorMessage = data.message;
+            } else {
+              errorMessage = `Ошибка ${status}. Пожалуйста, попробуйте еще раз.`;
+            }
         }
+      } else if (error.request) {
+        // Запрос был отправлен, но ответ не получен
+        errorMessage = 'Не удалось подключиться к серверу. Проверьте интернет-соединение.';
       } else {
-        setServerError('Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.');
-        toast.error('Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.');
+        // Ошибка в коде
+        errorMessage = error.message || 'Произошла неизвестная ошибка.';
       }
+      
+      setServerError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -243,8 +280,11 @@ export const LoginForm = () => {
             
             {/* Сообщение об ошибке */}
             {serverError && (
-              <div className="rounded-lg bg-red-50 p-3 border border-red-200 text-sm text-red-600">
-                {serverError}
+              <div className="rounded-lg bg-red-50 p-3 border border-red-200 text-sm text-red-600 flex items-start gap-2">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{serverError}</span>
               </div>
             )}
             

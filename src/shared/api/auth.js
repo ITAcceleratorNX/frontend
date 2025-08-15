@@ -129,5 +129,35 @@ export const authApi = {
       console.error('Ошибка при восстановлении пароля:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Отправка кода для изменения пароля (используем существующий endpoint)
+  sendChangePasswordCode: async (email) => {
+    try {
+      console.log(`Отправка запроса на отправку кода для изменения пароля: ${email}`);
+      const response = await api.post('/auth/check-email', { email });
+      console.log('Код для изменения пароля отправлен');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при отправке кода для изменения пароля:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Изменение пароля (используем существующий endpoint для восстановления)
+  changePassword: async (email, unique_code, password) => {
+    try {
+      console.log(`Отправка запроса на изменение пароля для: ${email}`);
+      const response = await api.post('/auth/restore-password', { 
+        email, 
+        unique_code, 
+        password 
+      });
+      console.log('Пароль успешно изменен');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при изменении пароля:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

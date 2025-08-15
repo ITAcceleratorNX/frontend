@@ -13,12 +13,15 @@ import DatePicker from '../../../shared/ui/DatePicker';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
+import ChangePasswordModal from './ChangePasswordModal';
+import { Lock } from 'lucide-react';
 
 
 // Мемоизированный компонент личных данных с дополнительной оптимизацией
 const PersonalData = memo(() => {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const { user, isAuthenticated, isLoading, refetchUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -175,6 +178,19 @@ const PersonalData = memo(() => {
       </div>
       <span className="text-[#3B5B7C] text-xs mb-8 cursor-pointer hover:underline">Загрузите фото</span>
 
+      {/* Заголовок и кнопка изменения пароля */}
+      <div className="w-full flex flex-col sm:flex-row items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-[#1e2c4f] mb-4 sm:mb-0">Личные данные</h1>
+        <Button
+          variant="outline"
+          onClick={() => setIsChangePasswordModalOpen(true)}
+          className="w-full sm:w-auto border-[#1e2c4f] text-[#1e2c4f] hover:bg-[#1e2c4f] hover:text-white hover:shadow-lg transition-all duration-200 font-medium"
+        >
+          <Lock className="w-4 h-4 mr-2" />
+          Изменить пароль
+        </Button>
+      </div>
+
       {/* Форма личных данных */}
       <form className="w-full mb-8" onSubmit={handleSubmit(onSubmit)}>
         {/* Основные поля в 2 колонки */}
@@ -315,6 +331,13 @@ const PersonalData = memo(() => {
           Изменить
         </Button>
       )}
+
+      {/* Модалка изменения пароля */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        userEmail={user?.email}
+      />
     </div>
 
   );
