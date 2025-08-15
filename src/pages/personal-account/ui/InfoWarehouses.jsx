@@ -301,14 +301,14 @@ const InfoWarehouses = () => {
                   {warehouse.storage && (
                     <div className="pt-3 border-t border-gray-100">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Всего боксов:</span>
-                        <span className="font-medium text-gray-900">{warehouse.storage.length}</span>
+                        <span className="text-gray-600">Всего {warehouse.type === "CLOUD" ? 'мест:' : 'боксов:' }</span>
+                        <span className="font-medium text-gray-900">{warehouse.type === "CLOUD" ? warehouse.storage[0].total_volume : warehouse.storage.length}</span>
                       </div>
                       {warehouse.storage.filter && (
                         <div className="flex items-center justify-between text-sm mt-1">
                           <span className="text-gray-600">Свободно:</span>
                           <span className="font-medium text-green-600">
-                            {warehouse.storage.filter(s => s.status === 'VACANT').length}
+                            {warehouse.type === "CLOUD" ? warehouse.storage[0].available_volume : warehouse.storage.filter(s => s.status === 'VACANT').length}
                           </span>
                         </div>
                       )}

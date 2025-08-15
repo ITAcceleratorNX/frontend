@@ -18,6 +18,7 @@ const WarehouseData = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeNav, setActiveNav] = useState('warehouses');
+  const [isCloud, setIsCloud] = useState(false);
 
   const {
     register,
@@ -40,6 +41,7 @@ const WarehouseData = () => {
         setError(null);
         const data = await warehouseApi.getWarehouseById(warehouseId);
         setWarehouse(data);
+        setIsCloud(data.type === "CLOUD");
         
         // Заполняем форму данными склада
         reset({
@@ -47,7 +49,8 @@ const WarehouseData = () => {
           address: data.address || '',
           work_start: data.work_start || '',
           work_end: data.work_end || '',
-          status: data.status || 'AVAILABLE'
+          status: data.status || 'AVAILABLE',
+          total_volume: data.storage?.[0]?.total_volume || ''
         });
 
         if (import.meta.env.DEV) {
@@ -82,7 +85,8 @@ const WarehouseData = () => {
         address: data.address,
         work_start: formatTime(data.work_start),
         work_end: formatTime(data.work_end),
-        status: data.status
+        status: data.status,
+        ...(isCloud && { total_volume: data.total_volume }),
       };
 
       if (import.meta.env.DEV) {
@@ -461,6 +465,31 @@ const WarehouseData = () => {
                           </div>
                         </div>
 
+                        {/* здесь */}
+                        {isCloud && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Вместимость (м²) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              {...register('total_volume', { required: 'Вместимость обязательна', valueAsNumber: true })}
+                              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                errors.total_volume ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
+                              placeholder="Введите вместимость склада в м²"
+                            />
+                            {errors.total_volume && (
+                              <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {errors.total_volume.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                           <button
                             type="button"
@@ -493,7 +522,7 @@ const WarehouseData = () => {
                 )}
 
                 {/* Кнопка "Подробно боксов" - только в режиме просмотра */}
-                {!isEditing && (
+                {!isCloud && !isEditing && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                     <div className="text-center">
                       <div className="w-16 h-16 mx-auto mb-4 bg-[#273655]/10 rounded-full flex items-center justify-center">
@@ -525,8 +554,8 @@ const WarehouseData = () => {
                 {warehouse.storage ? (
                   <>
                     {getStatCard(
-                      'Всего боксов',
-                      warehouse.storage.length,
+                      `Всего ${isCloud ? 'мест м2' : 'боксов'}`,
+                        isCloud ? warehouse.storage[0]?.total_volume : warehouse.storage.length,
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>,
@@ -535,7 +564,7 @@ const WarehouseData = () => {
                     
                     {getStatCard(
                       'Свободные',
-                      warehouse.storage.filter(s => s.status === 'VACANT').length,
+                      isCloud ? warehouse.storage[0]?.available_volume : warehouse.storage.filter(s => s.status === 'VACANT').length,
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>,
@@ -544,14 +573,14 @@ const WarehouseData = () => {
                     
                     {getStatCard(
                       'Занятые',
-                      warehouse.storage.filter(s => s.status === 'OCCUPIED').length,
+                        isCloud ? warehouse.storage[0]?.total_volume - warehouse.storage[0]?.available_volume : warehouse.storage.filter(s => s.status === 'OCCUPIED').length,
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>,
                       'text-red-600'
                     )}
                     
-                    {getStatCard(
+                    {!isCloud && getStatCard(
                       'Ожидающие',
                       warehouse.storage.filter(s => s.status === 'PENDING').length,
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
