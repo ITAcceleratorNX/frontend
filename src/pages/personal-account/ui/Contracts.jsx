@@ -94,6 +94,22 @@ const getContractStatusInfo = (statusText) => {
   
   return statusMap[statusText] || { style: 'default', icon: null, message: statusText };
 };
+function StatusBadge({ status, type = 'order' }) {
+  if (!status) return null;
+
+  const info =
+      type === 'order'
+          ? getOrderStatusInfo(status)
+          : type === 'contract'
+              ? getContractStatusInfo(status)
+              : getPaymentStatusInfo(status);
+
+  return (
+      <Badge className={`${statusStyles[info.style]} justify-center py-1.5 px-2.5 text-xs`}>
+        {info.message || status}
+      </Badge>
+  );
+}
 
 const statusStyles = {
   success: 'bg-green-100 text-green-800 border border-green-200 hover:bg-green-200',
@@ -161,6 +177,10 @@ const getOrderStatusInfo = (status) => {
     'ACTIVE': { 
       style: 'info',
       message: 'Активный'
+    },
+    'CANCELED': {
+      style: 'danger',
+      message: 'Расторгнут'
     }
   };
   
@@ -571,6 +591,7 @@ const Contracts = () => {
                   <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
                   <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
                   <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>
+                  <th className="text-left px-6 py-4 font-medium">СТАТУС</th>
                   <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
                 </tr>
               </thead>
@@ -587,6 +608,9 @@ const Contracts = () => {
                     </td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{row.warehouse_address}</td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
+                    <td className="px-6 py-5">
+                      <StatusBadge status={row.order_status} type="order" />
+                    </td>
                     <td className="px-6 py-5 text-center">
                       <div className="flex items-center justify-center space-x-3">
                         <button
@@ -645,6 +669,15 @@ const Contracts = () => {
                   <div className="flex items-start gap-2 text-gray-700">
                     <Calendar className="w-4 h-4 mt-0.5 text-gray-500" />
                     <span>{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mb-3">
+                  <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <div className="text-base font-semibold text-[#1e2c4f]">
+                      {`Individual Storage (${row.total_volume} м²)`}
+                    </div>
+                    <StatusBadge status={row.order_status} type="order" />
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-2">
