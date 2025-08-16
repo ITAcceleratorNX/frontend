@@ -313,23 +313,23 @@ const CourierRequestOrder = () => {
               </Card>
 
               {/* Услуги */}
-                {order.serviceDescriptions?.length > 0 && (
+                {order.serviceDescriptions && Object.keys(order.serviceDescriptions).length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
                       <FileText className="w-5 h-5" />
                       Услуги
                       <Badge variant="outline" className="ml-auto">
-                        {order.serviceDescriptions.length}
+                        {Object.keys(order.serviceDescriptions).length}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {order.serviceDescriptions.map((desc, i) => (
+                      {Object.entries(order.serviceDescriptions).map(([desc, count], i) => (
                         <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                           <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{desc}</span>
+                          <span className="text-sm text-gray-700">{desc} — {count} шт.</span>
                         </div>
                       ))}
                     </div>
