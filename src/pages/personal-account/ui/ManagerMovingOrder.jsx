@@ -21,10 +21,12 @@ import {
   FileText,
   Box,
   Phone,
-  Download
+  Download,
+  Edit
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
+import EditLocationModal from './EditLocationModal';
 
 const ManagerMovingOrder = () => {
   const { orderId } = useParams();
@@ -32,6 +34,8 @@ const ManagerMovingOrder = () => {
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const downloadItemFile = useDownloadItemFile();
 
   useEffect(() => {
@@ -54,6 +58,24 @@ const ManagerMovingOrder = () => {
 
   const handleDownloadItem = (itemId) => {
     downloadItemFile.mutate(itemId);
+  };
+
+  // Обработчик открытия модалки редактирования локации
+  const handleEditLocation = (item) => {
+    setSelectedItem(item);
+    setIsLocationModalOpen(true);
+  };
+
+  // Обработчик обновления локации
+  const handleLocationUpdated = (updatedItem) => {
+    setOrder(prev => ({
+      ...prev,
+      items: prev.items.map(item => 
+        item.id === updatedItem.id 
+          ? { ...item, location: updatedItem.physical_location }
+          : item
+      )
+    }));
   };
 
   // Менеджер только просматривает - никаких кнопок действий
@@ -320,16 +342,27 @@ const ManagerMovingOrder = () => {
                               </Badge>
                             </td>
                             <td className="py-3 px-4 text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
-                                onClick={() => handleDownloadItem(item.id)}
-                                disabled={downloadItemFile.isPending}
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                <span>Скачать</span>
-                              </Button>
+                              <div className="flex items-center gap-2 justify-end">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
+                                  onClick={() => handleDownloadItem(item.id)}
+                                  disabled={downloadItemFile.isPending}
+                                >
+                                  <Download className="w-4 h-4 mr-1" />
+                                  <span>Скачать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditLocation(item)}
+                                  className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
+                                >
+                                  <Edit className="w-4 h-4 mr-1" />
+                                  <span>Местоположение</span>
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -339,6 +372,14 @@ const ManagerMovingOrder = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Модальное окно редактирования локации */}
+            <EditLocationModal
+              isOpen={isLocationModalOpen}
+              onClose={() => setIsLocationModalOpen(false)}
+              item={selectedItem}
+              onLocationUpdated={handleLocationUpdated}
+            />
           </div>
         </main>
       </div>

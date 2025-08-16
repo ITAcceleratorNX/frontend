@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -6,15 +6,20 @@ import {
   getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
+import EditLocationModal from './EditLocationModal';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
     return 'Индивидуальное';
+  } else if (type === 'CLOUD') {
+    return 'Облачное'
   }
   return type;
 };
 
 const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) => {
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   // Функции для форматирования
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -128,6 +133,30 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
 
   const getContractVariant = (status) => {
     return status === 'SIGNED' ? 'default' : 'secondary';
+  };
+
+  // Обработчик открытия модалки редактирования локации
+  const handleEditLocation = (item) => {
+    setSelectedItem(item);
+    setIsLocationModalOpen(true);
+  };
+
+  // Обработчик обновления локации
+  const handleLocationUpdated = (updatedItem) => {
+    // Обновляем локацию в списке предметов заказа
+    const updatedOrder = {
+      ...order,
+      items: order.items.map(item => 
+        item.id === updatedItem.id 
+          ? { ...item, physical_location: updatedItem.physical_location }
+          : item
+      )
+    };
+    
+    // Вызываем onUpdate если он предоставлен, чтобы обновить родительский компонент
+    if (onUpdate) {
+      onUpdate(updatedOrder);
+    }
   };
 
   // Функция для получения компонента дополнительной услуги
@@ -432,6 +461,24 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
                       </Badge>
                       <span className="text-gray-400">|</span>
                       <span className="text-gray-600">{getCargoMarkText(item.cargo_mark)}</span>
+                      <span className="text-gray-400">|</span>
+                      <span className="text-gray-600">
+                        {order?.storage?.storage_type === "CLOUD" ? (
+                          <div className="flex items-center gap-2">
+                            <span>{item.physical_location ? item.physical_location : 'Расположение пока не определен'}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditLocation(item)}
+                              className="h-5 w-5 p-0 text-gray-500 hover:text-[#1e2c4f]"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </Button>
+                          </div>
+                        ) : ''}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -636,6 +683,14 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
               </Button>
           )}
         </div> )}
+
+        {/* Модальное окно редактирования локации */}
+        <EditLocationModal
+          isOpen={isLocationModalOpen}
+          onClose={() => setIsLocationModalOpen(false)}
+          item={selectedItem}
+          onLocationUpdated={handleLocationUpdated}
+        />
       </CardContent>
     </Card>
   );

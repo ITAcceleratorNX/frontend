@@ -23,10 +23,12 @@ import {
   FileText,
   Box,
   Phone,
-  Download
+  Download,
+  Edit
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
+import EditLocationModal from './EditLocationModal';
 
 const CourierRequestOrder = () => {
   const { orderId } = useParams();
@@ -35,6 +37,8 @@ const CourierRequestOrder = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const downloadItemFile = useDownloadItemFile();
 
   useEffect(() => {
@@ -57,6 +61,24 @@ const CourierRequestOrder = () => {
 
   const handleDownloadItem = (itemId) => {
     downloadItemFile.mutate(itemId);
+  };
+
+  // Обработчик открытия модалки редактирования локации
+  const handleEditLocation = (item) => {
+    setSelectedItem(item);
+    setIsLocationModalOpen(true);
+  };
+
+  // Обработчик обновления локации
+  const handleLocationUpdated = (updatedItem) => {
+    setOrder(prev => ({
+      ...prev,
+      items: prev.items.map(item => 
+        item.id === updatedItem.id 
+          ? { ...item, location: updatedItem.physical_location }
+          : item
+      )
+    }));
   };
 
   const handleActionClick = async () => {
@@ -355,6 +377,7 @@ const CourierRequestOrder = () => {
                     <table className="w-full">
                         <thead>
                         <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Название</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Объём</th>
                           <th className="text-left py-3 px-4 font-medium text-gray-900">Маркировка</th>
@@ -364,6 +387,12 @@ const CourierRequestOrder = () => {
                         <tbody>
                         {order.items.map((item) => (
                           <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Box className="w-4 h-4 text-gray-400" />
+                                <span className="font-medium text-gray-900">{item.public_id}</span>
+                              </div>
+                            </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
                                 <Box className="w-4 h-4 text-gray-400" />
@@ -384,16 +413,27 @@ const CourierRequestOrder = () => {
                               </Badge>
                             </td>
                             <td className="py-3 px-4 text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
-                                onClick={() => handleDownloadItem(item.id)}
-                                disabled={downloadItemFile.isPending}
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                <span>Скачать</span>
-                              </Button>
+                              <div className="flex items-center gap-2 justify-end">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
+                                  onClick={() => handleDownloadItem(item.id)}
+                                  disabled={downloadItemFile.isPending}
+                                >
+                                  <Download className="w-4 h-4 mr-1" />
+                                  <span>Скачать</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditLocation(item)}
+                                  className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
+                                >
+                                  <Edit className="w-4 h-4 mr-1" />
+                                  <span>Местоположение</span>
+                                </Button>
+                              </div>
                             </td>
                             </tr>
                         ))}
@@ -403,6 +443,14 @@ const CourierRequestOrder = () => {
                 </CardContent>
               </Card>
                 )}
+
+            {/* Модальное окно редактирования локации */}
+            <EditLocationModal
+              isOpen={isLocationModalOpen}
+              onClose={() => setIsLocationModalOpen(false)}
+              item={selectedItem}
+              onLocationUpdated={handleLocationUpdated}
+            />
             </div>
           </main>
         </div>

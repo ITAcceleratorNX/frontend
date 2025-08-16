@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Package, MapPin, User, Phone, Truck, Clock } from 'lucide-react';
+import { Search, Package, MapPin, User, Phone, Truck, Clock, Edit } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { Card } from '../../../components/ui/card';
@@ -13,12 +13,15 @@ import {
   InputButtonSubmit,
   InputButtonInput,
 } from '../../../components/animate-ui/buttons/input';
+import EditLocationModal from './EditLocationModal';
 
 const ItemSearch = () => {
   const [itemId, setItemId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [isSearched, setIsSearched] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Функция для получения текста статуса на русском
   const getMovingStatusText = (status) => {
@@ -88,6 +91,23 @@ const ItemSearch = () => {
     setItemId('');
     setSearchResult(null);
     setIsSearched(false);
+  };
+
+  // Обработчик открытия модалки редактирования локации
+  const handleEditLocation = (item) => {
+    setSelectedItem(item);
+    setIsLocationModalOpen(true);
+  };
+
+  // Обработчик обновления локации
+  const handleLocationUpdated = (updatedItem) => {
+    setSearchResult(prev => ({
+      ...prev,
+      item: {
+        ...prev.item,
+        location: updatedItem.physical_location
+      }
+    }));
   };
 
   return (
@@ -196,7 +216,20 @@ const ItemSearch = () => {
                     <div>
                       <p className="text-sm text-gray-500">Склад</p>
                       <p className="font-semibold">{searchResult.warehouseAddress}</p>
-                      <p className="text-sm text-gray-600">Бокс: {searchResult.storageName}</p>
+                      {searchResult?.storage_type !== "CLOUD" && (<p className="text-sm text-gray-600">Бокс: {searchResult.storageName}</p>)}
+                      {searchResult?.storage_type === "CLOUD" && (
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-gray-600">Расположение: {searchResult.item.location ? searchResult.item.location : "Пока не определен"}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditLocation(searchResult.item)}
+                            className="h-6 w-6 p-0 text-gray-500 hover:text-[#1e2c4f]"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -262,6 +295,14 @@ const ItemSearch = () => {
           </Button>
         </div>
       )}
+
+      {/* Модальное окно редактирования локации */}
+      <EditLocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        item={selectedItem}
+        onLocationUpdated={handleLocationUpdated}
+      />
     </div>
   );
 };
