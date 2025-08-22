@@ -24,7 +24,8 @@ import ChatButton from "../../shared/components/ChatButton";
 import CostCalculator from "../../shared/components/CostCalculator";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import VolumeSelector from "../../components/VolumeSelector.jsx";
-
+import { Dropdown } from '../../shared/components/Dropdown.jsx';
+import { SmartButton } from "../../shared/components/SmartButton.jsx";
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
   const navigate = useNavigate();
@@ -119,14 +120,10 @@ const HomePage = memo(() => {
   const handleWarehouseSelect = (warehouse) => {
     setSelectedWarehouse(warehouse);
     setIsWarehouseDropdownOpen(false);
-    if (import.meta.env.DEV) {
-      console.log("Выбран склад:", warehouse);
-    }
   };
 
-  if (import.meta.env.DEV) {
-    console.log("Рендеринг компонента HomePage");
-  }
+  const dropdownItems = apiWarehouses.length > 0 ? apiWarehouses : warehouses;
+
 
   return (
     <div className="font-['Montserrat'] min-h-screen bg-white flex flex-col">
@@ -259,7 +256,7 @@ const HomePage = memo(() => {
             {/* Жёлтый — Оплата */}
             <div
               className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden cursor-pointer"
-              
+
             >
               <div className="z-10 relative text-right">
                 <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
@@ -276,14 +273,14 @@ const HomePage = memo(() => {
                 className="absolute right-[180px] bottom-[-10px] w-[150px] md:w-[220px] select-none pointer-events-none z-0"
                 style={{ paddingLeft: "70px" }}
               />
-               <div className="flex justify-center md:justify-start">
-                    <button
-                        onClick={() => navigate("/online-payment")}
-                        className="mt-2 sm:mt-4 w-full sm:w-[165px] h-[36px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors"
-                    >
-                        Подробнее
-                    </button>
-                </div>
+              <div className="flex justify-center md:justify-start">
+                <button
+                  onClick={() => navigate("/online-payment")}
+                  className="mt-2 sm:mt-4 w-full sm:w-[165px] h-[36px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors"
+                >
+                  Подробнее
+                </button>
+              </div>
             </div>
 
 
@@ -457,7 +454,7 @@ const HomePage = memo(() => {
                     </p>
                     <p className="text-sm text-[#3E4958]">
                       {selectedWarehouse.work_start &&
-                      selectedWarehouse.work_end
+                        selectedWarehouse.work_end
                         ? `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}`
                         : "Режим работы уточняется"}
                     </p>
@@ -485,68 +482,23 @@ const HomePage = memo(() => {
 
                 {/* Dropdown */}
                 <div className="relative mt-4 w-full max-w-xs">
-                  <button
-                    className="w-full flex items-center justify-between px-4 py-2 bg-[#273655] text-white rounded-full text-base hover:bg-[#193A7E]"
-                    onClick={toggleWarehouseDropdown}
-                    disabled={warehousesLoading}
-                  >
-                    Выбрать склад
-                    <svg
-                      className={`w-4 h-4 transition-transform ${isWarehouseDropdownOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-
-                  {isWarehouseDropdownOpen && (
-                    <div className="absolute z-20 w-full mt-2 bg-white border rounded-lg shadow max-h-60 overflow-y-auto">
-                      {apiWarehouses.length > 0 ? (
-                        apiWarehouses.map((w) => (
-                          <button
-                            key={w.id}
-                            onClick={() => handleWarehouseSelect(w)}
-                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-b last:border-b-0"
-                          >
-                            <div className="font-medium text-[#273655]">
-                              {w.name}
-                            </div>
-                            <div className="text-gray-600 text-xs">
-                              {w.address}
-                            </div>
-                            <span
-                              className={`text-xs px-2 py-1 rounded-full mt-1 inline-block ${w.status === "AVAILABLE" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-                            >
-                              {w.status === "AVAILABLE"
-                                ? "Доступен"
-                                : "Недоступен"}
-                            </span>
-                          </button>
-                        ))
-                      ) : (
-                        <p className="px-4 py-3 text-center text-gray-500">
-                          Нет доступных складов
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  <Dropdown
+                    items={dropdownItems}
+                    value={selectedWarehouse ? (selectedWarehouse.id ?? selectedWarehouse.value) : undefined}
+                    onChange={(_, item) => setSelectedWarehouse(item)}
+                    placeholder="Выбрать склад"
+                    searchable={false}
+                    getKey={(w) => w.id}
+                    getLabel={(w) => w.name}
+                    getDescription={(w) => w.address}
+                    className="bg-[#273655] text-white border-0"
+                    popoverProps={{ className: "p-0" }}
+                  />
                 </div>
 
                 {/* Бронирование */}
                 {selectedWarehouse?.status === "AVAILABLE" && (
-                  <button
-                    onClick={() => navigate("/warehouse-order")}
-                    className="mt-4 px-4 py-2 bg-[#F86812] text-white rounded-full text-sm hover:bg-[#d87d1c] max-w-[170px]"
-                  >
-                    Забронировать бокс
-                  </button>
+                  <SmartButton variant="outline" onClick={() => navigate("/warehouse-order")}>Забронировать бокс</SmartButton>
                 )}
               </div>
             </div>
