@@ -58,7 +58,7 @@ const CloudStorage = () => {
             >
                 <div className="w-full max-w-[1100px] bg-white mt-10 px-4 md:px-8 py-8 md:py-12">
                     <h2 className="text-[26px] md:text-[46px] font-bold text-[#000000] font-['DM Sans'] mb-4 md:mb-6">
-                        Облачное хранение от ExtraSpace
+                        Облачное хранение
                     </h2>
                     <p className="text-[16px] md:text-[18px] text-[#000000] font-['DM Sans'] font-normal leading-relaxed mb-4 max-w-full md:max-w-[730px]">
                         Ваши вещи — в безопасности, даже когда вас нет рядом.
