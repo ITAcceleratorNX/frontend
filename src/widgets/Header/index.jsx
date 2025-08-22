@@ -136,9 +136,6 @@ export const Header = memo(() => {
                   className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 mr-3 sm:mr-4 lg:mr-6"
                   onClick={handleLogoClick}
               >
-                <div className="text-[#273551] font-['Montserrat'] font-bold text-[27px] leading-[100%] tracking-[0.05em] capitalize">
-                  ExtraSpace
-                </div>
               </div>
               <nav className="hidden md:flex gap-3">
                 <NavLink to="/" end className={getNavLinkClass}>ГЛАВНАЯ</NavLink>
