@@ -153,9 +153,9 @@ const HomePage = memo(() => {
             </h1>
 
             <div className="mt-3">
-              <button className="bg-[#273655] text-white px-6 sm:px-8 md:px-10 py-1 sm:py-1.5 rounded-[15px] text-base sm:text-lg font-medium hover:bg-[#2a3c64] transition-colors font-['Montserrat']">
+              <div className="bg-[#273655] text-white px-6 sm:px-8 md:px-10 py-1 sm:py-1.5 rounded-[15px] text-base sm:text-lg font-medium hover:bg-[#2a3c64] transition-colors font-['Montserrat']">
                 Теплые склады с охраной от 3 м²
-              </button>
+              </div>
             </div>
 
             <div className="relative mt-5 w-full h-[280px] sm:h-[350px] md:h-[470px]">
