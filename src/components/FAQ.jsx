@@ -1,18 +1,27 @@
-import React, { useState, useMemo, memo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import api from '../shared/api/axios';
-import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
+import React, { memo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "../shared/api/axios";
 
-const FAQ_QUERY_KEY = 'faq';
+const FAQ_QUERY_KEY = "faq";
+
+const Skeleton = () => (
+  <div className="w-full max-w-[820px] space-y-4 px-3">
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="h-5 w-3/4 animate-pulse rounded bg-gray-200" />
+        <div className="mt-3 h-4 w-5/6 animate-pulse rounded bg-gray-100" />
+        <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-gray-100" />
+      </div>
+    ))}
+  </div>
+);
 
 const FAQ = memo(() => {
-  const [openItems, setOpenItems] = useState({});
-
   const { data: faqItems = [], isLoading, error } = useQuery({
     queryKey: [FAQ_QUERY_KEY],
     queryFn: async () => {
-      const response = await api.get('/faq');
-      return response.data.slice(0, 6);
+      const { data } = await api.get("/faq");
+      return data.slice(0, 6);
     },
     staleTime: 60 * 60 * 1000,
     cacheTime: 120 * 60 * 1000,
@@ -20,66 +29,49 @@ const FAQ = memo(() => {
     refetchOnMount: false,
   });
 
-  const toggleItem = useMemo(() => (id) => {
-    setOpenItems((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  }, []);
-
-  const renderFAQItems = (items) =>
-      items.map((faq) => (
-          <div
-              key={faq.id}
-              className="mb-6 w-full rounded-lg bg-white p-4 sm:p-6 lg:px-6 xl:px-8"
-          >
-            <button
-                className="faq-btn flex w-full text-left"
-                onClick={() => toggleItem(faq.id)}
-            >
-              <div className="mr-5 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/5 text-primary">
-                {openItems[faq.id] ? (
-                    <MinusIcon className="w-5 h-5 stroke-2 text-[#273655]" />
-                ) : (
-                    <PlusIcon className="w-5 h-5 stroke-2 text-[#273655]" />
-                )}
-              </div>
-              <div className="w-full">
-                <h4 className="mt-1 text-lg font-semibold text-[#222] font-['Montserrat']">
-                  {faq.question}
-                </h4>
-              </div>
-            </button>
-
-            {openItems[faq.id] && (
-                <div className="pl-[62px] pt-4 mt-4 text-[16px] font-['Montserrat'] text-[#666] leading-relaxed">
-                  {faq.answer}
-                </div>
-            )}
-          </div>
-      ));
-
   return (
-      <section className="w-full flex flex-col items-center justify-center mb-24 font-['Montserrat']">
-        <h2 className="text-[30px] font-bold text-[#273655] text-center mb-10">
-          Часто задаваемые вопросы:
-        </h2>
+    <section className="mb-24 flex w-full flex-col items-center justify-center font-['Montserrat']">
+      <h2 className="mb-2 text-center text-[28px] font-extrabold text-[#273655] sm:text-[32px]">
+        Часто задаваемые вопросы
+      </h2>
+      <p className="mb-10 max-w-[720px] px-4 text-center text-sm text-[#6b7280]">
+        Мы собрали ответы на популярные вопросы. Если не нашли нужное — напишите нам.
+      </p>
 
-        {isLoading ? (
-            <div className="w-full max-w-[800px] flex justify-center py-8">
-              <div className="animate-spin rounded-full h-9 w-9 border-t-2 border-b-2 border-[#273655]"></div>
-            </div>
-        ) : error ? (
-            <div className="w-full max-w-[820px] text-center text-red-500 py-4">
-              Не удалось загрузить вопросы. Пожалуйста, попробуйте позже.
-            </div>
-        ) : (
-            <div className="w-full max-w-[820px]">{renderFAQItems(faqItems)}</div>
-        )}
-      </section>
+      {isLoading ? (
+        <Skeleton />
+      ) : error ? (
+        <div className="w-full max-w-[820px] px-3 text-center text-red-500">
+          Не удалось загрузить вопросы. Пожалуйста, попробуйте позже.
+        </div>
+      ) : (
+        <div className="w-full max-w-[820px] space-y-5 px-3">
+          {faqItems.map((faq) => (
+            <article
+              key={faq.id}
+              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+            >
+              {/* тонкая цветная полоса сверху */}
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-400 opacity-80" />
+
+              <header className="mb-3 flex items-start gap-3">
+                <div className="mt-0.5 inline-flex h-7 select-none items-center justify-center rounded-md bg-indigo-50 px-2 text-xs font-semibold text-indigo-700">
+                  ?
+                </div>
+                <h3 className="text-[17px] font-semibold leading-snug text-[#1f2937]">
+                  {faq.question}
+                </h3>
+              </header>
+
+
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 });
 
-FAQ.displayName = 'FAQ';
+FAQ.displayName = "FAQ";
 
 export default FAQ;
