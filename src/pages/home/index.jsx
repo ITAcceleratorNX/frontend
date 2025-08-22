@@ -181,7 +181,7 @@ const HomePage = memo(() => {
             {/* Верхний левый — текст */}
             <div className="flex flex-col w-full md:w-[560px] md:h-[255px] pl-2 pt-6">
               <div className="text-[20px] sm:text-[24px] md:text-[28px] font-bold font-['Montserrat'] text-[#273655] leading-tight mb-4">
-                мы предоставляем{" "}
+                Мы предоставляем{" "}
                 <span className="text-[#C73636]">
                   автоматизированные склады
                 </span>
