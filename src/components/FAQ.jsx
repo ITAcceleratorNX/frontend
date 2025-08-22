@@ -62,8 +62,6 @@ const FAQ = memo(() => {
                   {faq.question}
                 </h3>
               </header>
-
-
             </article>
           ))}
         </div>
