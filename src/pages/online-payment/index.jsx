@@ -24,7 +24,7 @@ const OnlinePaymentPage = () => {
         <div className="flex items-center justify-center mb-2 mt-[-20px]">
           <img src={Vector038} alt="icon" className="w-10 h-10 mr-2 mt-[-5px]" />
           <h1 className="text-[35px] md:text-[35px] font-bold text-[#273655] font-['Montserrat'] text-center tracking-[0.05em]">
-            Информация об онлайн-оплате для<br />сайта extraspace.kz
+            Информация об онлайн-оплате
           </h1>
           <img src={Vector038} alt="icon" className="w-10 h-10 ml-2 mt-[-5px]" />
         </div>
@@ -37,8 +37,8 @@ const OnlinePaymentPage = () => {
             <img src={image85} alt="bank card payment" className="w-[330px] h-[330px] object-contain" />
           </div>
           <div className="flex-1 text-left mr-32 max-w-[485px]">
-            <h2 className="text-[30px] md:text-[30px] text-right font-bold text-white mb-6 font-['Montserrat']">
-              Платежи. Оплата банковской<br />картой онлайн
+            <h2 className="text-[30px] md:text-[30px] text-left font-bold text-white mb-6 font-['Montserrat']">
+              Оплата картой онлайн
             </h2>
             <p className="text-white text-[14px] font-bold leading-relaxed max-w-[500px] font-['Montserrat'] text-justify">
               Наш сайт подключен к интернет-эквайрингу, и Вы можете оплатить услугу банковской картой Visa или Mastercard, а также с помощью Apple Pay и Google Pay. После подтверждения выбранной услуги откроется защищенное окно с платежной страницей процессингового центра OneVision, где Вам необходимо ввести данные Вашей банковской карты. Для дополнительной аутентификации держателя карты используется протокол 3-D Secure.
