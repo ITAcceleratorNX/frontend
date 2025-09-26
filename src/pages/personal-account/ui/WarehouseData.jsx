@@ -157,6 +157,12 @@ const WarehouseData = () => {
     return 'bg-gray-100 text-gray-800 border border-gray-200';
   };
 
+  // Функция для форматирования времени (убираем секунды)
+  const formatTime = (timeString) => {
+    if (!timeString) return timeString;
+    return timeString.substring(0, 5); // Берем только HH:MM
+  };
+
   const getStatCard = (title, value, icon, color = 'text-gray-600') => (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
@@ -327,7 +333,7 @@ const WarehouseData = () => {
                               <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              <p className="text-gray-900">{warehouse.work_start} - {warehouse.work_end}</p>
+                              <p className="text-gray-900">{formatTime(warehouse.work_start)} - {formatTime(warehouse.work_end)}</p>
                             </div>
                           </div>
                         </div>

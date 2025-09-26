@@ -455,7 +455,7 @@ const HomePage = memo(() => {
                     <p className="text-sm text-[#3E4958]">
                       {selectedWarehouse.work_start &&
                         selectedWarehouse.work_end
-                        ? `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}`
+                        ? `Режим: ${selectedWarehouse.work_start.substring(0, 5)} - ${selectedWarehouse.work_end.substring(0, 5)}`
                         : "Режим работы уточняется"}
                     </p>
                     <div className="flex items-center gap-2 text-sm text-[#273655] mt-2">

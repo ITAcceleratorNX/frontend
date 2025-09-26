@@ -8,8 +8,6 @@ import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import { ChatStatus } from '../../../entities/chat/ui';
 import { CHAT_STATUS, USER_ROLES } from '../../../entities/chat/model';
 import { useChatStore } from '../../../entities/chat/model';
-import ServerStatus from '../../../shared/components/ServerStatus';
-import WebSocketStatus from '../../../shared/components/WebSocketStatus';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { QuickActions } from './QuickActions';
@@ -130,15 +128,6 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
               managerName={managerName}
             />
             
-            {!isMobile && (
-              <div className="flex items-center gap-2">
-                <WebSocketStatus 
-                  isConnected={isConnected} 
-                  isReconnecting={isReconnecting} 
-                />
-                <ServerStatus />
-              </div>
-            )}
           </div>
           
           <div className="flex items-center gap-2">

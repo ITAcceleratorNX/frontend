@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo } from 'react';
-import { Clock, MessageSquare, User, X, Trash2, Users, MoreVertical, Settings, Search } from 'lucide-react';
+import { MessageSquare, User, X, Trash2, Users, MoreVertical, Settings, Search } from 'lucide-react';
 import { useManagerChats } from '../../../shared/lib/hooks/use-manager-chats';
 import { useChat } from '../../../shared/lib/hooks/use-chat';
 import { useChatMessages } from '../../../shared/lib/hooks/use-chat-messages';
@@ -41,12 +41,6 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
     }
   };
 
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('ru-RU', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   // Форматирование имени пользователя
   const formatUserName = (chat) => {
@@ -78,10 +72,6 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
             <h4 className="font-medium text-sm text-gray-900 truncate">
               {formatUserName(chat)}
             </h4>
-            <div className="flex items-center space-x-1 text-xs text-gray-500">
-              <Clock className="w-3 h-3" />
-              <span>{formatTime(chat.createdAt || Date.now())}</span>
-            </div>
           </div>
         </div>
         

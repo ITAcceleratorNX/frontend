@@ -22,7 +22,6 @@ import {
   XCircle, 
   Loader2,
   AlertCircle,
-  ArrowRight,
   User,
   Building
 } from 'lucide-react';
@@ -158,7 +157,6 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
             </CardTitle>
             {getStatusBadge()}
           </div>
-          <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#1e2c4f] transition-colors" />
         </div>
       </CardHeader>
 

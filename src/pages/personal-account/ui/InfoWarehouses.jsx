@@ -96,6 +96,12 @@ const InfoWarehouses = () => {
       : 'border-gray-200 hover:border-gray-300 hover:shadow-md opacity-75';
   };
 
+  // Функция для форматирования времени (убираем секунды)
+  const formatTime = (timeString) => {
+    if (!timeString) return timeString;
+    return timeString.substring(0, 5); // Берем только HH:MM
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -293,7 +299,7 @@ const InfoWarehouses = () => {
                       <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>{warehouse.work_start} - {warehouse.work_end}</span>
+                      <span>{formatTime(warehouse.work_start)} - {formatTime(warehouse.work_end)}</span>
                     </div>
                   </div>
 
