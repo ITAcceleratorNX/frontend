@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 export const NOTIFICATION_QUERY_KEYS = {
   all: ['notifications'],
   user: (userId) => ['notifications', 'user', userId],
+  search: (searchParams) => ['notifications', 'search', searchParams],
   users: ['notifications', 'users'],
   stats: ['notifications', 'stats']
 };
@@ -228,6 +229,23 @@ export const useNotifications = () => {
     markAsRead.mutate,
     markAsRead.isPending,
   ]);
+};
+
+// Хук для поиска уведомлений
+export const useSearchNotifications = (searchParams) => {
+  const { user } = useAuth();
+  const userRole = user?.role;
+  
+  // Создаем ключ кеша на основе параметров поиска
+  const searchKey = JSON.stringify(searchParams);
+  
+  return useQuery({
+    queryKey: NOTIFICATION_QUERY_KEYS.search(searchKey),
+    queryFn: () => notificationApi.searchNotifications(searchParams),
+    enabled: !!(userRole && (userRole === 'MANAGER' || userRole === 'ADMIN')),
+    staleTime: 30 * 1000, // 30 секунд
+    cacheTime: 5 * 60 * 1000, // 5 минут
+  });
 };
 
 // Хук для подсчета непрочитанных уведомлений

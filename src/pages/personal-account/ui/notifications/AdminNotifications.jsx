@@ -1,12 +1,15 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Settings, Plus, History, Loader2, AlertCircle, Shield, BarChart3 } from 'lucide-react';
-import { useNotifications } from '../../../../shared/lib/hooks/use-notifications';
+import { useNotifications, useSearchNotifications } from '../../../../shared/lib/hooks/use-notifications';
 import { toast } from 'react-toastify';
 import NotificationCard from './NotificationCard';
 import CreateNotificationForm from './CreateNotificationForm';
+import { NotificationSearch } from '../../../../components/ui/NotificationSearch';
 
 const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState('history');
+  const [searchParams, setSearchParams] = useState(null);
+  const [isSearchMode, setIsSearchMode] = useState(false);
   const observerRef = useRef(null);
 
   const {
@@ -22,6 +25,9 @@ const AdminNotifications = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useNotifications();
+
+  // Поиск уведомлений
+  const searchResult = useSearchNotifications(searchParams || {});
 
   // IntersectionObserver
   const lastElementRef = useCallback(
@@ -50,14 +56,37 @@ const AdminNotifications = () => {
     }
   };
 
-  if (isLoading) {
+  const handleSearch = (params) => {
+    setSearchParams(params);
+    setIsSearchMode(true);
+  };
+
+  const handleClearSearch = () => {
+    setSearchParams(null);
+    setIsSearchMode(false);
+  };
+
+  // Определяем какие данные показывать
+  const displayData = isSearchMode ? {
+    notifications: searchResult.data?.notifications || [],
+    total: searchResult.data?.total || 0,
+    isLoading: searchResult.isLoading,
+    error: searchResult.error
+  } : {
+    notifications,
+    total,
+    isLoading,
+    error
+  };
+
+  if (displayData.isLoading) {
     return (
         <div className="flex items-center justify-center min-h-[600px]">
           <div className="flex flex-col items-center gap-4 text-center">
             <Loader2 className="w-12 h-12 text-[#1e2c4f] animate-spin" />
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Загрузка системы уведомлений
+                {isSearchMode ? 'Поиск уведомлений...' : 'Загрузка системы уведомлений'}
               </h3>
               <p className="text-sm text-muted-foreground">Пожалуйста, подождите...</p>
             </div>
@@ -66,7 +95,7 @@ const AdminNotifications = () => {
     );
   }
 
-  if (error) {
+  if (displayData.error) {
     return (
         <div className="min-h-[600px] flex items-center justify-center">
           <div className="text-center space-y-4 max-w-md mx-auto">
@@ -75,8 +104,10 @@ const AdminNotifications = () => {
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-gray-900">Ошибка загрузки</h3>
-              <p className="text-gray-600">Не удалось загрузить систему уведомлений</p>
-              <p className="text-sm text-gray-500">{error.message}</p>
+              <p className="text-gray-600">
+                {isSearchMode ? 'Не удалось выполнить поиск' : 'Не удалось загрузить систему уведомлений'}
+              </p>
+              <p className="text-sm text-gray-500">{displayData.error.message}</p>
             </div>
             <button
                 onClick={() => window.location.reload()}
@@ -89,7 +120,7 @@ const AdminNotifications = () => {
     );
   }
 
-  const totalNotifications = total || 0;
+  const totalNotifications = displayData.total || 0;
   const totalUsers = users?.length || 0;
 
   return (
@@ -142,6 +173,13 @@ const AdminNotifications = () => {
           </div>
         </div>
 
+        {/* Поиск уведомлений */}
+        <NotificationSearch 
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+          isLoading={searchResult.isLoading}
+        />
+
         {/* Tabs */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="border-b border-gray-200">
@@ -187,19 +225,56 @@ const AdminNotifications = () => {
 
             {activeTab === 'history' && (
                 <div className="p-6 space-y-4">
-                  {notifications.map((n, index) => {
-                    if (notifications.length === index + 1) {
-                      return (
-                          <div ref={lastElementRef} key={n.notification_id}>
-                            <NotificationCard notification={n} />
-                          </div>
-                      );
-                    } else {
-                      return <NotificationCard key={n.notification_id} notification={n} />;
-                    }
-                  })}
+                  {/* Индикатор режима поиска */}
+                  {isSearchMode && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span className="text-sm text-blue-700">
+                            Показаны результаты поиска: {displayData.notifications.length} из {displayData.total}
+                          </span>
+                        </div>
+                        <button
+                          onClick={handleClearSearch}
+                          className="text-sm text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Показать все уведомления
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-                  {isFetchingNextPage && (
+                  {displayData.notifications.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <History className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {isSearchMode ? 'Ничего не найдено' : 'Уведомлений пока нет'}
+                      </h3>
+                      <p className="text-gray-600">
+                        {isSearchMode 
+                          ? 'Попробуйте изменить параметры поиска' 
+                          : 'Уведомления появятся здесь после их создания'
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    displayData.notifications.map((n, index) => {
+                      if (!isSearchMode && displayData.notifications.length === index + 1) {
+                        return (
+                            <div ref={lastElementRef} key={n.notification_id}>
+                              <NotificationCard notification={n} />
+                            </div>
+                        );
+                      } else {
+                        return <NotificationCard key={n.notification_id} notification={n} />;
+                      }
+                    })
+                  )}
+
+                  {!isSearchMode && isFetchingNextPage && (
                       <div className="flex justify-center py-4">
                         <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin" />
                       </div>

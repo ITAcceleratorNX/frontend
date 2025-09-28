@@ -53,6 +53,34 @@ export const notificationApi = {
     }
   },
 
+  // Поиск уведомлений
+  async searchNotifications(searchParams) {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      // Добавляем параметры поиска
+      if (searchParams.query) queryParams.append('query', searchParams.query);
+      if (searchParams.notification_type) queryParams.append('notification_type', searchParams.notification_type);
+      if (searchParams.date_from) queryParams.append('date_from', searchParams.date_from);
+      if (searchParams.date_to) queryParams.append('date_to', searchParams.date_to);
+      if (searchParams.is_read !== undefined && searchParams.is_read !== '') queryParams.append('is_read', searchParams.is_read);
+      if (searchParams.user_role) queryParams.append('user_role', searchParams.user_role);
+      if (searchParams.page) queryParams.append('page', searchParams.page);
+      if (searchParams.limit) queryParams.append('limit', searchParams.limit);
+
+      const response = await api.get(`/notifications/search?${queryParams.toString()}`);
+      
+      if (isDevelopment) {
+        console.log('Ответ с сервера (поиск уведомлений):', response.data);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Error searching notifications:', error);
+      throw error;
+    }
+  },
+
   // Отправка уведомления
   async sendNotification(notification) {
     try {

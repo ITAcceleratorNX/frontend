@@ -230,15 +230,6 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
             isReconnecting={isReconnecting} 
             managerName={managerName}
           />
-          {!isMobile && (
-            <div className="flex items-center gap-2">
-              <WebSocketStatus 
-                isConnected={isConnected} 
-                isReconnecting={isReconnecting} 
-              />
-              <ServerStatus />
-            </div>
-          )}
         </div>
         
         <div className="flex items-center gap-2">
