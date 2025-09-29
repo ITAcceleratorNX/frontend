@@ -57,7 +57,15 @@ const AdminNotifications = () => {
   };
 
   const handleSearch = (params) => {
-    setSearchParams(params);
+    // Фильтруем параметры, убирая значения 'all' и пустые строки
+    const filteredParams = {};
+    Object.entries(params).forEach(([key, value]) => {
+      if (value && value !== 'all') {
+        filteredParams[key] = value;
+      }
+    });
+    
+    setSearchParams(filteredParams);
     setIsSearchMode(true);
   };
 
@@ -79,14 +87,15 @@ const AdminNotifications = () => {
     error
   };
 
-  if (displayData.isLoading) {
+  // Показываем полный экран загрузки только при первоначальной загрузке данных, не при поиске
+  if (isLoading && !isSearchMode) {
     return (
         <div className="flex items-center justify-center min-h-[600px]">
           <div className="flex flex-col items-center gap-4 text-center">
             <Loader2 className="w-12 h-12 text-[#1e2c4f] animate-spin" />
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {isSearchMode ? 'Поиск уведомлений...' : 'Загрузка системы уведомлений'}
+                Загрузка системы уведомлений
               </h3>
               <p className="text-sm text-muted-foreground">Пожалуйста, подождите...</p>
             </div>
@@ -245,7 +254,14 @@ const AdminNotifications = () => {
                     </div>
                   )}
 
-                  {displayData.notifications.length === 0 ? (
+                  {displayData.isLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center space-x-2 text-gray-500">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#1e2c4f]" />
+                        <span className="text-sm">Поиск уведомлений...</span>
+                      </div>
+                    </div>
+                  ) : displayData.notifications.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <History className="w-8 h-8 text-gray-400" />

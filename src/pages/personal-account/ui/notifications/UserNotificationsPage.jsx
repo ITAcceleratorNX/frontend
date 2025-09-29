@@ -10,6 +10,12 @@ const UserNotificationsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterRead, setFilterRead] = useState('all');
+  const [appliedFilters, setAppliedFilters] = useState({
+    query: '',
+    type: 'all',
+    read: 'all'
+  });
+  const [isSearching, setIsSearching] = useState(false);
 
   // Используем хук для получения данных уведомлений
   const {
@@ -26,14 +32,27 @@ const UserNotificationsPage = () => {
     }
   }, [notifications]);
 
-  // Фильтрация уведомлений
+  // Функция применения фильтров
+  const applyFilters = () => {
+    setIsSearching(true);
+    setTimeout(() => {
+      setAppliedFilters({
+        query: searchQuery,
+        type: filterType,
+        read: filterRead
+      });
+      setIsSearching(false);
+    }, 300); // Небольшая задержка для плавности
+  };
+
+  // Фильтрация уведомлений на основе примененных фильтров
   const filteredNotifications = useMemo(() => {
     if (!notifications) return [];
     
     return notifications.filter(notification => {
       // Поиск по тексту
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase();
+      if (appliedFilters.query) {
+        const searchLower = appliedFilters.query.toLowerCase();
         const matchesSearch = 
           notification.title?.toLowerCase().includes(searchLower) ||
           notification.message?.toLowerCase().includes(searchLower);
@@ -41,19 +60,19 @@ const UserNotificationsPage = () => {
       }
       
       // Фильтр по типу
-      if (filterType !== 'all' && notification.notification_type !== filterType) {
+      if (appliedFilters.type !== 'all' && notification.notification_type !== appliedFilters.type) {
         return false;
       }
       
       // Фильтр по статусу прочтения
-      if (filterRead !== 'all') {
-        const isRead = filterRead === 'true';
+      if (appliedFilters.read !== 'all') {
+        const isRead = appliedFilters.read === 'true';
         if (notification.is_read !== isRead) return false;
       }
       
       return true;
     });
-  }, [notifications, searchQuery, filterType, filterRead]);
+  }, [notifications, appliedFilters]);
 
   const unreadCount = filteredNotifications?.filter(n => !n.is_read)?.length || 0;
   const totalCount = filteredNotifications?.length || 0;
@@ -62,9 +81,15 @@ const UserNotificationsPage = () => {
     setSearchQuery('');
     setFilterType('all');
     setFilterRead('all');
+    setAppliedFilters({
+      query: '',
+      type: 'all',
+      read: 'all'
+    });
   };
 
-  const hasActiveFilters = searchQuery || filterType !== 'all' || filterRead !== 'all';
+  const hasActiveFilters = appliedFilters.query || appliedFilters.type !== 'all' || appliedFilters.read !== 'all';
+  const hasUnappliedChanges = searchQuery !== appliedFilters.query || filterType !== appliedFilters.type || filterRead !== appliedFilters.read;
 
   // Show loading state
   if (isLoading) {
@@ -189,6 +214,15 @@ const UserNotificationsPage = () => {
               </SelectContent>
             </Select>
 
+            <Button
+              onClick={applyFilters}
+              disabled={!hasUnappliedChanges}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Search className="h-4 w-4 mr-1" />
+              Поиск
+            </Button>
+
             {hasActiveFilters && (
               <Button
                 variant="outline"
@@ -240,10 +274,19 @@ const UserNotificationsPage = () => {
           </div>
         ) : (
           <div className="p-6">
-            <UserNotifications 
-              notifications={filteredNotifications || []}
-              onMarkAsRead={markAsRead}
-            />
+            {isSearching ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center space-x-2 text-gray-500">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <span className="text-sm">Поиск...</span>
+                </div>
+              </div>
+            ) : (
+              <UserNotifications 
+                notifications={filteredNotifications || []}
+                onMarkAsRead={markAsRead}
+              />
+            )}
           </div>
         )}
       </div>

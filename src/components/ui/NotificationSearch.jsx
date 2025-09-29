@@ -12,24 +12,24 @@ import { cn } from '../../shared/lib/utils';
 export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => {
   const [searchParams, setSearchParams] = useState({
     query: '',
-    notification_type: '',
+    notification_type: 'all',
     date_from: '',
     date_to: '',
-    is_read: '',
-    user_role: ''
+    is_read: 'all',
+    user_role: 'all'
+  });
+
+  const [appliedParams, setAppliedParams] = useState({
+    query: '',
+    notification_type: 'all',
+    date_from: '',
+    date_to: '',
+    is_read: 'all',
+    user_role: 'all'
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  // Обновляем родительский компонент при изменении параметров
-  useEffect(() => {
-    const hasActiveFilters = Object.values(searchParams).some(value => value !== '');
-    if (hasActiveFilters) {
-      onSearch(searchParams);
-    } else {
-      onClear();
-    }
-  }, [searchParams, onSearch, onClear]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleInputChange = (field, value) => {
     setSearchParams(prev => ({
@@ -38,15 +38,27 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
     }));
   };
 
+  const handleApplySearch = () => {
+    setIsSearching(true);
+    setTimeout(() => {
+      setAppliedParams(searchParams);
+      onSearch(searchParams);
+      setIsSearching(false);
+    }, 300);
+  };
+
   const handleClearFilters = () => {
-    setSearchParams({
+    const clearedParams = {
       query: '',
-      notification_type: '',
+      notification_type: 'all',
       date_from: '',
       date_to: '',
-      is_read: '',
-      user_role: ''
-    });
+      is_read: 'all',
+      user_role: 'all'
+    };
+    setSearchParams(clearedParams);
+    setAppliedParams(clearedParams);
+    onClear();
   };
 
   const handleDateSelect = (field, date) => {
@@ -72,7 +84,8 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
     }
   };
 
-  const hasActiveFilters = Object.values(searchParams).some(value => value !== '');
+  const hasActiveFilters = Object.values(appliedParams).some(value => value !== '' && value !== 'all');
+  const hasUnappliedChanges = JSON.stringify(searchParams) !== JSON.stringify(appliedParams);
 
   return (
     <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
@@ -94,6 +107,15 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
           className="whitespace-nowrap"
         >
           {showAdvanced ? 'Скрыть фильтры' : 'Расширенные фильтры'}
+        </Button>
+
+        <Button
+          onClick={handleApplySearch}
+          disabled={!hasUnappliedChanges}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Search className="h-4 w-4 mr-1" />
+          Поиск
         </Button>
 
         {hasActiveFilters && (
@@ -122,7 +144,7 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
                 <SelectValue placeholder="Все типы" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все типы</SelectItem>
+                <SelectItem value="all">Все типы</SelectItem>
                 <SelectItem value="general">Общие</SelectItem>
                 <SelectItem value="payment">Платежи</SelectItem>
                 <SelectItem value="contract">Договоры</SelectItem>
@@ -141,7 +163,7 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
                 <SelectValue placeholder="Все статусы" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все статусы</SelectItem>
+                <SelectItem value="all">Все статусы</SelectItem>
                 <SelectItem value="false">Непрочитанные</SelectItem>
                 <SelectItem value="true">Прочитанные</SelectItem>
               </SelectContent>
@@ -159,7 +181,7 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
                 <SelectValue placeholder="Все роли" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все роли</SelectItem>
+                <SelectItem value="all">Все роли</SelectItem>
                 <SelectItem value="USER">Пользователь</SelectItem>
                 <SelectItem value="MANAGER">Менеджер</SelectItem>
                 <SelectItem value="ADMIN">Администратор</SelectItem>
@@ -225,7 +247,7 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
       )}
 
       {/* Индикатор загрузки */}
-      {isLoading && (
+      {(isLoading || isSearching) && (
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-sm text-gray-600">Поиск...</span>
