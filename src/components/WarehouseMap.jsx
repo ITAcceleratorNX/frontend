@@ -211,9 +211,26 @@ const WarehouseMap = ({ warehouses = [] }) => {
     // Load 2GIS API if not already loaded
     if (!window.DG) {
       const apiScript = document.createElement('script');
-      apiScript.src = 'https://maps.api.2gis.ru/2.0/loader.js?pkg=full';
+      // Добавляем API ключ для 2GIS (нужно получить от api@2gis.com)
+      const apiKey = import.meta.env.VITE_2GIS_API_KEY || '';
+      const apiKeyParam = apiKey ? `&key=${apiKey}` : '';
+      apiScript.src = `https://maps.api.2gis.ru/2.0/loader.js?pkg=full${apiKeyParam}`;
       apiScript.onload = () => {
         document.head.appendChild(script);
+      };
+      apiScript.onerror = () => {
+        console.error('Ошибка загрузки 2GIS API');
+        // Показываем fallback сообщение
+        if (mapContainer.current) {
+          mapContainer.current.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f3f3f3; border-radius: 24px; color: #666;">
+              <div style="text-align: center; padding: 20px;">
+                <p style="margin: 0; font-size: 16px;">Карта временно недоступна</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px;">Проверьте подключение к интернету</p>
+              </div>
+            </div>
+          `;
+        }
       };
       document.head.appendChild(apiScript);
     } else {

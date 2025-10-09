@@ -1,5 +1,36 @@
 import { toast } from 'react-toastify';
 
+// Кеш для предотвращения дублирования toast уведомлений
+const toastCache = new Set();
+const CACHE_DURATION = 3000; // 3 секунды
+
+// Функция для показа toast с защитой от дублирования
+const showToastWithCache = (message, type = 'error', options = {}) => {
+  const cacheKey = `${type}-${message}`;
+  
+  if (toastCache.has(cacheKey)) {
+    return;
+  }
+  
+  toastCache.add(cacheKey);
+  
+  // Удаляем из кеша через указанное время
+  setTimeout(() => {
+    toastCache.delete(cacheKey);
+  }, CACHE_DURATION);
+  
+  toast[type](message, options);
+};
+
+// Специальные функции для ошибок чата
+export const showChatConnectionError = () => {
+  showToastWithCache('Ошибка подключения к чату. Проверьте соединение с интернетом.', 'error');
+};
+
+export const showChatServerError = () => {
+  showToastWithCache('Сервер чата временно недоступен. Попробуйте позже.', 'error');
+};
+
 export const showPaymentSuccess = (amount) => {
   toast.success(`Платеж на сумму ${amount}₸ успешно проведен!`);
 };

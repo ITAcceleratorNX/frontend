@@ -1,7 +1,6 @@
 import React, { useEffect, useState, memo, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import personalImg from '../../../assets/personal_account_image.png';
@@ -157,8 +156,6 @@ const PersonalData = memo(() => {
   return (
 
     <div className="w-full max-w-[700px] flex flex-col items-center mx-auto">
-      <ToastContainer position="top-right" autoClose={3000} />
-
       {/* Аватар */}
       <div className="relative mb-4 w-[120px] h-[120px] rounded-full overflow-hidden">
         <img

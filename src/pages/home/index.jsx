@@ -8,10 +8,6 @@ import good2 from "../../assets/good2.png";
 import procent2 from "../../assets/procent2.png";
 import key2 from "../../assets/key2.png";
 
-import FileCheckIcon from "../../assets/File_Check.png";
-import GroupIcon from "../../assets/group.png";
-import ShieldTickIcon from "../../assets/shield-tick.png";
-import BoxTickIcon from "../../assets/box-tick.png";
 import beigeCircle from "../../assets/beige_circle.svg";
 import houseOnBeigeCircle from "../../assets/house_on_beige_circle.svg";
 import extraspaceLogo from "../../assets/extraspace_logo.png";
@@ -21,7 +17,6 @@ import Footer from "../../widgets/Footer";
 import FAQ from "../../components/FAQ";
 import WarehouseMap from "../../components/WarehouseMap";
 import ChatButton from "../../shared/components/ChatButton";
-import CostCalculator from "../../shared/components/CostCalculator";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import VolumeSelector from "../../components/VolumeSelector.jsx";
 import { Dropdown } from '../../shared/components/Dropdown.jsx';
@@ -133,14 +128,13 @@ const HomePage = memo(() => {
         <div className="container mx-auto tracking-[0.1em] px-4 py-8">
           <div className="text-center relative flex flex-col items-center">
             <h1 className="text-[22px] sm:text-[28px] md:text-[45px] font-bold text-[#273655] mb-2 flex flex-col items-center leading-[1.0] font-['Montserrat']">
-              <span className="mb-1">БЕРЕЖНОЕ ХРАНЕНИЕ</span>
               <div className="flex justify-center items-center gap-2">
                 <img
                   src={vectorImg}
                   alt="Декор"
                   className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8"
                 />
-                <span>ВАШИХ ВЕЩЕЙ</span>
+                <span>ЖИВИТЕ СВОБОДНО</span>
                 <img
                   src={vectorImg}
                   alt="Декор"
@@ -150,9 +144,12 @@ const HomePage = memo(() => {
             </h1>
 
             <div className="mt-3">
-              <div className="bg-[#273655] text-white px-6 sm:px-8 md:px-10 py-1 sm:py-1.5 rounded-[15px] text-base sm:text-lg font-medium hover:bg-[#2a3c64] transition-colors font-['Montserrat']">
-                Теплые склады с охраной от 3 м²
-              </div>
+              <button
+                onClick={() => navigate("/warehouse-order")}
+                className="bg-[#F86812] hover:bg-[#e55a0a] text-white px-6 sm:px-8 md:px-10 py-2 sm:py-2.5 rounded-[15px] text-base sm:text-lg font-bold transition-all duration-300 hover:shadow-lg hover:scale-105 font-['Montserrat']"
+              >
+                ЗАБРОНИРОВАТЬ БОКС
+              </button>
             </div>
 
             <div className="relative mt-5 w-full h-[280px] sm:h-[350px] md:h-[470px]">
@@ -253,153 +250,14 @@ const HomePage = memo(() => {
               />
             </div>
 
-            {/* Жёлтый — Оплата */}
-            <div
-              className="relative rounded-3xl bg-[#CFB238] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden cursor-pointer"
-
-            >
-              <div className="z-10 relative text-right">
-                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
-                  Оплата банковской картой онлайн
-                </div>
-                <div className="text-[#00000094] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
-                  Вы можете оплатить услугу банковской картой Visa / Mastercard,
-                  а также с помощью Apple Pay и Google Pay.
-                </div>
-              </div>
-              <img
-                src={image85}
-                alt="bank card"
-                className="absolute right-[180px] bottom-[-10px] w-[150px] md:w-[220px] select-none pointer-events-none z-0"
-                style={{ paddingLeft: "70px" }}
-              />
-              <div className="flex justify-center md:justify-start">
-                <button
-                  onClick={() => navigate("/online-payment")}
-                  className="mt-2 sm:mt-4 w-full sm:w-[165px] h-[36px] bg-[#273655] text-white text-[14px] sm:text-[16px] font-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-[#1e2940] transition-colors"
-                >
-                  Подробнее
-                </button>
-              </div>
-            </div>
-
-
-            {/* Синий — Гарантии */}
-            <div className="relative rounded-3xl bg-[#0181D3] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
-              <div className="z-10 relative">
-                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
-                  Гарантии безопасности
-                </div>
-                <div className="text-[#00000073] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug" style={{ color: "white" }}>
-                  OneVision не передает данные Вашей карты третьим <br />лицам. Ввод
-                  данных осуществляется в <br />защищенном  окне на платежной
-                  странице.
-                </div>
-              </div>
-              <img
-                src={group1010}
-                alt="security"
-                className="absolute right-[20px] bottom-[10px] w-[120px] md:w-[150px] select-none pointer-events-none z-0"
-              />
-            </div>
           </div>
         </div>
       </section>
-      <div className="flex justify-center w-full px-5 my-5 mb-24">
-        <button
-          onClick={() => navigate("/warehouse-order")}
-          className="w-[290px] h-[50px] bg-[#273655] text-white text-[18px] font-bold rounded-[20px] hover:bg-[#273655] transition-colors font-['Montserrat'] disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_4px_0_#B0B0B0]"
-        >
-          ЗАБРОНИРОВАТЬ БОКС
-        </button>
-      </div>
       {/* Третий фрейм: карточка склада */}
       <section className="w-full flex justify-center items-center px-4 py-8 font-['Montserrat']">
         <VolumeSelector />
       </section>
 
-      {/* Четвертый фрейм: калькулятор стоимости */}
-      <CostCalculator />
-      {/* Пятый фрейм: как работает облачное хранение */}
-      <section className="w-full flex flex-col items-center justify-center mt-1 font-['Montserrat'] px-4">
-        <div className="w-full max-w-[1100px] mx-auto">
-          {/* Заголовок */}
-          <h2 className="text-[24px] md:text-[30px] font-bold text-[#273655] text-center mb-8">
-            Как работает облачное хранение?
-          </h2>
-
-          {/* Видео */}
-          <div className="w-full flex justify-center mb-6">
-            <div className="w-full max-w-[900px] aspect-video shadow-lg rounded-lg overflow-hidden">
-              <iframe
-                src="https://www.youtube.com/embed/nW1yLTEeLWc?si=4O4dNpCsmMSlLY0x"
-                title="Как работает облачное хранение"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-
-          {/* Подпись */}
-          <div className="text-[18px] md:text-[20px] font-medium text-[#273655] text-center mb-10 px-2">
-            Платите только за объем ваших вещей, а не за весь склад
-          </div>
-
-          {/* Блок шагов */}
-          <div className="relative flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 w-full max-w-[900px] mx-auto mt-4 pb-2">
-            {/* Соединяющая линия для desktop */}
-            <div
-              className="hidden md:block absolute left-[130px] right-[130px] top-[60%] h-[2px] bg-[#273655] z-0"
-              style={{ transform: "translateY(-50%)" }}
-            />
-
-            {/* Шаги */}
-            {[
-              {
-                title: "Заявка",
-                icon: FileCheckIcon,
-              },
-              {
-                title: "Упаковка",
-                icon: BoxTickIcon,
-              },
-              {
-                title: "Доставка",
-                icon: GroupIcon,
-              },
-              {
-                title: "Хранение",
-                icon: ShieldTickIcon,
-              },
-              {
-                title: "Возврат",
-                icon: GroupIcon,
-                flipped: true,
-              },
-            ].map((step, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center z-10 text-center"
-              >
-                <span className="text-[#000] text-[16px] md:text-[18px] mb-1">
-                  {step.title}
-                </span>
-                <div className="w-[56px] h-[56px] rounded-full bg-[#273655] flex items-center justify-center mt-1">
-                  <img
-                    src={step.icon}
-                    alt={step.title}
-                    className="w-[36px] h-[36px]"
-                    style={step.flipped ? { transform: "scaleX(-1)" } : {}}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full flex flex-col items-center justify-center mt-28 mb-24 font-['Montserrat']">
         <div className="w-full max-w-6xl mx-auto mb-10 px-4 md:px-8">

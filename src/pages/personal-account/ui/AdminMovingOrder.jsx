@@ -38,6 +38,11 @@ const AdminMovingOrder = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const downloadItemFile = useDownloadItemFile();
 
+  // Функция для обработки навигации в сайдбаре
+  const handleNavClick = (navKey) => {
+    navigate('/personal-account', { state: { activeSection: navKey } });
+  };
+
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -113,7 +118,7 @@ const AdminMovingOrder = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
-          <Sidebar activeNav="adminmoving" setActiveNav={() => {}} />
+          <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
             <div className="max-w-5xl mx-auto py-12 px-10">
               <div className="text-center py-12">
@@ -133,7 +138,7 @@ const AdminMovingOrder = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
-          <Sidebar activeNav="adminmoving" setActiveNav={() => {}} />
+          <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
             <div className="max-w-5xl mx-auto py-12 px-10">
               <Card className="border-red-200">
@@ -161,7 +166,7 @@ const AdminMovingOrder = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="flex flex-1">
-        <Sidebar activeNav="adminmoving" setActiveNav={() => {}} />
+        <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
         <main className="flex-1 mr-[110px]">
           <div className="max-w-5xl mx-auto py-12 px-10 space-y-6">
             {/* Навигация назад */}

@@ -101,7 +101,7 @@ const OfferPage = () => {
                     <div className="mt-4 p-4 bg-purple-100 rounded-lg">
                       <p className="text-sm font-medium text-purple-800">
                         В рамках настоящих правил Продавцом является <strong>ТОО «Valar Group»</strong><br/>
-                        📍 Республика Казахстан, г.Алматы, Бостандыкский район, Проспект Аль-фараби, дом 19/1, н.п. 12б, почтовый индекс 050059
+                        📍 Казахстан, город Алматы, Бостандыкский район, улица Аль-Фараби 19/1
                       </p>
                     </div>
                   </div>
@@ -408,7 +408,7 @@ const OfferPage = () => {
                   </div>
                   <div className="text-sm text-gray-500">
                     <p className="mb-2">ТОО «Valar Group»</p>
-                    <p>г. Алматы, Бостандыкский район, Проспект Аль-фараби, дом 19/1, н.п. 12б</p>
+                    <p>Казахстан, город Алматы, Бостандыкский район, улица Аль-Фараби 19/1</p>
                     <p className="mt-4 font-medium text-blue-700">
                       По вопросам договора-оферты: 
                       <a href="mailto:info@extraspace.kz" className="ml-1 hover:underline">info@extraspace.kz</a>
@@ -430,19 +430,18 @@ const OfferPage = () => {
                 <h2 className="text-5xl lg:text-6xl font-bold font-['Audiowide'] mb-4 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
                   ExtraSpace
                 </h2>
-                <p className="text-blue-200 text-lg">Интернет-магазин товаров для дома</p>
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
                 <h3 className="font-bold mb-6 text-xl text-blue-200">РЕКВИЗИТЫ ЮРИДИЧЕСКОГО ЛИЦА</h3>
                 <div className="space-y-2 text-sm">
                   <p><span className="font-semibold text-blue-300">ТОО</span> «Valar Group»</p>
-                  <p><span className="font-semibold text-blue-300">БИН:</span> 123456789012</p>
-                  <p><span className="font-semibold text-blue-300">ЮРИДИЧЕСКИЙ АДРЕС:</span> г. Алматы, Бостандыкский район</p>
-                  <p className="ml-4">Проспект Аль-фараби, дом 19/1, н.п. 12б, 050059</p>
-                  <p><span className="font-semibold text-blue-300">БАНК:</span> АО «КАЗКОММЕРЦБАНК»</p>
-                  <p><span className="font-semibold text-blue-300">ИИК:</span> KZ123456789012345678</p>
-                  <p><span className="font-semibold text-blue-300">БИК:</span> KZKOKZKX</p>
+                  <p><span className="font-semibold text-blue-300">БИН:</span> 230240017395</p>
+                  <p><span className="font-semibold text-blue-300">НОМЕР СЧЕТА:</span> KZ59722S000024650651</p>
+                  <p><span className="font-semibold text-blue-300">КБЕ:</span> 17</p>
+                  <p><span className="font-semibold text-blue-300">НАИМЕНОВАНИЕ БАНКА:</span> АО Kaspi Bank</p>
+                  <p><span className="font-semibold text-blue-300">БИК:</span> CASPKZKA</p>
+                  <p><span className="font-semibold text-blue-300">АДРЕС:</span> Казахстан, город Алматы, Бостандыкский район, улица Аль-Фараби 19/1</p>
                   <p className="pt-2">
                     <span className="font-semibold text-blue-300">EMAIL:</span> 
                     <a href="mailto:info@extraspace.kz" className="ml-1 text-blue-200 hover:text-white transition-colors">

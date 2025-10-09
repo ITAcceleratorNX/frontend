@@ -76,6 +76,11 @@ const UserProfile = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+
+  // Функция для обработки навигации в сайдбаре
+  const handleNavClick = (navKey) => {
+    navigate('/personal-account', { state: { activeSection: navKey } });
+  };
   
   // Состояния для модального окна удаления
   const [deleteModal, setDeleteModal] = useState({
@@ -231,7 +236,7 @@ const UserProfile = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
-          <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={() => {}} />
+          <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center space-y-4">
@@ -250,7 +255,7 @@ const UserProfile = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
-          <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={() => {}} />
+          <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
             <div className="text-center py-20">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -287,7 +292,7 @@ const UserProfile = () => {
       />
       
       <div className="flex flex-1">
-        <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={() => {}} />
+        <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />
         <main className="flex-1 mr-[110px]">
           <div className="max-w-4xl mx-auto py-8 px-6">
             {/* Навигация назад */}

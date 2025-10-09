@@ -1,33 +1,40 @@
 import React, { memo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import api from "../shared/api/axios";
 
-const FAQ_QUERY_KEY = "faq";
-
-const Skeleton = () => (
-  <div className="w-full max-w-[820px] space-y-4 px-3">
-    {Array.from({ length: 3 }).map((_, i) => (
-      <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="h-5 w-3/4 animate-pulse rounded bg-gray-200" />
-        <div className="mt-3 h-4 w-5/6 animate-pulse rounded bg-gray-100" />
-        <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-gray-100" />
-      </div>
-    ))}
-  </div>
-);
+// Статичные данные FAQ
+const faqItems = [
+  {
+    id: 1,
+    question: "Какие размеры боксов есть?",
+    answer: "От небольших (2 м², для коробок и мелких вещей) до крупных (10+ м², для мебели и техники)."
+  },
+  {
+    id: 2,
+    question: "Насколько безопасно хранение?",
+    answer: "Территория под камерами, сигнализацией и охраной. Доступ только для арендаторов."
+  },
+  {
+    id: 3,
+    question: "Что запрещено хранить?",
+    answer: "Продукты, жидкости, химикаты, оружие, горючие материалы, животных."
+  },
+  {
+    id: 4,
+    question: "Можно ли арендовать на короткий срок?",
+    answer: "Минимальный срок хранения 1 месяц."
+  },
+  {
+    id: 5,
+    question: "Можно ли арендовать на юр.лицо?",
+    answer: "Да, предоставляем чек или счёт-фактуру."
+  },
+  {
+    id: 6,
+    question: "Как попасть внутрь?",
+    answer: "Вы получаете личный ключ или код доступа. Никто кроме вас не откроет бокс."
+  }
+];
 
 const FAQ = memo(() => {
-  const { data: faqItems = [], isLoading, error } = useQuery({
-    queryKey: [FAQ_QUERY_KEY],
-    queryFn: async () => {
-      const { data } = await api.get("/faq");
-      return data.slice(0, 6);
-    },
-    staleTime: 60 * 60 * 1000,
-    cacheTime: 120 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
 
   return (
     <section className="mb-24 flex w-full flex-col items-center justify-center font-['Montserrat']">
@@ -38,34 +45,32 @@ const FAQ = memo(() => {
         Мы собрали ответы на популярные вопросы. Если не нашли нужное — напишите нам.
       </p>
 
-      {isLoading ? (
-        <Skeleton />
-      ) : error ? (
-        <div className="w-full max-w-[820px] px-3 text-center text-red-500">
-          Не удалось загрузить вопросы. Пожалуйста, попробуйте позже.
-        </div>
-      ) : (
-        <div className="w-full max-w-[820px] space-y-5 px-3">
-          {faqItems.map((faq) => (
-            <article
-              key={faq.id}
-              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
-            >
-              {/* тонкая цветная полоса сверху */}
-              <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-400 opacity-80" />
+      <div className="w-full max-w-[820px] space-y-5 px-3">
+        {faqItems.map((faq) => (
+          <article
+            key={faq.id}
+            className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+          >
+            {/* тонкая цветная полоса сверху */}
+            <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-400 opacity-80" />
 
-              <header className="mb-3 flex items-start gap-3">
-                <div className="mt-0.5 inline-flex h-7 select-none items-center justify-center rounded-md bg-indigo-50 px-2 text-xs font-semibold text-indigo-700">
-                  ?
-                </div>
-                <h3 className="text-[17px] font-semibold leading-snug text-[#1f2937]">
-                  {faq.question}
-                </h3>
-              </header>
-            </article>
-          ))}
-        </div>
-      )}
+            <header className="mb-3 flex items-start gap-3">
+              <div className="mt-0.5 inline-flex h-7 select-none items-center justify-center rounded-md bg-indigo-50 px-2 text-xs font-semibold text-indigo-700">
+                ?
+              </div>
+              <h3 className="text-[17px] font-semibold leading-snug text-[#1f2937]">
+                {faq.question}
+              </h3>
+            </header>
+            
+            <div className="ml-10">
+              <p className="text-[15px] leading-relaxed text-[#4b5563]">
+                {faq.answer}
+              </p>
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
   );
 });

@@ -47,7 +47,7 @@ export const Header = memo(() => {
   }, []);
 
   const confirmCall = useCallback(() => {
-    window.location.href = 'tel:+77765721927';
+    window.location.href = 'tel:+77088241384';
     setIsCallModalOpen(false);
   }, []);
 
@@ -141,18 +141,6 @@ export const Header = memo(() => {
                 <NavLink to="/" end className={getNavLinkClass}>ГЛАВНАЯ</NavLink>
                 <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
                 <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
-                <NavLink
-                    to="/warehouse-order"
-                    className={(props) =>
-                        `${getNavLinkClass(props)} border-2 text-white hover:opacity-90`
-                    }
-                    style={{
-                      backgroundColor: '#F86812',
-                      borderColor: '#F86812',
-                    }}
-                >
-                  ЗАБРОНИРОВАТЬ БОКС
-                </NavLink>
 
 
 
@@ -172,7 +160,7 @@ export const Header = memo(() => {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-800">Телефон</p>
-                    <p className="text-sm font-bold text-[#1e2c4f]">+7 (776) 572-19-27</p>
+                    <p className="text-sm font-bold text-[#1e2c4f]">+7 (708) 824-13-84</p>
                     <button
                         onClick={handleCallClick}
                         className="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded text-sm"
@@ -193,7 +181,7 @@ export const Header = memo(() => {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-800">WhatsApp</p>
-                    <p className="text-sm font-bold text-[#1e2c4f]">+7 (776) 572-19-27</p>
+                    <p className="text-sm font-bold text-[#1e2c4f]">+7 (708) 824-13-84</p>
                     <button
                         onClick={handleWhatsApp}
                         className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded text-sm"
@@ -217,19 +205,6 @@ export const Header = memo(() => {
                 <NavLink to="/" end className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ГЛАВНАЯ</NavLink>
                 <NavLink to="/cloud-storage" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
                 <NavLink to="/moving" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>МУВИНГ</NavLink>
-                <NavLink
-                    to="/warehouse-order"
-                    className={(props) =>
-                        `${getNavLinkClass(props)} border-2 text-white hover:opacity-90`
-                    }
-                    style={{
-                      backgroundColor: '#F86812',
-                      borderColor: '#F86812',
-                    }}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  ЗАБРОНИРОВАТЬ БОКС
-                </NavLink>
                 <div className="relative">
                   {authButtons}
                 </div>
@@ -258,7 +233,7 @@ export const Header = memo(() => {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-lg p-6 max-w-md w-full">
                 <h3 className="text-lg font-bold text-[#273655] mb-4">Позвонить в ExtraSpace?</h3>
-                <p className="text-gray-700 mb-6">Вы действительно хотите позвонить по номеру +7 (776) 572-19-27?</p>
+                <p className="text-gray-700 mb-6">Вы действительно хотите позвонить по номеру +7 (708) 824-13-84?</p>
                 <div className="flex justify-end gap-3">
                   <button
                       onClick={() => setIsCallModalOpen(false)}

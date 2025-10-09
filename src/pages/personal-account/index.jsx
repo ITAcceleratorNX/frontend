@@ -26,8 +26,7 @@ import {
   CourierNotifications,
 } from './ui/notifications';
 import { useAuth } from '../../shared/context/AuthContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// ToastContainer уже подключен в главном приложении
 
 // Мемоизированный компонент страницы личного кабинета
 const PersonalAccountPage = memo(() => {
@@ -119,7 +118,6 @@ const PersonalAccountPage = memo(() => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="flex flex-1">
         {!isMobile && (
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />

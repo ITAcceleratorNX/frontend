@@ -1,6 +1,6 @@
 // frontend/src/components/Footer.jsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { ToastContainer, toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import api from '@/shared/api/axios.js'
 
 const Footer = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     phone: ''
@@ -119,6 +120,19 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row justify-between items-center text-sm text-[#A6A6A6] gap-2">
               <p>Все права защищены. © 2025 extraspace.kz</p>
               <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-8">
+                <button
+                  onClick={() => navigate("/online-payment")}
+                  className="text-[#B0B0B0] hover:text-white hover:underline transition-colors duration-200 flex items-center gap-1"
+                >
+                  <svg width="22" height="22" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0.5" y="1.5" width="15" height="9" rx="1.5" stroke="currentColor" strokeWidth="1"/>
+                    <line x1="0.5" y1="4" x2="15.5" y2="4" stroke="currentColor" strokeWidth="1"/>
+                    <line x1="3" y1="7.5" x2="5" y2="7.5" stroke="currentColor" strokeWidth="1"/>
+                    <circle cx="12" cy="7.5" r="1" stroke="currentColor" strokeWidth="1"/>
+                    <circle cx="14" cy="7.5" r="1" stroke="currentColor" strokeWidth="1"/>
+                  </svg>
+                  Информация об оплате
+                </button>
                 <Link 
                   to="/offer" 
                   className="text-[#B0B0B0] hover:text-white hover:underline transition-colors duration-200 flex items-center gap-1"

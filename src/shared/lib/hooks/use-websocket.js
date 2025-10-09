@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import { showChatConnectionError, showChatServerError } from '../utils/notifications';
 
 export const useWebSocket = () => {
   const { user, isAuthenticated } = useAuth();
@@ -12,6 +13,7 @@ export const useWebSocket = () => {
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+  const isConnectingRef = useRef(false);
   
   // Message handlers үшін ref
   const messageHandlers = useRef(new Set());
@@ -26,6 +28,13 @@ export const useWebSocket = () => {
     }
 
     // Предотвращаем множественные подключения
+    if (isConnectingRef.current) {
+      if (import.meta.env.DEV) {
+        console.log('WebSocket: Подключение уже выполняется');
+      }
+      return;
+    }
+
     if (socketRef.current && 
         (socketRef.current.readyState === WebSocket.OPEN || 
          socketRef.current.readyState === WebSocket.CONNECTING)) {
@@ -36,6 +45,7 @@ export const useWebSocket = () => {
     }
 
     try {
+      isConnectingRef.current = true;
       const socketUrl = `wss://api.extraspace.kz?userId=${user.id}`;
       if (import.meta.env.DEV) {
         console.log('WebSocket: Подключение к', socketUrl);
@@ -54,6 +64,7 @@ export const useWebSocket = () => {
         setIsConnected(true);
         setIsReconnecting(false);
         reconnectAttempts.current = 0;
+        isConnectingRef.current = false;
         setSocket(newSocket);
         
         if (reconnectAttempts.current > 0) {
@@ -68,6 +79,7 @@ export const useWebSocket = () => {
         setIsConnected(false);
         socketRef.current = null;
         setSocket(null);
+        isConnectingRef.current = false;
         
         // Проверяем код закрытия для определения стратегии переподключения
         const shouldAttemptReconnect = event.code !== 1000 && // не ручное закрытие
@@ -89,7 +101,10 @@ export const useWebSocket = () => {
         } else if (event.code === 1006) {
           // Сервер недоступен (код 520 от Cloudflare преобразуется в 1006)
           console.log('WebSocket: Сервер временно недоступен');
-          toast.error('Сервер чата временно недоступен. Попробуйте позже.');
+          // Показываем ошибку только если это не первая попытка подключения
+          if (reconnectAttempts.current > 0) {
+            showChatServerError();
+          }
           setIsReconnecting(false);
         } else if (reconnectAttempts.current >= maxReconnectAttempts) {
           toast.error('Не удалось восстановить соединение с чатом');
@@ -118,13 +133,14 @@ export const useWebSocket = () => {
 
       newSocket.onerror = (error) => {
         console.error('WebSocket: Ошибка соединения', error);
-        if (reconnectAttempts.current === 0) {
-          toast.error('Ошибка подключения к чату. Проверьте соединение с интернетом.');
-        }
+        isConnectingRef.current = false;
+        // Убираем показ ошибки при первой попытке подключения
+        // toast.error('Ошибка подключения к чату. Проверьте соединение с интернетом.');
       };
       
     } catch (error) {
       console.error('WebSocket: Ошибка создания соединения', error);
+      isConnectingRef.current = false;
       toast.error('Не удалось создать соединение с чатом');
     }
   }, [isAuthenticated, user?.id]);
@@ -167,6 +183,8 @@ export const useWebSocket = () => {
       setIsConnected(false);
       setIsReconnecting(false);
     }
+    
+    isConnectingRef.current = false;
   }, []);
 
   // Добавление обработчика сообщений
