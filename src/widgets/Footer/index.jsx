@@ -16,11 +16,58 @@ const Footer = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const formatPhoneNumber = (value) => {
+    // Убираем все, кроме цифр
+    const numbers = value.replace(/\D/g, '');
+    
+    // Если начинается с 8, заменяем на 7
+    let cleaned = numbers;
+    if (cleaned.startsWith('8')) {
+      cleaned = '7' + cleaned.slice(1);
+    }
+    
+    // Если не начинается с 7, добавляем 7
+    if (cleaned && !cleaned.startsWith('7')) {
+      cleaned = '7' + cleaned;
+    }
+    
+    // Ограничиваем до 11 цифр (7 + 10 цифр)
+    cleaned = cleaned.slice(0, 11);
+    
+    // Форматируем с пробелами: +7 XXX XXX XX XX
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted = '+7';
+      if (cleaned.length > 1) {
+        formatted += ' ' + cleaned.slice(1, 4);
+      }
+      if (cleaned.length > 4) {
+        formatted += ' ' + cleaned.slice(4, 7);
+      }
+      if (cleaned.length > 7) {
+        formatted += ' ' + cleaned.slice(7, 9);
+      }
+      if (cleaned.length > 9) {
+        formatted += ' ' + cleaned.slice(9, 11);
+      }
+    }
+    
+    return formatted;
+  };
+
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    if (field === 'phone') {
+      const formatted = formatPhoneNumber(value);
+      setFormData((prev) => ({
+        ...prev,
+        [field]: formatted,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
   const validatePhone = (phone) => {

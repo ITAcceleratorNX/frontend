@@ -4,13 +4,14 @@ import warehouseImg from '../../assets/warehouse.png';
 import api from '../../shared/api/axios';
 
 const CostCalculator = () => {
-  const [area, setArea] = useState(50);
+  const [area, setArea] = useState(10);
   const [month, setMonth] = useState(1);
   const [type, setType] = useState('INDIVIDUAL');
   const [prices, setPrices] = useState([]);
   const [totalCost, setTotalCost] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [areaInput, setAreaInput] = useState('10');
 
   // Добавляем состояния для размеров (облачное хранение)
   const [dimensions, setDimensions] = useState({
@@ -195,21 +196,49 @@ const CostCalculator = () => {
                   <label htmlFor="area" className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Площадь:</label>
                   <div className="w-full flex flex-col mb-8">
                     <div className="relative w-full h-[56px] flex items-center bg-white rounded-t-[8px]" style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}>
-                  <span className="absolute left-4 flex items-center h-full">
-                    <img src={housePlanIcon} alt="house plan" className="w-6 h-6" />
-                  </span>
-                      <span className="ml-12 text-[#C7C7C7] text-[14px]">— {area} кв.м</span>
+                      <span className="absolute left-4 flex items-center h-full">
+                        <img src={housePlanIcon} alt="house plan" className="w-6 h-6" />
+                      </span>
+                      <input
+                        type="number"
+                        min="3"
+                        max="30"
+                        value={areaInput}
+                        onChange={e => {
+                          const value = e.target.value;
+                          setAreaInput(value);
+                          const numValue = Number(value);
+                          if (numValue >= 3 && numValue <= 30) {
+                            setArea(numValue);
+                            localStorage.setItem("prep_area", numValue);
+                            setTotalCost(null);
+                            localStorage.setItem("calculated_price", null);
+                          }
+                        }}
+                        onBlur={e => {
+                          let value = Number(e.target.value);
+                          if (value < 3) value = 3;
+                          if (value > 30) value = 30;
+                          setAreaInput(value.toString());
+                          setArea(value);
+                          localStorage.setItem("prep_area", value);
+                        }}
+                        className="ml-12 w-20 text-[#6B6B6B] text-[14px] border-b border-gray-300 focus:border-[#0062D3] focus:outline-none"
+                      />
+                      <span className="text-[#6B6B6B] text-[14px] ml-1">кв.м</span>
                     </div>
                     <div className="w-full relative -mt-[22px]">
-                      <div className="absolute left-0 bottom-0 h-[2px] bg-[#0062D3] rounded-full z-[1]" style={{ width: `${Math.min(100, area)}%` }}></div>
+                      <div className="absolute left-0 bottom-0 h-[2px] bg-[#0062D3] rounded-full z-[1]" style={{ width: `${((area - 3) / (30 - 3)) * 100}%` }}></div>
                       <input
                           id="area"
                           type="range"
-                          min="1"
-                          max="100"
+                          min="3"
+                          max="30"
                           value={area}
                           onChange={e => {
-                            setArea(Number(e.target.value));
+                            const value = Number(e.target.value);
+                            setArea(value);
+                            setAreaInput(value.toString());
                             localStorage.setItem("prep_area", e.target.value);
                             setTotalCost(null);
                             localStorage.setItem("calculated_price", null);

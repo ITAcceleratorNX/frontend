@@ -6,6 +6,7 @@ import { clsx } from 'clsx';
 import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 import { Menu, X } from 'lucide-react';
 import { useUnreadNotificationsCount } from '../../shared/lib/hooks/use-notifications';
+import extraspaceLogo from '../../assets/photo_2025-10-08_12-29-41-removebg-preview.png';
 
 // Мемоизированный компонент Header
 export const Header = memo(() => {
@@ -136,14 +137,15 @@ export const Header = memo(() => {
                   className="flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-105 mr-3 sm:mr-4 lg:mr-6"
                   onClick={handleLogoClick}
               >
+                <img 
+                  src={extraspaceLogo} 
+                  alt="ExtraSpace Logo" 
+                  className="h-12 w-auto object-contain"
+                />
               </div>
               <nav className="hidden md:flex gap-3">
-                <NavLink to="/" end className={getNavLinkClass}>ГЛАВНАЯ</NavLink>
                 <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
                 <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
-
-
-
               </nav>
             </div>
 
@@ -202,7 +204,6 @@ export const Header = memo(() => {
 
           {isMobileMenuOpen && (
               <div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-md z-40 py-4 px-6 space-y-4 flex flex-col items-center">
-                <NavLink to="/" end className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ГЛАВНАЯ</NavLink>
                 <NavLink to="/cloud-storage" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
                 <NavLink to="/moving" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>МУВИНГ</NavLink>
                 <div className="relative">
