@@ -15,24 +15,36 @@ export default function AboutWarehouseRentPage() {
   const warehouses = useMemo(() => [
     {
       id: 1,
-      name: "EXTRA SPACE Главный склад",
+      name: "ЖК Есентай",
       address: "Касымова улица, 32, Алматы",
       phone: "+7 727 123 4567",
-      workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
+      // workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
+      workingHours: "Круглосуточно",
       coordinates: [76.930495, 43.225893],
       available: true,
       image: extraspaceLogo
     },
     {
       id: 2,
-      name: "EXTRA SPACE Мега",
+      name: "Mega Towers",
       address: "Абиша Кекилбайулы, 270 блок 4, Алматы",
       phone: "+7 727 987 6543",
-      workingHours: "Ежедневно: 08:00-22:00",
+      // workingHours: "Ежедневно: 08:00-22:00",
+      workingHours: "Круглосуточно",
       coordinates: [76.890647, 43.201397],
       available: true,
       image: extraspaceLogo
-    }
+    },
+    {
+      id: 3,
+      name: "ЖК Комфорт",
+      address: "Проспект Серкебаева, 146/3",
+      phone: "+7 727 987 6543",
+      workingHours: "Круглосуточно",
+      coordinates: [76.900575, 43.201302],
+      available: true,
+      image: extraspaceLogo,
+    },
   ], []);
 
   // Состояние для переключателя
