@@ -541,11 +541,11 @@ const WarehouseOrderPage = memo(() => {
                 <div 
                   className="min-w-max mx-auto relative"
                   style={{
-                    minWidth: selectedWarehouse.name === "EXTRA SPACE Мега" ? '615px' : 
-                              selectedWarehouse.name === "EXTRA SPACE Главный склад" ? '1120px' : 'auto'
+                    minWidth: selectedWarehouse.name === "Mega Towers" ? '615px' : 
+                              selectedWarehouse.name === "ЖК Есентай" ? '1120px' : 'auto'
                   }}
                 >
-                  {selectedWarehouse.name === "EXTRA SPACE Мега" ? (
+                  {selectedWarehouse.name === "Mega Towers" ? (
                     <InteractiveWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}
@@ -553,7 +553,7 @@ const WarehouseOrderPage = memo(() => {
                       userRole={user?.role}
                       isViewOnly={isAdminOrManager}
                     />
-                  ) : selectedWarehouse.name === "EXTRA SPACE Главный склад" ? (
+                  ) : selectedWarehouse.name === "ЖК Есентай" ? (
                     <MainWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}
