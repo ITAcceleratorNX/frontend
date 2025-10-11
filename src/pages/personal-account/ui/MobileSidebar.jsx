@@ -259,6 +259,10 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
                 {item.key === 'notifications' && unreadCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
+                {/* Красная точка для непрочитанных сообщений в чате */}
+                {item.key === 'chat' && totalUnreadChatCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
                 {/* Красная точка для доставок со статусом AWAITABLE */}
                 {item.key === 'delivery' && awaitableDeliveriesCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
