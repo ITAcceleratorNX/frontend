@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
+import { useChatStore } from '../../../entities/chat/model';
 import { useEffect } from 'react';
 
 // Разделы для обычных пользователей
@@ -73,9 +74,13 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const location = useLocation();
-    const unreadCount = useUnreadNotificationsCount();
+  const unreadCount = useUnreadNotificationsCount();
   const awaitableDeliveriesCount = useAwaitableDeliveriesCount();
   const pendingExtensionCount = usePendingExtensionOrdersCount();
+  const { unreadMessages } = useChatStore();
+  
+  // Подсчитываем общее количество непрочитанных сообщений в чате
+  const totalUnreadChatCount = Object.values(unreadMessages).reduce((sum, count) => sum + count, 0);
 
   // Принудительно загружаем данные при входе в личный кабинет
   useEffect(() => {
@@ -249,6 +254,10 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 <img src={item.icon} alt="icon" className={clsx('w-5 h-5 flex-shrink-0', activeNav === item.key ? 'filter invert' : 'filter brightness-0')} />
                 {/* Красная точка для непрочитанных уведомлений */}
                 {item.key === 'notifications' && unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+                {/* Красная точка для непрочитанных сообщений в чате */}
+                {item.key === 'chat' && totalUnreadChatCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
                 {/* Красная точка для доставок со статусом AWAITABLE */}

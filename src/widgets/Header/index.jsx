@@ -103,9 +103,7 @@ export const Header = memo(() => {
             <span className="hidden sm:inline">ЛИЧНЫЙ КАБИНЕТ</span>
             {/* Красная точка для непрочитанных уведомлений и сообщений */}
             {(unreadCount > 0 || totalUnreadChatCount > 0) && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold animate-pulse">
-                {unreadCount + totalUnreadChatCount > 99 ? '99+' : unreadCount + totalUnreadChatCount}
-              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
             )}
           </button>
       );

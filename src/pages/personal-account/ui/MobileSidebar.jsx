@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
+import { useChatStore } from '../../../entities/chat/model';
 import { useEffect } from 'react';
 import clsx from 'clsx';
 import './mobile-menu.css';
@@ -76,6 +77,10 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
   const unreadCount = useUnreadNotificationsCount();
   const awaitableDeliveriesCount = useAwaitableDeliveriesCount();
   const pendingExtensionCount = usePendingExtensionOrdersCount();
+  const { unreadMessages } = useChatStore();
+  
+  // Подсчитываем общее количество непрочитанных сообщений в чате
+  const totalUnreadChatCount = Object.values(unreadMessages).reduce((sum, count) => sum + count, 0);
 
   // Принудительно загружаем данные при входе в личный кабинет
   useEffect(() => {
