@@ -6,6 +6,7 @@ import { clsx } from 'clsx';
 import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 import { Menu, X } from 'lucide-react';
 import { useUnreadNotificationsCount } from '../../shared/lib/hooks/use-notifications';
+import { useChatStore } from '../../entities/chat/model';
 import extraspaceLogo from '../../assets/photo_2025-10-08_12-29-41-removebg-preview.png';
 
 // Мемоизированный компонент Header
@@ -14,6 +15,10 @@ export const Header = memo(() => {
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const unreadCount = useUnreadNotificationsCount();
+  const { unreadMessages } = useChatStore();
+  
+  // Подсчитываем общее количество непрочитанных сообщений в чате
+  const totalUnreadChatCount = Object.values(unreadMessages).reduce((sum, count) => sum + count, 0);
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isEmailFormOpen, setIsEmailFormOpen] = useState(false);
@@ -96,9 +101,11 @@ export const Header = memo(() => {
           >
             <User size={16} className="mr-2" />
             <span className="hidden sm:inline">ЛИЧНЫЙ КАБИНЕТ</span>
-            {/* Красная точка для непрочитанных уведомлений */}
-            {unreadCount > 0 && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+            {/* Красная точка для непрочитанных уведомлений и сообщений */}
+            {(unreadCount > 0 || totalUnreadChatCount > 0) && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold animate-pulse">
+                {unreadCount + totalUnreadChatCount > 99 ? '99+' : unreadCount + totalUnreadChatCount}
+              </div>
             )}
           </button>
       );
@@ -113,7 +120,7 @@ export const Header = memo(() => {
           </button>
       );
     }
-  }, [isAuthenticated, handleCabinetClick, handleStartAuth, unreadCount]);
+  }, [isAuthenticated, handleCabinetClick, handleStartAuth, unreadCount, totalUnreadChatCount]);
 
   const headerClass = useMemo(() =>
           clsx(

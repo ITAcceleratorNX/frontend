@@ -13,7 +13,7 @@ const validationSchema = Yup.object({
     .email('Неверный формат email')
     .required('Email обязателен'),
   unique_code: Yup.string()
-    .min(4, 'Код должен содержать минимум 4 символа')
+    .matches(/^\d{6}$/, 'Код должен содержать ровно 6 цифр')
     .required('Уникальный код обязателен'),
   password: Yup.string()
     .min(6, 'Пароль должен содержать минимум 6 символов')
@@ -218,9 +218,14 @@ export const RestorePasswordForm = () => {
                   <Field
                     name="unique_code"
                     type="text"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 bg-white"
-                    placeholder="Введите код из email"
+                    maxLength="6"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 bg-white text-center text-lg tracking-widest"
+                    placeholder="123456"
                     disabled={isLoading || isSubmitting}
+                    onInput={(e) => {
+                      // Разрешаем только цифры
+                      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    }}
                   />
                   <ErrorMessage name="unique_code" component="div" className="text-sm text-red-500 mt-1 flex items-center gap-1">
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>

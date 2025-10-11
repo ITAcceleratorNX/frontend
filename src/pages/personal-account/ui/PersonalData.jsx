@@ -3,9 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
-import personalImg from '../../../assets/personal_account_image.png';
-import shadowImg from '../../../assets/personal_account_shadow.png';
-import cameraIcon from '../../../assets/personal_camera.svg';
 import Input from '../../../shared/ui/Input';
 import Button from '../../../shared/ui/Button';
 import DatePicker from '../../../shared/ui/DatePicker';
@@ -157,35 +154,25 @@ const PersonalData = memo(() => {
 
     <div className="w-full max-w-[700px] flex flex-col items-center mx-auto">
       {/* Аватар */}
-      <div className="relative mb-4 w-[120px] h-[120px] rounded-full overflow-hidden">
-        <img
-          src={personalImg}
-          alt="Аватар"
-          className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
-        />
-        <img
-          src={shadowImg}
-          alt="Тень"
-          className="absolute left-1 top-20 w-[120px] h-[40px] pointer-events-none"
-          style={{ mixBlendMode: 'multiply', opacity: 1 }}
-        />
-        <button className="absolute left-1/2 bottom-1.5 -translate-x-1/2 z-10 p-0 m-0 bg-transparent border-none">
-          <img src={cameraIcon} alt="Загрузить фото" className="w-8 h-8" />
-        </button>
+      <div className="mb-8 w-[120px] h-[120px] rounded-full overflow-hidden">
+        <div className="w-full h-full rounded-full bg-gradient-to-br from-[#273655] to-[#1e2c4f] flex items-center justify-center text-white font-bold text-5xl border-4 border-white shadow-lg">
+          {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+        </div>
       </div>
-      <span className="text-[#3B5B7C] text-xs mb-8 cursor-pointer hover:underline">Загрузите фото</span>
 
       {/* Заголовок и кнопка изменения пароля */}
       <div className="w-full flex flex-col sm:flex-row items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-[#1e2c4f] mb-4 sm:mb-0">Личные данные</h1>
-        <Button
-          variant="outline"
-          onClick={() => setIsChangePasswordModalOpen(true)}
-          className="w-full sm:w-auto border-[#1e2c4f] text-[#1e2c4f] hover:bg-[#1e2c4f] hover:text-white hover:shadow-lg transition-all duration-200 font-medium"
-        >
-          <Lock className="w-4 h-4 mr-2" />
-          Изменить пароль
-        </Button>
+        {user?.auth_method !== 'oauth' && (
+          <Button
+            variant="outline"
+            onClick={() => setIsChangePasswordModalOpen(true)}
+            className="w-full sm:w-auto border-[#1e2c4f] text-[#1e2c4f] hover:bg-[#1e2c4f] hover:text-white hover:shadow-lg transition-all duration-200 font-medium"
+          >
+            <Lock className="w-4 h-4 mr-2" />
+            Изменить пароль
+          </Button>
+        )}
       </div>
 
       {/* Форма личных данных */}
@@ -329,12 +316,14 @@ const PersonalData = memo(() => {
         </Button>
       )}
 
-      {/* Модалка изменения пароля */}
-      <ChangePasswordModal
-        isOpen={isChangePasswordModalOpen}
-        onClose={() => setIsChangePasswordModalOpen(false)}
-        userEmail={user?.email}
-      />
+      {/* Модалка изменения пароля - только для пользователей с паролем */}
+      {user?.auth_method !== 'oauth' && (
+        <ChangePasswordModal
+          isOpen={isChangePasswordModalOpen}
+          onClose={() => setIsChangePasswordModalOpen(false)}
+          userEmail={user?.email}
+        />
+      )}
     </div>
 
   );

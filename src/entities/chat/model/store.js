@@ -30,9 +30,14 @@ export const useChatStore = create(
 
     // Действия для сообщений
     setMessages: (messages) => set({ messages }),
-    addMessage: (message) => set(state => ({
-      messages: [...state.messages, message]
-    })),
+    addMessage: (message) => set(state => {
+      if (import.meta.env.DEV) {
+        console.log('Store addMessage: Добавление сообщения, текущее количество:', state.messages.length, 'новое:', message);
+      }
+      return {
+        messages: [...state.messages, message]
+      };
+    }),
     prependMessages: (messages) => set(state => ({
       messages: [...messages, ...state.messages]
     })),

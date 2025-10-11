@@ -247,13 +247,22 @@ export const RegisterForm = () => {
                 <div className="flex-1">
                 <input
                   type="text"
-                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
+                  maxLength="6"
+                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 text-center text-lg tracking-widest ${
                     errors.unique_code ? 'border-red-400 bg-red-50' : 'border-slate-200'
                   } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
-                  placeholder="Введите проверочный код"
+                  placeholder="123456"
                   disabled={isLoading}
+                  onInput={(e) => {
+                    // Разрешаем только цифры
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                  }}
                   {...register('unique_code', {
                     required: 'Проверочный код обязателен',
+                    pattern: {
+                      value: /^\d{6}$/,
+                      message: 'Код должен содержать ровно 6 цифр'
+                    }
                   })}
                 />
                 </div>

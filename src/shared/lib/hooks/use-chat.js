@@ -27,13 +27,54 @@ export const useChat = () => {
     removeNewChatNotification,
     resetChat,
     setManagerName,
-    clearUnreadMessages
+    clearUnreadMessages,
+    incrementUnreadMessages,
+    getUnreadCount
   } = useChatStore();
 
   // Обновляем статус соединения в store
   useEffect(() => {
     setConnectionStatus(isConnected);
   }, [isConnected, setConnectionStatus]);
+
+  // Загрузка непрочитанных сообщений при подключении
+  useEffect(() => {
+    const loadUnreadMessages = async () => {
+      if (!isConnected || !isAuthenticated || !user?.id) return;
+
+      try {
+        const unreadCounts = await import('../../api/chatApi').then(({ chatApi }) => 
+          chatApi.getUnreadMessagesCount()
+        );
+
+        // Обновляем store с непрочитанными сообщениями из БД
+        const { unreadMessages: currentUnread } = useChatStore.getState();
+        const updatedUnread = { ...currentUnread, ...unreadCounts };
+        
+        // Устанавливаем непрочитанные сообщения в store
+        Object.entries(unreadCounts).forEach(([chatId, count]) => {
+          const currentCount = currentUnread[chatId] || 0;
+          if (count > currentCount) {
+            // Обновляем только если в БД больше непрочитанных
+            useChatStore.setState(state => ({
+              unreadMessages: {
+                ...state.unreadMessages,
+                [chatId]: count
+              }
+            }));
+          }
+        });
+
+        if (import.meta.env.DEV) {
+          console.log('Chat: Загружены непрочитанные сообщения из БД:', unreadCounts);
+        }
+      } catch (error) {
+        console.error('Chat: Ошибка загрузки непрочитанных сообщений:', error);
+      }
+    };
+
+    loadUnreadMessages();
+  }, [isConnected, isAuthenticated, user?.id]);
 
   // Обработка WebSocket сообщений
   const handleWebSocketMessage = useCallback((data) => {
@@ -44,7 +85,7 @@ export const useChat = () => {
     switch (data.type) {
       case WS_MESSAGE_TYPES.WAITING_FOR_MANAGER:
         setChatStatus(CHAT_STATUS.PENDING);
-        toast.info(data.message || 'Ожидаем менеджера...');
+        toast.info(data.message || 'Создаем чат...');
         break;
 
       case WS_MESSAGE_TYPES.CHAT_ACCEPTED:
@@ -57,7 +98,7 @@ export const useChat = () => {
           setManagerName(data.managerName);
         }
         setChatStatus(CHAT_STATUS.ACTIVE);
-        toast.success('Менеджер присоединился к чату');
+        toast.success(data.message || 'Менеджер подключен к чату');
 
         // Инвалидируем кеш чата пользователя
         import('../../api/chatApi').then(({ chatApi }) => {
@@ -94,7 +135,8 @@ export const useChat = () => {
       case WS_MESSAGE_TYPES.NEW_MESSAGE:
         // Реализация realtime доставки сообщений
         if (data.message) {
-          const isOwnMessage = data.message.sender_id === user?.id;
+          // Используем isSelf из backend, если он есть, иначе проверяем sender_id
+          const isOwnMessage = data.isSelf !== undefined ? data.isSelf : (data.message.sender_id === user?.id);
           const messageChatId = data.message.chat_id;
           const isActiveChat = activeChat?.id === messageChatId;
 
@@ -106,28 +148,40 @@ export const useChat = () => {
           };
 
           if (import.meta.env.DEV) {
-            console.log('Chat: Получено WebSocket сообщение:', {
+            console.log('Chat: Получено WebSocket сообщение NEW_MESSAGE:', {
               type: data.type,
               isOwnMessage,
               messageChatId,
               isActiveChat,
               activeChat: activeChat?.id,
+              userId: user?.id,
+              messageSenderId: data.message.sender_id,
+              isSelf: data.isSelf,
               message: messageWithTime
             });
           }
 
           if (!isOwnMessage) {
             // Сообщение от другого пользователя
+            if (import.meta.env.DEV) {
+              console.log('Chat: Обработка сообщения от другого пользователя:', {
+                isActiveChat,
+                messageChatId,
+                activeChatId: activeChat?.id,
+                willAddToChat: isActiveChat
+              });
+            }
+            
             if (isActiveChat) {
               // Добавляем в активный чат
               addMessage(messageWithTime);
               
               if (import.meta.env.DEV) {
                 console.log('Chat: Добавлено realtime сообщение в активный чат:', messageWithTime);
+                console.log('Chat: Текущее количество сообщений в store:', messages.length + 1);
               }
             } else {
               // Сообщение из другого чата - увеличиваем счетчик непрочитанных
-              const { incrementUnreadMessages } = useChatStore.getState();
               incrementUnreadMessages(messageChatId);
               
               if (import.meta.env.DEV) {
@@ -296,6 +350,28 @@ export const useChat = () => {
     return success;
   }, [isConnected, sendWebSocketMessage, activeChat?.id, user?.id, user?.role, addMessage]);
 
+  // Пометка сообщений как прочитанных
+  const markMessagesAsRead = useCallback((chatId = activeChat?.id) => {
+    if (!chatId || !isConnected || !user?.id) return;
+
+    const success = sendWebSocketMessage({
+      type: 'MARK_MESSAGES_READ',
+      chatId,
+      userId: user.id
+    });
+
+    if (success) {
+      // Очищаем счетчик непрочитанных для этого чата
+      clearUnreadMessages(chatId);
+      
+      if (import.meta.env.DEV) {
+        console.log('Chat: Сообщения помечены как прочитанные для чата:', chatId);
+      }
+    }
+
+    return success;
+  }, [isConnected, sendWebSocketMessage, activeChat?.id, user?.id, clearUnreadMessages]);
+
   // Принять чат (для менеджеров)
   const acceptChat = useCallback((chatId) => {
     if (user?.role !== USER_ROLES.MANAGER) {
@@ -361,6 +437,7 @@ export const useChat = () => {
       startChat,
       sendMessage,
       acceptChat,
+      markMessagesAsRead,
       resetChatState,
 
       // Проверки

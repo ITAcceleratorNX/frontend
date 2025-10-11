@@ -171,6 +171,22 @@ export const chatApi = {
     }
   },
 
+  // Получить количество непрочитанных сообщений для всех чатов пользователя
+  getUnreadMessagesCount: async () => {
+    try {
+      const response = await api.get('/chats/unread-count');
+      
+      if (import.meta.env.DEV) {
+        console.log('ChatAPI: Получено количество непрочитанных сообщений:', response.data);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при получении количества непрочитанных сообщений:', error);
+      return {};
+    }
+  },
+
   // Утилиты для управления кешем
   
   // Очистить весь кеш API

@@ -29,7 +29,8 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
     canSendMessage, 
     isManager,
     startChat,
-    sendMessage 
+    sendMessage,
+    markMessagesAsRead
   } = useChat();
   
   const { managerName } = useChatStore();
@@ -68,6 +69,30 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
       setShowChatList(false);
     }
   }, [isMobile, activeChat]);
+
+  // Пометка сообщений как прочитанных при открытии чата
+  useEffect(() => {
+    if (isOpen && activeChat && markMessagesAsRead) {
+      // Небольшая задержка, чтобы дать время загрузиться сообщениям
+      const timer = setTimeout(() => {
+        markMessagesAsRead(activeChat.id);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, activeChat, markMessagesAsRead]);
+
+  // Пометка новых сообщений как прочитанных при их получении
+  useEffect(() => {
+    if (isOpen && activeChat && groupedMessages.length > 0 && markMessagesAsRead) {
+      // Помечаем сообщения как прочитанные при получении новых
+      const timer = setTimeout(() => {
+        markMessagesAsRead(activeChat.id);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, activeChat, groupedMessages.length, markMessagesAsRead]);
 
   // Обработка очистки сообщений
   const handleClearMessages = async () => {
@@ -295,7 +320,7 @@ const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
           <div className="flex flex-col items-center justify-center h-full px-4">
             <div className="w-6 h-6 border-2 border-[#263554] border-t-transparent rounded-full mb-4 animate-spin"></div>
             <p className={`text-gray-600 text-center ${isMobile ? 'text-sm' : ''}`}>
-              Подключаем менеджера...
+              Создаем чат...
             </p>
           </div>
         )}

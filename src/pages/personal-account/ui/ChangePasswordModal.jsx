@@ -18,7 +18,7 @@ import {
 // Схема валидации с Yup
 const validationSchema = Yup.object({
   unique_code: Yup.string()
-    .min(4, 'Код должен содержать минимум 4 символа')
+    .matches(/^\d{6}$/, 'Код должен содержать ровно 6 цифр')
     .required('Уникальный код обязателен'),
   password: Yup.string()
     .min(6, 'Пароль должен содержать минимум 6 символов')
@@ -204,13 +204,18 @@ const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
                 <>
                   {/* Код подтверждения */}
                   <div className="space-y-2">
-                    <Label htmlFor="unique_code">Код подтверждения</Label>
+                    <Label htmlFor="unique_code">Код подтверждения (6 цифр)</Label>
                     <Field
                       id="unique_code"
                       name="unique_code"
                       type="text"
-                      placeholder="Введите код из email"
+                      maxLength="6"
+                      placeholder="123456"
                       className="text-center text-lg tracking-widest flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onInput={(e) => {
+                        // Разрешаем только цифры
+                        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                      }}
                     />
                     <ErrorMessage name="unique_code" component="div" className="text-red-500 text-sm" />
                   </div>

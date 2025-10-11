@@ -12,7 +12,7 @@ const ChatStatus = memo(({ status, isConnected, isReconnecting, managerName }) =
     
     switch (status) {
       case CHAT_STATUS.PENDING:
-        return 'ожидание менеджера...';
+        return 'создание чата...';
       case CHAT_STATUS.ACTIVE:
         return managerName ? `Менеджер: ${managerName}` : 'Менеджер онлайн';
       case CHAT_STATUS.CLOSED:

@@ -3,8 +3,8 @@ import { MessageSquare, User, X, Trash2, Users, MoreVertical, Settings, Search }
 import { useManagerChats } from '../../../shared/lib/hooks/use-manager-chats';
 import { useChat } from '../../../shared/lib/hooks/use-chat';
 import { useChatMessages } from '../../../shared/lib/hooks/use-chat-messages';
-import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import { useChatStore, CHAT_STATUS } from '../../../entities/chat/model';
+import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import { ClearMessagesButton } from './ClearMessagesButton';
 import { PendingChatsPanel } from './PendingChatsPanel';
 import { ChangeManagerModal } from './ChangeManagerModal';
@@ -150,24 +150,6 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
         </div>
       </div>
       
-      {chat.status === 'PENDING' && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAccept(chat.id);
-          }}
-          className={`
-            w-full bg-green-500 text-white font-medium rounded 
-            hover:bg-green-600 transition-colors
-            ${isMobile 
-              ? 'mt-3 px-4 py-3 text-sm min-h-[44px]' 
-              : 'mt-1 px-3 py-1 text-xs'
-            }
-          `}
-        >
-          Принять
-        </button>
-      )}
     </div>
   );
 });
@@ -175,7 +157,7 @@ const ChatItem = memo(({ chat, isActive, onAccept, onSelect, onChangeManager }) 
 ChatItem.displayName = 'ChatItem';
 
 const ManagerChatList = memo(({ onChatSelect }) => {
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('active');
   const [searchTerm, setSearchTerm] = useState('');
   const [showChangeManagerModal, setShowChangeManagerModal] = useState(false);
   const [selectedChatForManager, setSelectedChatForManager] = useState(null);
@@ -191,6 +173,8 @@ const ManagerChatList = memo(({ onChatSelect }) => {
     clearChatMessages,
     loadChats
   } = useManagerChats();
+  
+  const { getUnreadCount } = useChatStore();
   
   const { activeChat, acceptChat: acceptChatFromWebSocket } = useChat();
   
@@ -325,46 +309,16 @@ const ManagerChatList = memo(({ onChatSelect }) => {
           </div>
         </div>
         
-        {/* Табы - адаптивные */}
-        <div className={`flex space-x-1 bg-gray-100 rounded ${isMobile ? 'p-2' : 'p-1'}`}>
-          <button
-            onClick={() => setActiveTab('pending')}
-            className={`
-              flex items-center space-x-1 rounded font-medium transition-all
-              ${isMobile 
-                ? 'px-4 py-2 text-sm min-h-[44px]' 
-                : 'px-3 py-1 text-xs'
-              }
-              ${activeTab === 'pending' 
-                ? 'bg-white text-amber-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
-              }
-            `}
-          >
-            <div className={`bg-amber-400 rounded-full ${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`}></div>
-            <span>Ожидают</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('active')}
-            className={`
-              flex items-center space-x-1 rounded font-medium transition-all
-              ${isMobile 
-                ? 'px-4 py-2 text-sm min-h-[44px]' 
-                : 'px-3 py-1 text-xs'
-              }
-              ${activeTab === 'active' 
-                ? 'bg-white text-green-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
-              }
-            `}
-          >
-            <div className={`bg-green-400 rounded-full ${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`}></div>
-            <span>Активные ({counts.active})</span>
-          </button>
+        {/* Заголовок активных чатов */}
+        <div className="flex items-center space-x-2 text-gray-600">
+          <div className={`bg-green-400 rounded-full ${isMobile ? 'w-3 h-3' : 'w-2 h-2'}`}></div>
+          <span className={`font-medium ${isMobile ? 'text-sm' : 'text-xs'}`}>
+            Активные чаты ({counts.active})
+          </span>
         </div>
 
-        {/* Поиск для активных чатов */}
-        {activeTab === 'active' && (
+        {/* Поиск */}
+        {(
           <div className={`relative ${isMobile ? 'mt-4' : 'mt-3'}`}>
             <div className={`absolute inset-y-0 left-0 flex items-center pointer-events-none ${isMobile ? 'pl-4' : 'pl-3'}`}>
               <Search className={`text-gray-400 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
@@ -465,46 +419,37 @@ const ManagerChatList = memo(({ onChatSelect }) => {
 
       {/* Содержимое */}
       <div className="flex-1 overflow-hidden">
-        {activeTab === 'pending' ? (
-          <div className={`h-full overflow-y-auto ${isMobile ? 'p-4' : 'p-3'}`}>
-            <PendingChatsPanel 
-              onAcceptChat={handleAcceptChat}
-              className="h-full"
-            />
-          </div>
-        ) : (
-          <div className="h-full overflow-y-auto bg-white">
-            {filteredActiveChats.length === 0 ? (
-              <div className={`h-full flex items-center justify-center text-center ${isMobile ? 'p-8' : 'p-6'}`}>
-                <div>
-                  <div className={`
-                    bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3
-                    ${isMobile ? 'w-16 h-16' : 'w-12 h-12'}
-                  `}>
-                    <MessageSquare className={`text-gray-400 ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} />
-                  </div>
-                  <h3 className={`font-medium text-gray-900 mb-2 ${isMobile ? 'text-base' : 'text-sm'}`}>
-                    {searchTerm ? 'Чаты не найдены' : 'Нет активных чатов'}
-                  </h3>
-                  <p className={`text-gray-500 ${isMobile ? 'text-sm' : 'text-xs'}`}>
-                    {searchTerm ? 'Попробуйте изменить поисковый запрос' : 'Принятые чаты будут отображаться здесь'}
-                  </p>
+        <div className="h-full overflow-y-auto bg-white">
+          {filteredActiveChats.length === 0 ? (
+            <div className={`h-full flex items-center justify-center text-center ${isMobile ? 'p-8' : 'p-6'}`}>
+              <div>
+                <div className={`
+                  bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3
+                  ${isMobile ? 'w-16 h-16' : 'w-12 h-12'}
+                `}>
+                  <MessageSquare className={`text-gray-400 ${isMobile ? 'w-8 h-8' : 'w-6 h-6'}`} />
                 </div>
+                <h3 className={`font-medium text-gray-900 mb-2 ${isMobile ? 'text-base' : 'text-sm'}`}>
+                  {searchTerm ? 'Чаты не найдены' : 'Нет активных чатов'}
+                </h3>
+                <p className={`text-gray-500 ${isMobile ? 'text-sm' : 'text-xs'}`}>
+                  {searchTerm ? 'Попробуйте изменить поисковый запрос' : 'Назначенные чаты будут отображаться здесь'}
+                </p>
               </div>
-            ) : (
-              filteredActiveChats.map((chat) => (
-                <ChatItem
-                  key={chat.id}
-                  chat={chat}
-                  isActive={activeChat?.id === chat.id}
-                  onAccept={handleAcceptChat}
-                  onSelect={() => handleSelectChat(chat)}
-                  onChangeManager={handleChangeManager}
-                />
-              ))
-            )}
-          </div>
-        )}
+            </div>
+          ) : (
+            filteredActiveChats.map((chat) => (
+              <ChatItem
+                key={chat.id}
+                chat={chat}
+                isActive={activeChat?.id === chat.id}
+                onAccept={handleAcceptChat}
+                onSelect={() => handleSelectChat(chat)}
+                onChangeManager={handleChangeManager}
+              />
+            ))
+          )}
+        </div>
       </div>
 
       {/* Подвал с статистикой - адаптивный */}
