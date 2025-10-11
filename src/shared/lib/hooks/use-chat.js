@@ -352,7 +352,22 @@ export const useChat = () => {
 
   // Пометка сообщений как прочитанных
   const markMessagesAsRead = useCallback((chatId = activeChat?.id) => {
-    if (!chatId || !isConnected || !user?.id) return;
+    if (import.meta.env.DEV) {
+      console.log('🔵 markMessagesAsRead вызвана:', {
+        chatId,
+        activeChatId: activeChat?.id,
+        isConnected,
+        userId: user?.id,
+        hasAllRequired: !!(chatId && isConnected && user?.id)
+      });
+    }
+
+    if (!chatId || !isConnected || !user?.id) {
+      if (import.meta.env.DEV) {
+        console.log('❌ markMessagesAsRead пропущена - не хватает данных');
+      }
+      return;
+    }
 
     const success = sendWebSocketMessage({
       type: 'MARK_MESSAGES_READ',
@@ -365,7 +380,31 @@ export const useChat = () => {
       clearUnreadMessages(chatId);
       
       if (import.meta.env.DEV) {
-        console.log('Chat: Сообщения помечены как прочитанные для чата:', chatId);
+        console.log('✅ markMessagesAsRead: Запрос отправлен успешно для чата:', chatId);
+      }
+
+      // Через небольшую задержку перезагружаем счетчик непрочитанных из БД
+      setTimeout(async () => {
+        try {
+          const unreadCounts = await import('../../api/chatApi').then(({ chatApi }) => 
+            chatApi.getUnreadMessagesCount()
+          );
+          
+          // Обновляем store с актуальными данными из БД
+          useChatStore.setState(state => ({
+            unreadMessages: unreadCounts
+          }));
+          
+          if (import.meta.env.DEV) {
+            console.log('🔄 Счетчик непрочитанных обновлен из БД:', unreadCounts);
+          }
+        } catch (error) {
+          console.error('Ошибка обновления счетчика непрочитанных:', error);
+        }
+      }, 500);
+    } else {
+      if (import.meta.env.DEV) {
+        console.log('❌ markMessagesAsRead: Не удалось отправить запрос для чата:', chatId);
       }
     }
 

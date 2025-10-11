@@ -15,7 +15,7 @@ import { ManagerChatList } from './ManagerChatList';
 import { ClearMessagesButton } from './ClearMessagesButton';
 // import { ChatDebugInfo } from './ChatDebugInfo';
 
-const ChatWindow = memo(({ isOpen, onClose, className = '' }) => {
+const ChatWindow = memo(({ isOpen = true, onClose, className = '' }) => {
   const { user, isAuthenticated } = useAuth();
   const { isMobile } = useDeviceType();
   const [showChatList, setShowChatList] = useState(!isMobile);
