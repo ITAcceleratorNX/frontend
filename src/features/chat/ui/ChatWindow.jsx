@@ -30,7 +30,8 @@ const ChatWindow = memo(({ isOpen = true, onClose, className = '' }) => {
     isManager,
     startChat,
     sendMessage,
-    markMessagesAsRead
+    markMessagesAsRead,
+    deleteMessage
   } = useChat();
   
   const { managerName } = useChatStore();
@@ -204,6 +205,8 @@ const ChatWindow = memo(({ isOpen = true, onClose, className = '' }) => {
                   isLoadingMessages={isLoadingMessages}
                   onLoadMore={loadMoreMessages}
                   messagesEndRef={messagesEndRef}
+                  onDeleteMessage={deleteMessage}
+                  currentUserId={user?.id}
                 />
                 <MessageInput 
                   onSend={sendMessage}
@@ -332,6 +335,8 @@ const ChatWindow = memo(({ isOpen = true, onClose, className = '' }) => {
             isLoadingMessages={isLoadingMessages}
             onLoadMore={loadMoreMessages}
             messagesEndRef={messagesEndRef}
+            onDeleteMessage={deleteMessage}
+            currentUserId={user?.id}
           />
         )}
       </div>

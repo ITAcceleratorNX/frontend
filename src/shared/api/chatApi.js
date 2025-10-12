@@ -104,6 +104,17 @@ export const chatApi = {
     }
   },
 
+  // Удалить сообщение
+  deleteMessage: async (messageId) => {
+    try {
+      const response = await api.delete(`/chats/messages/${messageId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при удалении сообщения:', error);
+      throw error;
+    }
+  },
+
   // Сменить менеджера чата
   changeManager: async (chatId, newManagerId) => {
     try {
