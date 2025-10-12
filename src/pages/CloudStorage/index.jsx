@@ -9,6 +9,7 @@ import FileCheckIcon from '../../assets/File_Check.png';
 import GroupIcon from '../../assets/group.png';
 import ShieldTickIcon from '../../assets/shield-tick.png';
 import BoxTickIcon from '../../assets/box-tick.png';
+import VolumeSelector from "../../components/VolumeSelector.jsx";
 
 const CloudStorage = () => {
     return (
@@ -75,6 +76,11 @@ const CloudStorage = () => {
                     </p>
                 </div>
             </div>
+
+            {/* Третий фрейм: карточка склада */}
+            <section className="w-full flex justify-center items-center px-4 py-8 font-['Montserrat']">
+                <VolumeSelector />
+            </section>
 
             {/* Секция видео и шагов */}
             <section className="w-full flex flex-col items-center justify-center mt-1 font-['Montserrat'] px-4">
