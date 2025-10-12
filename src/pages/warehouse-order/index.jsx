@@ -503,7 +503,7 @@ const WarehouseOrderPage = memo(() => {
                       }`}
                   >
                     <h3 className="text-lg font-bold text-[#273655]">{warehouse.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{warehouse.address}</p>
+                    <p className="text-sm text-gray-600 mt-1">{warehouse?.address}</p>
                     <p className="text-[#6B6B6B] text-sm">
                       Время работы: {warehouse.work_start?.substring(0, 5)} - {warehouse.work_end?.substring(0, 5)}
                     </p>

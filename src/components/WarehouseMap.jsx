@@ -24,7 +24,7 @@ const WarehouseMap = ({ warehouses = [] }) => {
               </div>
               <div style="space-y: 6px;">
                 <p style="margin: 6px 0; font-size: 14px; color: #6B6B6B; display: flex; align-items: center;">
-                  <span style="margin-right: 8px;">📍</span>${warehouse.address}
+                  <span style="margin-right: 8px;">📍</span>${warehouse?.address}
                 </p>
                 <p style="margin: 6px 0; font-size: 14px; color: #6B6B6B; display: flex; align-items: center;">
                   <span style="margin-right: 8px;">📞</span>${warehouse.phone}

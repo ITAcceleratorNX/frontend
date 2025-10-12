@@ -324,25 +324,33 @@ const HomePage = memo(() => {
                     </p>
                     <p className="text-sm text-[#3E4958]">
                       {selectedWarehouse.work_start &&
-                        selectedWarehouse.work_end
-                        ? `Режим: ${selectedWarehouse.work_start.substring(0, 5)} - ${selectedWarehouse.work_end.substring(0, 5)}`
-                        : "Режим работы уточняется"}
+                      selectedWarehouse.work_end ? (
+                        selectedWarehouse.work_start === "00:00" && selectedWarehouse.work_end === "23:59" ? (
+                          "Режим: Круглосуточно"
+                        ) : (
+                          `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}`
+                        )
+                      ) : (
+                        "Режим работы уточняется"
+                      )}
                     </p>
-                    <div className="flex items-center gap-2 text-sm text-[#273655] mt-2">
-                      <span className="relative w-6 h-6">
-                        <img
-                          src={beigeCircle}
-                          alt=""
-                          className="absolute w-full h-full"
-                        />
-                        <img
-                          src={houseOnBeigeCircle}
-                          alt=""
-                          className="absolute w-4 h-4 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                        />
-                      </span>
-                      {selectedWarehouse.address || "Адрес уточняется"}
-                    </div>
+                    {selectedWarehouse?.address && (
+                        <div className="flex items-center gap-2 text-sm text-[#273655] mt-2">
+                          <span className="relative w-6 h-6">
+                            <img
+                                src={beigeCircle}
+                                alt=""
+                                className="absolute w-full h-full"
+                            />
+                            <img
+                                src={houseOnBeigeCircle}
+                                alt=""
+                                className="absolute w-4 h-4 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                            />
+                          </span>
+                          {selectedWarehouse?.address}
+                        </div>
+                    )}
                   </>
                 )}
 

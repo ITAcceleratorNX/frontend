@@ -111,7 +111,6 @@ export function Dropdown({
               {items.map((item) => {
                 const key = _getKey(item);
                 const label = _getLabel(item);
-                const desc = _getDescription(item);
                 const active = String(value) === String(key);
 
                 return (
@@ -127,7 +126,6 @@ export function Dropdown({
                     <Check className={`mt-[2px] h-4 w-4 ${active ? "opacity-100" : "opacity-0"}`} />
                     <div className="flex flex-col">
                       <span className="text-sm">{label}</span>
-                      {desc && <span className="text-xs text-muted-foreground">{desc}</span>}
                     </div>
                   </CommandItem>
                 );

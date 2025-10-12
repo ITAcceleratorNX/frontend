@@ -133,7 +133,7 @@ const WarehouseData = () => {
     navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${warehouseId}`, { replace: true });
     reset({
       name: warehouse.name || '',
-      address: warehouse.address || '',
+      address: warehouse?.address || '',
       work_start: warehouse.work_start || '',
       work_end: warehouse.work_end || '',
       status: warehouse.status || 'AVAILABLE'
@@ -345,7 +345,7 @@ const WarehouseData = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <p className="text-gray-900">{warehouse.address}</p>
+                            <p className="text-gray-900">{warehouse?.address}</p>
                           </div>
                         </div>
                       </div>
