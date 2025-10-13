@@ -253,6 +253,16 @@ export const useChat = () => {
         });
         break;
 
+      case 'MESSAGE_DELETED':
+        // Удаляем сообщение из store
+        if (import.meta.env.DEV) {
+          console.log('Chat: Получено уведомление об удалении сообщения:', data.messageId);
+        }
+        
+        const { removeMessage } = useChatStore.getState();
+        removeMessage(data.messageId);
+        break;
+
       default:
         if (import.meta.env.DEV) {
           console.log('Chat: Неизвестный тип WebSocket сообщения:', data.type);
@@ -444,6 +454,44 @@ export const useChat = () => {
     return success;
   }, [user?.role, user?.id, isConnected, sendWebSocketMessage, setActiveChat, setChatStatus, removeNewChatNotification, clearUnreadMessages]);
 
+  // Удаление сообщения
+  const deleteMessage = useCallback(async (messageId) => {
+    if (!isConnected || !user?.id) {
+      if (import.meta.env.DEV) {
+        console.log('❌ deleteMessage: Нет соединения или пользователя');
+      }
+      return false;
+    }
+
+    try {
+      if (import.meta.env.DEV) {
+        console.log('🔴 deleteMessage: Удаление сообщения', messageId);
+      }
+
+      // Отправляем запрос через WebSocket
+      const success = sendWebSocketMessage({
+        type: 'DELETE_MESSAGE',
+        messageId,
+        userId: user.id
+      });
+
+      if (success) {
+        if (import.meta.env.DEV) {
+          console.log('✅ deleteMessage: Запрос на удаление отправлен');
+        }
+        return true;
+      } else {
+        if (import.meta.env.DEV) {
+          console.log('❌ deleteMessage: Не удалось отправить запрос');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ deleteMessage: Ошибка при удалении сообщения:', error);
+      return false;
+    }
+  }, [isConnected, user?.id, sendWebSocketMessage]);
+
   // Сброс состояния чата
   const resetChatState = useCallback(() => {
     resetChat();
@@ -477,6 +525,7 @@ export const useChat = () => {
       sendMessage,
       acceptChat,
       markMessagesAsRead,
+      deleteMessage,
       resetChatState,
 
       // Проверки
@@ -493,6 +542,7 @@ export const useChat = () => {
     startChat,
     sendMessage,
     acceptChat,
+    deleteMessage,
     resetChatState,
     isAuthenticated,
     user?.role

@@ -8,6 +8,8 @@ const MessageList = memo(({
   isLoadingMessages = false, 
   onLoadMore, 
   messagesEndRef,
+  onDeleteMessage,
+  currentUserId,
   className = '' 
 }) => {
   const containerRef = useRef(null);
@@ -135,6 +137,8 @@ const MessageList = memo(({
           message={messageData}
           isFromUser={isFromUser}
           showAvatar={showAvatar}
+          onDeleteMessage={onDeleteMessage}
+          currentUserId={currentUserId}
         />
       </div>
     );

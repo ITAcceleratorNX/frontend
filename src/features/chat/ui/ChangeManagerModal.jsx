@@ -62,7 +62,20 @@ const ChangeManagerModal = memo(({
   };
 
   const formatManagerName = (manager) => {
+    if (!manager) return 'Неизвестно';
     return manager.name || manager.email?.split('@')[0] || `Менеджер #${manager.id}`;
+  };
+
+  // Получаем данные текущего менеджера
+  const getCurrentManagerData = () => {
+    if (currentManager && currentManager.id) {
+      return currentManager;
+    }
+    // Если currentManager не передан или не имеет id, ищем в списке менеджеров
+    if (chat?.manager_id) {
+      return managers.find(m => m.id === chat.manager_id) || { id: chat.manager_id };
+    }
+    return { id: 'неизвестен' };
   };
 
   if (!isOpen) return null;
@@ -123,15 +136,15 @@ const ChangeManagerModal = memo(({
                   ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}
                 `}>
                   <span className={`text-white font-bold ${isMobile ? 'text-base' : 'text-sm'}`}>
-                    {formatManagerName(currentManager || {}).charAt(0).toUpperCase()}
+                    {formatManagerName(getCurrentManagerData()).charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
                   <div className={`font-medium text-[#1e2c4f] ${isMobile ? 'text-base' : 'text-sm'}`}>
-                    {formatManagerName(currentManager || {})}
+                    {formatManagerName(getCurrentManagerData())}
                   </div>
                   <div className={`text-[#1e2c4f]/70 ${isMobile ? 'text-sm' : 'text-xs'}`}>
-                    ID: {currentManager?.id || chat?.manager_id}
+                    ID: {getCurrentManagerData().id}
                   </div>
                 </div>
               </div>
@@ -160,7 +173,7 @@ const ChangeManagerModal = memo(({
                 }
               `}>
                 {managers
-                  .filter(manager => manager.id !== (currentManager?.id || chat?.manager_id))
+                  .filter(manager => manager.id !== getCurrentManagerData().id)
                   .map((manager) => (
                   <div
                     key={manager.id}

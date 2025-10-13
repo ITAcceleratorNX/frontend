@@ -41,6 +41,14 @@ export const useChatStore = create(
     prependMessages: (messages) => set(state => ({
       messages: [...messages, ...state.messages]
     })),
+    removeMessage: (messageId) => set(state => {
+      if (import.meta.env.DEV) {
+        console.log('Store removeMessage: Удаление сообщения', messageId);
+      }
+      return {
+        messages: state.messages.filter(msg => msg.id !== messageId)
+      };
+    }),
     setHasMoreMessages: (hasMore) => set({ hasMoreMessages: hasMore }),
     setIsLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
 
