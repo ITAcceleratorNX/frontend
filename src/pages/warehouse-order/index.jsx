@@ -505,7 +505,16 @@ const WarehouseOrderPage = memo(() => {
                     <h3 className="text-lg font-bold text-[#273655]">{warehouse.name}</h3>
                     <p className="text-sm text-gray-600 mt-1">{warehouse?.address}</p>
                     <p className="text-[#6B6B6B] text-sm">
-                      Время работы: {warehouse.work_start?.substring(0, 5)} - {warehouse.work_end?.substring(0, 5)}
+                      {warehouse.work_start &&
+                      warehouse.work_end ? (
+                          warehouse.work_start === "00:00" && warehouse.work_end === "23:59" ? (
+                                "Время работы: Круглосуточно"
+                            ) : (
+                                `Время работы: ${warehouse.work_start} - ${warehouse.work_end}`
+                            )
+                        ) : (
+                            "Время работы уточняется"
+                        )}
                     </p>
                     <p className="text-[#6B6B6B] text-sm">
                       Статус:{" "}
@@ -541,11 +550,11 @@ const WarehouseOrderPage = memo(() => {
                 <div 
                   className="min-w-max mx-auto relative"
                   style={{
-                    minWidth: selectedWarehouse.name === "Mega Towers" ? '615px' : 
+                    minWidth: selectedWarehouse.name === "Mega Towers Сити" ? '615px' :
                               selectedWarehouse.name === "ЖК Есентай" ? '1120px' : 'auto'
                   }}
                 >
-                  {selectedWarehouse.name === "Mega Towers" ? (
+                  {selectedWarehouse.name === "Mega Towers Сити" ? (
                     <InteractiveWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}

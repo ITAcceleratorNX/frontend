@@ -48,7 +48,7 @@ const HomePage = memo(() => {
       },
       {
         id: 2,
-        name: "Mega Towers",
+        name: "Mega Towers Сити",
         address: "Абиша Кекилбайулы, 270 блок 4",
         phone: "+7 727 987 6543",
         // workingHours: "Ежедневно: 08:00-22:00",
@@ -59,7 +59,7 @@ const HomePage = memo(() => {
       },
       {
         id: 3,
-        name: "ЖК Комфорт",
+        name: "ЖК Комфорт Сити",
         address: "Проспект Серкебаева, 146/3",
         phone: "+7 727 987 6543",
         workingHours: "Круглосуточно",
