@@ -26,7 +26,7 @@ export default function AboutWarehouseRentPage() {
     },
     {
       id: 2,
-      name: "Mega Towers Сити",
+      name: "ЖК Mega Towers",
       address: "Абиша Кекилбайулы, 270 блок 4, Алматы",
       phone: "+7 727 987 6543",
       // workingHours: "Ежедневно: 08:00-22:00",

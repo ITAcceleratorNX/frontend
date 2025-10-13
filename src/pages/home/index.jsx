@@ -48,7 +48,7 @@ const HomePage = memo(() => {
       },
       {
         id: 2,
-        name: "Mega Towers Сити",
+        name: "ЖК Mega Towers",
         address: "Абиша Кекилбайулы, 270 блок 4",
         phone: "+7 727 987 6543",
         // workingHours: "Ежедневно: 08:00-22:00",

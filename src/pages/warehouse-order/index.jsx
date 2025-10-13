@@ -550,11 +550,11 @@ const WarehouseOrderPage = memo(() => {
                 <div 
                   className="min-w-max mx-auto relative"
                   style={{
-                    minWidth: selectedWarehouse.name === "Mega Towers Сити" ? '615px' :
+                    minWidth: selectedWarehouse.name === "ЖК Mega Towers" ? '615px' :
                               selectedWarehouse.name === "ЖК Есентай" ? '1120px' : 'auto'
                   }}
                 >
-                  {selectedWarehouse.name === "Mega Towers Сити" ? (
+                  {selectedWarehouse.name === "ЖК Mega Towers" ? (
                     <InteractiveWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}
