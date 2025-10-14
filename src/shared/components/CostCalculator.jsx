@@ -56,7 +56,7 @@ const CostCalculator = () => {
 
   // Обработчик изменения размеров (для облачного хранения)
   const handleDimensionChange = (e, dimension) => {
-    const value = Math.max(1, Number(e.target.value)); // Минимальное значение 1
+    const value = Math.max(0.1, Number(e.target.value)); // Минимальное значение 0.1
     const newDimensions = {
       ...dimensions,
       [dimension]: value
@@ -103,14 +103,52 @@ const CostCalculator = () => {
   const calculateCost = () => {
     let price;
     
+    // Определяем тип ценообразования в зависимости от периода аренды
+    let pricingType;
+    if (month <= 6) {
+      pricingType = 'UP_6M';
+    } else if (month <= 12) {
+      pricingType = '6_12M';
+    } else {
+      pricingType = 'OVER_12M';
+    }
+
     // Для стеллажного хранения (RACK) используем особую логику
     if (type === 'RACK') {
       const selectedPrice = prices.find(price => price.type === 'RACK');
       // Если тариф из API доступен - используем его, иначе дефолтный 20₸
       price = selectedPrice ? parseFloat(selectedPrice.price) : 20;
     } else {
-      // Для остальных типов используем обычную логику
-      const selectedPrice = prices.find(price => price.type === type);
+      // Новая логика ценообразования согласно таблице ставок
+      let serviceType;
+      if (type === 'INDIVIDUAL') {
+        // Для индивидуального хранения используем м2
+        serviceType = `M2_${pricingType}`;
+      } else if (type === 'CLOUD') {
+        // Для облачного хранения используем м3
+        // Если объем меньше 1 м³, используем 0.1 м³ тарифы
+        if (area < 1) {
+          serviceType = `M3_01_${pricingType}`;
+        } else {
+          serviceType = `M3_${pricingType}`;
+        }
+      } else {
+        // Для остальных типов используем старую логику
+        const selectedPrice = prices.find(price => price.type === type);
+        if (!selectedPrice) {
+          setError('Цена для выбранного типа услуги не найдена');
+          return;
+        }
+        price = parseFloat(selectedPrice.price);
+        const total = price * area * month;
+        setTotalCost(Math.round(total));
+        localStorage.setItem("calculated_price", Math.round(total))
+        setError(null);
+        return;
+      }
+
+      // Ищем цену по новому типу услуги
+      const selectedPrice = prices.find(price => price.type === serviceType);
       if (!selectedPrice) {
         setError('Цена для выбранного типа услуги не найдена');
         return;
@@ -128,6 +166,9 @@ const CostCalculator = () => {
         area,
         month,
         type,
+        pricingType,
+        serviceType: type === 'INDIVIDUAL' || type === 'CLOUD' ? 
+          `${type === 'INDIVIDUAL' ? 'M2' : 'M3'}_${pricingType}` : type,
         price,
         total,
         ...(type === 'CLOUD' && { dimensions }),
@@ -159,8 +200,10 @@ const CostCalculator = () => {
       localStorage.setItem("prep_area", volume);
     } else {
       // Для индивидуального хранения используем площадь по умолчанию
-      setArea(50);
-      localStorage.setItem('prep_area', null);
+      const defaultArea = 10;
+      setArea(defaultArea);
+      setAreaInput(defaultArea.toString());
+      localStorage.setItem('prep_area', defaultArea);
     }
   };
 
@@ -257,7 +300,8 @@ const CostCalculator = () => {
                       <label className="text-[14px] text-[#6B6B6B] w-16">Ширина:</label>
                       <input
                           type="number"
-                          min="1"
+                          min="0.1"
+                          step="0.1"
                           value={dimensions.width}
                           onChange={(e) => handleDimensionChange(e, 'width')}
                           className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
@@ -268,7 +312,8 @@ const CostCalculator = () => {
                       <label className="text-[14px] text-[#6B6B6B] w-16">Высота:</label>
                       <input
                           type="number"
-                          min="1"
+                          min="0.1"
+                          step="0.1"
                           value={dimensions.height}
                           onChange={(e) => handleDimensionChange(e, 'height')}
                           className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
@@ -279,7 +324,8 @@ const CostCalculator = () => {
                       <label className="text-[14px] text-[#6B6B6B] w-16">Длина:</label>
                       <input
                           type="number"
-                          min="1"
+                          min="0.1"
+                          step="0.1"
                           value={dimensions.length}
                           onChange={(e) => handleDimensionChange(e, 'length')}
                           className="flex-1 h-[56px] rounded-lg border-none bg-white px-4 text-[16px] text-[#273655] font-normal focus:outline-none"
@@ -293,7 +339,8 @@ const CostCalculator = () => {
                 </>
             ) : (
                 <>
-                  <label className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Размеры стеллажа (м):</label>
+                  {/* Закомментировано стеллажное хранение */}
+                  {/* <label className="text-[16px] sm:text-[18px] text-[#6B6B6B] font-bold mb-4">Размеры стеллажа (м):</label>
                   <div className="w-full flex flex-col gap-4 mb-8">
                     <div className="flex items-center gap-4">
                       <label className="text-[14px] text-[#6B6B6B] w-16">Ширина:</label>
@@ -334,6 +381,13 @@ const CostCalculator = () => {
                     <div className="mt-2 text-[14px] text-[#6B6B6B]">
                       Объем: {area} м³
                     </div>
+                  </div> */}
+                  
+                  {/* Показываем сообщение что стеллажное хранение недоступно */}
+                  <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8">
+                    <div className="text-[16px] text-[#6B6B6B] text-center">
+                      Стеллажное хранение временно недоступно
+                    </div>
                   </div>
                 </>
             )}
@@ -365,28 +419,27 @@ const CostCalculator = () => {
 
             {/* Тип услуги */}
             <label className="text-[16px] sm:text-[18px] text-[#9C9C9C] font-bold mb-4">Тип услуги:</label>
-            <div className="flex flex-col sm:flex-row gap-4 mb-4 w-full">
-              <div className="flex flex-col gap-4 w-full sm:w-1/2">
-                <button
-                    onClick={() => handleServiceTypeClick('INDIVIDUAL')}
-                    className={`h-[56px] rounded-lg text-[16px] font-bold w-full transition-colors ${
-                        type === 'INDIVIDUAL' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'
-                    }`}
-                    style={{ boxShadow: '4px 4px 8px 0 #B0B0B0', border: '1px solid #273655' }}
-                >
-                  Индивидуальное
-                </button>
-                <button
-                    onClick={() => handleServiceTypeClick('CLOUD')}
-                    className={`h-[56px] rounded-lg text-[16px] font-bold w-full transition-colors ${
-                        type === 'CLOUD' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'
-                    }`}
-                    style={{ boxShadow: '4px 4px 8px 0 #B0B0B0', border: '1px solid #273655' }}
-                >
-                  Облачное
-                </button>
-              </div>
-              <div className="flex flex-col gap-4 w-full sm:w-1/2">
+            <div className="flex flex-row gap-4 mb-4 w-full">
+              <button
+                  onClick={() => handleServiceTypeClick('INDIVIDUAL')}
+                  className={`h-[56px] rounded-lg text-[16px] font-bold flex-1 transition-colors ${
+                      type === 'INDIVIDUAL' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'
+                  }`}
+                  style={{ boxShadow: '4px 4px 8px 0 #B0B0B0', border: '1px solid #273655' }}
+              >
+                Индивидуальное
+              </button>
+              <button
+                  onClick={() => handleServiceTypeClick('CLOUD')}
+                  className={`h-[56px] rounded-lg text-[16px] font-bold flex-1 transition-colors ${
+                      type === 'CLOUD' ? 'bg-[#273655] text-white' : 'bg-white text-[#273655]'
+                  }`}
+                  style={{ boxShadow: '4px 4px 8px 0 #B0B0B0', border: '1px solid #273655' }}
+              >
+                Облачное
+              </button>
+              {/* Закомментировано стеллажное хранение */}
+              {/* <div className="flex flex-col gap-4 w-full sm:w-1/2">
                 <button
                     onClick={() => handleServiceTypeClick('RACK')}
                     className={`h-[56px] rounded-lg text-[16px] font-bold w-full transition-colors ${
@@ -397,7 +450,7 @@ const CostCalculator = () => {
                   Стеллажное
                 </button>
                 <div className="h-[56px] w-full" />
-              </div>
+              </div> */}
             </div>
 
             {/* Результат или ошибка */}
