@@ -26,7 +26,7 @@ export default function AboutWarehouseRentPage() {
     },
     {
       id: 2,
-      name: "Mega Towers",
+      name: "ЖК Mega Towers",
       address: "Абиша Кекилбайулы, 270 блок 4, Алматы",
       phone: "+7 727 987 6543",
       // workingHours: "Ежедневно: 08:00-22:00",
@@ -37,7 +37,7 @@ export default function AboutWarehouseRentPage() {
     },
     {
       id: 3,
-      name: "ЖК Комфорт",
+      name: "ЖК Комфорт Сити",
       address: "Проспект Серкебаева, 146/3",
       phone: "+7 727 987 6543",
       workingHours: "Круглосуточно",
