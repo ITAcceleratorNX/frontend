@@ -12,7 +12,7 @@ import pomesh from "../../assets/pomesh.png";
 
 import beigeCircle from "../../assets/beige_circle.svg";
 import houseOnBeigeCircle from "../../assets/house_on_beige_circle.svg";
-import extraspaceLogo from "../../assets/extraspace_logo.png";
+import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
 import image85 from "../../assets/image 85.png";
 import group1010 from "../../assets/Group 1010.png";
 import Footer from "../../widgets/Footer";
