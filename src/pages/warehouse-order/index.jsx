@@ -10,6 +10,7 @@ import { useAuth } from "../../shared/context/AuthContext";
 import ChatButton from "../../shared/components/ChatButton";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
 import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
+import MiniVolumeSelector from "../../components/MiniVolumeSelector";
 import ProfileValidationGuard from "../../shared/components/ProfileValidationGuard";
 // Импорт компонентов UI
 import {
@@ -43,6 +44,7 @@ const WarehouseOrderPage = memo(() => {
   ]);
   const [months, setMonths] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCloudVolume, setSelectedCloudVolume] = useState(3);
   // Состояния для дополнительных услуг
   const [isSelectedMoving, setIsSelectedMoving] = useState(false);
   const [isSelectedPackage, setIsSelectedPackage] = useState(false);
@@ -589,16 +591,11 @@ const WarehouseOrderPage = memo(() => {
                           Тип хранения: <span className="font-medium text-[#273655]">Облачное</span>
                         </p>
                         <p className="text-[#6B6B6B]">
-                          Общий объем ваших вещей:{" "}
+                          Выбранный объем:{" "}
                           <span className="font-medium text-[#273655]">
-                          {totalVolume.toFixed(2)} м³
+                          {selectedCloudVolume} м³
                         </span>
                         </p>
-                        {totalVolume > parseFloat(selectedStorage.available_volume) && (
-                            <p className="text-red-600 font-medium mt-2">
-                              ⚠️ Объем превышает доступное место в боксе!
-                            </p>
-                        )}
                       </>
                   ) : (
                       <>
@@ -628,6 +625,7 @@ const WarehouseOrderPage = memo(() => {
                       </>
                   )}
                 </div>
+                {selectedWarehouse?.type !== 'CLOUD' && (
                 <div className="space-y-4">
                   {orderItems.map((item, index) => (
                     <div
@@ -731,14 +729,22 @@ const WarehouseOrderPage = memo(() => {
                     </div>
                   ))}
                 </div>
+                )}
                 <div className="mt-4">
-                  <button
-                    onClick={addOrderItem}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Добавить еще вещь
-                  </button>
+                  {selectedWarehouse?.type === 'CLOUD' ? (
+                    <MiniVolumeSelector
+                      selectedVolume={selectedCloudVolume}
+                      onVolumeChange={setSelectedCloudVolume}
+                    />
+                  ) : (
+                    <button
+                      onClick={addOrderItem}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Добавить еще вещь
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -782,7 +788,7 @@ const WarehouseOrderPage = memo(() => {
                           className="bg-gray-200 data-[state=checked]:bg-[#273655]"
                       />
                   ) : (
-                      <Badge className="bg-blue-100 text-blue-800">Включено бесплатно</Badge>
+                      <Badge className="bg-green-100 text-green-800">7000 ₸</Badge>
                   )}
                 </div>
                 {/* Услуга упаковки - показывается только если включена перевозка */}
@@ -809,7 +815,7 @@ const WarehouseOrderPage = memo(() => {
                               className="bg-gray-200 data-[state=checked]:bg-[#273655]"
                           />
                       ) : (
-                          <Badge className="bg-blue-100 text-blue-800">Включено бесплатно</Badge>
+                          <Badge className="bg-green-100 text-green-800">4000 ₸</Badge>
                       )}
                     </div>
                 )}

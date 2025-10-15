@@ -7,6 +7,8 @@ import boxesImg from "../../assets/boxes.png";
 import good2 from "../../assets/good2.png";
 import procent2 from "../../assets/procent2.png";
 import key2 from "../../assets/key2.png";
+import security from "../../assets/security.png";
+import pomesh from "../../assets/pomesh.png";
 
 import beigeCircle from "../../assets/beige_circle.svg";
 import houseOnBeigeCircle from "../../assets/house_on_beige_circle.svg";
@@ -190,15 +192,9 @@ const HomePage = memo(() => {
             {/* Верхний левый — текст */}
             <div className="flex flex-col w-full md:w-[560px] md:h-[255px] pl-2 pt-6">
               <div className="text-[20px] sm:text-[24px] md:text-[28px] font-bold font-['Montserrat'] text-[#273655] leading-tight mb-4">
-                Мы предоставляем{" "}
                 <span className="text-[#C73636]">
-                  автоматизированные склады
+                  Хранение вещей в современных складских системах.
                 </span>
-                <br />
-                для хранения вещей.
-              </div>
-              <div className="font-bold font-['Montserrat'] text-[#273655] text-[20px] sm:text-[24px] md:text-[28px] leading-tight">
-                современные складские системы, оборудования и инфраструктура.
               </div>
             </div>
 
@@ -206,33 +202,24 @@ const HomePage = memo(() => {
             <div className="relative rounded-3xl bg-[#F3EEDD] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
               <div className="z-10 relative">
                 <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-[#273655] mb-3">
-                  Безопасность и надежность
-                </div>
-                <div className="text-[#717171] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
-                  Наши склады оборудованы современными системами безопасности,
-                  включая видеонаблюдение,
-                  <br /> охрану и контроль доступа.
+                  Видеонаблюдение, охрана и доступ 24/7
                 </div>
               </div>
               <img
-                src={key2}
-                alt="key"
-                className="absolute right-[-40px] bottom-[-120px] w-[200px] md:w-[320px] rotate-[20deg] select-none pointer-events-none z-0"
+                src={security}
+                alt="security"
+                className="absolute right-[-40px] bottom-[-80px] w-[250px] md:w-[400px] rotate-[20deg] select-none pointer-events-none z-0"
               />
             </div>
 
             {/* Зелёный блок */}
-            <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-between items-end p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
-              <div className="z-10 relative text-right">
-                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
-                  Конкурентные цены
+            <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-center items-center p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
+              <div className="z-10 relative text-center">
+                <div className="text-[28px] md:text-[32px] font-bold font-['Montserrat'] text-white mb-2">
+                  300 тг/ за 1 м²
                 </div>
-                <div
-                  className="text-[#313131B2] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug"
-                  style={{ paddingLeft: "100px" }}
-                >
-                  Мы предлагаем конкурентоспособные <br />цены на аренду, чтобы помочь
-                  вам <br />сэкономить на затратах и улучшить <br />вашу рентабельность.
+                <div className="text-[16px] md:text-[18px] font-['Montserrat'] text-white opacity-80">
+                  в день
                 </div>
               </div>
               <img
@@ -242,24 +229,11 @@ const HomePage = memo(() => {
               />
             </div>
 
-            {/* Оранжевый — Репутация */}
-            <div className="relative rounded-3xl bg-[#EA9938] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
-              <div className="z-10 relative">
-                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-white mb-3">
-                  Репутация
-                </div>
-                <div className="text-[#423131B2] font-['Montserrat'] text-[14px] md:text-[16px] leading-snug">
-                  Мы имеем прочную репутацию, основанную
-                  <br /> на долгосрочных отношениях с нашими
-                  <br /> клиентами и их полной
-                  <br /> удовлетворенности нашими услугами.
-                </div>
+            {/* Оранжевый — Помещения */}
+            <div className="relative rounded-3xl shadow-md flex flex-col justify-center items-center p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden" style={{backgroundImage: `url(${pomesh})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
+              <div className="z-10 relative text-center">
+                
               </div>
-              <img
-                src={good2}
-                alt="good"
-                className="absolute right-[-60px] bottom-[-100px] w-[200px] md:w-[320px] rotate-[-20deg] select-none pointer-events-none z-0"
-              />
             </div>
 
           </div>

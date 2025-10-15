@@ -146,13 +146,13 @@ const OnlinePaymentPage = () => {
             <h2 className="text-7xl mt-[50px] font-bold font-['Audiowide']">ExtraSpace</h2>
             <div className="text-sm mr-[150px] text-left">
               <h3 className="font-bold mb-2 text-xl">РЕКВИЗИТЫ ЮРИДИЧЕСКОГО ЛИЦА</h3>
-              <p className="mb-0"><b>ТОО</b> «EXTRA SPACE»</p>
-              <p className="mb-0"><b>БИН:</b> 123456789012</p>
-              <p className="mb-0"><b>ЮРИДИЧЕСКИЙ АДРЕС: Г. АЛМАТЫ. УЛ. ПРИМЕРНАЯ,</b> 1</p>
-              <p className="mb-0"><b>ФАКТИЧЕСКИЙ АДРЕС: ТОТ ЖЕ</b></p>
-              <p className="mb-0"><b>БАНК: АО «КАЗКОММЕРЦБАНК»</b></p>
-              <p className="mb-0"><b>ИИК:</b> KZ123456789012345678</p>
-              <p className="mb-0"><b>БИК:</b> KZKOKZKX</p>
+              <p className="mb-0"><b>ТОО</b> «Valar Group»</p>
+              <p className="mb-0"><b>БИН:</b> 230240017395</p>
+              <p className="mb-0"><b>НОМЕР СЧЕТА:</b> KZ59722S000024650651</p>
+              <p className="mb-0"><b>КБЕ:</b> 17</p>
+              <p className="mb-0"><b>НАИМЕНОВАНИЕ БАНКА:</b> АО Kaspi Bank</p>
+              <p className="mb-0"><b>БИК:</b> CASPKZKA</p>
+              <p className="mb-0"><b>АДРЕС:</b> Казахстан, город Алматы, Бостандыкский район, улица Аль-Фараби 19/1</p>
               <p className="mb-0">EMAIL: INFO@EXTRASPACE.KZ</p>
             </div>
           </div>
