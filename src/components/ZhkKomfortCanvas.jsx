@@ -15,7 +15,7 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
             console.log('ZhkKomfortCanvas: Данные боксов с API:', storageBoxes);
             console.log('ZhkKomfortCanvas: Режим просмотра:', isViewOnly, 'Роль пользователя:', userRole);
             console.log('ZhkKomfortCanvas: Имена боксов ЖК Комфорт:',
-                storageBoxes.filter(s => s.storage_type === 'ZHK_KOMFORT').map(s => s.name)
+                storageBoxes.filter(s => s.storage_type === 'INDIVIDUAL').map(s => s.name)
             );
             console.log('ZhkKomfortCanvas: Боксы со статусом OCCUPIED:',
                 storageBoxes.filter(s => s.status === 'OCCUPIED').map(s => ({ name: s.name, status: s.status }))
@@ -72,13 +72,13 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
     // Функция получения статуса бокса по имени
     const getBoxStatus = (boxName) => {
         const box = storageBoxes.find(storage =>
-            storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'ZHK_KOMFORT'
+            storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
         );
         const status = box ? box.status : 'OCCUPIED';
         if (import.meta.env.DEV && (status === 'OCCUPIED' || status === 'PENDING')) {
             if (!box) {
                 console.log(`ZhkKomfortCanvas: Бокс "${boxName}" не найден в API данных.`,
-                    storageBoxes.filter(s => s.storage_type === 'ZHK_KOMFORT').map(s => s.name)
+                    storageBoxes.filter(s => s.storage_type === 'INDIVIDUAL').map(s => s.name)
                 );
             }
             console.log(`ZhkKomfortCanvas: Бокс "${boxName}": найден=${!!box}, статус=${status}, box data:`, box);
@@ -89,7 +89,7 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
     // Получение данных бокса
     const getBoxData = (boxName) => {
         return storageBoxes.find(storage =>
-            storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'ZHK_KOMFORT'
+            storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
         );
     };
 
