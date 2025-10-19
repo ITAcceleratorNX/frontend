@@ -10,6 +10,7 @@ import { useAuth } from "../../shared/context/AuthContext";
 import ChatButton from "../../shared/components/ChatButton";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
 import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
+import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
 import MiniVolumeSelector from "../../components/MiniVolumeSelector";
 import ProfileValidationGuard from "../../shared/components/ProfileValidationGuard";
 // Импорт компонентов UI
@@ -572,7 +573,15 @@ const WarehouseOrderPage = memo(() => {
                       userRole={user?.role}
                       isViewOnly={isAdminOrManager}
                     />
-                  ) : null}
+                  ) : selectedWarehouse.name === "ЖК Комфорт Сити" ? (
+                      <ZhkKomfortCanvas
+                          storageBoxes={selectedWarehouse.storage}
+                          onBoxSelect={setSelectedStorage}
+                          selectedStorage={selectedStorage}
+                          userRole={user?.role}
+                          isViewOnly={isAdminOrManager}
+                      />
+                  ): null}
                 </div>
               </div>
             </div>
