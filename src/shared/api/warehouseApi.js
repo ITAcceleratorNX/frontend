@@ -51,5 +51,31 @@ export const warehouseApi = {
       console.error('Ошибка при создании заказа:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Расчет цены через калькулятор
+  calculatePrice: async (type, area, month) => {
+    try {
+      console.log('Отправка запроса на расчет цены:', { type, area, month });
+      const response = await api.post('/prices/calculate', { type, area, month });
+      console.log('Цена рассчитана:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при расчете цены:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Массовый расчет стоимости для множества сервисов
+  calculateBulkPrice: async (data) => {
+    try {
+      console.log('Отправка запроса на массовый расчет цены:', data);
+      const response = await api.post('/prices/calculate-bulk', data);
+      console.log('Массовая цена рассчитана:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при массовом расчете цены:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

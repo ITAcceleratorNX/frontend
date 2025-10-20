@@ -283,7 +283,7 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
 
                     {isHovered && boxData && (
                       <Text
-                        text={`${boxData.available_volume} м³`}
+                        text={`${boxData.available_volume} м²`}
                         x={centerX}
                         y={centerY + 18}
                         fontSize={12}

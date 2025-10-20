@@ -275,8 +275,8 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                 {isHovered && boxData && (
                   <Text
                     text={isViewOnly 
-                      ? `${boxData.available_volume} м³`
-                      : `${boxData.available_volume} м³`
+                      ? `${boxData.available_volume} м²`
+                      : `${boxData.available_volume} м²`
                     }
                     x={box.x}
                     y={box.y + box.height / 2 + 15}

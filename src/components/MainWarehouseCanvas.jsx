@@ -332,8 +332,8 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
                 {isHovered && boxData && (
                   <Text
                     text={isViewOnly 
-                      ? `${boxData.available_volume} м³`
-                      : `${boxData.available_volume} м³`
+                      ? `${boxData.available_volume} м²`
+                      : `${boxData.available_volume} м²`
                     }
                     x={centerX}
                     y={centerY + 18}

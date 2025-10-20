@@ -68,6 +68,13 @@ const WarehouseOrderPage = memo(() => {
       const isCloudType = selectedWarehouse.type === 'CLOUD';
       setIsCloud(isCloudType);
 
+      console.log('Смена склада:', {
+        warehouseType: selectedWarehouse.type,
+        isCloudType,
+        currentMovingOrdersLength: movingOrders.length,
+        currentMovingOrders: movingOrders
+      });
+
       // Если CLOUD — автоматически включаем перевозку и упаковку
       if (isCloudType) {
         setIsSelectedMoving(true);
@@ -80,6 +87,11 @@ const WarehouseOrderPage = memo(() => {
           ]);
           setMovingOrderErrors([{}, {}]);
         }
+      } else {
+        // Для индивидуальных складов сбрасываем movingOrders
+        console.log('Сброс movingOrders для индивидуального склада');
+        setMovingOrders([]);
+        setMovingOrderErrors([]);
       }
     }
   }, [selectedWarehouse]);
@@ -149,7 +161,21 @@ const WarehouseOrderPage = memo(() => {
         try {
           setIsPricesLoading(true);
           const pricesData = await paymentsApi.getPrices();
-          const filteredPrices = pricesData.filter((price) => price.id > 4);
+          const filteredPrices = pricesData.filter((price) => {
+            // Исключаем первые 4 услуги (id > 4)
+            if (price.id <= 4) return false;
+            
+            // Исключаем базовые тарифы и тарифы для расчета стоимости хранения
+            const excludedTypes = [
+              'DEPOSIT', // Базовый тариф депозита
+              'M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M',
+              'M3_UP_6M', 'M3_6_12M', 'M3_OVER_12M',
+              'M2_01_UP_6M', 'M2_01_6_12M', 'M2_01_OVER_12M',
+              'M3_01_UP_6M', 'M3_01_6_12M', 'M3_01_OVER_12M'
+            ];
+            
+            return !excludedTypes.includes(price.type);
+          });
           setPrices(filteredPrices);
           if (import.meta.env.DEV) {
             console.log("Цены услуг загружены:", filteredPrices);
@@ -165,13 +191,6 @@ const WarehouseOrderPage = memo(() => {
     }
   }, [isSelectedPackage, isSelectedMoving, prices.length]);
 
-  // Функция добавления товара
-  const addOrderItem = () => {
-    setOrderItems([
-      ...orderItems,
-      { name: "", length: "", width: "", height: "", volume: "", cargo_mark: "NO" }
-    ]);
-  };
 
   // Функция удаления товара
   const removeOrderItem = (index) => {
@@ -312,6 +331,117 @@ const WarehouseOrderPage = memo(() => {
     }
   };
 
+  // Состояние для цены аренды склада
+  const [storagePrice, setStoragePrice] = useState(0);
+  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+
+  // Функция расчета цены аренды склада через новый API
+  const calculateStoragePrice = async () => {
+    console.log('calculateStoragePrice вызвана:', {
+      selectedStorage,
+      selectedWarehouse,
+      months,
+      totalVolume
+    });
+    
+    if (!selectedStorage) {
+      console.log('selectedStorage не выбран, выходим');
+      return;
+    }
+    
+    if (!months) {
+      console.log('months не установлен, выходим');
+      return;
+    }
+    
+    try {
+      setIsCalculatingPrice(true);
+      
+      // Определяем тип хранения на основе типа склада
+      let storageType = 'INDIVIDUAL';
+      if (selectedWarehouse?.type === 'CLOUD') {
+        storageType = 'CLOUD';
+      }
+      
+      // Рассчитываем площадь/объем
+      let area, volume;
+      if (selectedWarehouse?.type === 'CLOUD') {
+        // Для облачного хранения используем объем товаров
+        volume = parseFloat(totalVolume) || 1;
+        console.log('CLOUD: volume =', volume);
+      } else {
+        // Для индивидуального хранения используем площадь товаров
+        // Если товары не указаны, используем размер бокса
+        area = totalVolume > 0 ? totalVolume : (parseFloat(selectedStorage.total_volume) || 1);
+        console.log('INDIVIDUAL: area =', area, 'totalVolume =', totalVolume, 'selectedStorage.total_volume =', selectedStorage.total_volume);
+      }
+      
+      // Используем новый API для расчета стоимости хранения
+      const requestData = {
+        services: [], // Только хранение, без дополнительных услуг
+        storageType: storageType,
+        months: months
+      };
+      
+      console.log('Данные для расчета стоимости хранения:', {
+        selectedStorage,
+        selectedWarehouse,
+        storageType,
+        area,
+        volume,
+        months,
+        requestData
+      });
+      
+      // Добавляем соответствующие измерения
+      if (storageType === 'INDIVIDUAL') {
+        requestData.area = area;
+      } else if (storageType === 'CLOUD') {
+        requestData.volume = volume;
+      }
+      
+      const result = await warehouseApi.calculateBulkPrice(requestData);
+      console.log('Результат расчета стоимости хранения:', result);
+      console.log('Устанавливаем storagePrice =', result.storage.price);
+      setStoragePrice(result.storage.price);
+    } catch (error) {
+      console.error('Ошибка при расчете цены склада:', error);
+      // Fallback на старую логику
+      setStoragePrice((selectedStorage.price || 0) * months);
+    } finally {
+      setIsCalculatingPrice(false);
+    }
+  };
+
+  // Пересчитываем цену при изменении параметров
+  useEffect(() => {
+    if (selectedStorage && months) {
+      calculateStoragePrice();
+    }
+  }, [selectedStorage, months]);
+
+  // Функция расчета общей стоимости
+  const calculateTotalPrice = () => {
+    if (!selectedStorage) return 0;
+    
+    let totalPrice = storagePrice;
+    
+    // Стоимость услуг упаковки (бесплатно для облачных складов)
+    if (isSelectedPackage && services.length > 0 && selectedWarehouse?.type !== 'CLOUD') {
+      services.forEach(service => {
+        const servicePrice = prices.find(p => p.id === parseInt(service.service_id));
+        if (servicePrice && service.count > 0) {
+          totalPrice += servicePrice.price * service.count;
+        }
+      });
+    }
+    
+    // Стоимость услуг перевозки уже учтена в services через syncGazelleService
+    // Дополнительный расчет не нужен, так как это приведет к дублированию
+    
+    return totalPrice;
+  };
+
   // Функция создания заказа
   const handleCreateOrder = async () => {
     if (!selectedStorage) {
@@ -319,11 +449,16 @@ const WarehouseOrderPage = memo(() => {
       return;
     }
     // Валидация товаров
-    const validItems = orderItems.filter(
-      (item) => item.name.trim() && item.volume && parseFloat(item.volume) > 0
-    );
+    const validItems = orderItems.filter((item) => {
+      if (selectedWarehouse?.type === 'CLOUD') {
+        return item.name.trim(); // Для облачного хранения нужен только название
+      } else {
+        return item.name.trim();
+      }
+    });
     if (validItems.length === 0) {
-      setError("Добавьте хотя бы один товар с указанием названия и объема");
+      const errorMessage = "Добавьте хотя бы один товар с указанием названия";
+      setError(errorMessage);
       return;
     }
     // Валидация перевозок, если выбрана услуга перевозки
@@ -386,7 +521,7 @@ const WarehouseOrderPage = memo(() => {
         months: months,
         order_items: validItems.map((item) => ({
           name: item.name.trim(),
-          volume: parseFloat(item.volume),
+          volume: selectedWarehouse?.type === 'CLOUD' ? (parseFloat(item.volume) || 0) : 0,
           cargo_mark: item.cargo_mark,
         })),
         is_selected_moving: isSelectedMoving,
@@ -448,10 +583,31 @@ const WarehouseOrderPage = memo(() => {
   };
 
   // Расчет общего объема товаров
-  const totalVolume = orderItems.reduce((sum, item) => {
-    const volume = parseFloat(item.volume) || 0;
-    return sum + volume;
-  }, 0);
+  const totalVolume = selectedWarehouse?.type === 'CLOUD' 
+    ? selectedCloudVolume 
+    : orderItems.reduce((sum, item) => {
+        const volume = parseFloat(item.volume) || 0;
+        return sum + volume;
+      }, 0);
+
+  // Пересчитываем цену при изменении товаров
+  useEffect(() => {
+    if (selectedStorage && months) {
+      calculateStoragePrice();
+    }
+  }, [totalVolume, selectedCloudVolume]);
+
+  // Обновляем volume для всех товаров при изменении selectedCloudVolume
+  useEffect(() => {
+    if (selectedWarehouse?.type === 'CLOUD' && selectedCloudVolume) {
+      setOrderItems(prevItems => 
+        prevItems.map(item => ({
+          ...item,
+          volume: selectedCloudVolume
+        }))
+      );
+    }
+  }, [selectedCloudVolume, selectedWarehouse?.type]);
 
   if (isLoading) {
     return (
@@ -615,18 +771,22 @@ const WarehouseOrderPage = memo(() => {
                         </span>
                         </p>
                         <p className="text-[#6B6B6B] mb-2">
-                          Доступный объем:{" "}
+                          {selectedWarehouse?.type === 'CLOUD' 
+                            ? 'Доступный объем:' 
+                            : 'Доступная площадь:'}{" "}
                           <span className="font-medium text-[#273655]">
-                          {selectedStorage.available_volume} м³
+                          {selectedStorage.available_volume} {selectedWarehouse?.type === 'CLOUD' ? 'м³' : 'м²'}
                         </span>
                         </p>
-                        <p className="text-[#6B6B6B]">
-                          Общий объем ваших вещей:{" "}
-                          <span className="font-medium text-[#273655]">
-                          {totalVolume.toFixed(2)} м³
-                        </span>
-                        </p>
-                        {totalVolume > parseFloat(selectedStorage.available_volume) && (
+                        {selectedWarehouse?.type === 'CLOUD' && (
+                          <p className="text-[#6B6B6B]">
+                            Общий объем ваших вещей:{" "}
+                            <span className="font-medium text-[#273655]">
+                            {totalVolume.toFixed(2)} м³
+                          </span>
+                          </p>
+                        )}
+                        {selectedWarehouse?.type === 'CLOUD' && totalVolume > parseFloat(selectedStorage.available_volume) && (
                             <p className="text-red-600 font-medium mt-2">
                               ⚠️ Объем превышает доступное место в боксе!
                             </p>
@@ -634,7 +794,6 @@ const WarehouseOrderPage = memo(() => {
                       </>
                   )}
                 </div>
-                {selectedWarehouse?.type !== 'CLOUD' && (
                 <div className="space-y-4">
                   {orderItems.map((item, index) => (
                     <div
@@ -656,53 +815,6 @@ const WarehouseOrderPage = memo(() => {
                             placeholder="Например: Диван"
                           />
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-[#273655] mb-1">
-                              Длина(м)
-                            </label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                value={item.length}
-                                onChange={(e) => updateOrderItem(index, "length", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-[#273655] mb-1">
-                              Ширина(м)
-                            </label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                value={item.width}
-                                onChange={(e) => updateOrderItem(index, "width", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-[#273655] mb-1">
-                              Высота(м)
-                            </label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                value={item.height}
-                                onChange={(e) => updateOrderItem(index, "height", e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                            />
-                          </div>
-                        </div>
-
-                        <p className="mt-2 text-sm text-gray-700">
-                          Объём: <strong>{item.volume || 0}</strong> м³
-                        </p>
 
                         <div>
                           <label className="block text-sm font-medium text-[#273655] mb-1">
@@ -738,22 +850,13 @@ const WarehouseOrderPage = memo(() => {
                     </div>
                   ))}
                 </div>
-                )}
                 <div className="mt-4">
                   {selectedWarehouse?.type === 'CLOUD' ? (
                     <MiniVolumeSelector
                       selectedVolume={selectedCloudVolume}
                       onVolumeChange={setSelectedCloudVolume}
                     />
-                  ) : (
-                    <button
-                      onClick={addOrderItem}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Добавить еще вещь
-                    </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -1059,20 +1162,103 @@ const WarehouseOrderPage = memo(() => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {/* Отображение стоимости */}
+                  {selectedStorage && (
+                    <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                      <div className="text-center">
+                        {isCalculatingPrice ? (
+                          <div className="text-[20px] font-bold text-[#273655] flex items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#273655]"></div>
+                            Расчет...
+                          </div>
+                        ) : (
+                          <>
+                            {/* Месячная стоимость хранения */}
+                            <div className="mb-3">
+                              <div className="text-[14px] text-[#6B6B6B] mb-1">Стоимость хранения за месяц:</div>
+                              <div className="text-[18px] font-bold text-[#273655]">
+                                {storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸
+                              </div>
+                            </div>
+
+                            {/* Общая стоимость услуг */}
+                            {(isSelectedPackage || isSelectedMoving) && (
+                              <div className="mb-3">
+                                <div className="text-[14px] text-[#6B6B6B] mb-1">Стоимость услуг:</div>
+                                <div className="text-[18px] font-bold text-[#273655]">
+                                  {selectedWarehouse?.type === 'CLOUD' 
+                                    ? 'Бесплатно' 
+                                    : `${(calculateTotalPrice() - storagePrice).toLocaleString()} ₸`
+                                  }
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Общая стоимость */}
+                            <div className="border-t border-green-300 pt-3">
+                              <div className="text-[14px] text-[#6B6B6B] mb-1">Общая стоимость:</div>
+                              <div className="text-[20px] font-bold text-[#273655]">
+                                {calculateTotalPrice().toLocaleString()} ₸
+                              </div>
+                              <div className="text-[12px] text-[#6B6B6B] mt-1">
+                                за {months} {months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}
+                                {selectedWarehouse?.type !== 'CLOUD' && isSelectedPackage && ' + услуги упаковки'}
+                                {selectedWarehouse?.type !== 'CLOUD' && isSelectedMoving && ' + услуги перевозки'}
+                                {selectedWarehouse?.type === 'CLOUD' && (isSelectedPackage || isSelectedMoving) && ' + услуги бесплатно'}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   <button
                     onClick={handleCreateOrder}
-                    disabled={
-                      isSubmitting ||
-                      !selectedStorage ||
-                      orderItems.filter(
-                        (item) => item.name.trim() && item.volume
-                      ).length === 0 ||
-                      totalVolume >
-                        parseFloat(selectedStorage.available_volume) ||
-                      (isSelectedMoving && movingOrders.length === 0) ||
-                      (isSelectedMoving && movingOrders.some(order => !order.address || order.address.trim() === "")) ||
-                      (isSelectedPackage && (services.filter(s => s.service_id && s.count > 0).length === 0 && !isCloud))
-                    }
+                    disabled={(() => {
+                      const validItems = orderItems.filter((item) => {
+                        if (selectedWarehouse?.type === 'CLOUD') {
+                          return item.name.trim(); // Для облачного хранения нужен только название
+                        } else {
+                          return item.name.trim();
+                        }
+                      });
+                      const hasValidItems = validItems.length > 0;
+                      const volumeExceeded = selectedWarehouse?.type === 'CLOUD' && totalVolume > parseFloat(selectedStorage.available_volume);
+                      const movingSelectedButNoOrders = isSelectedMoving && movingOrders.length === 0;
+                      const movingSelectedButNoAddresses = isSelectedMoving && movingOrders.some(order => !order.address || order.address.trim() === "");
+                      const packageSelectedButNoServices = isSelectedPackage && (services.filter(s => s.service_id && s.count > 0).length === 0 && !isCloud);
+                      
+                      const isDisabled = isSubmitting ||
+                        !selectedStorage ||
+                        !hasValidItems ||
+                        volumeExceeded ||
+                        movingSelectedButNoOrders ||
+                        movingSelectedButNoAddresses ||
+                        packageSelectedButNoServices;
+                      
+                      console.log('Кнопка "Создать заявку" - проверка условий:', {
+                        isSubmitting,
+                        selectedStorage: !!selectedStorage,
+                        hasValidItems,
+                        validItemsCount: validItems.length,
+                        volumeExceeded,
+                        totalVolume,
+                        availableVolume: selectedStorage?.available_volume,
+                        movingSelectedButNoOrders,
+                        movingSelectedButNoAddresses,
+                        packageSelectedButNoServices,
+                        isSelectedMoving,
+                        isSelectedPackage,
+                        movingOrdersLength: movingOrders.length,
+                        servicesCount: services.filter(s => s.service_id && s.count > 0).length,
+                        isCloud,
+                        isDisabled
+                      });
+                      
+                      return isDisabled;
+                    })()}
                     className="w-full h-[56px] bg-[#F86812] text-white text-[18px] font-bold rounded-lg hover:bg-[#d87d1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ boxShadow: "4px 4px 8px 0 #B0B0B0" }}
                   >
