@@ -214,11 +214,11 @@ const HomePage = memo(() => {
 
             {/* Зелёный блок */}
             <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-center items-center p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
-              <div className="z-10 relative text-center">
+              <div className="z-10 relative text-center" style={{ marginTop: '-20px' }}>
                 <div className="text-[28px] md:text-[32px] font-bold font-['Montserrat'] text-white mb-2">
                   300 тг/ за 1 м²
                 </div>
-                <div className="text-[16px] md:text-[18px] font-['Montserrat'] text-white opacity-80">
+                <div className="text-[16px] md:text-[18px] font-bold font-['Montserrat'] text-white opacity-80">
                   в день
                 </div>
               </div>
@@ -230,7 +230,7 @@ const HomePage = memo(() => {
             </div>
 
             {/* Оранжевый — Помещения */}
-            <div className="relative rounded-3xl shadow-md flex flex-col justify-center items-center p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden" style={{backgroundImage: `url(${pomesh})`, backgroundSize: 'cover', backgroundPosition: 'center'}}>
+            <div className="relative rounded-3xl shadow-md flex flex-col justify-center items-center p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden" style={{backgroundImage: `url(${pomesh})`, backgroundSize: 'cover', backgroundPosition: 'center 40%'}}>
               <div className="z-10 relative text-center">
                 
               </div>
