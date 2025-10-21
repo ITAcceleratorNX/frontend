@@ -184,6 +184,22 @@ export const useChat = () => {
               // Сообщение из другого чата - увеличиваем счетчик непрочитанных
               incrementUnreadMessages(messageChatId);
               
+              // Автоматически загружаем чат, если у пользователя нет активного чата
+              if (!activeChat && user?.role === USER_ROLES.USER) {
+                if (import.meta.env.DEV) {
+                  console.log('Chat: Автоматически загружаем чат пользователя при получении сообщения');
+                }
+                loadUserChat().then((userChat) => {
+                  // Если чат загружен и это тот же чат, добавляем сообщение
+                  if (userChat && userChat.id === messageChatId) {
+                    if (import.meta.env.DEV) {
+                      console.log('Chat: Добавляем сообщение после загрузки чата:', messageWithTime);
+                    }
+                    addMessage(messageWithTime);
+                  }
+                });
+              }
+              
               if (import.meta.env.DEV) {
                 console.log('Chat: Получено сообщение из неактивного чата:', messageChatId, messageWithTime);
               }

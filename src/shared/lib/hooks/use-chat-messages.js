@@ -129,7 +129,7 @@ export const useChatMessages = (chatId) => {
     let currentDate = null;
     
     messagesList.forEach((msg) => {
-      const msgDate = new Date(msg.createdAt || Date.now());
+      const msgDate = new Date(msg.created_at || Date.now());
       const dateStr = msgDate.toLocaleDateString('ru-RU', { 
         day: 'numeric',
         month: 'long'
