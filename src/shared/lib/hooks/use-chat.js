@@ -140,11 +140,13 @@ export const useChat = () => {
           const messageChatId = data.message.chat_id;
           const isActiveChat = activeChat?.id === messageChatId;
 
-          // Сообщение с правильной временной меткой
+          // Сообщение с правильной временной меткой и статусом
           const messageWithTime = {
             ...data.message,
             created_at: data.message.created_at || new Date().toISOString(),
-            isTemporary: false
+            isTemporary: false,
+            delivered_at: data.message.delivered_at || new Date().toISOString(),
+            is_read: data.message.is_read || false
           };
 
           if (import.meta.env.DEV) {
@@ -185,19 +187,35 @@ export const useChat = () => {
               incrementUnreadMessages(messageChatId);
               
               // Автоматически загружаем чат, если у пользователя нет активного чата
-              if (!activeChat && user?.role === USER_ROLES.USER) {
-                if (import.meta.env.DEV) {
-                  console.log('Chat: Автоматически загружаем чат пользователя при получении сообщения');
-                }
-                loadUserChat().then((userChat) => {
-                  // Если чат загружен и это тот же чат, добавляем сообщение
-                  if (userChat && userChat.id === messageChatId) {
-                    if (import.meta.env.DEV) {
-                      console.log('Chat: Добавляем сообщение после загрузки чата:', messageWithTime);
-                    }
-                    addMessage(messageWithTime);
+              if (!activeChat) {
+                if (user?.role === USER_ROLES.USER) {
+                  if (import.meta.env.DEV) {
+                    console.log('Chat: Автоматически загружаем чат пользователя при получении сообщения');
                   }
-                });
+                  loadUserChat().then((userChat) => {
+                    // Если чат загружен и это тот же чат, добавляем сообщение
+                    if (userChat && userChat.id === messageChatId) {
+                      if (import.meta.env.DEV) {
+                        console.log('Chat: Добавляем сообщение после загрузки чата:', messageWithTime);
+                      }
+                      addMessage(messageWithTime);
+                    }
+                  });
+                } else if (user?.role === USER_ROLES.MANAGER) {
+                  // Для менеджера автоматически устанавливаем активный чат
+                  if (import.meta.env.DEV) {
+                    console.log('Chat: Автоматически устанавливаем активный чат для менеджера:', messageChatId);
+                  }
+                  setActiveChat({
+                    id: messageChatId,
+                    user_id: data.message.sender_id,
+                    manager_id: user.id
+                  });
+                  setChatStatus(CHAT_STATUS.ACTIVE);
+                  
+                  // Добавляем сообщение в store
+                  addMessage(messageWithTime);
+                }
               }
               
               if (import.meta.env.DEV) {
@@ -349,7 +367,9 @@ export const useChat = () => {
       is_from_user: user.role !== USER_ROLES.MANAGER,
       created_at: new Date().toISOString(), // Используем created_at для совместимости
       createdAt: new Date().toISOString(), // Fallback для старых компонентов
-      isTemporary: true
+      isTemporary: true,
+      delivered_at: null, // Временное сообщение еще не доставлено
+      is_read: false // Временное сообщение еще не прочитано
     };
 
     // Оптимистично добавляем сообщение в UI

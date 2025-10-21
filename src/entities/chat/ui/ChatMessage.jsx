@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Check, CheckCheck, Clock } from 'lucide-react';
 import chatIcon from '../../../assets/chat_icon.png';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 
@@ -10,6 +10,20 @@ const ChatMessage = memo(({ message, isFromUser, showAvatar = true, onDeleteMess
   // Проверяем, является ли текущий пользователь автором сообщения
   // Приводим к числу для корректного сравнения
   const isOwnMessage = currentUserId && Number(message.sender_id) === Number(currentUserId);
+  
+  // Отладочная информация
+  if (import.meta.env.DEV) {
+    console.log('ChatMessage: Отладка статуса сообщения:', {
+      messageId: message.id,
+      sender_id: message.sender_id,
+      currentUserId: currentUserId,
+      isOwnMessage: isOwnMessage,
+      isFromUser: isFromUser,
+      isTemporary: message.isTemporary,
+      is_read: message.is_read,
+      delivered_at: message.delivered_at
+    });
+  }
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
     
@@ -34,6 +48,56 @@ const ChatMessage = memo(({ message, isFromUser, showAvatar = true, onDeleteMess
   // Используем created_at из API (ISO формат)
   const messageTime = message.created_at;
 
+  // Определяем статус сообщения
+  const getMessageStatus = () => {
+    if (!isOwnMessage) {
+      if (import.meta.env.DEV) {
+        console.log('ChatMessage: Статус не показывается - не собственное сообщение');
+      }
+      return null; // Статус только для собственных сообщений
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log('ChatMessage: Определяем статус для собственного сообщения:', {
+        isTemporary: message.isTemporary,
+        is_read: message.is_read,
+        delivered_at: message.delivered_at
+      });
+    }
+    
+    // Если сообщение временное (отправляется)
+    if (message.isTemporary) {
+      return { icon: Clock, text: 'Отправляется', color: 'text-gray-400' };
+    }
+    
+    // Если сообщение прочитано
+    if (message.is_read) {
+      return { icon: CheckCheck, text: 'Прочитано', color: 'text-blue-500' };
+    }
+    
+    // Если сообщение доставлено, но не прочитано
+    if (message.delivered_at) {
+      return { icon: Check, text: 'Доставлено', color: 'text-gray-500' };
+    }
+    
+    // По умолчанию - отправлено
+    return { icon: Check, text: 'Отправлено', color: 'text-gray-400' };
+  };
+
+  const messageStatus = getMessageStatus();
+  
+  // Отладочная информация для статуса
+  if (import.meta.env.DEV && isOwnMessage) {
+    console.log('ChatMessage: Финальный статус сообщения:', {
+      messageId: message.id,
+      messageStatus: messageStatus,
+      willShowStatus: !!messageStatus,
+      statusIcon: messageStatus?.icon?.toString(),
+      statusText: messageStatus?.text,
+      statusColor: messageStatus?.color
+    });
+  }
+
   const handleDeleteClick = () => {
     setShowDeleteModal(true);
   };
@@ -57,9 +121,21 @@ const ChatMessage = memo(({ message, isFromUser, showAvatar = true, onDeleteMess
               {message.text}
             </p>
             <div className="flex justify-between items-center mt-2">
-              <span className="text-[12px] font-normal leading-[17px] text-[#202224]">
-                {formatTime(messageTime)}
-              </span>
+              <div className="flex items-center space-x-1">
+                <span className="text-[12px] font-normal leading-[17px] text-[#202224]">
+                  {formatTime(messageTime)}
+                </span>
+                {messageStatus && (
+                  <div className="flex items-center space-x-1" title={messageStatus.text}>
+                    <messageStatus.icon className={`w-3 h-3 ${messageStatus.color}`} />
+                  </div>
+                )}
+                {import.meta.env.DEV && isOwnMessage && !messageStatus && (
+                  <span className="text-xs text-red-400 ml-1">
+                    НЕТ СТАТУСА
+                  </span>
+                )}
+              </div>
               <div className="flex items-center space-x-2">
                 {showActions && onDeleteMessage && isOwnMessage && (
                   <button
@@ -112,9 +188,16 @@ const ChatMessage = memo(({ message, isFromUser, showAvatar = true, onDeleteMess
             {message.text}
           </p>
           <div className="flex justify-between items-center mt-2">
-            <span className="text-[12px] font-normal leading-[17px] text-[#757575]">
-              {formatTime(messageTime)}
-            </span>
+            <div className="flex items-center space-x-1">
+              <span className="text-[12px] font-normal leading-[17px] text-[#757575]">
+                {formatTime(messageTime)}
+              </span>
+              {messageStatus && (
+                <div className="flex items-center space-x-1" title={messageStatus.text}>
+                  <messageStatus.icon className={`w-3 h-3 ${messageStatus.color}`} />
+                </div>
+              )}
+            </div>
             {onDeleteMessage && isOwnMessage && (
               <button
                 onClick={handleDeleteClick}
