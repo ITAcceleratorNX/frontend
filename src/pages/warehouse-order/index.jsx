@@ -62,6 +62,14 @@ const WarehouseOrderPage = memo(() => {
 
   const [gazelleService, setGazelleService] = useState(null);
   const [isCloud, setIsCloud] = useState(false);
+  // Состояние для выбора карты склада ЖК Комфорт Сити
+  const [selectedMap, setSelectedMap] = useState(1);
+
+  // Функция для смены карты с сбросом выбранного бокса
+  const handleMapChange = (mapNumber) => {
+    setSelectedMap(mapNumber);
+    setSelectedStorage(null); // Сбрасываем выбранный бокс при смене карты
+  };
 
   useEffect(() => {
     if (selectedWarehouse) {
@@ -730,13 +738,41 @@ const WarehouseOrderPage = memo(() => {
                       isViewOnly={isAdminOrManager}
                     />
                   ) : selectedWarehouse.name === "ЖК Комфорт Сити" ? (
-                      <ZhkKomfortCanvas
+                      <>
+                        {/* Селектор карты для ЖК Комфорт Сити */}
+                        <div className="mb-4 flex justify-center">
+                          <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
+                            <button
+                              onClick={() => handleMapChange(1)}
+                              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                selectedMap === 1
+                                  ? 'bg-[#273655] text-white'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              Карта 1
+                            </button>
+                            <button
+                              onClick={() => handleMapChange(2)}
+                              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                selectedMap === 2
+                                  ? 'bg-[#273655] text-white'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              Карта 2
+                            </button>
+                          </div>
+                        </div>
+                        <ZhkKomfortCanvas
                           storageBoxes={selectedWarehouse.storage}
                           onBoxSelect={setSelectedStorage}
                           selectedStorage={selectedStorage}
                           userRole={user?.role}
                           isViewOnly={isAdminOrManager}
-                      />
+                          selectedMap={selectedMap}
+                        />
+                      </>
                   ): null}
                 </div>
               </div>
