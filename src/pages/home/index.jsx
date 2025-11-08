@@ -340,6 +340,88 @@ const HomePage = memo(() => {
     return MOVING_SERVICE_ESTIMATE;
   }, [gazelleService, serviceOptions]);
 
+  const costSummary = useMemo(() => {
+    const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
+    const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
+    const serviceTotal = serviceSummary.total;
+    const combinedTotal = (baseTotal || 0) + serviceTotal;
+
+    return {
+      baseMonthly,
+      baseTotal,
+      serviceTotal,
+      combinedTotal,
+    };
+  }, [pricePreview, serviceSummary.total]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storageType = activeStorageTab === "CLOUD" ? "CLOUD" : "INDIVIDUAL";
+    localStorage.setItem("prep_storage_type", storageType);
+  }, [activeStorageTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const duration =
+      activeStorageTab === "CLOUD" ? cloudMonthsNumber : monthsNumber;
+    if (duration && duration > 0) {
+      localStorage.setItem("prep_duration", String(duration));
+    }
+  }, [activeStorageTab, cloudMonthsNumber, monthsNumber]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (activeStorageTab === "INDIVIDUAL") {
+      const area =
+        parseFloat(
+          previewStorage?.available_volume ??
+            previewStorage?.total_volume ??
+            previewStorage?.area ??
+            previewStorage?.square ??
+            previewStorage?.volume ??
+            ""
+        ) || null;
+      if (area && area > 0) {
+        localStorage.setItem("prep_area", String(area));
+      } else {
+        localStorage.removeItem("prep_area");
+      }
+    } else {
+      if (cloudVolume && cloudVolume > 0) {
+        localStorage.setItem("prep_area", cloudVolume.toFixed(2));
+      } else {
+        localStorage.removeItem("prep_area");
+      }
+    }
+  }, [activeStorageTab, previewStorage, cloudVolume]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let price = null;
+
+    if (activeStorageTab === "INDIVIDUAL") {
+      if (pricePreview && previewStorage) {
+        price = Math.round(costSummary.combinedTotal || 0);
+      }
+    } else if (activeStorageTab === "CLOUD") {
+      if (cloudPricePreview) {
+        price = Math.round(cloudPricePreview.total || 0);
+      }
+    }
+
+    if (price && price > 0) {
+      localStorage.setItem("calculated_price", String(price));
+    } else {
+      localStorage.removeItem("calculated_price");
+    }
+  }, [
+    activeStorageTab,
+    costSummary.combinedTotal,
+    pricePreview,
+    previewStorage,
+    cloudPricePreview,
+  ]);
+
   const buildMovingOrders = useCallback((address, months) => {
     const monthsCount = Math.max(1, Number(months) || 1);
     const start = new Date();
@@ -622,20 +704,6 @@ const HomePage = memo(() => {
     isUserRole,
     navigate,
   ]);
-
-  const costSummary = useMemo(() => {
-    const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
-    const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
-    const serviceTotal = serviceSummary.total;
-    const combinedTotal = (baseTotal || 0) + serviceTotal;
-
-    return {
-      baseMonthly,
-      baseTotal,
-      serviceTotal,
-      combinedTotal,
-    };
-  }, [pricePreview, serviceSummary.total]);
 
   const handleCloudDimensionChange = (dimension, rawValue) => {
     const value = Math.max(0.1, Number(rawValue) || 0);
@@ -1334,68 +1402,63 @@ const HomePage = memo(() => {
 
                             {services.length > 0 && (
                               <div className="space-y-2">
-                                {services.map((service, index) => (
-                                  <div
-                                    key={index}
-                                    className="rounded-xl border border-[#d7dbe6] bg-white p-3 space-y-2"
-                                  >
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                                      <div className="flex-1">
-                                        <span className="block text-xs uppercase tracking-[0.08em] text-[#6B6B6B] mb-1">
-                                          Услуга
-                                        </span>
-                                        <Select
-                                          value={service.service_id}
-                                          onValueChange={(value) => updateServiceRow(index, "service_id", value)}
-                                        >
-                                          <SelectTrigger className="h-11 rounded-xl border-[#d7dbe6] text-sm">
-                                            <SelectValue placeholder="Выберите услугу" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {serviceOptions
-                                              .filter((option) => option.type !== "GAZELLE")
-                                              .map((option) => (
-                                                <SelectItem key={option.id} value={String(option.id)}>
-                                                  {getServiceTypeName(option.type) || option.description || `Услуга ${option.id}`}
-                                                </SelectItem>
-                                              ))}
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
+                                {services.map((service, index) => {
+                                  const selectedOption = serviceOptions.find((option) => String(option.id) === service.service_id);
+                                  const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
+
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2"
+                                    >
+                                      <Select
+                                        value={service.service_id}
+                                        onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                      >
+                                        <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
+                                          <SelectValue placeholder="Услуга" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {serviceOptions
+                                            .filter((option) => option.type !== "GAZELLE")
+                                            .map((option) => (
+                                              <SelectItem key={option.id} value={String(option.id)}>
+                                                {getServiceTypeName(option.type) || option.description || `Услуга ${option.id}`}
+                                              </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                      </Select>
+
                                       <div className="flex items-center gap-2">
-                                        <label className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
+                                        <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
                                           Кол-во
-                                        </label>
+                                        </span>
                                         <input
                                           type="number"
                                           min="1"
                                           value={service.count}
                                           onChange={(e) => updateServiceRow(index, "count", e.target.value)}
-                                          className="w-20 h-11 rounded-xl border border-[#d7dbe6] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                                          className="w-16 h-10 rounded-lg border border-[#d7dbe6] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
                                         />
-                                        <button
-                                          type="button"
-                                          onClick={() => removeServiceRow(index)}
-                                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
-                                          aria-label="Удалить услугу"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </button>
                                       </div>
-                                    </div>
-                                    {service.service_id && (
-                                      <div className="text-xs text-[#6B6B6B] flex justify-between">
-                                        <span>Стоимость за единицу</span>
-                                        <span className="font-semibold text-[#273655]">
-                                          {(
-                                            serviceOptions.find((option) => String(option.id) === service.service_id)?.price ??
-                                            PACKING_SERVICE_ESTIMATE
-                                          ).toLocaleString()} ₸
+
+                                      {service.service_id && (
+                                        <span className="ml-auto text-xs text-[#6B6B6B]">
+                                          {unitPrice.toLocaleString()} ₸/шт.
                                         </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
+                                      )}
+
+                                      <button
+                                        type="button"
+                                        onClick={() => removeServiceRow(index)}
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
+                                        aria-label="Удалить услугу"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
 
@@ -1407,8 +1470,11 @@ const HomePage = memo(() => {
 
                             <button
                               type="button"
-                              onClick={addServiceRow}
-                              className="inline-flex items-center gap-2 rounded-xl border border-dashed border-[#273655]/40 px-4 py-2 text-sm font-semibold text-[#273655] hover:bg-[#273655]/5 transition-colors"
+                              onClick={() => {
+                                ensureServiceOptions();
+                                addServiceRow();
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#273655]/40 px-3 py-2 text-xs sm:text-sm font-semibold text-[#273655] hover:bg-[#273655]/5 transition-colors"
                             >
                               <Plus className="h-4 w-4" />
                               Добавить услугу
@@ -1506,6 +1572,21 @@ const HomePage = memo(() => {
                     disabled={!isIndividualFormReady || isSubmittingOrder}
                   >
                     Забронировать бокс
+                  </SmartButton>
+                  <SmartButton
+                    variant="outline"
+                    size="lg"
+                    className="w-full h-[56px] text-base font-semibold border-[#273655] text-[#273655] hover:bg-[#273655] hover:text-white"
+                    onClick={() => {
+                      setTimeout(() => {
+                        window.scrollTo({
+                          top: document.body.scrollHeight,
+                          behavior: "smooth",
+                        });
+                      }, 100);
+                    }}
+                  >
+                    ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
                   </SmartButton>
                 </div>
               </div>
@@ -1652,6 +1733,21 @@ const HomePage = memo(() => {
                     disabled={!isCloudFormReady || isSubmittingOrder}
                   >
                     Забронировать бокс
+                  </SmartButton>
+                  <SmartButton
+                    variant="outline"
+                    size="lg"
+                    className="w-full h-[56px] text-base font-semibold border-[#273655] text-[#273655] hover:bg-[#273655] hover:text-white"
+                    onClick={() => {
+                      setTimeout(() => {
+                        window.scrollTo({
+                          top: document.body.scrollHeight,
+                          behavior: "smooth",
+                        });
+                      }, 100);
+                    }}
+                  >
+                    ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
                   </SmartButton>
                 </div>
 
