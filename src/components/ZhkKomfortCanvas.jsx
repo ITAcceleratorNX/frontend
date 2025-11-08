@@ -1,19 +1,23 @@
 import React, { useEffect, useState, memo } from "react";
 import { Stage, Layer, Rect, Text, Image, Line } from "react-konva";
-import backgroundImage from "../assets/ZHK_Komfort_storage.jpeg";
+import firstBackgroundImg from "../assets/zhkomfort_map.jpeg";
+import secondBackgroundImg from "../assets/second_zhkomfort_map.jpeg";
 import lockIcon from "../assets/lock.png";
-import warehouseLayoutData from "../assets/ZHK_Komfort_storage.json";
+import firstMapData from "../assets/ZHK_Komfort_storage.json";
+import secondMapData from "../assets/second_ZHK_Komfort_storage.json";
 
-const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, userRole, isViewOnly = false }) => {
+const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, userRole, isViewOnly = false, selectedMap = 1 }) => {
     const [backgroundImg, setBackgroundImg] = useState(null);
     const [lockImg, setLockImg] = useState(null);
     const [hoveredId, setHoveredId] = useState(null);
+    const [imageDimensions, setImageDimensions] = useState({});
 
     // Отладочная информация для проверки данных с API
     useEffect(() => {
         if (import.meta.env.DEV && storageBoxes?.length > 0) {
             console.log('ZhkKomfortCanvas: Данные боксов с API:', storageBoxes);
             console.log('ZhkKomfortCanvas: Режим просмотра:', isViewOnly, 'Роль пользователя:', userRole);
+            console.log('ZhkKomfortCanvas: Выбранная карта:', selectedMap);
             console.log('ZhkKomfortCanvas: Имена боксов ЖК Комфорт:',
                 storageBoxes.filter(s => s.storage_type === 'INDIVIDUAL').map(s => s.name)
             );
@@ -27,32 +31,40 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                 storageBoxes.filter(s => s.status === 'VACANT').map(s => ({ name: s.name, status: s.status }))
             );
         }
-    }, [storageBoxes, isViewOnly, userRole]);
+    }, [storageBoxes, isViewOnly, userRole, selectedMap]);
 
     // Отладочная информация для схемы складов
     useEffect(() => {
         if (import.meta.env.DEV) {
-            console.log('ZhkKomfortCanvas: Все боксы в схеме:',
-                warehouseLayoutData.map(box => box.name)
+            const currentMapData = selectedMap === 1 ? firstMapData : secondMapData;
+            console.log(`ZhkKomfortCanvas: Все боксы в схеме карты ${selectedMap}:`,
+                currentMapData.map(box => box.name)
             );
             console.log('ZhkKomfortCanvas: Выбранный бокс:', selectedStorage);
         }
-    }, [selectedStorage]);
+    }, [selectedStorage, selectedMap]);
 
-    // Загрузка фонового изображения
+    // Загрузка фонового изображения в зависимости от выбранной карты
     useEffect(() => {
         const img = new window.Image();
-        img.src = backgroundImage;
+        const backgroundSource = selectedMap === 1 ? firstBackgroundImg : secondBackgroundImg;
+        img.src = backgroundSource;
+        const { width, height } = selectedMap === 1 ? { width: 1123, height: 423 } : { width: 1176, height: 537 };
+        setImageDimensions({width, height});
         img.onload = () => {
             setBackgroundImg(img);
+            // Автоматически определяем размеры изображения
             if (import.meta.env.DEV) {
-                console.log('ZhkKomfortCanvas: Фоновое изображение загружено');
+                console.log(`ZhkKomfortCanvas: Фоновое изображение карты ${selectedMap} загружено`, {
+                    naturalWidth: img.naturalWidth,
+                    naturalHeight: img.naturalHeight
+                });
             }
         };
         img.onerror = () => {
-            console.error('ZhkKomfortCanvas: Ошибка загрузки фонового изображения');
+            console.error(`ZhkKomfortCanvas: Ошибка загрузки фонового изображения карты ${selectedMap}`);
         };
-    }, []);
+    }, [selectedMap]);
 
     // Загрузка иконки замка
     useEffect(() => {
@@ -143,39 +155,35 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
 
     const handleMouseLeave = () => setHoveredId(null);
 
-    // Responsive scaling for scrollable canvas
-    const stageWidth = 1280;
-    const stageHeight = 751;
-    const scaleX = stageWidth / 1280;
-    const scaleY = stageHeight / 751;
+    const currentMapData = selectedMap === 1 ? firstMapData : secondMapData;
 
     return (
       <div
         className="block"
-        style={{ overflow: 'auto', width: '100%', height: '90vh' }}
+        style={{ overflow: 'auto', width: '100%', height: imageDimensions.height }}
       >
-        <div style={{ width: stageWidth, height: stageHeight }}>
-          <Stage width={stageWidth} height={stageHeight}>
+        <div style={{ width: imageDimensions.width, height: imageDimensions.height }}>
+          <Stage width={imageDimensions.width} height={imageDimensions.height}>
             <Layer>
               {backgroundImg && (
                 <Image
                   image={backgroundImg}
                   x={0}
                   y={0}
-                  width={stageWidth}
-                  height={stageHeight}
+                  width={imageDimensions.width}
+                  height={imageDimensions.height}
                   listening={false}
                 />
               )}
 
-              {warehouseLayoutData.map((box) => {
-                const scaledX = (box.x || 0) * scaleX;
-                const scaledY = (box.y || 0) * scaleY;
-                const scaledWidth = (box.width || 0) * scaleX;
-                const scaledHeight = (box.height || 0) * scaleY;
+              {currentMapData.map((box) => {
+                const scaledX = (box.x || 0);
+                const scaledY = (box.y || 0);
+                const scaledWidth = (box.width || 0);
+                const scaledHeight = (box.height || 0);
                 let scaledPoints = null;
                 if (box.points) {
-                  scaledPoints = box.points.map((p, idx) => (idx % 2 === 0 ? p * scaleX : p * scaleY));
+                  scaledPoints = box.points.map((p, idx) => (idx % 2 === 0 ? p: p));
                 }
 
                 const status = getBoxStatus(box.name);
@@ -220,7 +228,7 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                   <React.Fragment key={box.name}>
                     {scaledPoints ? (
                       <Line
-                        points={box.points.map((p, i) => (i % 2 === 0 ? p * scaleX : p * scaleY))}
+                        points={box.points.map((p, i) => (i % 2 === 0 ? p : p))}
                         fill={fillColor}
                         stroke={strokeColor}
                         strokeWidth={strokeWidth}

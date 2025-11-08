@@ -30,7 +30,7 @@ import {
   SelectValue,
   Switch,
 } from "../../components/ui";
-import { Truck, Package } from "lucide-react";
+import { Truck, Package, X } from "lucide-react";
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -58,6 +58,8 @@ const HomePage = memo(() => {
   const [cloudPricePreview, setCloudPricePreview] = useState(null);
   const [isCloudPriceCalculating, setIsCloudPriceCalculating] = useState(false);
   const [cloudPriceError, setCloudPriceError] = useState(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
 
   const monthsNumber = useMemo(() => {
     const parsed = parseInt(individualMonths, 10);
@@ -285,6 +287,31 @@ const HomePage = memo(() => {
   }, [selectedWarehouse]);
 
   useEffect(() => {
+    if (selectedWarehouse?.name !== "ЖК Комфорт Сити") {
+      setKomfortSelectedMap(1);
+    }
+  }, [selectedWarehouse]);
+
+  useEffect(() => {
+    if (selectedWarehouse?.name === "ЖК Комфорт Сити") {
+      setPreviewStorage(null);
+    }
+  }, [komfortSelectedMap, selectedWarehouse]);
+
+  useEffect(() => {
+    if (!isMapModalOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMapModalOpen]);
+
+  useEffect(() => {
     let isCancelled = false;
 
     const calculatePrice = async () => {
@@ -396,7 +423,7 @@ const HomePage = memo(() => {
     };
   }, [activeStorageTab, monthsNumber, previewStorage, selectedWarehouse]);
 
-  const renderWarehouseScheme = () => {
+  const renderWarehouseScheme = ({ isFullscreen = false } = {}) => {
     if (!selectedWarehouse) {
       return (
         <div className="min-h-[220px] flex items-center justify-center text-center text-[#6B6B6B]">
@@ -431,13 +458,18 @@ const HomePage = memo(() => {
       isViewOnly: true,
     };
 
+    const isKomfortWarehouse = selectedWarehouse.name === "ЖК Комфорт Сити";
+    if (isKomfortWarehouse) {
+      canvasProps.selectedMap = komfortSelectedMap;
+    }
+
     let canvas = null;
 
     if (selectedWarehouse.name === "ЖК Mega Towers") {
       canvas = <InteractiveWarehouseCanvas {...canvasProps} />;
     } else if (selectedWarehouse.name === "ЖК Есентай") {
       canvas = <MainWarehouseCanvas {...canvasProps} />;
-    } else if (selectedWarehouse.name === "ЖК Комфорт Сити") {
+    } else if (isKomfortWarehouse) {
       canvas = <ZhkKomfortCanvas {...canvasProps} />;
     }
 
@@ -449,7 +481,57 @@ const HomePage = memo(() => {
       );
     }
 
-    return <div className="min-w-max mx-auto">{canvas}</div>;
+    const komfortControls = isKomfortWarehouse ? (
+      <div
+        className={`flex ${isFullscreen ? "flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : "items-center justify-center gap-3"} flex-wrap`}
+      >
+        <span className="text-sm font-semibold text-[#273655]">Карта ЖК Комфорт Сити</span>
+        <div className="inline-flex rounded-xl border border-[#d7dbe6] bg-white p-1 shadow-sm">
+          {[1, 2].map((mapNumber) => {
+            const isActive = komfortSelectedMap === mapNumber;
+            return (
+              <button
+                key={mapNumber}
+                type="button"
+                onClick={() => setKomfortSelectedMap(mapNumber)}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-[#273655] text-white shadow"
+                    : "text-[#273655] hover:bg-[#273655]/10"
+                }`}
+                aria-pressed={isActive}
+              >
+                Карта {mapNumber}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
+
+    const wrapperClasses = isFullscreen
+      ? "flex-1 min-h-[50vh] rounded-2xl border border-[#d7dbe6] bg-white overflow-auto"
+      : "rounded-2xl border border-dashed border-[#273655]/20 bg-white/70 max-h-[320px] overflow-auto";
+
+    return (
+      <div className={`flex flex-col gap-4 ${isFullscreen ? "h-full" : ""}`}>
+        {komfortControls}
+        <div className={wrapperClasses}>
+          <div className="min-w-max mx-auto py-3 px-2">
+            {canvas}
+          </div>
+        </div>
+        {!isFullscreen && (
+          <button
+            type="button"
+            onClick={() => setIsMapModalOpen(true)}
+            className="self-center w-full sm:w-auto px-4 py-2 rounded-xl border border-[#273655] text-[#273655] text-sm font-semibold hover:bg-[#273655] hover:text-white transition-colors"
+          >
+            Смотреть карту
+          </button>
+        )}
+      </div>
+    );
   };
 
 
@@ -560,7 +642,7 @@ const HomePage = memo(() => {
                         Посмотрите расположение боксов и их доступность прямо на главной странице.
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-dashed border-[#273655]/20 bg-[#f5f6fa] p-4 overflow-auto">
+                    <div className="rounded-2xl bg-[#f5f6fa] p-4">
                       {renderWarehouseScheme()}
                     </div>
                   </div>
@@ -944,6 +1026,37 @@ const HomePage = memo(() => {
       <section className="w-full flex justify-center items-center px-4 py-8 font-['Montserrat']">
         <VolumeSelector />
       </section>
+
+      {isMapModalOpen && (
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-6">
+          <div className="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-[#d7dbe6] flex flex-col max-h-[90vh]">
+            <button
+              type="button"
+              onClick={() => setIsMapModalOpen(false)}
+              className="absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d7dbe6] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors"
+              aria-label="Закрыть карту"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="p-6 pb-4 sm:p-8 sm:pb-6 flex flex-col gap-4 h-full">
+              <div className="space-y-1 pr-12">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#6B6B6B]">
+                  Схема склада
+                </p>
+                <h3 className="text-xl font-bold text-[#273655]">
+                  {selectedWarehouse?.name || "Карта склада"}
+                </h3>
+                {selectedWarehouse?.address && (
+                  <p className="text-sm text-[#6B6B6B]">{selectedWarehouse.address}</p>
+                )}
+              </div>
+              <div className="flex-1 min-h-[40vh]">
+                {renderWarehouseScheme({ isFullscreen: true })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full flex flex-col items-center justify-center mt-28 mb-24 font-['Montserrat']">

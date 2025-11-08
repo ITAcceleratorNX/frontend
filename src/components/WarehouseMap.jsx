@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-const WarehouseMap = ({ warehouses = [], mapId = "warehouse-map" }) => {
+const WarehouseMap = ({ warehouses = [] }) => {
   const mapContainer = useRef(null);
 
   useEffect(() => {
@@ -8,7 +8,6 @@ const WarehouseMap = ({ warehouses = [], mapId = "warehouse-map" }) => {
 
     // Create 2GIS map configuration
     const mapConfig = {
-      mapId,
       orderedGeometries: warehouses.map((warehouse, index) => ({
         type: "Feature",
         properties: {
@@ -61,11 +60,10 @@ const WarehouseMap = ({ warehouses = [], mapId = "warehouse-map" }) => {
         var geometries = config.orderedGeometries;
         var mapPosition = config.mapPosition;
         var isWheelZoomEnabled = config.isWheelZoomEnabled;
-        var mapId = config.mapId;
         
         if (typeof DG !== 'undefined') {
           DG.then(function(){
-            var map = DG.map(mapId, {
+            var map = DG.map("warehouse-map", {
               center: [mapPosition.lat, mapPosition.lon],
               zoom: mapPosition.zoom,
               scrollWheelZoom: isWheelZoomEnabled,
@@ -253,7 +251,7 @@ const WarehouseMap = ({ warehouses = [], mapId = "warehouse-map" }) => {
   return (
       <div className="relative w-full h-full">
         <div
-            id={mapId}
+            id="warehouse-map"
             ref={mapContainer}
             className="absolute inset-0 rounded-3xl shadow-lg overflow-hidden"
             style={{width: '100%', height: '100%'}}
