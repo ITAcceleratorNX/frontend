@@ -1,77 +1,788 @@
-import React, { useState, memo, useMemo, useEffect } from "react";
+import React, { useState, memo, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "../../widgets";
 import vectorImg from "../../assets/vector.png";
 import backgroundTextImg from "../../assets/background-text.png";
 import boxesImg from "../../assets/boxes.png";
-import good2 from "../../assets/good2.png";
-import procent2 from "../../assets/procent2.png";
-import key2 from "../../assets/key2.png";
-import security from "../../assets/security.png";
-import pomesh from "../../assets/pomesh.png";
-
 import beigeCircle from "../../assets/beige_circle.svg";
 import houseOnBeigeCircle from "../../assets/house_on_beige_circle.svg";
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
-import image85 from "../../assets/image 85.png";
-import group1010 from "../../assets/Group 1010.png";
 import Footer from "../../widgets/Footer";
 import FAQ from "../../components/FAQ";
 import WarehouseMap from "../../components/WarehouseMap";
+import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
+import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
+import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
 import ChatButton from "../../shared/components/ChatButton";
 import { warehouseApi } from "../../shared/api/warehouseApi";
+import { paymentsApi } from "../../shared/api/paymentsApi";
 import VolumeSelector from "../../components/VolumeSelector.jsx";
 import { Dropdown } from '../../shared/components/Dropdown.jsx';
 import { SmartButton } from "../../shared/components/SmartButton.jsx";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+  Switch,
+} from "../../components/ui";
+import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
+import { Truck, Package, X, Info, Plus, Trash2 } from "lucide-react";
+import { useAuth } from "../../shared/context/AuthContext";
+import { toast } from "react-toastify";
+
+const MOVING_SERVICE_ESTIMATE = 7000;
+const PACKING_SERVICE_ESTIMATE = 4000;
+
+const getServiceTypeName = (type) => {
+  switch (type) {
+    case "LOADER":
+      return "Грузчик";
+    case "PACKER":
+      return "Упаковщик";
+    case "FURNITURE_SPECIALIST":
+      return "Мебельщик";
+    case "GAZELLE":
+      return "Газель";
+    case "STRETCH_FILM":
+      return "Стрейч-плёнка";
+    case "BOX_SIZE":
+      return "Коробка";
+    case "MARKER":
+      return "Маркер";
+    case "UTILITY_KNIFE":
+      return "Канцелярский нож";
+    case "BUBBLE_WRAP_1":
+      return "Воздушно-пузырчатая плёнка 10м";
+    case "BUBBLE_WRAP_2":
+      return "Воздушно-пузырчатая плёнка 120м";
+    default:
+      return "Услуга";
+  }
+};
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const isUserRole = user?.role === "USER";
 
   // Новые состояния для выбора склада
-  const [isWarehouseDropdownOpen, setIsWarehouseDropdownOpen] = useState(false);
   const [apiWarehouses, setApiWarehouses] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [warehousesLoading, setWarehousesLoading] = useState(false);
   const [warehousesError, setWarehousesError] = useState(null);
+  const [activeStorageTab, setActiveStorageTab] = useState("INDIVIDUAL");
+  const [individualMonths, setIndividualMonths] = useState("1");
+  const [includeMoving, setIncludeMoving] = useState(false);
+  const [includePacking, setIncludePacking] = useState(false);
+  const [cloudMonths, setCloudMonths] = useState("1");
+  const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
+  const [movingAddressFrom, setMovingAddressFrom] = useState("");
+  const [cloudPickupAddress, setCloudPickupAddress] = useState("");
+  const [previewStorage, setPreviewStorage] = useState(null);
+  const [pricePreview, setPricePreview] = useState(null);
+  const [isPriceCalculating, setIsPriceCalculating] = useState(false);
+  const [priceError, setPriceError] = useState(null);
+  const [cloudPricePreview, setCloudPricePreview] = useState(null);
+  const [isCloudPriceCalculating, setIsCloudPriceCalculating] = useState(false);
+  const [cloudPriceError, setCloudPriceError] = useState(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [serviceOptions, setServiceOptions] = useState([]);
+  const [isServicesLoading, setIsServicesLoading] = useState(false);
+  const [servicesError, setServicesError] = useState(null);
+  const [services, setServices] = useState([]);
+  const [gazelleService, setGazelleService] = useState(null);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   // Данные для складов на карте
   const warehouses = useMemo(
-    () => [
-      {
-        id: 1,
-        name: "ЖК Есентай",
-        address: "Касымова улица, 32",
-        phone: "+7 727 123 4567",
-        // workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
-        workingHours: "Круглосуточно",
-        coordinates: [76.930495, 43.225893],
-        available: true,
-        image: extraspaceLogo,
-      },
-      {
-        id: 2,
-        name: "ЖК Mega Towers",
-        address: "Абиша Кекилбайулы, 270 блок 4",
-        phone: "+7 727 987 6543",
-        // workingHours: "Ежедневно: 08:00-22:00",
-        workingHours: "Круглосуточно",
-        coordinates: [76.890647, 43.201397],
-        available: true,
-        image: extraspaceLogo,
-      },
-      {
-        id: 3,
-        name: "ЖК Комфорт Сити",
-        address: "Проспект Серкебаева, 146/3",
-        phone: "+7 727 987 6543",
-        workingHours: "Круглосуточно",
-        coordinates: [76.900575, 43.201302],
-        available: true,
-        image: extraspaceLogo,
-      },
-    ],
-    []
+      () => [
+        {
+          id: 1,
+          name: "ЖК Есентай",
+          address: "Касымова улица, 32",
+          phone: "+7 727 123 4567",
+          // workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
+          workingHours: "Круглосуточно",
+          type: "INDIVIDUAL",
+          storage: [],
+          coordinates: [76.930495, 43.225893],
+          available: true,
+          image: extraspaceLogo,
+        },
+        {
+          id: 2,
+          name: "ЖК Mega Towers",
+          address: "Абиша Кекилбайулы, 270 блок 4",
+          phone: "+7 727 987 6543",
+          // workingHours: "Ежедневно: 08:00-22:00",
+          workingHours: "Круглосуточно",
+          type: "INDIVIDUAL",
+          storage: [],
+          coordinates: [76.890647, 43.201397],
+          available: true,
+          image: extraspaceLogo,
+        },
+        {
+          id: 3,
+          name: "ЖК Комфорт Сити",
+          address: "Проспект Серкебаева, 146/3",
+          phone: "+7 727 987 6543",
+          workingHours: "Круглосуточно",
+          type: "INDIVIDUAL",
+          storage: [],
+          coordinates: [76.900575, 43.201302],
+          available: true,
+          image: extraspaceLogo,
+        },
+      ],
+      []
   );
+
+  const ensureServiceOptions = useCallback(async () => {
+    if (serviceOptions.length > 0) {
+      return serviceOptions;
+    }
+
+    if (isServicesLoading) {
+      return serviceOptions;
+    }
+
+    try {
+      setIsServicesLoading(true);
+      setServicesError(null);
+      const pricesData = await paymentsApi.getPrices();
+      const filteredPrices = pricesData.filter((price) => {
+        if (price.id <= 4) return false;
+        const excludedTypes = [
+          "DEPOSIT",
+          "M2_UP_6M",
+          "M2_6_12M",
+          "M2_OVER_12M",
+          "M3_UP_6M",
+          "M3_6_12M",
+          "M3_OVER_12M",
+          "M2_01_UP_6M",
+          "M2_01_6_12M",
+          "M2_01_OVER_12M",
+          "M3_01_UP_6M",
+          "M3_01_6_12M",
+          "M3_01_OVER_12M",
+        ];
+        return !excludedTypes.includes(price.type);
+      });
+      setServiceOptions(filteredPrices);
+      return filteredPrices;
+    } catch (error) {
+      console.error("Ошибка при загрузке услуг:", error);
+      setServicesError("Не удалось загрузить список услуг. Попробуйте позже.");
+      return [];
+    } finally {
+      setIsServicesLoading(false);
+    }
+  }, [serviceOptions, isServicesLoading]);
+
+  const addServiceRow = useCallback(() => {
+    setServices((prev) => [...prev, { service_id: "", count: 1 }]);
+    setSubmitError(null);
+  }, []);
+
+  const updateServiceRow = useCallback((index, field, value) => {
+    setServices((prev) =>
+      prev.map((service, i) =>
+        i === index
+          ? {
+              ...service,
+              [field]: field === "count" ? Math.max(1, Number(value) || 1) : value,
+            }
+          : service
+      )
+    );
+    setSubmitError(null);
+  }, []);
+
+  const removeServiceRow = useCallback((index) => {
+    setServices((prev) => prev.filter((_, i) => i !== index));
+    setSubmitError(null);
+  }, []);
+
+  const InfoHint = ({ description, ariaLabel = "Подробнее", align = "end", side = "bottom" }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={ariaLabel}
+          title={ariaLabel}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-[#6B6B6B] transition-colors hover:border-[#d7dbe6] hover:text-[#273655] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#273655]/30"
+        >
+          <Info className="h-4 w-4" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align={align}
+        side={side}
+        sideOffset={8}
+        className="max-w-xs rounded-2xl border border-[#d7dbe6] bg-white p-4 text-sm leading-relaxed text-[#273655] shadow-xl"
+      >
+        {description}
+      </PopoverContent>
+    </Popover>
+  );
+
+  const monthsNumber = useMemo(() => {
+    const parsed = parseInt(individualMonths, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }, [individualMonths]);
+
+  const cloudMonthsNumber = useMemo(() => {
+    const parsed = parseInt(cloudMonths, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }, [cloudMonths]);
+
+  const serviceSummary = useMemo(() => {
+    const breakdown = [];
+    let total = 0;
+
+    if (includeMoving && gazelleService) {
+      const count = 2;
+      const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
+      total += amount;
+      breakdown.push({
+        label: gazelleService.name || "Перевозка вещей",
+        amount,
+      });
+    }
+
+    if (includePacking) {
+      services.forEach((service) => {
+        if (!service?.service_id || !service?.count || service.count <= 0) {
+          return;
+        }
+        const option = serviceOptions.find((item) => String(item.id) === String(service.service_id));
+        const unitPrice = option?.price ?? PACKING_SERVICE_ESTIMATE;
+        const amount = unitPrice * service.count;
+        total += amount;
+        breakdown.push({
+          label: option?.description || getServiceTypeName(option?.type) || "Услуга",
+          amount,
+        });
+      });
+    }
+
+    return {
+      total,
+      breakdown,
+    };
+  }, [includeMoving, includePacking, gazelleService, services, serviceOptions]);
+
+  const packagingServicesForOrder = useMemo(
+    () =>
+      services
+        .filter((service) => service?.service_id && service?.count && service.count > 0)
+        .map((service) => ({
+          service_id: service.service_id,
+          count: Math.max(1, Number(service.count) || 1),
+        })),
+    [services]
+  );
+
+  const isIndividualFormReady = useMemo(() => {
+    if (!previewStorage || !monthsNumber || monthsNumber <= 0) return false;
+    if (includeMoving && !movingAddressFrom.trim()) return false;
+    if (includePacking && packagingServicesForOrder.length === 0) return false;
+    return true;
+  }, [
+    includeMoving,
+    includePacking,
+    monthsNumber,
+    movingAddressFrom,
+    packagingServicesForOrder.length,
+    previewStorage,
+  ]);
+
+  const cloudWarehouse = useMemo(
+      () => (apiWarehouses.length > 0 ? apiWarehouses : warehouses).find((item) => item.type === "CLOUD") || null,
+      [apiWarehouses, warehouses]
+  );
+
+  const cloudVolume = useMemo(() => {
+    const { width, height, length } = cloudDimensions;
+    const volume = Number(width) * Number(height) * Number(length);
+    return Number.isFinite(volume) && volume > 0 ? volume : 0;
+  }, [cloudDimensions]);
+
+  const cloudStorage = cloudWarehouse?.storage?.[0] || null;
+
+  const isCloudFormReady = useMemo(() => {
+    if (!cloudStorage?.id) return false;
+    if (!cloudMonthsNumber || cloudMonthsNumber <= 0) return false;
+    if (!cloudVolume || cloudVolume <= 0) return false;
+    if (!cloudPickupAddress.trim()) return false;
+    return true;
+  }, [cloudStorage, cloudMonthsNumber, cloudPickupAddress, cloudVolume]);
+
+  const movingServicePrice = useMemo(() => {
+    if (gazelleService?.price) {
+      return gazelleService.price;
+    }
+    const gazelleOption = serviceOptions.find((option) => option.type === "GAZELLE");
+    if (gazelleOption?.price) {
+      return gazelleOption.price;
+    }
+    return MOVING_SERVICE_ESTIMATE;
+  }, [gazelleService, serviceOptions]);
+
+  const costSummary = useMemo(() => {
+    const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
+    const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
+    const serviceTotal = serviceSummary.total;
+    const combinedTotal = (baseTotal || 0) + serviceTotal;
+
+    return {
+      baseMonthly,
+      baseTotal,
+      serviceTotal,
+      combinedTotal,
+    };
+  }, [pricePreview, serviceSummary.total]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storageType = activeStorageTab === "CLOUD" ? "CLOUD" : "INDIVIDUAL";
+    localStorage.setItem("prep_storage_type", storageType);
+  }, [activeStorageTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const duration =
+      activeStorageTab === "CLOUD" ? cloudMonthsNumber : monthsNumber;
+    if (duration && duration > 0) {
+      localStorage.setItem("prep_duration", String(duration));
+    }
+  }, [activeStorageTab, cloudMonthsNumber, monthsNumber]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (activeStorageTab === "INDIVIDUAL") {
+      const area =
+        parseFloat(
+          previewStorage?.available_volume ??
+            previewStorage?.total_volume ??
+            previewStorage?.area ??
+            previewStorage?.square ??
+            previewStorage?.volume ??
+            ""
+        ) || null;
+      if (area && area > 0) {
+        localStorage.setItem("prep_area", String(area));
+      } else {
+        localStorage.removeItem("prep_area");
+      }
+    } else {
+      if (cloudVolume && cloudVolume > 0) {
+        localStorage.setItem("prep_area", cloudVolume.toFixed(2));
+      } else {
+        localStorage.removeItem("prep_area");
+      }
+    }
+  }, [activeStorageTab, previewStorage, cloudVolume]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let price = null;
+
+    if (activeStorageTab === "INDIVIDUAL") {
+      if (pricePreview && previewStorage) {
+        price = Math.round(costSummary.combinedTotal || 0);
+      }
+    } else if (activeStorageTab === "CLOUD") {
+      if (cloudPricePreview) {
+        price = Math.round(cloudPricePreview.total || 0);
+      }
+    }
+
+    if (price && price > 0) {
+      localStorage.setItem("calculated_price", String(price));
+    } else {
+      localStorage.removeItem("calculated_price");
+    }
+  }, [
+    activeStorageTab,
+    costSummary.combinedTotal,
+    pricePreview,
+    previewStorage,
+    cloudPricePreview,
+  ]);
+
+  const buildMovingOrders = useCallback((address, months) => {
+    const monthsCount = Math.max(1, Number(months) || 1);
+    const start = new Date();
+    const pickupDate = new Date(start);
+    const returnDate = new Date(start);
+    returnDate.setMonth(returnDate.getMonth() + monthsCount);
+
+    return [
+      {
+        moving_date: pickupDate.toISOString(),
+        status: "PENDING_FROM",
+        address,
+      },
+      {
+        moving_date: returnDate.toISOString(),
+        status: "PENDING_TO",
+        address,
+      },
+    ];
+  }, []);
+
+  const handleCreateIndividualOrder = useCallback(async () => {
+    if (isSubmittingOrder) return;
+
+    if (!isAuthenticated) {
+      toast.info("Авторизуйтесь, чтобы оформить заказ.");
+      navigate("/login", { state: { from: "/" } });
+      return;
+    }
+
+    if (!isUserRole) {
+      toast.error("Создание заказа доступно только клиентам с ролью USER.");
+      return;
+    }
+
+    if (!selectedWarehouse || !previewStorage) {
+      setSubmitError("Выберите склад и бокс, чтобы продолжить.");
+      return;
+    }
+
+    if (!monthsNumber || monthsNumber <= 0) {
+      setSubmitError("Укажите срок аренды.");
+      return;
+    }
+
+    if (includeMoving && !movingAddressFrom.trim()) {
+      setSubmitError("Укажите адрес для перевозки.");
+      return;
+    }
+
+    if (includePacking && packagingServicesForOrder.length === 0) {
+      setSubmitError("Добавьте хотя бы одну услугу упаковки или отключите опцию.");
+      return;
+    }
+
+    const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
+    if (!Number.isFinite(storageId) || storageId <= 0) {
+      setSubmitError("Не удалось определить выбранный бокс. Попробуйте выбрать его заново.");
+      return;
+    }
+
+    try {
+      setIsSubmittingOrder(true);
+      setSubmitError(null);
+
+      let availableOptions = serviceOptions;
+      if ((includePacking || includeMoving) && serviceOptions.length === 0) {
+        const loadedOptions = await ensureServiceOptions();
+        if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
+          availableOptions = loadedOptions;
+        }
+      }
+
+      const trimmedAddress = movingAddressFrom.trim();
+
+      const orderItems = [
+        {
+          name: "Предварительная бронь",
+          volume: 0,
+          cargo_mark: "NO",
+        },
+      ];
+
+      const packagingEntries = includePacking ? packagingServicesForOrder : [];
+
+      const finalServices = packagingEntries
+        .map((service) => ({
+          service_id: Number(service.service_id),
+          count: service.count,
+        }))
+        .filter(
+          (service) =>
+            Number.isFinite(service.service_id) && service.service_id > 0 && Number.isFinite(service.count) && service.count > 0
+        );
+
+      if (includeMoving) {
+        const gazelleOption =
+          gazelleService ||
+          availableOptions?.find((option) => option.type === "GAZELLE");
+        const gazelleId =
+          gazelleOption?.id ?? gazelleOption?.service_id ?? gazelleOption ?? null;
+
+        if (!gazelleId || !Number.isFinite(Number(gazelleId))) {
+          setSubmitError("Услуга перевозки временно недоступна. Попробуйте позже.");
+          setIsSubmittingOrder(false);
+          return;
+        }
+
+        finalServices.push({
+          service_id: Number(gazelleId),
+          count: 2,
+        });
+      }
+
+      const orderData = {
+        storage_id: storageId,
+        months: monthsNumber,
+        order_items: orderItems,
+        is_selected_moving: includeMoving,
+        is_selected_package: packagingEntries.length > 0,
+      };
+
+      if (includeMoving) {
+        orderData.moving_orders = buildMovingOrders(trimmedAddress, monthsNumber);
+      }
+
+      if (finalServices.length > 0) {
+        orderData.services = finalServices;
+      }
+
+      await warehouseApi.createOrder(orderData);
+
+      toast.success(
+        <div>
+          <div>
+            <strong>Заявка отправлена!</strong>
+          </div>
+          <div style={{ marginTop: 5 }}>
+            СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заявки менеджером.
+            <br />
+            Оплата будет доступна сразу после подписания договора.
+          </div>
+        </div>,
+        {
+          autoClose: 4000,
+        }
+      );
+
+      setTimeout(() => {
+        navigate("/personal-account", { state: { activeSection: "payments" } });
+      }, 1500);
+    } catch (error) {
+      console.error("Ошибка при создании заказа:", error);
+      const message =
+        error.response?.data?.message || "Не удалось создать заказ. Попробуйте позже.";
+      setSubmitError(message);
+      toast.error(message, {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+  }, [
+    buildMovingOrders,
+    ensureServiceOptions,
+    gazelleService,
+    includeMoving,
+    includePacking,
+    isAuthenticated,
+    isSubmittingOrder,
+    isUserRole,
+    monthsNumber,
+    navigate,
+    packagingServicesForOrder,
+    previewStorage,
+    selectedWarehouse,
+    serviceOptions,
+    movingAddressFrom,
+  ]);
+
+  const handleCreateCloudOrder = useCallback(async () => {
+    if (isSubmittingOrder) return;
+
+    if (!isAuthenticated) {
+      toast.info("Авторизуйтесь, чтобы оформить заказ.");
+      navigate("/login", { state: { from: "/" } });
+      return;
+    }
+
+    if (!isUserRole) {
+      toast.error("Создание заказа доступно только клиентам с ролью USER.");
+      return;
+    }
+
+    if (!cloudStorage?.id) {
+      setSubmitError("Склад облачного хранения временно недоступен.");
+      return;
+    }
+
+    if (!cloudMonthsNumber || cloudMonthsNumber <= 0) {
+      setSubmitError("Укажите срок аренды для облачного хранения.");
+      return;
+    }
+
+    if (!cloudVolume || cloudVolume <= 0) {
+      setSubmitError("Укажите габариты вещей для расчёта объёма.");
+      return;
+    }
+
+    if (!cloudPickupAddress.trim()) {
+      setSubmitError("Укажите адрес забора вещей.");
+      return;
+    }
+
+    try {
+      setIsSubmittingOrder(true);
+      setSubmitError(null);
+
+      const trimmedAddress = cloudPickupAddress.trim();
+
+      const orderItems = [
+        {
+          name: "Облачное хранение",
+          volume: Number(cloudVolume.toFixed(2)),
+          cargo_mark: "NO",
+        },
+      ];
+
+      const orderData = {
+        storage_id: Number(cloudStorage.id),
+        months: cloudMonthsNumber,
+        order_items: orderItems,
+        is_selected_moving: true,
+        is_selected_package: false,
+        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber),
+      };
+
+      await warehouseApi.createOrder(orderData);
+
+      toast.success(
+        <div>
+          <div>
+            <strong>Заявка отправлена!</strong>
+          </div>
+          <div style={{ marginTop: 5 }}>
+            СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заявки менеджером.
+            <br />
+            Оплата будет доступна сразу после подписания договора.
+          </div>
+        </div>,
+        {
+          autoClose: 4000,
+        }
+      );
+
+      setTimeout(() => {
+        navigate("/personal-account", { state: { activeSection: "payments" } });
+      }, 1500);
+    } catch (error) {
+      console.error("Ошибка при создании облачного заказа:", error);
+      const message =
+        error.response?.data?.message || "Не удалось создать заказ. Попробуйте позже.";
+      setSubmitError(message);
+      toast.error(message, {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+  }, [
+    buildMovingOrders,
+    cloudMonthsNumber,
+    cloudPickupAddress,
+    cloudStorage,
+    cloudVolume,
+    isAuthenticated,
+    isSubmittingOrder,
+    isUserRole,
+    navigate,
+  ]);
+
+  const handleCloudDimensionChange = (dimension, rawValue) => {
+    const value = Math.max(0.1, Number(rawValue) || 0);
+    setCloudDimensions((prev) => ({ ...prev, [dimension]: value }));
+    setSubmitError(null);
+  };
+
+  useEffect(() => {
+    if (activeStorageTab !== "CLOUD") {
+      setCloudPickupAddress("");
+    }
+  }, [activeStorageTab]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const calculateCloudPrice = async () => {
+      if (activeStorageTab !== "CLOUD") {
+        setCloudPricePreview(null);
+        setCloudPriceError(null);
+        return;
+      }
+
+      if (!cloudMonthsNumber || cloudMonthsNumber <= 0) {
+        setCloudPricePreview(null);
+        setCloudPriceError(null);
+        return;
+      }
+
+      if (!cloudVolume || cloudVolume <= 0) {
+        setCloudPricePreview(null);
+        setCloudPriceError("Укажите габариты вещей, чтобы рассчитать объём хранение.");
+        return;
+      }
+
+      setIsCloudPriceCalculating(true);
+      setCloudPriceError(null);
+
+      try {
+        const payload = {
+          storageType: "CLOUD",
+          months: cloudMonthsNumber,
+          volume: cloudVolume,
+          services: [],
+        };
+
+        const response = await warehouseApi.calculateBulkPrice(payload);
+        if (isCancelled) return;
+
+        const storagePrice = response?.storage?.price;
+
+        if (typeof storagePrice === "number" && !Number.isNaN(storagePrice) && storagePrice > 0) {
+          setCloudPricePreview({
+            total: storagePrice,
+            monthly: storagePrice / cloudMonthsNumber,
+            isFallback: false,
+          });
+        } else {
+          setCloudPricePreview(null);
+          setCloudPriceError("Не удалось получить предварительный расчёт стоимости.");
+        }
+      } catch (error) {
+        console.error("Ошибка при расчёте стоимости облачного хранения:", error);
+        if (isCancelled) return;
+        setCloudPricePreview(null);
+        setCloudPriceError("Не удалось рассчитать стоимость. Попробуйте позже или уточните у менеджера.");
+      } finally {
+        if (!isCancelled) {
+          setIsCloudPriceCalculating(false);
+        }
+      }
+    };
+
+    calculateCloudPrice();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeStorageTab, cloudMonthsNumber, cloudVolume]);
 
   // Загрузка складов с API
   useEffect(() => {
@@ -82,9 +793,10 @@ const HomePage = memo(() => {
         const data = await warehouseApi.getAllWarehouses();
         setApiWarehouses(Array.isArray(data) ? data : []);
 
-        // Устанавливаем первый склад как выбранный по умолчанию
+        // Устанавливаем первый склад INDIVIDUAL как выбранный по умолчанию
         if (data && data.length > 0) {
-          setSelectedWarehouse(data[0]);
+          const firstIndividual = data.find((item) => item.type === "INDIVIDUAL");
+          setSelectedWarehouse(firstIndividual || data[0]);
         }
 
         if (import.meta.env.DEV) {
@@ -103,35 +815,327 @@ const HomePage = memo(() => {
     fetchWarehouses();
   }, [warehouses]);
 
-  // Закрытие dropdown при клике вне его
+  const dropdownItems = useMemo(() => {
+    const list = apiWarehouses.length > 0 ? apiWarehouses : warehouses;
+    return list.filter((item) => item.type !== "CLOUD");
+  }, [apiWarehouses, warehouses]);
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isWarehouseDropdownOpen) {
-        // Проверяем, что клик был не по элементу dropdown
-        const dropdown = event.target.closest(".warehouse-dropdown");
-        if (!dropdown) {
-          setIsWarehouseDropdownOpen(false);
+    if (!selectedWarehouse || selectedWarehouse.type === "CLOUD") {
+      setSelectedWarehouse(dropdownItems[0] || null);
+    }
+  }, [dropdownItems, selectedWarehouse]);
+
+  useEffect(() => {
+    setPreviewStorage(null);
+  }, [selectedWarehouse]);
+
+  useEffect(() => {
+    if (selectedWarehouse?.name !== "ЖК Комфорт Сити") {
+      setKomfortSelectedMap(1);
+    }
+  }, [selectedWarehouse]);
+
+  useEffect(() => {
+    if (selectedWarehouse?.name === "ЖК Комфорт Сити") {
+      setPreviewStorage(null);
+    }
+  }, [komfortSelectedMap, selectedWarehouse]);
+
+  useEffect(() => {
+    if (!isMapModalOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMapModalOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const updateMatch = (event) => setIsMobileView(event.matches);
+    updateMatch(mediaQuery);
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", updateMatch);
+      return () => mediaQuery.removeEventListener("change", updateMatch);
+    }
+
+    mediaQuery.addListener(updateMatch);
+    return () => mediaQuery.removeListener(updateMatch);
+  }, []);
+
+  useEffect(() => {
+    if (!includeMoving) {
+      setGazelleService(null);
+      return;
+    }
+
+    if (serviceOptions.length === 0) {
+      ensureServiceOptions();
+      return;
+    }
+
+    const gazelle = serviceOptions.find((option) => option.type === "GAZELLE");
+    if (gazelle) {
+      setGazelleService({
+        id: String(gazelle.id),
+        name: getServiceTypeName(gazelle.type) || gazelle.description || "Газель",
+        price: gazelle.price,
+      });
+    } else {
+      setGazelleService(null);
+    }
+  }, [includeMoving, serviceOptions, ensureServiceOptions]);
+
+  useEffect(() => {
+    setSubmitError(null);
+  }, [activeStorageTab]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const calculatePrice = async () => {
+      if (activeStorageTab !== "INDIVIDUAL") {
+        setPricePreview(null);
+        setPriceError(null);
+        return;
+      }
+
+      if (!selectedWarehouse || selectedWarehouse?.type === "CLOUD") {
+        setPricePreview(null);
+        setPriceError(null);
+        return;
+      }
+
+      if (!previewStorage) {
+        setPricePreview(null);
+        setPriceError(null);
+        return;
+      }
+
+      if (!monthsNumber || monthsNumber <= 0) {
+        setPricePreview(null);
+        setPriceError(null);
+        return;
+      }
+
+      const rawArea = parseFloat(
+        previewStorage.available_volume ??
+        previewStorage.total_volume ??
+        previewStorage.area ??
+        previewStorage.square ??
+        previewStorage.volume ??
+        ""
+      );
+
+      if (!rawArea || Number.isNaN(rawArea) || rawArea <= 0) {
+        setPricePreview(null);
+        setPriceError("Для выбранного бокса отсутствуют данные по площади/объёму.");
+        return;
+      }
+
+      setIsPriceCalculating(true);
+      setPriceError(null);
+
+      try {
+        const payload = {
+          storageType: "INDIVIDUAL",
+          months: monthsNumber,
+          area: rawArea,
+          services: [],
+        };
+
+        const response = await warehouseApi.calculateBulkPrice(payload);
+
+        if (isCancelled) return;
+
+        const storagePrice = response?.storage?.price;
+
+        if (typeof storagePrice === "number" && !Number.isNaN(storagePrice) && storagePrice > 0) {
+          setPricePreview({
+            total: storagePrice,
+            monthly: storagePrice / monthsNumber,
+            isFallback: false,
+          });
+        } else {
+          const fallback = (parseFloat(previewStorage.price) || 0) * monthsNumber;
+          if (fallback > 0) {
+            setPricePreview({
+              total: fallback,
+              monthly: fallback / monthsNumber,
+              isFallback: true,
+            });
+          } else {
+            setPricePreview(null);
+            setPriceError("Не удалось получить предварительный расчёт стоимости.");
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка при расчёте предварительной стоимости:", error);
+        if (isCancelled) return;
+
+        const fallback = monthsNumber && previewStorage?.price
+          ? (parseFloat(previewStorage.price) || 0) * monthsNumber
+          : null;
+
+        if (fallback) {
+          setPricePreview({
+            total: fallback,
+            monthly: fallback / monthsNumber,
+            isFallback: true,
+          });
+          setPriceError("Показана ориентировочная стоимость по тарифу бокса.");
+        } else {
+          setPricePreview(null);
+          setPriceError("Не удалось рассчитать стоимость. Попробуйте позже.");
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsPriceCalculating(false);
         }
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    calculatePrice();
+
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      isCancelled = true;
     };
-  }, [isWarehouseDropdownOpen]);
+  }, [activeStorageTab, monthsNumber, previewStorage, selectedWarehouse]);
 
-  // Функции для управления выпадающим списком
-  const toggleWarehouseDropdown = () => {
-    setIsWarehouseDropdownOpen(!isWarehouseDropdownOpen);
+  const renderWarehouseScheme = ({ isFullscreen = false } = {}) => {
+    if (!selectedWarehouse) {
+      return (
+        <div className="min-h-[220px] flex items-center justify-center text-center text-[#6B6B6B]">
+          Выберите склад, чтобы увидеть схему расположения боксов.
+        </div>
+      );
+    }
+
+    if (selectedWarehouse?.type === "CLOUD") {
+      return (
+        <div className="min-h-[220px] flex items-center justify-center text-center text-[#6B6B6B]">
+          Для облачного хранения схема склада не требуется — мы забираем и возвращаем ваши вещи сами.
+        </div>
+      );
+    }
+
+    const storageBoxes = selectedWarehouse?.storage ?? [];
+
+    if (!storageBoxes.length) {
+      return (
+        <div className="min-h-[220px] flex items-center justify-center text-center text-[#6B6B6B]">
+          Схема для выбранного склада появится после синхронизации с системой бронирования.
+        </div>
+      );
+    }
+
+    const canvasProps = {
+      storageBoxes,
+      onBoxSelect: setPreviewStorage,
+      selectedStorage: previewStorage,
+      userRole: "USER",
+      isViewOnly: true,
+    };
+
+    const isKomfortWarehouse = selectedWarehouse.name === "ЖК Комфорт Сити";
+    if (isKomfortWarehouse) {
+      canvasProps.selectedMap = komfortSelectedMap;
+    }
+
+    let canvas = null;
+
+    if (selectedWarehouse.name === "ЖК Mega Towers") {
+      canvas = <InteractiveWarehouseCanvas {...canvasProps} />;
+    } else if (selectedWarehouse.name === "ЖК Есентай") {
+      canvas = <MainWarehouseCanvas {...canvasProps} />;
+    } else if (isKomfortWarehouse) {
+      canvas = <ZhkKomfortCanvas {...canvasProps} />;
+    }
+
+    if (!canvas) {
+      return (
+        <div className="min-h-[220px] flex items-center justify-center text-center text-[#6B6B6B]">
+          Для выбранного склада пока нет схемы. Пожалуйста, свяжитесь с менеджером для подробной информации.
+        </div>
+      );
+    }
+
+    const komfortControls = isKomfortWarehouse ? (
+      <div
+        className={`flex ${isFullscreen ? "flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : "items-center justify-center gap-3"} flex-wrap`}
+      >
+        <span className="text-sm font-semibold text-[#273655]">Карта ЖК Комфорт Сити</span>
+        <div className="inline-flex rounded-xl border border-[#d7dbe6] bg-white p-1 shadow-sm">
+          {[1, 2].map((mapNumber) => {
+            const isActive = komfortSelectedMap === mapNumber;
+            return (
+              <button
+                key={mapNumber}
+                type="button"
+                onClick={() => setKomfortSelectedMap(mapNumber)}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-[#273655] text-white shadow"
+                    : "text-[#273655] hover:bg-[#273655]/10"
+                }`}
+                aria-pressed={isActive}
+              >
+                Карта {mapNumber}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
+
+    const wrapperClasses = isFullscreen
+      ? "flex-1 min-h-[50vh] rounded-2xl border border-[#d7dbe6] bg-white overflow-auto"
+      : "rounded-2xl border border-dashed border-[#273655]/20 bg-white/70 max-h-[320px] overflow-auto";
+
+    const showInlineCanvas = isFullscreen || !isMobileView;
+
+    return (
+      <div className={`flex flex-col gap-4 ${isFullscreen ? "h-full" : ""}`}>
+        {showInlineCanvas && komfortControls}
+        {showInlineCanvas ? (
+          <div
+            className={wrapperClasses}
+            style={
+              isFullscreen
+                ? {
+                    maxHeight: isMobileView ? "70vh" : "75vh",
+                  }
+                : undefined
+            }
+          >
+            <div className="min-w-max mx-auto py-3 px-2">
+              {canvas}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-[#273655]/20 bg-white px-4 py-3 text-sm text-[#6B6B6B]">
+            Нажмите «Смотреть карту», чтобы открыть схему склада на весь экран.
+          </div>
+        )}
+        {!isFullscreen && (
+          <button
+            type="button"
+            onClick={() => setIsMapModalOpen(true)}
+            className="self-center w-full sm:w-auto px-4 py-2 rounded-xl border border-[#273655] text-[#273655] text-sm font-semibold hover:bg-[#273655] hover:text-white transition-colors"
+          >
+            Смотреть карту
+          </button>
+        )}
+      </div>
+    );
   };
-
-  const handleWarehouseSelect = (warehouse) => {
-    setSelectedWarehouse(warehouse);
-    setIsWarehouseDropdownOpen(false);
-  };
-
-  const dropdownItems = apiWarehouses.length > 0 ? apiWarehouses : warehouses;
 
 
   return (
@@ -188,61 +1192,701 @@ const HomePage = memo(() => {
       {/* Второй фрейм: преимущества */}
       <section className="w-full flex flex-col items-center justify-center mt-8 sm:mt-16 mb-8 sm:mb-16 px-4 sm:px-6">
         <div className="w-full max-w-[1144px] flex flex-col items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-            {/* Верхний левый — текст */}
-            <div className="flex flex-col w-full md:w-[560px] md:h-[255px] pl-2 pt-6">
-              <div className="text-[20px] sm:text-[24px] md:text-[28px] font-bold font-['Montserrat'] text-[#273655] leading-tight mb-4">
-                <span className="text-[#C73636]">
-                  Хранение вещей в современных складских системах.
-                </span>
-              </div>
+          <Tabs value={activeStorageTab} onValueChange={setActiveStorageTab} className="w-full">
+            <div className="w-full bg-[#F5F6FA] rounded-2xl p-1">
+              <TabsList className="grid grid-cols-1 sm:grid-cols-2 w-full bg-transparent h-auto">
+                <TabsTrigger
+                  value="INDIVIDUAL"
+                  className="rounded-2xl py-3 px-4 text-sm sm:text-base font-semibold text-[#273655] data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#1f2d4c] transition-all"
+                >
+                  Индивидуальное хранение
+                </TabsTrigger>
+                <TabsTrigger
+                  value="CLOUD"
+                  className="rounded-2xl py-3 px-4 text-sm sm:text-base font-semibold text-[#273655]/70 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#1f2d4c] transition-all"
+                >
+                  Облачное хранение
+                </TabsTrigger>
+              </TabsList>
             </div>
 
-            {/* Верхний правый */}
-            <div className="relative rounded-3xl bg-[#F3EEDD] shadow-md flex flex-col justify-between p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
-              <div className="z-10 relative">
-                <div className="text-[20px] md:text-[24px] font-bold font-['Montserrat'] text-[#273655] mb-3">
-                  Видеонаблюдение, охрана и доступ 24/7
+            <TabsContent value="INDIVIDUAL" className="mt-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-6">
+                <div className="space-y-6">
+                  <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-xl font-bold text-[#273655]">
+                          Выберите склад
+                        </h3>
+                      </div>
+                      <InfoHint
+                        description={
+                          <span>
+                            Укажите удобную локацию, чтобы посмотреть схему склада, доступные боксы и свободные места в режиме реального времени.
+                          </span>
+                        }
+                        ariaLabel="Подробнее о выборе склада"
+                      />
+                    </div>
+                    <div className="relative w-full">
+                      <Dropdown
+                        items={dropdownItems}
+                        value={selectedWarehouse ? (selectedWarehouse.id ?? selectedWarehouse.value) : undefined}
+                        onChange={(_, item) => setSelectedWarehouse(item)}
+                        placeholder="Выбрать склад"
+                        searchable={false}
+                        getKey={(w) => w.id}
+                        getLabel={(w) => w.name}
+                        getDescription={(w) => w.address}
+                        className="bg-[#273655] text-white border-0"
+                        popoverProps={{ className: "p-0" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-xl font-bold text-[#273655]">
+                          Карта-схема склада
+                        </h3>
+                      </div>
+                      <InfoHint
+                        description={
+                          <span>
+                            Быстро найдите свободный бокс: схема показывает актуальную доступность. Нажмите на бокс, чтобы увидеть его параметры и рассчитать стоимость.
+                          </span>
+                        }
+                        ariaLabel="Подсказка по схеме склада"
+                      />
+                    </div>
+                    <div className="rounded-2xl bg-[#f5f6fa] p-4">
+                      {renderWarehouseScheme()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm flex flex-col gap-4 sm:gap-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#273655]">
+                        Настройте хранение
+                      </h3>
+                    </div>
+                    <InfoHint
+                      description={
+                        <span>
+                          Настройте срок аренды, выберите перевозку и упаковку — все параметры сохранятся, когда перейдёте к оформлению заявки.
+                        </span>
+                      }
+                      ariaLabel="Подсказка по настройкам хранения"
+                    />
+                  </div>
+
+                  <div className="space-y-2 sm:space-y-2.5">
+                    <span className="text-sm font-semibold text-[#273655]">
+                      Срок аренды (месяцы)
+                    </span>
+                    <Select
+                      value={individualMonths}
+                      onValueChange={(value) => {
+                        setIndividualMonths(value);
+                        setSubmitError(null);
+                      }}
+                    >
+                      <SelectTrigger className="h-12 rounded-2xl border-[#273655]/20 text-[#273655]">
+                        <SelectValue placeholder="Выберите срок" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 месяц</SelectItem>
+                        <SelectItem value="2">2 месяца</SelectItem>
+                        <SelectItem value="3">3 месяца</SelectItem>
+                        <SelectItem value="6">6 месяцев</SelectItem>
+                        <SelectItem value="12">12 месяцев</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                          <Truck className="w-5 h-5 shrink-0" />
+                          <span>Перевозка вещей</span>
+                          <InfoHint
+                            description={
+                              <span>
+                                Заберём и привезём ваши вещи по указанному адресу. Стоимость услуги — {movingServicePrice.toLocaleString()} ₸, добавится при оформлении заявки.
+                              </span>
+                            }
+                            ariaLabel="Подробнее о перевозке вещей"
+                            align="start"
+                          />
+                        </div>
+                        <Switch
+                          checked={includeMoving}
+                          onCheckedChange={async (checked) => {
+                            setIncludeMoving(checked);
+                            setSubmitError(null);
+                            if (checked) {
+                              await ensureServiceOptions();
+                            } else {
+                              setMovingAddressFrom("");
+                            }
+                          }}
+                          className="bg-gray-200 data-[state=checked]:bg-[#273655]"
+                        />
+                      </div>
+
+                      {includeMoving && (
+                        <div className="mt-3 space-y-3">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора</label>
+                            <input
+                              type="text"
+                              value={movingAddressFrom}
+                              onChange={(e) => {
+                                setMovingAddressFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Например: г. Алматы, Абая 25"
+                              className="h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                  <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                        <Package className="w-5 h-5 shrink-0" />
+                        <span>Услуги упаковки</span>
+                        <InfoHint
+                          description={
+                            <span>
+                              Выберите дополнительные услуги упаковки — всё, что нужно, чтобы подготовить вещи к хранению.
+                            </span>
+                          }
+                          ariaLabel="Подробнее об услугах упаковки"
+                          align="start"
+                        />
+                      </div>
+                      <Switch
+                        checked={includePacking}
+                        onCheckedChange={async (checked) => {
+                          setIncludePacking(checked);
+                          if (checked) {
+                            await ensureServiceOptions();
+                            setServices((prev) => (prev.length > 0 ? prev : [{ service_id: "", count: 1 }]));
+                          }
+                          setSubmitError(null);
+                        }}
+                        className="bg-gray-200 data-[state=checked]:bg-[#273655]"
+                      />
+                    </div>
+
+                    {includePacking && (
+                      <div className="space-y-3">
+                        {isServicesLoading ? (
+                          <div className="flex items-center justify-center py-2">
+                            <span className="w-5 h-5 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                          </div>
+                        ) : (
+                          <>
+                            {servicesError && (
+                              <p className="text-xs text-[#C73636]">
+                                {servicesError}
+                              </p>
+                            )}
+
+                            {services.length > 0 && (
+                              <div className="space-y-2">
+                                {services.map((service, index) => {
+                                  const selectedOption = serviceOptions.find((option) => String(option.id) === service.service_id);
+                                  const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
+
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2"
+                                    >
+                                      <Select
+                                        value={service.service_id}
+                                        onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                      >
+                                        <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
+                                          <SelectValue placeholder="Услуга" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {serviceOptions
+                                            .filter((option) => option.type !== "GAZELLE")
+                                            .map((option) => (
+                                              <SelectItem key={option.id} value={String(option.id)}>
+                                                {getServiceTypeName(option.type) || option.description || `Услуга ${option.id}`}
+                                              </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                      </Select>
+
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
+                                          Кол-во
+                                        </span>
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          value={service.count}
+                                          onChange={(e) => updateServiceRow(index, "count", e.target.value)}
+                                          className="w-16 h-10 rounded-lg border border-[#d7dbe6] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                                        />
+                                      </div>
+
+                                      {service.service_id && (
+                                        <span className="ml-auto text-xs text-[#6B6B6B]">
+                                          {unitPrice.toLocaleString()} ₸/шт.
+                                        </span>
+                                      )}
+
+                                      <button
+                                        type="button"
+                                        onClick={() => removeServiceRow(index)}
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
+                                        aria-label="Удалить услугу"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {services.length === 0 && !servicesError && (
+                              <p className="text-xs text-[#6B6B6B]">
+                                Добавьте услуги, чтобы мы подготовили упаковку под ваши вещи.
+                              </p>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                ensureServiceOptions();
+                                addServiceRow();
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#273655]/40 px-3 py-2 text-xs sm:text-sm font-semibold text-[#273655] hover:bg-[#273655]/5 transition-colors"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Добавить услугу
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3">
+                    <div className="flex items-center justify-between text-[#273655]">
+                      <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
+                      {previewStorage && (
+                        <span className="text-xs text-[#6B6B6B]">
+                          {previewStorage.name}
+                        </span>
+                      )}
+                    </div>
+                    {isPriceCalculating ? (
+                      <div className="flex items-center justify-center gap-2 text-base font-semibold">
+                        <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                        Расчёт...
+                      </div>
+                    ) : previewStorage && pricePreview ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6B6B6B]">За месяц</span>
+                          <span className="text-base font-semibold">
+                            {costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6B6B6B]">За {monthsNumber} мес</span>
+                          <span className="text-lg font-bold text-[#273655]">
+                            {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
+                          </span>
+                        </div>
+                        {pricePreview.isFallback && (
+                          <p className="text-xs text-[#C67A00]">
+                            Ориентировочная стоимость по тарифу бокса.
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-[#6B6B6B]">
+                        Выберите бокс на схеме, чтобы увидеть предварительную цену.
+                      </p>
+                    )}
+                    {serviceSummary.breakdown.length > 0 && (
+                      <div className="border-t border-dashed border-[#273655]/20 pt-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6B6B6B]">Услуги</span>
+                          <span className="font-semibold">
+                            +{serviceSummary.total.toLocaleString()} ₸
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-xs text-[#6B6B6B]">
+                          {serviceSummary.breakdown.map((item, index) => (
+                            <div key={`${item.label}-${index}`} className="flex items-center justify-between">
+                              <span className="truncate pr-2">{item.label}</span>
+                              <span className="font-medium text-[#273655]">
+                                +{item.amount.toLocaleString()} ₸
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {(previewStorage && (pricePreview || serviceSummary.total > 0)) && (
+                      <div className="flex items-center justify-between border-t border-dashed border-[#273655]/20 pt-3 text-base font-bold text-[#273655]">
+                        <span>Всего</span>
+                        <span>
+                          {(costSummary.combinedTotal || 0).toLocaleString()} ₸
+                        </span>
+                      </div>
+                    )}
+                    {priceError && (
+                      <p className="text-xs text-[#C73636]">
+                        {priceError}
+                      </p>
+                    )}
+                    {submitError && (
+                      <p className="text-xs text-[#C73636]">
+                        {submitError}
+                      </p>
+                    )}
+                  </div>
+
+                  <SmartButton
+                    variant="success"
+                    size="lg"
+                    className="w-full h-[56px] text-base font-semibold"
+                    onClick={handleCreateIndividualOrder}
+                    isLoading={isSubmittingOrder}
+                    disabled={!isIndividualFormReady || isSubmittingOrder}
+                  >
+                    Забронировать бокс
+                  </SmartButton>
+                  <SmartButton
+                    variant="outline"
+                    size="lg"
+                    className="w-full h-[56px] text-base font-semibold border-[#273655] text-[#273655] hover:bg-[#273655] hover:text-white"
+                    onClick={() => {
+                      setTimeout(() => {
+                        window.scrollTo({
+                          top: document.body.scrollHeight,
+                          behavior: "smooth",
+                        });
+                      }, 100);
+                    }}
+                  >
+                    ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
+                  </SmartButton>
                 </div>
               </div>
-              <img
-                src={security}
-                alt="security"
-                className="absolute right-[-40px] bottom-[-80px] w-[250px] md:w-[400px] rotate-[20deg] select-none pointer-events-none z-0"
-              />
-            </div>
+            </TabsContent>
 
-            {/* Зелёный блок */}
-            <div className="relative rounded-3xl bg-[#6AD960] shadow-md flex flex-col justify-center items-center p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden">
-              <div className="z-10 relative text-center" style={{ marginTop: '-20px' }}>
-                <div className="text-[28px] md:text-[32px] font-bold font-['Montserrat'] text-white mb-2">
-                  300 тг/ за 1 м²
+            <TabsContent value="CLOUD" className="mt-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-6">
+                <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#273655]">
+                        Укажите габариты вещей
+                      </h3>
+                    </div>
+                    <InfoHint
+                      description={
+                        <span>
+                          Введите ширину, высоту и длину в метрах — мы автоматически посчитаем общий объём для облачного хранения.
+                        </span>
+                      }
+                      ariaLabel="Подсказка по вводу габаритов"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4">
+                      <label className="w-24 text-sm text-[#6B6B6B]">Ширина</label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        value={cloudDimensions.width}
+                        onChange={(e) => handleCloudDimensionChange("width", e.target.value)}
+                        className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                      />
+                      <span className="text-sm text-[#6B6B6B]">м</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="w-24 text-sm text-[#6B6B6B]">Высота</label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        value={cloudDimensions.height}
+                        onChange={(e) => handleCloudDimensionChange("height", e.target.value)}
+                        className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                      />
+                      <span className="text-sm text-[#6B6B6B]">м</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="w-24 text-sm text-[#6B6B6B]">Длина</label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.1"
+                        value={cloudDimensions.length}
+                        onChange={(e) => handleCloudDimensionChange("length", e.target.value)}
+                        className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                      />
+                      <span className="text-sm text-[#6B6B6B]">м</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/15 p-3">
+                    <p className="text-sm text-[#6B6B6B]">
+                      Рассчитанный объём: <span className="font-semibold text-[#273655]">{cloudVolume.toFixed(2)} м³</span>
+                    </p>
+                    <p className="mt-1 text-xs text-[#6B6B6B]">
+                      Минимальный объём — 0.1 м³. Если вещей больше, добавьте отдельные размеры — мы суммируем общий объём при бронировании.
+                    </p>
+                  </div>
                 </div>
-                <div className="text-[16px] md:text-[18px] font-bold font-['Montserrat'] text-white opacity-80">
-                  в день
+
+                <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#273655]">
+                        Облачное хранение ExtraSpace
+                      </h3>
+                    </div>
+                    <InfoHint
+                      description={
+                        <span>
+                          Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
+                        </span>
+                      }
+                      ariaLabel="Подсказка по облачному хранению"
+                    />
+                  </div>
+
+                  <div className="space-y-2 sm:space-y-2.5">
+                    <span className="text-sm font-semibold text-[#273655]">
+                      Срок аренды (месяцы)
+                    </span>
+                    <Select
+                      value={cloudMonths}
+                      onValueChange={(value) => {
+                        setCloudMonths(value);
+                        setSubmitError(null);
+                      }}
+                    >
+                      <SelectTrigger className="h-12 rounded-2xl border-[#273655]/20 text-[#273655]">
+                        <SelectValue placeholder="Выберите срок" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 месяц</SelectItem>
+                        <SelectItem value="2">2 месяца</SelectItem>
+                        <SelectItem value="3">3 месяца</SelectItem>
+                        <SelectItem value="6">6 месяцев</SelectItem>
+                        <SelectItem value="12">12 месяцев</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                    <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/20 p-3 text-sm text-[#273655] space-y-2">
+                    <p>
+                      Рассчитанный объём: <span className="font-semibold">{cloudVolume.toFixed(2)} м³</span>
+                    </p>
+                    <p>
+                      Срок аренды: <span className="font-semibold">{cloudMonths} мес</span>
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-[#6B6B6B]">Адрес забора вещей</span>
+                      <input
+                        type="text"
+                        value={cloudPickupAddress}
+                        onChange={(e) => {
+                          setCloudPickupAddress(e.target.value);
+                          setSubmitError(null);
+                        }}
+                        placeholder="Например: г. Алматы, Абая 25"
+                        className="h-[46px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                      />
+                    </div>
+                    <p>Перевозка и упаковка включены в стоимость.</p>
+                  </div>
+
+                  <SmartButton
+                    variant="success"
+                    size="lg"
+                    className="w-full h-[56px] text-base font-semibold"
+                    onClick={handleCreateCloudOrder}
+                    isLoading={isSubmittingOrder}
+                    disabled={!isCloudFormReady || isSubmittingOrder}
+                  >
+                    Забронировать бокс
+                  </SmartButton>
+                  <SmartButton
+                    variant="outline"
+                    size="lg"
+                    className="w-full h-[56px] text-base font-semibold border-[#273655] text-[#273655] hover:bg-[#273655] hover:text-white"
+                    onClick={() => {
+                      setTimeout(() => {
+                        window.scrollTo({
+                          top: document.body.scrollHeight,
+                          behavior: "smooth",
+                        });
+                      }, 100);
+                    }}
+                  >
+                    ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
+                  </SmartButton>
                 </div>
-              </div>
-              <img
-                src={procent2}
-                alt="procent"
-                className="absolute left-[-60px] bottom-[-100px] w-[200px] md:w-[320px] rotate-[-1deg] select-none pointer-events-none z-0"
-              />
-            </div>
 
-            {/* Оранжевый — Помещения */}
-            <div className="relative rounded-3xl shadow-md flex flex-col justify-center items-center p-6 w-full md:w-[560px] md:h-[255px] overflow-hidden" style={{backgroundImage: `url(${pomesh})`, backgroundSize: 'cover', backgroundPosition: 'center 40%'}}>
-              <div className="z-10 relative text-center">
-                
+                  <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3">
+                    <div className="flex items-center justify-between text-[#273655]">
+                      <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
+                      <span className="text-xs text-[#6B6B6B]">
+                        {cloudVolume.toFixed(2)} м³
+                      </span>
+                    </div>
+                    {isCloudPriceCalculating ? (
+                      <div className="flex items-center justify-center gap-2 text-base font-semibold">
+                        <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                        Расчёт...
+                      </div>
+                    ) : cloudPricePreview ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6B6B6B]">За месяц</span>
+                          <span className="text-base font-semibold">
+                            {Math.round(cloudPricePreview.monthly).toLocaleString()} ₸
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6B6B6B]">За {cloudMonthsNumber} мес</span>
+                          <span className="text-lg font-bold text-[#273655]">
+                            {Math.round(cloudPricePreview.total).toLocaleString()} ₸
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[#6B6B6B]">
+                        Укажите габариты и срок, чтобы увидеть ориентировочную цену.
+                      </p>
+                    )}
+                    {cloudPricePreview?.isFallback && (
+                      <p className="text-xs text-[#C67A00]">
+                        Ориентировочная стоимость — подтверждаем при бронировании.
+                      </p>
+                    )}
+                    {cloudPriceError && (
+                      <p className="text-xs text-[#C73636]">
+                        {cloudPriceError}
+                      </p>
+                    )}
+                    {submitError && (
+                      <p className="text-xs text-[#C73636]">
+                        {submitError}
+                      </p>
+                    )}
+                  </div>
               </div>
-            </div>
-
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
       {/* Третий фрейм: карточка склада */}
       <section className="w-full flex justify-center items-center px-4 py-8 font-['Montserrat']">
         <VolumeSelector />
       </section>
+
+      {isMapModalOpen && (
+        <div className="fixed inset-0 z-[1200]">
+          {isMobileView ? (
+            <div className="absolute inset-0 flex flex-col justify-end">
+              <button
+                type="button"
+                aria-label="Закрыть карту"
+                onClick={() => setIsMapModalOpen(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              <div className="relative z-10 mt-auto w-full max-h-[92vh] rounded-t-3xl border border-[#d7dbe6]/60 bg-white shadow-2xl overflow-hidden">
+                <div className="flex justify-center py-3">
+                  <span className="block h-1.5 w-12 rounded-full bg-[#d7dbe6]" />
+                </div>
+                <div className="px-5 pb-6 flex flex-col gap-4 overflow-hidden">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="pr-6">
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-[#6B6B6B]">
+                        Схема склада
+                      </p>
+                      <h3 className="text-lg font-semibold text-[#273655] leading-snug">
+                        {selectedWarehouse?.name || "Карта склада"}
+                      </h3>
+                      {selectedWarehouse?.address && (
+                        <p className="mt-1 text-sm text-[#6B6B6B]">
+                          {selectedWarehouse.address}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(false)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d7dbe6] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#273655]/30"
+                      aria-label="Закрыть карту"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-hidden rounded-2xl border border-[#d7dbe6]/70 bg-white">
+                    <div className="h-full overflow-auto">
+                      {renderWarehouseScheme({ isFullscreen: true })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-6">
+              <div className="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-[#d7dbe6] flex flex-col max-h-[90vh]">
+                <button
+                  type="button"
+                  onClick={() => setIsMapModalOpen(false)}
+                  className="absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d7dbe6] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors"
+                  aria-label="Закрыть карту"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="p-6 pb-4 sm:p-8 sm:pb-6 flex flex-col gap-4 h-full">
+                  <div className="space-y-1 pr-12">
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#6B6B6B]">
+                      Схема склада
+                    </p>
+                    <h3 className="text-xl font-bold text-[#273655]">
+                      {selectedWarehouse?.name || "Карта склада"}
+                    </h3>
+                    {selectedWarehouse?.address && (
+                      <p className="text-sm text-[#6B6B6B]">{selectedWarehouse.address}</p>
+                    )}
+                  </div>
+                  <div className="flex-1 min-h-[40vh] overflow-auto">
+                    {renderWarehouseScheme({ isFullscreen: true })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full flex flex-col items-center justify-center mt-28 mb-24 font-['Montserrat']">
@@ -256,7 +1900,7 @@ const HomePage = memo(() => {
           {/* Карта */}
           <div className="w-full md:w-[45%] rounded-2xl overflow-hidden bg-[#f3f3f3] shadow-md">
             <div style={{ width: "100%", height: 340 }}>
-              <WarehouseMap warehouses={warehouses} />
+              <WarehouseMap warehouses={warehouses} mapId="home-branches-map" />
             </div>
           </div>
 
