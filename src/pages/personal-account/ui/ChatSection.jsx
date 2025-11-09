@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatWindow } from '../../../features/chat';
+// import { ChatWindow } from '../../../features/chat';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 
@@ -7,18 +7,19 @@ const ChatSection = () => {
   const { user } = useAuth();
   const { isMobile } = useDeviceType();
 
-  // Проверяем, имеет ли пользователь доступ к чату (только USER и MANAGER)
-  const hasAccess = user && (user.role === 'USER' || user.role === 'MANAGER');
+  // Временное отключение чата для ролей USER и MANAGER
+  // const hasAccess = user && (user.role === 'USER' || user.role === 'MANAGER');
+  const hasAccess = false;
 
   if (!hasAccess) {
     return (
       <div className={`w-full mx-auto ${isMobile ? 'p-4' : 'max-w-4xl p-6'}`}>
         <div className={`bg-gray-50 rounded-lg text-center ${isMobile ? 'p-6' : 'p-8'}`}>
           <h2 className={`font-bold text-gray-600 mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}>
-            Доступ ограничен
+            Чат временно отключен
           </h2>
           <p className={`text-gray-500 ${isMobile ? 'text-sm' : 'text-sm'}`}>
-            Чат доступен только для пользователей и менеджеров
+            Функциональность чата будет возвращена позже
           </p>
         </div>
       </div>
@@ -42,10 +43,10 @@ const ChatSection = () => {
         </div>
       )}
       
-      {/* Чат окно - адаптивное */}
-      <div className={`${isMobile ? 'h-full' : 'flex justify-center'}`}>
+      {/* Чат окно временно отключено для USER и MANAGER ролей */}
+      {/* <div className={`${isMobile ? 'h-full' : 'flex justify-center'}`}>
         <ChatWindow />
-      </div>
+      </div> */}
     </div>
   );
 };

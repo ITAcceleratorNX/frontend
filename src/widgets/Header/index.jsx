@@ -1,9 +1,8 @@
 import React, { useEffect, useState, memo, useMemo, useCallback } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
-import { Phone, Mail, User, MessageCircle } from 'lucide-react';
+import { Phone, User } from 'lucide-react';
 import { clsx } from 'clsx';
-import ToggleableEmailForm from '../../features/auth/ui/ToggleableEmailForm';
 import { Menu, X } from 'lucide-react';
 import { useUnreadNotificationsCount } from '../../shared/lib/hooks/use-notifications';
 import { useChatStore } from '../../entities/chat/model';
@@ -12,7 +11,6 @@ import extraspaceLogo from '../../assets/photo_2025-10-08_12-29-41-removebg-prev
 // Мемоизированный компонент Header
 export const Header = memo(() => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const unreadCount = useUnreadNotificationsCount();
   const { unreadMessages } = useChatStore();
@@ -21,7 +19,6 @@ export const Header = memo(() => {
   const totalUnreadChatCount = Object.values(unreadMessages).reduce((sum, count) => sum + count, 0);
 
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isEmailFormOpen, setIsEmailFormOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
 
@@ -57,17 +54,14 @@ export const Header = memo(() => {
     setIsCallModalOpen(false);
   }, []);
 
-  const handleWhatsApp = useCallback(() => {
-    window.open('https://wa.me/77765721927', '_blank');
-  }, []);
-
   // Остальные обработчики остаются без изменений...
   const handleStartAuth = useCallback(() => {
     if (import.meta.env.DEV) {
-      console.log('Header: Открытие формы входа');
+      console.log('Header: Переход на страницу авторизации');
     }
-    setIsEmailFormOpen(true);
-  }, []);
+    setIsMobileMenuOpen(false);
+    navigate('/login');
+  }, [navigate]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -89,8 +83,6 @@ export const Header = memo(() => {
               ? 'bg-white text-[#1A1F2C] border border-gray-200 shadow-sm'
               : 'text-[#1A1F2C] hover:bg-gray-50 hover:scale-105'
       ), []);
-
-  const handleCloseEmailForm = useCallback(() => setIsEmailFormOpen(false), []);
 
   const authButtons = useMemo(() => {
     if (isAuthenticated) {
@@ -177,27 +169,6 @@ export const Header = memo(() => {
                   </div>
                 </div>
               </div>
-
-              <div className="relative group">
-                <button
-                    onClick={handleWhatsApp}
-                    className="flex items-center justify-center w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 transition-all duration-300 hover:shadow-md hover:scale-110"
-                >
-                  <MessageCircle size={18} />
-                </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-800">WhatsApp</p>
-                    <p className="text-sm font-bold text-[#1e2c4f]">+7 (708) 824-13-84</p>
-                    <button
-                        onClick={handleWhatsApp}
-                        className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded text-sm"
-                    >
-                      Написать в WhatsApp
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="md:hidden">
@@ -220,12 +191,6 @@ export const Header = memo(() => {
                       className="w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 flex items-center justify-center"
                   >
                     <Phone size={18} />
-                  </button>
-                  <button
-                      onClick={handleWhatsApp}
-                      className="w-10 h-10 bg-[#FEE2B2] hover:bg-yellow-200 rounded-full text-gray-800 flex items-center justify-center"
-                  >
-                    <MessageCircle size={18} />
                   </button>
                 </div>
               </div>
@@ -258,7 +223,6 @@ export const Header = memo(() => {
             </div>
         )}
 
-        <ToggleableEmailForm isOpen={isEmailFormOpen} onClose={handleCloseEmailForm} />
       </>
   );
 });

@@ -37,6 +37,13 @@ const PersonalAccountPage = memo(() => {
   const { isMobile } = useDeviceType();
 
 
+  // Сбрасываем раздел чата для ролей USER и MANAGER
+  useEffect(() => {
+    if ((user?.role === 'USER' || user?.role === 'MANAGER') && activeNav === 'chat') {
+      setActiveNav('personal');
+    }
+  }, [user?.role, activeNav]);
+
 
   // Проверяем состояние навигации при загрузке компонента
   useEffect(() => {

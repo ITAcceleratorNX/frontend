@@ -29,7 +29,7 @@ import icon13 from '../../../assets/13.svg';
 const userNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Договоры', icon: icon2, key: 'contracts' },
-  { label: 'Чат', icon: icon3, key: 'chat' },
+  // { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { label: 'Платежи', icon: icon4, key: 'payments' },
   { label: 'Доставка', icon: icon12, key: 'delivery' },
@@ -44,7 +44,7 @@ const managerNavItems = [
   { label: 'Мувинг', icon: icon9, key: 'managermoving' },
   { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
-  { label: 'Чат', icon: icon3, key: 'chat' },
+  // { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
   { label: 'Выйти', icon: icon6, key: 'logout' },

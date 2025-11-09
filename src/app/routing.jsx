@@ -4,7 +4,6 @@ import { useAuth } from '../shared/context/AuthContext';
 import UserOnlyRoute from '../shared/routes/UserOnlyRoute';
 
 import HomePage from '../pages/home';
-import EmailVerificationPage from '../pages/email-verification';
 import LoginPage from '../pages/login';
 import RegisterPage from '../pages/register';
 import RestorePasswordPage from '../pages/restore-password';
@@ -106,7 +105,6 @@ const Routing = memo(() => {
   // Мемоизируем роуты для предотвращения лишних перерисовок
   const publicRoutes = useMemo(() => [
     { path: "/", element: <HomePage /> },
-    { path: "/email-verification", element: <EmailVerificationPage /> },
     { path: "/login", element: <LoginPage /> },
     { path: "/register", element: <RegisterPage /> },
     { path: "/restore-password", element: <RestorePasswordPage /> },
