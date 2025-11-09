@@ -1650,13 +1650,59 @@ const HomePage = memo(() => {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/15 p-3">
+                  <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/15 p-3 space-y-3">
                     <p className="text-sm text-[#6B6B6B]">
                       Рассчитанный объём: <span className="font-semibold text-[#273655]">{cloudVolume.toFixed(2)} м³</span>
                     </p>
-                    <p className="mt-1 text-xs text-[#6B6B6B]">
-                      Минимальный объём — 0.1 м³. Если вещей больше, добавьте отдельные размеры — мы суммируем общий объём при бронировании.
-                    </p>
+
+                    <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3">
+                      <div className="flex items-center justify-between text-[#273655]">
+                        <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
+                        <span className="text-xs text-[#6B6B6B]">
+                          {cloudVolume.toFixed(2)} м³
+                        </span>
+                      </div>
+                      {isCloudPriceCalculating ? (
+                        <div className="flex items-center justify-center gap-2 text-base font-semibold">
+                          <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                          Расчёт...
+                        </div>
+                      ) : cloudPricePreview ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#6B6B6B]">За месяц</span>
+                            <span className="text-base font-semibold">
+                              {Math.round(cloudPricePreview.monthly).toLocaleString()} ₸
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#6B6B6B]">За {cloudMonthsNumber} мес</span>
+                            <span className="text-lg font-bold text-[#273655]">
+                              {Math.round(cloudPricePreview.total).toLocaleString()} ₸
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[#6B6B6B]">
+                          Укажите габариты и срок, чтобы увидеть ориентировочную цену.
+                        </p>
+                      )}
+                      {cloudPricePreview?.isFallback && (
+                        <p className="text-xs text-[#C67A00]">
+                          Ориентировочная стоимость — подтверждаем при бронировании.
+                        </p>
+                      )}
+                      {cloudPriceError && (
+                        <p className="text-xs text-[#C73636]">
+                          {cloudPriceError}
+                        </p>
+                      )}
+                      {submitError && (
+                        <p className="text-xs text-[#C73636]">
+                          {submitError}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -1670,7 +1716,7 @@ const HomePage = memo(() => {
                     <InfoHint
                       description={
                         <span>
-                          Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
+                          Перевозка и упаковка входят в тариф облачного хранения — никаких доплат, мы всё организуем.
                         </span>
                       }
                       ariaLabel="Подсказка по облачному хранению"
@@ -1702,12 +1748,15 @@ const HomePage = memo(() => {
                   </div>
 
                     <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/20 p-3 text-sm text-[#273655] space-y-2">
-                    <p>
-                      Рассчитанный объём: <span className="font-semibold">{cloudVolume.toFixed(2)} м³</span>
-                    </p>
-                    <p>
-                      Срок аренды: <span className="font-semibold">{cloudMonths} мес</span>
-                    </p>
+                      <div className="rounded-xl border border-[#273655]/20 bg-white/80 px-3 py-2 text-xs sm:text-sm text-[#273655] flex items-start gap-2">
+                        <Truck className="h-4 w-4 mt-[2px]" />
+                        <div>
+                          <strong>Дополнительные услуги</strong>
+                          <p className="mt-1">
+                            Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
+                          </p>
+                        </div>
+                      </div>
                     <div className="flex flex-col gap-1">
                       <span className="text-xs text-[#6B6B6B]">Адрес забора вещей</span>
                       <input
@@ -1750,55 +1799,6 @@ const HomePage = memo(() => {
                     ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
                   </SmartButton>
                 </div>
-
-                  <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3">
-                    <div className="flex items-center justify-between text-[#273655]">
-                      <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
-                      <span className="text-xs text-[#6B6B6B]">
-                        {cloudVolume.toFixed(2)} м³
-                      </span>
-                    </div>
-                    {isCloudPriceCalculating ? (
-                      <div className="flex items-center justify-center gap-2 text-base font-semibold">
-                        <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
-                        Расчёт...
-                      </div>
-                    ) : cloudPricePreview ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[#6B6B6B]">За месяц</span>
-                          <span className="text-base font-semibold">
-                            {Math.round(cloudPricePreview.monthly).toLocaleString()} ₸
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[#6B6B6B]">За {cloudMonthsNumber} мес</span>
-                          <span className="text-lg font-bold text-[#273655]">
-                            {Math.round(cloudPricePreview.total).toLocaleString()} ₸
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-[#6B6B6B]">
-                        Укажите габариты и срок, чтобы увидеть ориентировочную цену.
-                      </p>
-                    )}
-                    {cloudPricePreview?.isFallback && (
-                      <p className="text-xs text-[#C67A00]">
-                        Ориентировочная стоимость — подтверждаем при бронировании.
-                      </p>
-                    )}
-                    {cloudPriceError && (
-                      <p className="text-xs text-[#C73636]">
-                        {cloudPriceError}
-                      </p>
-                    )}
-                    {submitError && (
-                      <p className="text-xs text-[#C73636]">
-                        {submitError}
-                      </p>
-                    )}
-                  </div>
               </div>
             </TabsContent>
           </Tabs>
