@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
 import { MessageCircle } from 'lucide-react';
+import {TEL_LINK} from "/src/shared/components/CallbackRequestModal.jsx";
 
 const ChatButton = memo(({ className = '', position = 'fixed' }) => {
   const handleClick = () => {
     if (typeof window !== 'undefined') {
-      window.open('https://wa.me/77088241384', '_blank', 'noopener,noreferrer');
+      window.open(`https://wa.me/${TEL_LINK.substring(5)}`, '_blank', 'noopener,noreferrer');
     }
   };
 

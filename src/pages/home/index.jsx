@@ -35,6 +35,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/pop
 import { Truck, Package, X, Info, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
+import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -101,6 +102,8 @@ const HomePage = memo(() => {
   const [gazelleService, setGazelleService] = useState(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
+  const [callbackModalContext, setCallbackModalContext] = useState('callback');
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -189,6 +192,18 @@ const HomePage = memo(() => {
       setIsServicesLoading(false);
     }
   }, [serviceOptions, isServicesLoading]);
+
+  const openCallbackModal = useCallback((context = 'callback') => {
+    setCallbackModalContext(context);
+    setIsCallbackModalOpen(true);
+  }, []);
+
+  const handleCallbackModalOpenChange = useCallback((nextOpen) => {
+    setIsCallbackModalOpen(nextOpen);
+    if (!nextOpen) {
+      setCallbackModalContext('callback');
+    }
+  }, []);
 
   const addServiceRow = useCallback(() => {
     setServices((prev) => [...prev, { service_id: "", count: 1 }]);
@@ -282,6 +297,13 @@ const HomePage = memo(() => {
       breakdown,
     };
   }, [includeMoving, includePacking, gazelleService, services, serviceOptions]);
+
+  const callbackModalDescription = useMemo(() => {
+    if (callbackModalContext === 'booking') {
+      return 'Оставьте контакты, и менеджер поможет подобрать бокс и оформить бронирование.';
+    }
+    return undefined;
+  }, [callbackModalContext]);
 
   const packagingServicesForOrder = useMemo(
     () =>
@@ -704,6 +726,34 @@ const HomePage = memo(() => {
     isUserRole,
     navigate,
   ]);
+
+  const handleIndividualBookingClick = useCallback(() => {
+    if (!isAuthenticated) {
+      openCallbackModal('booking');
+      return;
+    }
+    handleCreateIndividualOrder();
+  }, [handleCreateIndividualOrder, isAuthenticated, openCallbackModal]);
+
+  const handleCloudBookingClick = useCallback(() => {
+    if (!isAuthenticated) {
+      openCallbackModal('booking');
+      return;
+    }
+    handleCreateCloudOrder();
+  }, [handleCreateCloudOrder, isAuthenticated, openCallbackModal]);
+
+  const handleHeroBookingClick = useCallback(() => {
+    if (!isAuthenticated) {
+      openCallbackModal('booking');
+      return;
+    }
+    navigate("/warehouse-order");
+  }, [isAuthenticated, navigate, openCallbackModal]);
+
+  const handleCallbackRequestClick = useCallback(() => {
+    openCallbackModal('callback');
+  }, [openCallbackModal]);
 
   const handleCloudDimensionChange = (dimension, rawValue) => {
     const value = Math.max(0.1, Number(rawValue) || 0);
@@ -1163,7 +1213,7 @@ const HomePage = memo(() => {
 
             <div className="mt-3">
               <button
-                onClick={() => navigate("/warehouse-order")}
+                onClick={handleHeroBookingClick}
                 className="bg-[#F86812] hover:bg-[#e55a0a] text-white px-6 sm:px-8 md:px-10 py-2 sm:py-2.5 rounded-[15px] text-base sm:text-lg font-bold transition-all duration-300 hover:shadow-lg hover:scale-105 font-['Montserrat']"
               >
                 ЗАБРОНИРОВАТЬ БОКС
@@ -1567,7 +1617,7 @@ const HomePage = memo(() => {
                     variant="success"
                     size="lg"
                     className="w-full h-[56px] text-base font-semibold"
-                    onClick={handleCreateIndividualOrder}
+                    onClick={handleIndividualBookingClick}
                     isLoading={isSubmittingOrder}
                     disabled={!isIndividualFormReady || isSubmittingOrder}
                   >
@@ -1577,14 +1627,7 @@ const HomePage = memo(() => {
                     variant="outline"
                     size="lg"
                     className="w-full h-[56px] text-base font-semibold border-[#273655] text-[#273655] hover:bg-[#273655] hover:text-white"
-                    onClick={() => {
-                      setTimeout(() => {
-                        window.scrollTo({
-                          top: document.body.scrollHeight,
-                          behavior: "smooth",
-                        });
-                      }, 100);
-                    }}
+                    onClick={handleCallbackRequestClick}
                   >
                     ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
                   </SmartButton>
@@ -1777,7 +1820,7 @@ const HomePage = memo(() => {
                     variant="success"
                     size="lg"
                     className="w-full h-[56px] text-base font-semibold"
-                    onClick={handleCreateCloudOrder}
+                    onClick={handleCloudBookingClick}
                     isLoading={isSubmittingOrder}
                     disabled={!isCloudFormReady || isSubmittingOrder}
                   >
@@ -1787,14 +1830,7 @@ const HomePage = memo(() => {
                     variant="outline"
                     size="lg"
                     className="w-full h-[56px] text-base font-semibold border-[#273655] text-[#273655] hover:bg-[#273655] hover:text-white"
-                    onClick={() => {
-                      setTimeout(() => {
-                        window.scrollTo({
-                          top: document.body.scrollHeight,
-                          behavior: "smooth",
-                        });
-                      }, 100);
-                    }}
+                    onClick={handleCallbackRequestClick}
                   >
                     ЗАКАЗАТЬ ОБРАТНЫЙ ЗВОНОК
                   </SmartButton>
@@ -1994,7 +2030,7 @@ const HomePage = memo(() => {
 
                 {/* Бронирование */}
                 {selectedWarehouse?.status === "AVAILABLE" && (
-                  <SmartButton variant="outline" onClick={() => navigate("/warehouse-order")}>Забронировать бокс</SmartButton>
+                  <SmartButton variant="outline" onClick={handleHeroBookingClick}>Забронировать бокс</SmartButton>
                 )}
               </div>
             </div>
@@ -2006,6 +2042,13 @@ const HomePage = memo(() => {
 
       {/* Плавающая кнопка чата */}
       <ChatButton />
+
+      <CallbackRequestModal
+        open={isCallbackModalOpen}
+        onOpenChange={handleCallbackModalOpenChange}
+        showRegisterPrompt={!isAuthenticated}
+        description={callbackModalDescription}
+      />
 
       <Footer />
     </div>
