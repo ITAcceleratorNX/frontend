@@ -123,10 +123,12 @@ const WarehouseOrderPage = memo(() => {
   const syncGazelleService = (movingCount, currentServices) => {
     if (!gazelleService || movingCount === 0) {
       // Удаляем "Газель", если нет перевозок
-      return currentServices.filter((s) => s.service_id !== gazelleService.id);
+      if (!gazelleService) return currentServices;
+      return currentServices.filter((s) => s.service_id?.toString() !== gazelleService.id?.toString());
     }
 
-    const existingIndex = currentServices.findIndex((s) => s.service_id === gazelleService.id);
+    const gazelleId = gazelleService.id?.toString();
+    const existingIndex = currentServices.findIndex((s) => s.service_id?.toString() === gazelleId);
     const updated = [...currentServices];
 
     if (existingIndex >= 0) {
@@ -496,7 +498,9 @@ const WarehouseOrderPage = memo(() => {
     const validServices = services.filter(
       (service) => service.service_id && service.count > 0
     );
-    if (isSelectedPackage && (validServices.length === 0 && !isCloud)) {
+    // Для обычных пользователей услуги обязательны, если включена упаковка
+    // Для ADMIN/MANAGER услуги не обязательны
+    if (isSelectedPackage && (validServices.length === 0 && !isCloud && isUserRole)) {
       setError("Добавьте хотя бы одну услугу для упаковки");
       return;
     }
@@ -511,7 +515,8 @@ const WarehouseOrderPage = memo(() => {
       if (isSelectedMoving && movingCount > 0 && gazelleService) {
         finalServices = syncGazelleService(movingCount, finalServices);
       } else if (gazelleService) {
-        finalServices = finalServices.filter((s) => s.service_id !== gazelleService.id);
+        const gazelleId = gazelleService.id?.toString();
+        finalServices = finalServices.filter((s) => s.service_id?.toString() !== gazelleId);
       }
 
       // Фильтрация валидных услуг
@@ -519,8 +524,8 @@ const WarehouseOrderPage = memo(() => {
           (service) => service.service_id && service.count > 0
       );
 
-      // Проверка: если выбрана упаковка, но нет услуг
-      if (isSelectedPackage && validServices.length === 0) {
+      // Проверка: если выбрана упаковка, но нет услуг (только для обычных пользователей)
+      if (isSelectedPackage && validServices.length === 0 && isUserRole && !isCloud) {
         setError("Добавьте хотя бы одну услугу для упаковки");
         return;
       }
@@ -780,7 +785,7 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Форма добавления товаров */}
-          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && (isUserRole || isAdminOrManager) && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {selectedWarehouse?.type === 'CLOUD' ? "2" : "3"}. Добавьте ваши вещи
@@ -905,7 +910,7 @@ const WarehouseOrderPage = memo(() => {
               </div>
           )}
           {/* Дополнительные услуги */}
-          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && (isUserRole || isAdminOrManager) && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {selectedWarehouse?.type === 'CLOUD' ? "3" : "4"}. Дополнительные услуги
@@ -928,8 +933,11 @@ const WarehouseOrderPage = memo(() => {
                           onCheckedChange={(checked) => {
                             setIsSelectedMoving(checked);
                             if (!checked) {
-                              setIsSelectedPackage(false);
-                              setServices([]);
+                              // Для обычных пользователей упаковка отключается вместе с перевозкой
+                              if (isUserRole) {
+                                setIsSelectedPackage(false);
+                                setServices([]);
+                              }
                               setMovingOrders([]);
                               setMovingOrderErrors([]);
                             }
@@ -940,8 +948,8 @@ const WarehouseOrderPage = memo(() => {
                       <Badge className="bg-green-100 text-green-800">7000 ₸</Badge>
                   )}
                 </div>
-                {/* Услуга упаковки - показывается только если включена перевозка */}
-                {isSelectedMoving && (
+                {/* Услуга упаковки - показывается если включена перевозка или для ADMIN/MANAGER */}
+                {(isSelectedMoving || isAdminOrManager) && (
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
@@ -972,7 +980,7 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Блок добавления дат перевозки - показывается если включена перевозка */}
-          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && isSelectedMoving && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && (isUserRole || isAdminOrManager) && isSelectedMoving && (
               <div className="mb-8">
                 <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                   {(() => {
@@ -1073,15 +1081,15 @@ const WarehouseOrderPage = memo(() => {
                 </div>
               </div>
           )}
-          {/* Блок добавления услуг - показывается если включена упаковка */}
-          {(selectedStorage && selectedWarehouse?.type !== 'CLOUD') && isUserRole && isSelectedPackage && (
+          {/* Блок добавления услуг - показывается если включена упаковка или для ADMIN/MANAGER при включенной перевозке */}
+          {(selectedStorage && selectedWarehouse?.type !== 'CLOUD') && (isUserRole || isAdminOrManager) && (isSelectedPackage || (isAdminOrManager && isSelectedMoving)) && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {(() => {
                   let stepNumber = selectedWarehouse?.type === 'CLOUD' ? 5 : 6;
                   if (!isSelectedMoving) stepNumber--;
                   return stepNumber;
-                })()}. Добавить услуги для упаковки
+                })()}. Добавить услуги {isSelectedPackage ? 'для упаковки' : ''}
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 {isPricesLoading ? (
@@ -1092,66 +1100,68 @@ const WarehouseOrderPage = memo(() => {
                   <>
                     {services.length > 0 && (
                       <div className="mb-6 space-y-4">
-                        {services.map((service, index) => (
-                          <div
-                            key={index}
-                            className="border border-gray-200 rounded-lg p-4"
-                          >
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-[#273655] mb-1">
-                                  Выберите услугу
-                                </label>
-                                <Select
-                                  value={service.service_id.toString()}
-                                  onValueChange={(value) =>
-                                    updateService(index, "service_id", value)
-                                  }
-                                  disabled={service.service_id === gazelleService.id}
-                                >
-                                  <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg" disabled={service.service_id === gazelleService.id}>
-                                    <SelectValue placeholder="Выберите услугу" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {prices.map((price) => (
-                                      <SelectItem
-                                        key={price.id}
-                                        value={price.id.toString()}
-                                        disabled={price.type === "GAZELLE"}
-                                      >
-                                        {getServiceTypeName(price.type) ||
-                                          price.description}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-[#273655] mb-1">
-                                  Количество
-                                </label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={service.count}
-                                  onChange={(e) =>
-                                      service.service_id !== gazelleService.id && updateService(index, "count", Number.parseInt(e.target.value) || 1)
-                                  }
-                                  disabled={service.service_id === gazelleService.id}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                                />
-                              </div>
-                              <div className="flex items-end">
-                                <button
-                                  onClick={() => removeService(index)}
-                                  className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                                >
-                                  <Trash2 className="w-5 h-5" />
-                                </button>
+                        {services.map((service, index) => {
+                          const isGazelleService = gazelleService && service.service_id && service.service_id.toString() === gazelleService.id?.toString();
+                          return (
+                            <div
+                              key={index}
+                              className="border border-gray-200 rounded-lg p-4"
+                            >
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-[#273655] mb-1">
+                                    Выберите услугу
+                                  </label>
+                                  <Select
+                                    value={service.service_id ? service.service_id.toString() : ""}
+                                    onValueChange={(value) =>
+                                      updateService(index, "service_id", value)
+                                    }
+                                    disabled={isGazelleService}
+                                  >
+                                    <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg" disabled={isGazelleService}>
+                                      <SelectValue placeholder="Выберите услугу" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {prices.map((price) => (
+                                        <SelectItem
+                                          key={price.id}
+                                          value={price.id.toString()}
+                                          disabled={price.type === "GAZELLE"}
+                                        >
+                                          {price.description || getServiceTypeName(price.type) || `Услуга ${price.id}`}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-[#273655] mb-1">
+                                    Количество
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={service.count}
+                                    onChange={(e) =>
+                                      !isGazelleService && updateService(index, "count", Number.parseInt(e.target.value) || 1)
+                                    }
+                                    disabled={isGazelleService}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                                  />
+                                </div>
+                                <div className="flex items-end">
+                                  <button
+                                    onClick={() => removeService(index)}
+                                    className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                                  >
+                                    <Trash2 className="w-5 h-5" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                     <button
@@ -1167,7 +1177,7 @@ const WarehouseOrderPage = memo(() => {
             </div>
           )}
           {/* Блок выбора срока аренды и кнопки создания заказа */}
-          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && isUserRole && (
+          {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && (isUserRole || isAdminOrManager) && (
             <div className="mb-8">
               <h2 className="text-[24px] font-bold text-[#273655] mb-4">
                 {(() => {
@@ -1265,7 +1275,8 @@ const WarehouseOrderPage = memo(() => {
                       const volumeExceeded = selectedWarehouse?.type === 'CLOUD' && totalVolume > parseFloat(selectedStorage.available_volume);
                       const movingSelectedButNoOrders = isSelectedMoving && movingOrders.length === 0;
                       const movingSelectedButNoAddresses = isSelectedMoving && movingOrders.some(order => !order.address || order.address.trim() === "");
-                      const packageSelectedButNoServices = isSelectedPackage && (services.filter(s => s.service_id && s.count > 0).length === 0 && !isCloud);
+                      // Для ADMIN/MANAGER услуги не обязательны, даже если упаковка включена
+                      const packageSelectedButNoServices = isSelectedPackage && isUserRole && (services.filter(s => s.service_id && s.count > 0).length === 0 && !isCloud);
                       
                       const isDisabled = isSubmitting ||
                         !selectedStorage ||

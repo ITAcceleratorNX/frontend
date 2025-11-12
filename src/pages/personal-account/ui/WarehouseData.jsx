@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useForm } from 'react-hook-form';
@@ -6,6 +6,19 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
+import WarehouseCanvasViewer from '../../../shared/components/WarehouseCanvasViewer';
+import { SmartButton } from '../../../shared/components/SmartButton.js';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+  Switch,
+} from '../../../components/ui';
+import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
+import { Truck, Package, X, Info } from 'lucide-react';
+import { Dropdown } from '../../../shared/components/Dropdown';
 
 const WarehouseData = () => {
   const navigate = useNavigate();
@@ -20,6 +33,24 @@ const WarehouseData = () => {
   const [activeNav, setActiveNav] = useState('warehouses');
   const [isCloud, setIsCloud] = useState(false);
   const [servicePrices, setServicePrices] = useState({});
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [individualMonths, setIndividualMonths] = useState('1');
+  const [cloudMonths, setCloudMonths] = useState('1');
+  const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
+  const [includeMoving, setIncludeMoving] = useState(false);
+  const [includePacking, setIncludePacking] = useState(false);
+  const [movingAddressFrom, setMovingAddressFrom] = useState('');
+  const [cloudPickupAddress, setCloudPickupAddress] = useState('');
+  const [previewStorage, setPreviewStorage] = useState(null);
+  const [pricePreview, setPricePreview] = useState(null);
+  const [isPriceCalculating, setIsPriceCalculating] = useState(false);
+  const [priceError, setPriceError] = useState(null);
+  const [cloudPricePreview, setCloudPricePreview] = useState(null);
+  const [isCloudPriceCalculating, setIsCloudPriceCalculating] = useState(false);
+  const [cloudPriceError, setCloudPriceError] = useState(null);
+  const [allWarehouses, setAllWarehouses] = useState([]);
+  const [warehousesLoading, setWarehousesLoading] = useState(false);
 
   const {
     register,
@@ -30,6 +61,320 @@ const WarehouseData = () => {
   } = useForm();
   
   const [initialFormData, setInitialFormData] = useState(null);
+
+  // Компонент InfoHint для подсказок
+  const InfoHint = ({ description, ariaLabel = 'Подробнее', align = 'end', side = 'bottom' }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={ariaLabel}
+          title={ariaLabel}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-[#6B6B6B] transition-colors hover:border-[#d7dbe6] hover:text-[#273655] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#273655]/30"
+        >
+          <Info className="h-4 w-4" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align={align}
+        side={side}
+        sideOffset={8}
+        className="max-w-xs rounded-2xl border border-[#d7dbe6] bg-white p-4 text-sm leading-relaxed text-[#273655] shadow-xl"
+      >
+        {description}
+      </PopoverContent>
+    </Popover>
+  );
+
+  // Проверка мобильного вида
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Блокировка скролла при открытом модальном окне
+  useEffect(() => {
+    if (isMapModalOpen) {
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = previousOverflow;
+      };
+    }
+  }, [isMapModalOpen]);
+
+  // Расчет объема для CLOUD
+  const cloudVolume = useMemo(() => {
+    return cloudDimensions.width * cloudDimensions.height * cloudDimensions.length;
+  }, [cloudDimensions]);
+
+  // Расчет месяцев для INDIVIDUAL
+  const monthsNumber = useMemo(() => {
+    const parsed = parseInt(individualMonths, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }, [individualMonths]);
+
+  // Расчет месяцев для CLOUD
+  const cloudMonthsNumber = useMemo(() => {
+    const parsed = parseInt(cloudMonths, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }, [cloudMonths]);
+
+  // Загрузка всех складов для выбора
+  useEffect(() => {
+    const fetchAllWarehouses = async () => {
+      try {
+        setWarehousesLoading(true);
+        const data = await warehouseApi.getAllWarehouses();
+        setAllWarehouses(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Ошибка при загрузке списка складов:', error);
+      } finally {
+        setWarehousesLoading(false);
+      }
+    };
+
+    fetchAllWarehouses();
+  }, []);
+
+  // Обработка смены склада
+  const handleWarehouseChange = (newWarehouseId) => {
+    if (newWarehouseId && newWarehouseId !== warehouseId) {
+      navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${newWarehouseId}`);
+      setPreviewStorage(null);
+      setPricePreview(null);
+      setPriceError(null);
+    }
+  };
+
+  // Расчет цены для INDIVIDUAL складов
+  useEffect(() => {
+    let isCancelled = false;
+
+    const calculatePrice = async () => {
+      if (isCloud || !warehouse) {
+        setPricePreview(null);
+        setPriceError(null);
+        return;
+      }
+
+      if (!previewStorage) {
+        setPricePreview(null);
+        setPriceError(null);
+        return;
+      }
+
+      if (!monthsNumber || monthsNumber <= 0) {
+        setPricePreview(null);
+        setPriceError(null);
+        return;
+      }
+
+      const rawArea = parseFloat(
+        previewStorage.available_volume ??
+        previewStorage.total_volume ??
+        previewStorage.area ??
+        previewStorage.square ??
+        previewStorage.volume ??
+        ""
+      );
+
+      if (!rawArea || Number.isNaN(rawArea) || rawArea <= 0) {
+        setPricePreview(null);
+        setPriceError("Для выбранного бокса отсутствуют данные по площади/объёму.");
+        return;
+      }
+
+      setIsPriceCalculating(true);
+      setPriceError(null);
+
+      try {
+        const payload = {
+          storageType: "INDIVIDUAL",
+          months: monthsNumber,
+          area: rawArea,
+          services: [],
+          warehouse_id: warehouse.id,
+        };
+
+        const response = await warehouseApi.calculateBulkPrice(payload);
+
+        if (isCancelled) return;
+
+        const storagePrice = response?.storage?.price;
+
+        if (typeof storagePrice === "number" && !Number.isNaN(storagePrice) && storagePrice > 0) {
+          setPricePreview({
+            total: storagePrice,
+            monthly: storagePrice / monthsNumber,
+            isFallback: false,
+          });
+        } else {
+          const fallback = (parseFloat(previewStorage.price) || 0) * monthsNumber;
+          if (fallback > 0) {
+            setPricePreview({
+              total: fallback,
+              monthly: fallback / monthsNumber,
+              isFallback: true,
+            });
+          } else {
+            setPricePreview(null);
+            setPriceError("Не удалось получить предварительный расчёт стоимости.");
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка при расчёте предварительной стоимости:", error);
+        if (isCancelled) return;
+
+        const fallback = monthsNumber && previewStorage?.price
+          ? (parseFloat(previewStorage.price) || 0) * monthsNumber
+          : null;
+
+        if (fallback) {
+          setPricePreview({
+            total: fallback,
+            monthly: fallback / monthsNumber,
+            isFallback: true,
+          });
+          setPriceError("Показана ориентировочная стоимость по тарифу бокса.");
+        } else {
+          setPricePreview(null);
+          setPriceError("Не удалось рассчитать стоимость. Попробуйте позже.");
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsPriceCalculating(false);
+        }
+      }
+    };
+
+    calculatePrice();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isCloud, warehouse, monthsNumber, previewStorage]);
+
+  // Расчет цены для CLOUD складов
+  useEffect(() => {
+    let isCancelled = false;
+
+    const calculateCloudPrice = async () => {
+      if (!isCloud || !warehouse) {
+        setCloudPricePreview(null);
+        setCloudPriceError(null);
+        return;
+      }
+
+      if (!cloudMonthsNumber || cloudMonthsNumber <= 0) {
+        setCloudPricePreview(null);
+        setCloudPriceError(null);
+        return;
+      }
+
+      if (!cloudVolume || cloudVolume <= 0) {
+        setCloudPricePreview(null);
+        setCloudPriceError("Укажите габариты вещей, чтобы рассчитать объём хранения.");
+        return;
+      }
+
+      setIsCloudPriceCalculating(true);
+      setCloudPriceError(null);
+
+      try {
+        const payload = {
+          storageType: "CLOUD",
+          months: cloudMonthsNumber,
+          volume: cloudVolume,
+          services: [],
+        };
+
+        const response = await warehouseApi.calculateBulkPrice(payload);
+        if (isCancelled) return;
+
+        const storagePrice = response?.storage?.price;
+
+        if (typeof storagePrice === "number" && !Number.isNaN(storagePrice) && storagePrice > 0) {
+          setCloudPricePreview({
+            total: storagePrice,
+            monthly: storagePrice / cloudMonthsNumber,
+            isFallback: false,
+          });
+        } else {
+          setCloudPricePreview(null);
+          setCloudPriceError("Не удалось получить предварительный расчёт стоимости.");
+        }
+      } catch (error) {
+        console.error("Ошибка при расчёте стоимости облачного хранения:", error);
+        if (isCancelled) return;
+        setCloudPricePreview(null);
+        setCloudPriceError("Не удалось рассчитать стоимость. Попробуйте позже или уточните у менеджера.");
+      } finally {
+        if (!isCancelled) {
+          setIsCloudPriceCalculating(false);
+        }
+      }
+    };
+
+    calculateCloudPrice();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isCloud, warehouse, cloudMonthsNumber, cloudVolume]);
+
+  // Расчет стоимости услуг (перевозка, упаковка)
+  const serviceSummary = useMemo(() => {
+    const breakdown = [];
+    let total = 0;
+
+    // Перевозка вещей
+    if (includeMoving && movingAddressFrom) {
+      // Для простоты используем фиксированную стоимость перевозки
+      // В реальном приложении это должно приходить из API
+      const movingPrice = 7000; // Примерная стоимость
+      total += movingPrice;
+      breakdown.push({
+        label: 'Перевозка вещей',
+        amount: movingPrice,
+      });
+    }
+
+    // Услуги упаковки (если нужно будет добавить позже)
+    // Пока оставляем пустым
+
+    return {
+      total,
+      breakdown,
+    };
+  }, [includeMoving, includePacking, movingAddressFrom]);
+
+  // Итоговая стоимость для INDIVIDUAL
+  const costSummary = useMemo(() => {
+    const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
+    const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
+    const serviceTotal = serviceSummary.total;
+    const combinedTotal = (baseTotal || 0) + serviceTotal;
+
+    return {
+      baseMonthly,
+      baseTotal,
+      serviceTotal,
+      combinedTotal,
+    };
+  }, [pricePreview, serviceSummary.total]);
+
+  // Сброс выбранного бокса при смене склада
+  useEffect(() => {
+    setPreviewStorage(null);
+    setPricePreview(null);
+    setPriceError(null);
+  }, [warehouseId]);
 
   // Определяем режим редактирования из URL параметров
   useEffect(() => {
@@ -1004,30 +1349,7 @@ const WarehouseData = () => {
                   </div>
                 )}
 
-                {/* Кнопка "Подробно боксов" - только в режиме просмотра */}
-                {!isCloud && !isEditing && (
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-[#273655]/10 rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 text-[#273655]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Управление боксами</h3>
-                      <p className="text-gray-600 mb-6">Просмотрите детальную схему склада и состояние всех боксов</p>
-                      <button
-                        onClick={() => navigate('/warehouse-order')}
-                        className="inline-flex items-center px-6 py-3 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2c4f] transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Подробно боксов
-                      </button>
-                    </div>
-                  </div>
-                )}
+                
               </div>
 
               {/* Статистика боксов */}
@@ -1084,9 +1406,535 @@ const WarehouseData = () => {
                 )}
               </div>
             </div>
+
+            {/* Блоки с картой и настройками - только в режиме просмотра */}
+            {!isEditing && warehouse && (
+              <div className="mt-8">
+                {isCloud ? (
+                  // Для CLOUD складов
+                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-6">
+                    {/* Блок с габаритами */}
+                    <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-xl font-bold text-[#273655]">
+                            Укажите габариты вещей
+                          </h3>
+                        </div>
+                        <InfoHint
+                          description={
+                            <span>
+                              Введите ширину, высоту и длину в метрах — мы автоматически посчитаем общий объём для облачного хранения.
+                            </span>
+                          }
+                          ariaLabel="Подсказка по вводу габаритов"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-4">
+                          <label className="w-24 text-sm text-[#6B6B6B]">Ширина</label>
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value={cloudDimensions.width}
+                            onChange={(e) => setCloudDimensions(prev => ({ ...prev, width: parseFloat(e.target.value) || 0.1 }))}
+                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                          />
+                          <span className="text-sm text-[#6B6B6B]">м</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-24 text-sm text-[#6B6B6B]">Высота</label>
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value={cloudDimensions.height}
+                            onChange={(e) => setCloudDimensions(prev => ({ ...prev, height: parseFloat(e.target.value) || 0.1 }))}
+                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                          />
+                          <span className="text-sm text-[#6B6B6B]">м</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-24 text-sm text-[#6B6B6B]">Длина</label>
+                          <input
+                            type="number"
+                            min="0.1"
+                            step="0.1"
+                            value={cloudDimensions.length}
+                            onChange={(e) => setCloudDimensions(prev => ({ ...prev, length: parseFloat(e.target.value) || 0.1 }))}
+                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                          />
+                          <span className="text-sm text-[#6B6B6B]">м</span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/15 p-3 space-y-3">
+                        <p className="text-sm text-[#6B6B6B]">
+                          Рассчитанный объём: <span className="font-semibold text-[#273655]">{cloudVolume.toFixed(2)} м³</span>
+                        </p>
+
+                        {/* Блок с расчетом стоимости для CLOUD */}
+                        <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3 mt-3">
+                          <div className="flex items-center justify-between text-[#273655]">
+                            <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
+                            <span className="text-xs text-[#6B6B6B]">
+                              {cloudVolume.toFixed(2)} м³
+                            </span>
+                          </div>
+                          {isCloudPriceCalculating ? (
+                            <div className="flex items-center justify-center gap-2 text-base font-semibold">
+                              <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                              Расчёт...
+                            </div>
+                          ) : cloudPricePreview ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[#6B6B6B]">За месяц</span>
+                                <span className="text-base font-semibold">
+                                  {Math.round(cloudPricePreview.monthly).toLocaleString()} ₸
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[#6B6B6B]">За {cloudMonthsNumber} мес</span>
+                                <span className="text-lg font-bold text-[#273655]">
+                                  {Math.round(cloudPricePreview.total).toLocaleString()} ₸
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-[#6B6B6B]">
+                              Укажите габариты и срок, чтобы увидеть ориентировочную цену.
+                            </p>
+                          )}
+                          {cloudPricePreview?.isFallback && (
+                            <p className="text-xs text-[#C67A00]">
+                              Ориентировочная стоимость — подтверждаем при бронировании.
+                            </p>
+                          )}
+                          {cloudPriceError && (
+                            <p className="text-xs text-[#C73636]">
+                              {cloudPriceError}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Блок с настройками */}
+                    <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-xl font-bold text-[#273655]">
+                            Облачное хранение ExtraSpace
+                          </h3>
+                        </div>
+                        <InfoHint
+                          description={
+                            <span>
+                              Перевозка и упаковка входят в тариф облачного хранения — никаких доплат, мы всё организуем.
+                            </span>
+                          }
+                          ariaLabel="Подсказка по облачному хранению"
+                        />
+                      </div>
+
+                      <div className="space-y-2 sm:space-y-2.5">
+                        <span className="text-sm font-semibold text-[#273655]">
+                          Срок аренды (месяцы)
+                        </span>
+                        <Select
+                          value={cloudMonths}
+                          onValueChange={setCloudMonths}
+                        >
+                          <SelectTrigger className="h-12 rounded-2xl border-[#273655]/20 text-[#273655]">
+                            <SelectValue placeholder="Выберите срок" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 месяц</SelectItem>
+                            <SelectItem value="2">2 месяца</SelectItem>
+                            <SelectItem value="3">3 месяца</SelectItem>
+                            <SelectItem value="6">6 месяцев</SelectItem>
+                            <SelectItem value="12">12 месяцев</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/20 p-3 text-sm text-[#273655] space-y-2">
+                        <div className="rounded-xl border border-[#273655]/20 bg-white/80 px-3 py-2 text-xs sm:text-sm text-[#273655] flex items-start gap-2">
+                          <Truck className="h-4 w-4 mt-[2px]" />
+                          <div>
+                            <strong>Дополнительные услуги</strong>
+                            <p className="mt-1">
+                              Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-[#6B6B6B]">Адрес забора вещей</span>
+                          <input
+                            type="text"
+                            value={cloudPickupAddress}
+                            onChange={(e) => setCloudPickupAddress(e.target.value)}
+                            placeholder="Например: г. Алматы, Абая 25"
+                            className="h-[46px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                          />
+                        </div>
+                        <p>Перевозка и упаковка включены в стоимость.</p>
+                      </div>
+
+                      <SmartButton
+                        variant="success"
+                        size="lg"
+                        className="w-full h-[56px] text-base font-semibold"
+                        onClick={() => navigate('/warehouse-order', { state: { warehouseType: 'CLOUD', warehouseId: warehouse.id } })}
+                      >
+                        Забронировать бокс
+                      </SmartButton>
+                    </div>
+                  </div>
+                ) : (
+                  // Для INDIVIDUAL складов
+                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-6">
+                    <div className="space-y-6">
+                      {/* Блок выбора склада */}
+                      {allWarehouses.length > 0 && (
+                        <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+                          <div className="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                              <h3 className="text-xl font-bold text-[#273655]">
+                                Выберите склад
+                              </h3>
+                            </div>
+                            <InfoHint
+                              description={
+                                <span>
+                                  Укажите удобную локацию, чтобы посмотреть схему склада, доступные боксы и свободные места в режиме реального времени.
+                                </span>
+                              }
+                              ariaLabel="Подробнее о выборе склада"
+                            />
+                          </div>
+                          <div className="relative w-full">
+                            <Dropdown
+                              items={allWarehouses.filter(w => w.type !== 'CLOUD')}
+                              value={warehouse?.id}
+                              onChange={(_, item) => handleWarehouseChange(item.id)}
+                              placeholder="Выбрать склад"
+                              searchable={false}
+                              getKey={(w) => w.id}
+                              getLabel={(w) => w.name}
+                              getDescription={(w) => w.address}
+                              className="bg-[#273655] text-white border-0"
+                              popoverProps={{ className: "p-0" }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Блок с картой-схемой склада */}
+                      <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="text-xl font-bold text-[#273655]">
+                              Карта-схема склада
+                            </h3>
+                          </div>
+                          <InfoHint
+                            description={
+                              <span>
+                                Быстро найдите свободный бокс: схема показывает актуальную доступность. Нажмите на бокс, чтобы увидеть его параметры и рассчитать стоимость.
+                              </span>
+                            }
+                            ariaLabel="Подсказка по схеме склада"
+                          />
+                        </div>
+                        <div className="rounded-2xl bg-[#f5f6fa] p-4">
+                          <WarehouseCanvasViewer
+                            warehouse={warehouse}
+                            userRole={user?.role || 'USER'}
+                            isViewOnly={true}
+                            showControls={true}
+                            isCompact={true}
+                            onViewMore={() => setIsMapModalOpen(true)}
+                            onBoxSelect={setPreviewStorage}
+                            selectedStorage={previewStorage}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Блок с настройками */}
+                    <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm flex flex-col gap-4 sm:gap-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-xl font-bold text-[#273655]">
+                            Настройте хранение
+                          </h3>
+                        </div>
+                        <InfoHint
+                          description={
+                            <span>
+                              Настройте срок аренды, выберите перевозку и упаковку — все параметры сохранятся, когда перейдёте к оформлению заявки.
+                            </span>
+                          }
+                          ariaLabel="Подсказка по настройкам хранения"
+                        />
+                      </div>
+
+                      <div className="space-y-2 sm:space-y-2.5">
+                        <span className="text-sm font-semibold text-[#273655]">
+                          Срок аренды (месяцы)
+                        </span>
+                        <Select
+                          value={individualMonths}
+                          onValueChange={setIndividualMonths}
+                        >
+                          <SelectTrigger className="h-12 rounded-2xl border-[#273655]/20 text-[#273655]">
+                            <SelectValue placeholder="Выберите срок" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 месяц</SelectItem>
+                            <SelectItem value="2">2 месяца</SelectItem>
+                            <SelectItem value="3">3 месяца</SelectItem>
+                            <SelectItem value="6">6 месяцев</SelectItem>
+                            <SelectItem value="12">12 месяцев</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                            <Truck className="w-5 h-5 shrink-0" />
+                            <span>Перевозка вещей</span>
+                          </div>
+                          <Switch
+                            checked={includeMoving}
+                            onCheckedChange={setIncludeMoving}
+                            className="bg-gray-200 data-[state=checked]:bg-[#273655]"
+                          />
+                        </div>
+
+                        {includeMoving && (
+                          <div className="mt-3 space-y-3">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора</label>
+                              <input
+                                type="text"
+                                value={movingAddressFrom}
+                                onChange={(e) => setMovingAddressFrom(e.target.value)}
+                                placeholder="Например: г. Алматы, Абая 25"
+                                className="h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                            <Package className="w-5 h-5 shrink-0" />
+                            <span>Услуги упаковки</span>
+                          </div>
+                          <Switch
+                            checked={includePacking}
+                            onCheckedChange={setIncludePacking}
+                            className="bg-gray-200 data-[state=checked]:bg-[#273655]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Блок с расчетом стоимости */}
+                      <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3">
+                        <div className="flex items-center justify-between text-[#273655]">
+                          <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
+                          {previewStorage && (
+                            <span className="text-xs text-[#6B6B6B]">
+                              {previewStorage.name || `Бокс ${previewStorage.id}`}
+                            </span>
+                          )}
+                        </div>
+                        {isPriceCalculating ? (
+                          <div className="flex items-center justify-center gap-2 text-base font-semibold">
+                            <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                            Расчёт...
+                          </div>
+                        ) : previewStorage && pricePreview ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#6B6B6B]">За месяц</span>
+                              <span className="text-base font-semibold">
+                                {costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#6B6B6B]">За {monthsNumber} мес</span>
+                              <span className="text-lg font-bold text-[#273655]">
+                                {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
+                              </span>
+                            </div>
+                            {pricePreview.isFallback && (
+                              <p className="text-xs text-[#C67A00]">
+                                Ориентировочная стоимость по тарифу бокса.
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[#6B6B6B]">
+                            Выберите бокс на схеме, чтобы увидеть предварительную цену.
+                          </p>
+                        )}
+                        {serviceSummary.breakdown.length > 0 && (
+                          <div className="border-t border-dashed border-[#273655]/20 pt-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#6B6B6B]">Услуги</span>
+                              <span className="font-semibold">
+                                +{serviceSummary.total.toLocaleString()} ₸
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-xs text-[#6B6B6B]">
+                              {serviceSummary.breakdown.map((item, index) => (
+                                <div key={`${item.label}-${index}`} className="flex items-center justify-between">
+                                  <span className="truncate pr-2">{item.label}</span>
+                                  <span className="font-medium text-[#273655]">
+                                    +{item.amount.toLocaleString()} ₸
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {(previewStorage && (pricePreview || serviceSummary.total > 0)) && (
+                          <div className="flex items-center justify-between border-t border-dashed border-[#273655]/20 pt-3 text-base font-bold text-[#273655]">
+                            <span>Всего</span>
+                            <span>
+                              {(costSummary.combinedTotal || 0).toLocaleString()} ₸
+                            </span>
+                          </div>
+                        )}
+                        {priceError && (
+                          <p className="text-xs text-[#C73636]">
+                            {priceError}
+                          </p>
+                        )}
+                      </div>
+
+                      <SmartButton
+                        variant="success"
+                        size="lg"
+                        className="w-full h-[56px] text-base font-semibold"
+                        onClick={() => navigate('/warehouse-order', { state: { warehouseType: 'INDIVIDUAL', warehouseId: warehouse.id } })}
+                      >
+                        Забронировать бокс
+                      </SmartButton>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
+
+      {/* Модальное окно с полноэкранной картой - только для INDIVIDUAL складов */}
+      {isMapModalOpen && !isCloud && warehouse && (
+        <div className="fixed inset-0 z-[1200]">
+          {isMobileView ? (
+            <div className="absolute inset-0 flex flex-col justify-end">
+              <button
+                type="button"
+                aria-label="Закрыть карту"
+                onClick={() => setIsMapModalOpen(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              <div className="relative z-10 mt-auto w-full max-h-[92vh] rounded-t-3xl border border-[#d7dbe6]/60 bg-white shadow-2xl overflow-hidden flex flex-col">
+                <div className="flex justify-center py-3 flex-shrink-0">
+                  <span className="block h-1.5 w-12 rounded-full bg-[#d7dbe6]" />
+                </div>
+                <div className="px-5 pb-6 flex flex-col gap-4 flex-1 min-h-0 overflow-hidden">
+                  <div className="flex items-start justify-between gap-3 flex-shrink-0">
+                    <div className="pr-6">
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-[#6B6B6B]">
+                        Схема склада
+                      </p>
+                      <h3 className="text-lg font-semibold text-[#273655] leading-snug">
+                        {warehouse?.name || "Карта склада"}
+                      </h3>
+                      {warehouse?.address && (
+                        <p className="mt-1 text-sm text-[#6B6B6B]">
+                          {warehouse.address}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(false)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d7dbe6] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#273655]/30"
+                      aria-label="Закрыть карту"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-hidden rounded-2xl border border-[#d7dbe6]/70 bg-white">
+                    <WarehouseCanvasViewer
+                      warehouse={warehouse}
+                      userRole={user?.role || 'USER'}
+                      isViewOnly={true}
+                      showControls={true}
+                      isFullscreen={true}
+                      onBoxSelect={setPreviewStorage}
+                      selectedStorage={previewStorage}
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-6">
+              <div className="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-[#d7dbe6] flex flex-col max-h-[90vh]">
+                <button
+                  type="button"
+                  onClick={() => setIsMapModalOpen(false)}
+                  className="absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d7dbe6] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors"
+                  aria-label="Закрыть карту"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="p-6 pb-4 sm:p-8 sm:pb-6 flex flex-col gap-4 h-full overflow-hidden">
+                  <div className="space-y-1 pr-12 flex-shrink-0">
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#6B6B6B]">
+                      Схема склада
+                    </p>
+                    <h3 className="text-xl font-bold text-[#273655]">
+                      {warehouse?.name || "Карта склада"}
+                    </h3>
+                    {warehouse?.address && (
+                      <p className="text-sm text-[#6B6B6B]">{warehouse.address}</p>
+                    )}
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <WarehouseCanvasViewer
+                      warehouse={warehouse}
+                      userRole={user?.role || 'USER'}
+                      isViewOnly={true}
+                      showControls={true}
+                      isFullscreen={true}
+                      onBoxSelect={setPreviewStorage}
+                      selectedStorage={previewStorage}
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
