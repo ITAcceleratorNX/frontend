@@ -19,13 +19,17 @@ const WarehouseData = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeNav, setActiveNav] = useState('warehouses');
   const [isCloud, setIsCloud] = useState(false);
+  const [servicePrices, setServicePrices] = useState({});
 
   const {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors, isDirty }
   } = useForm();
+  
+  const [initialFormData, setInitialFormData] = useState(null);
 
   // Определяем режим редактирования из URL параметров
   useEffect(() => {
@@ -43,15 +47,75 @@ const WarehouseData = () => {
         setWarehouse(data);
         setIsCloud(data.type === "CLOUD");
         
-        // Заполняем форму данными склада
-        reset({
-          name: data.name || '',
-          address: data.address || '',
-          work_start: data.work_start || '',
-          work_end: data.work_end || '',
-          status: data.status || 'AVAILABLE',
-          total_volume: data.storage?.[0]?.total_volume || ''
-        });
+        // Загружаем цены услуг для склада
+        try {
+          let pricesMap = {};
+          
+          // Определяем типы цен в зависимости от типа склада
+          const priceTypes = data.type === 'CLOUD' 
+            ? ['M3_UP_6M', 'M3_6_12M', 'M3_OVER_12M', 'M3_01_UP_6M', 'M3_01_6_12M', 'M3_01_OVER_12M']
+            : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M', 'M2_01_UP_6M', 'M2_01_6_12M', 'M2_01_OVER_12M'];
+          
+          if (data.type === 'CLOUD') {
+            // Для CLOUD складов получаем цены из /prices
+            const allPrices = await warehouseApi.getAllServicePrices();
+            // Фильтруем только нужные типы цен для CLOUD
+            const cloudPrices = allPrices.filter(price => priceTypes.includes(price.type));
+            // Преобразуем массив цен в объект для удобства
+            cloudPrices.forEach(price => {
+              pricesMap[price.type] = parseFloat(price.price);
+            });
+          } else {
+            // Для INDIVIDUAL складов получаем цены из warehouse-service-prices
+            const prices = await warehouseApi.getWarehouseServicePrices(warehouseId);
+            // Преобразуем массив цен в объект для удобства
+            prices.forEach(price => {
+              pricesMap[price.service_type] = parseFloat(price.price);
+            });
+          }
+          
+          setServicePrices(pricesMap);
+          
+          // Заполняем форму данными склада и ценами
+          const formData = {
+            name: data.name || '',
+            address: data.address || '',
+            work_start: data.work_start || '',
+            work_end: data.work_end || '',
+            status: data.status || 'AVAILABLE',
+            total_volume: data.storage?.[0]?.total_volume || '',
+            ...priceTypes.reduce((acc, type) => {
+              acc[type] = pricesMap[type] || '';
+              return acc;
+            }, {})
+          };
+          
+          reset(formData);
+          // Сохраняем исходные данные для сравнения
+          setInitialFormData(formData);
+        } catch (priceError) {
+          console.warn('Не удалось загрузить цены склада:', priceError);
+          // Если цены не загрузились, используем пустые значения
+          const priceTypes = data.type === 'CLOUD' 
+            ? ['M3_UP_6M', 'M3_6_12M', 'M3_OVER_12M', 'M3_01_UP_6M', 'M3_01_6_12M', 'M3_01_OVER_12M']
+            : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M', 'M2_01_UP_6M', 'M2_01_6_12M', 'M2_01_OVER_12M'];
+          
+          const emptyFormData = {
+            name: data.name || '',
+            address: data.address || '',
+            work_start: data.work_start || '',
+            work_end: data.work_end || '',
+            status: data.status || 'AVAILABLE',
+            total_volume: data.storage?.[0]?.total_volume || '',
+            ...priceTypes.reduce((acc, type) => {
+              acc[type] = '';
+              return acc;
+            }, {})
+          };
+          reset(emptyFormData);
+          // Сохраняем исходные данные для сравнения
+          setInitialFormData(emptyFormData);
+        }
 
         if (import.meta.env.DEV) {
           console.log('Данные склада загружены:', data);
@@ -80,23 +144,155 @@ const WarehouseData = () => {
         return timeString.substring(0, 5); // Берем только HH:MM
       };
 
-      const updateData = {
-        name: data.name,
-        address: data.address,
-        work_start: formatTime(data.work_start),
-        work_end: formatTime(data.work_end),
-        status: data.status,
-        ...(isCloud && { total_volume: data.total_volume }),
-      };
+      // Определяем типы цен в зависимости от типа склада
+      const priceTypes = warehouse?.type === 'CLOUD' 
+        ? ['M3_UP_6M', 'M3_6_12M', 'M3_OVER_12M', 'M3_01_UP_6M', 'M3_01_6_12M', 'M3_01_OVER_12M']
+        : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M', 'M2_01_UP_6M', 'M2_01_6_12M', 'M2_01_OVER_12M'];
+
+      // Сравниваем текущие значения с исходными и собираем только измененные поля
+      const updateData = {};
+      
+      if (!initialFormData) {
+        // Если исходные данные не загружены, отправляем все данные
+        updateData.name = data.name;
+        // Для CLOUD складов адрес может быть пустым
+        updateData.address = isCloud && (!data.address || data.address.trim() === '') 
+          ? null 
+          : data.address;
+        updateData.work_start = formatTime(data.work_start);
+        updateData.work_end = formatTime(data.work_end);
+        updateData.status = data.status;
+        if (isCloud && data.total_volume !== undefined) {
+          updateData.total_volume = data.total_volume;
+        }
+      } else {
+        // Сравниваем и добавляем только измененные поля
+        if (data.name !== initialFormData.name) {
+          updateData.name = data.name;
+        }
+        
+        // Для CLOUD складов адрес может быть пустым, для INDIVIDUAL - обязателен
+        // Нормализуем значения для сравнения (пустая строка = null для CLOUD)
+        const currentAddress = isCloud && (!data.address || data.address.trim() === '') 
+          ? null 
+          : data.address;
+        const initialAddress = isCloud && (!initialFormData.address || initialFormData.address.trim() === '') 
+          ? null 
+          : initialFormData.address;
+        
+        if (currentAddress !== initialAddress) {
+          updateData.address = currentAddress;
+        }
+        
+        if (formatTime(data.work_start) !== formatTime(initialFormData.work_start)) {
+          updateData.work_start = formatTime(data.work_start);
+        }
+        
+        if (formatTime(data.work_end) !== formatTime(initialFormData.work_end)) {
+          updateData.work_end = formatTime(data.work_end);
+        }
+        
+        if (data.status !== initialFormData.status) {
+          updateData.status = data.status;
+        }
+        
+        if (isCloud && data.total_volume !== initialFormData.total_volume) {
+          updateData.total_volume = data.total_volume;
+        }
+      }
+
+      // Формируем массив измененных цен для отправки
+      const changedPrices = [];
+      if (initialFormData) {
+        priceTypes.forEach(type => {
+          const currentValue = data[type];
+          const initialValue = initialFormData[type];
+          
+          // Проверяем, изменилась ли цена
+          if (currentValue !== undefined && currentValue !== '' && currentValue !== null) {
+            const currentPrice = parseFloat(currentValue);
+            const initialPrice = initialValue ? parseFloat(initialValue) : null;
+            
+            if (currentPrice !== initialPrice) {
+              changedPrices.push({
+                service_type: type,
+                price: currentPrice
+              });
+            }
+          }
+        });
+      } else {
+        // Если исходные данные не загружены, отправляем все цены
+        priceTypes.forEach(type => {
+          if (data[type] !== undefined && data[type] !== '' && data[type] !== null) {
+            changedPrices.push({
+              service_type: type,
+              price: parseFloat(data[type])
+            });
+          }
+        });
+      }
+
+      // Добавляем цены только если есть изменения
+      if (changedPrices.length > 0) {
+        updateData.service_prices = changedPrices;
+      }
+
+      // Проверяем, есть ли что отправлять
+      if (Object.keys(updateData).length === 0) {
+        toast.info('Нет изменений для сохранения');
+        setIsSaving(false);
+        return;
+      }
 
       if (import.meta.env.DEV) {
-        console.log('Отправляемые данные для обновления склада:', updateData);
+        console.log('Отправляемые данные для обновления склада (только измененные):', updateData);
       }
 
       await warehouseApi.updateWarehouse(warehouseId, updateData);
 
-      // Обновляем локальные данные
-      setWarehouse(prev => ({ ...prev, ...updateData }));
+      // Обновляем локальные данные только для измененных полей
+      setWarehouse(prev => {
+        const updated = { ...prev };
+        if (updateData.name !== undefined) updated.name = updateData.name;
+        if (updateData.address !== undefined) updated.address = updateData.address;
+        if (updateData.work_start !== undefined) updated.work_start = updateData.work_start;
+        if (updateData.work_end !== undefined) updated.work_end = updateData.work_end;
+        if (updateData.status !== undefined) updated.status = updateData.status;
+        if (updateData.total_volume !== undefined && updated.storage?.[0]) {
+          updated.storage[0].total_volume = updateData.total_volume;
+        }
+        return updated;
+      });
+      
+      // Обновляем локальные цены только для измененных
+      if (updateData.service_prices) {
+        const updatedPrices = { ...servicePrices };
+        updateData.service_prices.forEach(sp => {
+          updatedPrices[sp.service_type] = sp.price;
+        });
+        setServicePrices(updatedPrices);
+      }
+      
+      // Обновляем исходные данные формы после успешного сохранения
+      const currentValues = getValues();
+      const updatedInitialData = { ...initialFormData };
+      
+      // Обновляем все поля, которые были изменены
+      Object.keys(updateData).forEach(key => {
+        if (key !== 'service_prices') {
+          updatedInitialData[key] = currentValues[key];
+        }
+      });
+      
+      // Обновляем цены
+      if (updateData.service_prices) {
+        updateData.service_prices.forEach(sp => {
+          updatedInitialData[sp.service_type] = sp.price.toString();
+        });
+      }
+      
+      setInitialFormData(updatedInitialData);
       
       toast.success('Данные склада успешно обновлены');
       
@@ -131,13 +327,29 @@ const WarehouseData = () => {
     setIsEditing(false);
     // Убираем параметр edit из URL
     navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${warehouseId}`, { replace: true });
-    reset({
+    
+    // Определяем типы цен в зависимости от типа склада
+    const priceTypes = warehouse?.type === 'CLOUD' 
+      ? ['M3_UP_6M', 'M3_6_12M', 'M3_OVER_12M', 'M3_01_UP_6M', 'M3_01_6_12M', 'M3_01_OVER_12M']
+      : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M', 'M2_01_UP_6M', 'M2_01_6_12M', 'M2_01_OVER_12M'];
+    
+    const cancelFormData = {
       name: warehouse.name || '',
       address: warehouse?.address || '',
       work_start: warehouse.work_start || '',
       work_end: warehouse.work_end || '',
-      status: warehouse.status || 'AVAILABLE'
-    });
+      status: warehouse.status || 'AVAILABLE',
+      total_volume: warehouse.storage?.[0]?.total_volume || '',
+      ...priceTypes.reduce((acc, type) => {
+        acc[type] = servicePrices[type] || '';
+        return acc;
+      }, {})
+    };
+    reset(cancelFormData);
+    // Восстанавливаем исходные данные при отмене (если они были)
+    if (initialFormData) {
+      setInitialFormData(cancelFormData);
+    }
   };
 
   const handleEditClick = () => {
@@ -356,6 +568,72 @@ const WarehouseData = () => {
                           <p className="text-gray-900 mt-1">{warehouse.latitude}, {warehouse.longitude}</p>
                         </div>
                       )}
+
+                      {/* Секция цен в режиме просмотра */}
+                      <div className="pt-4 border-t border-gray-100">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                          Цены за {isCloud ? '1 м³' : '1 м²'}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <label className="text-xs font-medium text-gray-500">До 6 месяцев</label>
+                            <p className="text-lg font-semibold text-gray-900 mt-1">
+                              {servicePrices[isCloud ? 'M3_UP_6M' : 'M2_UP_6M'] 
+                                ? `${Number(servicePrices[isCloud ? 'M3_UP_6M' : 'M2_UP_6M']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <label className="text-xs font-medium text-gray-500">От 6 до 12 месяцев</label>
+                            <p className="text-lg font-semibold text-gray-900 mt-1">
+                              {servicePrices[isCloud ? 'M3_6_12M' : 'M2_6_12M'] 
+                                ? `${Number(servicePrices[isCloud ? 'M3_6_12M' : 'M2_6_12M']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <label className="text-xs font-medium text-gray-500">Свыше 12 месяцев</label>
+                            <p className="text-lg font-semibold text-gray-900 mt-1">
+                              {servicePrices[isCloud ? 'M3_OVER_12M' : 'M2_OVER_12M'] 
+                                ? `${Number(servicePrices[isCloud ? 'M3_OVER_12M' : 'M2_OVER_12M']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Секция цен за 0.1 м²/м³ в режиме просмотра */}
+                      <div className="pt-4 border-t border-gray-100">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                          Цены за {isCloud ? '0.1 м³' : '0.1 м²'}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <label className="text-xs font-medium text-gray-500">До 6 месяцев</label>
+                            <p className="text-lg font-semibold text-gray-900 mt-1">
+                              {servicePrices[isCloud ? 'M3_01_UP_6M' : 'M2_01_UP_6M'] 
+                                ? `${Number(servicePrices[isCloud ? 'M3_01_UP_6M' : 'M2_01_UP_6M']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <label className="text-xs font-medium text-gray-500">От 6 до 12 месяцев</label>
+                            <p className="text-lg font-semibold text-gray-900 mt-1">
+                              {servicePrices[isCloud ? 'M3_01_6_12M' : 'M2_01_6_12M'] 
+                                ? `${Number(servicePrices[isCloud ? 'M3_01_6_12M' : 'M2_01_6_12M']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <label className="text-xs font-medium text-gray-500">Свыше 12 месяцев</label>
+                            <p className="text-lg font-semibold text-gray-900 mt-1">
+                              {servicePrices[isCloud ? 'M3_01_OVER_12M' : 'M2_01_OVER_12M'] 
+                                ? `${Number(servicePrices[isCloud ? 'M3_01_OVER_12M' : 'M2_01_OVER_12M']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -407,15 +685,17 @@ const WarehouseData = () => {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Адрес *
+                            Адрес {!isCloud && '*'}
                           </label>
                           <textarea
-                            {...register('address', { required: 'Адрес обязателен' })}
+                            {...register('address', { 
+                              required: !isCloud ? 'Адрес обязателен' : false
+                            })}
                             rows={3}
                             className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors resize-none ${
                               errors.address ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
-                            placeholder="Введите полный адрес склада"
+                            placeholder={isCloud ? "Адрес склада (необязательно)" : "Введите полный адрес склада"}
                           />
                           {errors.address && (
                             <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -471,7 +751,6 @@ const WarehouseData = () => {
                           </div>
                         </div>
 
-                        {/* здесь */}
                         {isCloud && (
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -496,6 +775,204 @@ const WarehouseData = () => {
                             )}
                           </div>
                         )}
+
+                        {/* Секция цен */}
+                        <div className="pt-6 border-t border-gray-200">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Цены за {isCloud ? '1 м³' : '1 м²'}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Установите цены с учетом скидок за длительный период хранения
+                          </p>
+                          
+                          <div className="space-y-4">
+                            {/* Цена до 6 месяцев */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена до 6 месяцев (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register(isCloud ? 'M3_UP_6M' : 'M2_UP_6M', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors[isCloud ? 'M3_UP_6M' : 'M2_UP_6M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену"
+                              />
+                              {errors[isCloud ? 'M3_UP_6M' : 'M2_UP_6M'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors[isCloud ? 'M3_UP_6M' : 'M2_UP_6M'].message}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Цена от 6 до 12 месяцев */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена от 6 до 12 месяцев (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register(isCloud ? 'M3_6_12M' : 'M2_6_12M', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors[isCloud ? 'M3_6_12M' : 'M2_6_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену"
+                              />
+                              {errors[isCloud ? 'M3_6_12M' : 'M2_6_12M'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors[isCloud ? 'M3_6_12M' : 'M2_6_12M'].message}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Цена свыше 12 месяцев */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена свыше 12 месяцев (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register(isCloud ? 'M3_OVER_12M' : 'M2_OVER_12M', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors[isCloud ? 'M3_OVER_12M' : 'M2_OVER_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену"
+                              />
+                              {errors[isCloud ? 'M3_OVER_12M' : 'M2_OVER_12M'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors[isCloud ? 'M3_OVER_12M' : 'M2_OVER_12M'].message}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Секция цен за 0.1 м²/м³ */}
+                        <div className="pt-6 border-t border-gray-200">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Цены за {isCloud ? '0.1 м³' : '0.1 м²'}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Установите цены за 0.1 {isCloud ? 'м³' : 'м²'} с учетом скидок за длительный период хранения
+                          </p>
+                          
+                          <div className="space-y-4">
+                            {/* Цена до 6 месяцев */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена до 6 месяцев (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register(isCloud ? 'M3_01_UP_6M' : 'M2_01_UP_6M', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors[isCloud ? 'M3_01_UP_6M' : 'M2_01_UP_6M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену"
+                              />
+                              {errors[isCloud ? 'M3_01_UP_6M' : 'M2_01_UP_6M'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors[isCloud ? 'M3_01_UP_6M' : 'M2_01_UP_6M'].message}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Цена от 6 до 12 месяцев */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена от 6 до 12 месяцев (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register(isCloud ? 'M3_01_6_12M' : 'M2_01_6_12M', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors[isCloud ? 'M3_01_6_12M' : 'M2_01_6_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену"
+                              />
+                              {errors[isCloud ? 'M3_01_6_12M' : 'M2_01_6_12M'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors[isCloud ? 'M3_01_6_12M' : 'M2_01_6_12M'].message}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Цена свыше 12 месяцев */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена свыше 12 месяцев (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register(isCloud ? 'M3_01_OVER_12M' : 'M2_01_OVER_12M', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors[isCloud ? 'M3_01_OVER_12M' : 'M2_01_OVER_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену"
+                              />
+                              {errors[isCloud ? 'M3_01_OVER_12M' : 'M2_01_OVER_12M'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors[isCloud ? 'M3_01_OVER_12M' : 'M2_01_OVER_12M'].message}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                         <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                           <button
                             type="button"

@@ -53,19 +53,6 @@ export const warehouseApi = {
     }
   },
 
-  // Расчет цены через калькулятор
-  calculatePrice: async (type, area, month) => {
-    try {
-      console.log('Отправка запроса на расчет цены:', { type, area, month });
-      const response = await api.post('/prices/calculate', { type, area, month });
-      console.log('Цена рассчитана:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при расчете цены:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-
   // Массовый расчет стоимости для множества сервисов
   calculateBulkPrice: async (data) => {
     try {
@@ -75,6 +62,32 @@ export const warehouseApi = {
       return response.data;
     } catch (error) {
       console.error('Ошибка при массовом расчете цены:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Получение цен услуг для склада (только для INDIVIDUAL складов)
+  getWarehouseServicePrices: async (warehouseId) => {
+    try {
+      console.log('Отправка запроса на получение цен склада:', warehouseId);
+      const response = await api.get(`/warehouse-service-prices/warehouse/${warehouseId}`);
+      console.log('Цены склада загружены:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при загрузке цен склада:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Получение всех цен услуг из /prices (для CLOUD складов)
+  getAllServicePrices: async () => {
+    try {
+      console.log('Отправка запроса на получение всех цен услуг');
+      const response = await api.get('/prices');
+      console.log('Все цены услуг загружены:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при загрузке цен услуг:', error.response?.data || error.message);
       throw error;
     }
   }

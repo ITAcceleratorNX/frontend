@@ -999,6 +999,7 @@ const HomePage = memo(() => {
           months: monthsNumber,
           area: rawArea,
           services: [],
+          warehouse_id: selectedWarehouse.id,
         };
 
         const response = await warehouseApi.calculateBulkPrice(payload);
@@ -1979,7 +1980,7 @@ const HomePage = memo(() => {
                     <p className="text-sm text-[#3E4958]">
                       {selectedWarehouse.work_start &&
                       selectedWarehouse.work_end ? (
-                        selectedWarehouse.work_start === "00:00" && selectedWarehouse.work_end === "23:59" ? (
+                        selectedWarehouse.work_start === "00:00" && selectedWarehouse.work_end === "00:00" ? (
                           "Режим: Круглосуточно"
                         ) : (
                           `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}`

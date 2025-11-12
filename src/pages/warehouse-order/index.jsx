@@ -403,6 +403,7 @@ const WarehouseOrderPage = memo(() => {
       
       // Добавляем соответствующие измерения
       if (storageType === 'INDIVIDUAL') {
+        requestData.warehouse_id = selectedWarehouse.id;
         requestData.area = area;
       } else if (storageType === 'CLOUD') {
         requestData.volume = volume;
@@ -674,7 +675,7 @@ const WarehouseOrderPage = memo(() => {
                     <p className="text-[#6B6B6B] text-sm">
                       {warehouse.work_start &&
                       warehouse.work_end ? (
-                          warehouse.work_start === "00:00" && warehouse.work_end === "23:59" ? (
+                          warehouse.work_start === "00:00" && warehouse.work_end === "00:00" ? (
                                 "Время работы: Круглосуточно"
                             ) : (
                                 `Время работы: ${warehouse.work_start} - ${warehouse.work_end}`
