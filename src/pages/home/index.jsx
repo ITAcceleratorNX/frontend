@@ -1456,6 +1456,16 @@ const HomePage = memo(() => {
                                 {services.map((service, index) => {
                                   const selectedOption = serviceOptions.find((option) => String(option.id) === service.service_id);
                                   const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
+                                  
+                                  // Фильтруем уже выбранные услуги (кроме текущей)
+                                  const availableOptions = serviceOptions.filter((option) => {
+                                    if (option.type === "GAZELLE") return false;
+                                    // Исключаем услуги, которые уже выбраны в других строках
+                                    const isAlreadySelected = services.some((s, i) => 
+                                      i !== index && String(s.service_id) === String(option.id)
+                                    );
+                                    return !isAlreadySelected;
+                                  });
 
                                   return (
                                     <div
@@ -1470,13 +1480,17 @@ const HomePage = memo(() => {
                                           <SelectValue placeholder="Услуга" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {serviceOptions
-                                            .filter((option) => option.type !== "GAZELLE")
-                                            .map((option) => (
+                                          {availableOptions.length > 0 ? (
+                                            availableOptions.map((option) => (
                                               <SelectItem key={option.id} value={String(option.id)}>
                                                 {getServiceTypeName(option.type) || option.description || `Услуга ${option.id}`}
                                               </SelectItem>
-                                            ))}
+                                            ))
+                                          ) : (
+                                            <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
+                                              Нет доступных услуг
+                                            </div>
+                                          )}
                                         </SelectContent>
                                       </Select>
 

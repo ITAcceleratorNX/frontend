@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
+import { paymentsApi } from '../../../shared/api/paymentsApi';
 import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
 import WarehouseCanvasViewer from '../../../shared/components/WarehouseCanvasViewer';
@@ -17,8 +18,38 @@ import {
   Switch,
 } from '../../../components/ui';
 import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
-import { Truck, Package, X, Info } from 'lucide-react';
+import { Truck, Package, X, Info, Plus, Trash2 } from 'lucide-react';
 import { Dropdown } from '../../../shared/components/Dropdown';
+
+const MOVING_SERVICE_ESTIMATE = 7000;
+const PACKING_SERVICE_ESTIMATE = 4000;
+
+const getServiceTypeName = (type) => {
+  switch (type) {
+    case "LOADER":
+      return "Грузчик";
+    case "PACKER":
+      return "Упаковщик";
+    case "FURNITURE_SPECIALIST":
+      return "Мебельщик";
+    case "GAZELLE":
+      return "Газель";
+    case "STRETCH_FILM":
+      return "Стрейч-плёнка";
+    case "BOX_SIZE":
+      return "Коробка";
+    case "MARKER":
+      return "Маркер";
+    case "UTILITY_KNIFE":
+      return "Канцелярский нож";
+    case "BUBBLE_WRAP_1":
+      return "Воздушно-пузырчатая плёнка 10м";
+    case "BUBBLE_WRAP_2":
+      return "Воздушно-пузырчатая плёнка 120м";
+    default:
+      return "Услуга";
+  }
+};
 
 const WarehouseData = () => {
   const navigate = useNavigate();
@@ -51,6 +82,11 @@ const WarehouseData = () => {
   const [cloudPriceError, setCloudPriceError] = useState(null);
   const [allWarehouses, setAllWarehouses] = useState([]);
   const [warehousesLoading, setWarehousesLoading] = useState(false);
+  const [serviceOptions, setServiceOptions] = useState([]);
+  const [isServicesLoading, setIsServicesLoading] = useState(false);
+  const [servicesError, setServicesError] = useState(null);
+  const [services, setServices] = useState([]);
+  const [gazelleService, setGazelleService] = useState(null);
 
   const {
     register,
@@ -328,31 +364,135 @@ const WarehouseData = () => {
     };
   }, [isCloud, warehouse, cloudMonthsNumber, cloudVolume]);
 
+  // Загрузка опций услуг
+  const ensureServiceOptions = useCallback(async () => {
+    if (serviceOptions.length > 0) {
+      return serviceOptions;
+    }
+
+    if (isServicesLoading) {
+      return serviceOptions;
+    }
+
+    try {
+      setIsServicesLoading(true);
+      setServicesError(null);
+      const pricesData = await paymentsApi.getPrices();
+      const filteredPrices = pricesData.filter((price) => {
+        if (price.id <= 4) return false;
+        const excludedTypes = [
+          "DEPOSIT",
+          "M2_UP_6M",
+          "M2_6_12M",
+          "M2_OVER_12M",
+          "M3_UP_6M",
+          "M3_6_12M",
+          "M3_OVER_12M",
+          "M2_01_UP_6M",
+          "M2_01_6_12M",
+          "M2_01_OVER_12M",
+          "M3_01_UP_6M",
+          "M3_01_6_12M",
+          "M3_01_OVER_12M",
+        ];
+        return !excludedTypes.includes(price.type);
+      });
+      setServiceOptions(filteredPrices);
+      return filteredPrices;
+    } catch (error) {
+      console.error("Ошибка при загрузке услуг:", error);
+      setServicesError("Не удалось загрузить список услуг. Попробуйте позже.");
+      return [];
+    } finally {
+      setIsServicesLoading(false);
+    }
+  }, [serviceOptions, isServicesLoading]);
+
+  // Управление услугами
+  const addServiceRow = useCallback(() => {
+    setServices((prev) => [...prev, { service_id: "", count: 1 }]);
+  }, []);
+
+  const updateServiceRow = useCallback((index, field, value) => {
+    setServices((prev) =>
+      prev.map((service, i) =>
+        i === index
+          ? {
+              ...service,
+              [field]: field === "count" ? Math.max(1, Number(value) || 1) : value,
+            }
+          : service
+      )
+    );
+  }, []);
+
+  const removeServiceRow = useCallback((index) => {
+    setServices((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  // Автоматическое добавление услуги GAZELLE при включении перевозки
+  useEffect(() => {
+    if (!includeMoving) {
+      setGazelleService(null);
+      return;
+    }
+
+    if (serviceOptions.length === 0) {
+      ensureServiceOptions();
+      return;
+    }
+
+    const gazelle = serviceOptions.find((option) => option.type === "GAZELLE");
+    if (gazelle) {
+      setGazelleService({
+        id: String(gazelle.id),
+        type: gazelle.type,
+        name: getServiceTypeName(gazelle.type) || gazelle.description || "Газель",
+        price: gazelle.price,
+      });
+    } else {
+      setGazelleService(null);
+    }
+  }, [includeMoving, serviceOptions, ensureServiceOptions]);
+
   // Расчет стоимости услуг (перевозка, упаковка)
   const serviceSummary = useMemo(() => {
     const breakdown = [];
     let total = 0;
 
-    // Перевозка вещей
-    if (includeMoving && movingAddressFrom) {
-      // Для простоты используем фиксированную стоимость перевозки
-      // В реальном приложении это должно приходить из API
-      const movingPrice = 7000; // Примерная стоимость
-      total += movingPrice;
+    // Перевозка вещей (туда и обратно)
+    if (includeMoving && gazelleService) {
+      const count = 2; // Забор и доставка
+      const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
+      total += amount;
       breakdown.push({
-        label: 'Перевозка вещей',
-        amount: movingPrice,
+        label: gazelleService.name || "Перевозка вещей",
+        amount,
       });
     }
 
-    // Услуги упаковки (если нужно будет добавить позже)
-    // Пока оставляем пустым
+    // Услуги упаковки
+    if (includePacking) {
+      services.forEach((service) => {
+        if (!service?.service_id || !service?.count || service.count <= 0) {
+          return;
+        }
+        const option = serviceOptions.find((item) => String(item.id) === String(service.service_id));
+        const unitPrice = option?.price ?? PACKING_SERVICE_ESTIMATE;
+        const amount = unitPrice * service.count;
+        total += amount;
+        breakdown.push({
+          label: option?.description || getServiceTypeName(option?.type) || "Услуга",
+          amount,
+        });
+      });
+    }
 
     return {
       total,
       breakdown,
     };
-  }, [includeMoving, includePacking, movingAddressFrom]);
+  }, [includeMoving, includePacking, gazelleService, services, serviceOptions]);
 
   // Итоговая стоимость для INDIVIDUAL
   const costSummary = useMemo(() => {
@@ -1713,7 +1853,26 @@ const WarehouseData = () => {
                           </div>
                           <Switch
                             checked={includeMoving}
-                            onCheckedChange={setIncludeMoving}
+                            onCheckedChange={async (checked) => {
+                              setIncludeMoving(checked);
+                              if (checked) {
+                                const loadedOptions = await ensureServiceOptions();
+                                // Устанавливаем gazelleService сразу после загрузки опций
+                                if (loadedOptions && loadedOptions.length > 0) {
+                                  const gazelle = loadedOptions.find((option) => option.type === "GAZELLE");
+                                  if (gazelle) {
+                                    setGazelleService({
+                                      id: String(gazelle.id),
+                                      type: gazelle.type,
+                                      name: getServiceTypeName(gazelle.type) || gazelle.description || "Газель",
+                                      price: gazelle.price,
+                                    });
+                                  }
+                                }
+                              } else {
+                                setGazelleService(null);
+                              }
+                            }}
                             className="bg-gray-200 data-[state=checked]:bg-[#273655]"
                           />
                         </div>
@@ -1739,13 +1898,142 @@ const WarehouseData = () => {
                           <div className="flex items-center gap-2 text-[#273655] font-semibold">
                             <Package className="w-5 h-5 shrink-0" />
                             <span>Услуги упаковки</span>
+                            <InfoHint
+                              description={
+                                <span>
+                                  Выберите дополнительные услуги упаковки — всё, что нужно, чтобы подготовить вещи к хранению.
+                                </span>
+                              }
+                              ariaLabel="Подробнее об услугах упаковки"
+                              align="start"
+                            />
                           </div>
                           <Switch
                             checked={includePacking}
-                            onCheckedChange={setIncludePacking}
+                            onCheckedChange={async (checked) => {
+                              setIncludePacking(checked);
+                              if (checked) {
+                                await ensureServiceOptions();
+                                setServices((prev) => (prev.length > 0 ? prev : [{ service_id: "", count: 1 }]));
+                              } else {
+                                setServices([]);
+                              }
+                            }}
                             className="bg-gray-200 data-[state=checked]:bg-[#273655]"
                           />
                         </div>
+
+                        {includePacking && (
+                          <div className="space-y-3">
+                            {isServicesLoading ? (
+                              <div className="flex items-center justify-center py-2">
+                                <span className="w-5 h-5 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                              </div>
+                            ) : (
+                              <>
+                                {servicesError && (
+                                  <p className="text-xs text-[#C73636]">
+                                    {servicesError}
+                                  </p>
+                                )}
+
+                                {services.length > 0 && (
+                                  <div className="space-y-2">
+                                    {services.map((service, index) => {
+                                      const selectedOption = serviceOptions.find((option) => String(option.id) === service.service_id);
+                                      const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
+                                      
+                                      // Фильтруем уже выбранные услуги (кроме текущей)
+                                      const availableOptions = serviceOptions.filter((option) => {
+                                        if (option.type === "GAZELLE") return false;
+                                        // Исключаем услуги, которые уже выбраны в других строках
+                                        const isAlreadySelected = services.some((s, i) => 
+                                          i !== index && String(s.service_id) === String(option.id)
+                                        );
+                                        return !isAlreadySelected;
+                                      });
+
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2"
+                                        >
+                                          <Select
+                                            value={service.service_id}
+                                            onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                          >
+                                            <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
+                                              <SelectValue placeholder="Услуга" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {availableOptions.length > 0 ? (
+                                                availableOptions.map((option) => (
+                                                  <SelectItem key={option.id} value={String(option.id)}>
+                                                    {getServiceTypeName(option.type) || option.description || `Услуга ${option.id}`}
+                                                  </SelectItem>
+                                                ))
+                                              ) : (
+                                                <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
+                                                  Нет доступных услуг
+                                                </div>
+                                              )}
+                                            </SelectContent>
+                                          </Select>
+
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
+                                              Кол-во
+                                            </span>
+                                            <input
+                                              type="number"
+                                              min="1"
+                                              value={service.count}
+                                              onChange={(e) => updateServiceRow(index, "count", e.target.value)}
+                                              className="w-16 h-10 rounded-lg border border-[#d7dbe6] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                                            />
+                                          </div>
+
+                                          {service.service_id && (
+                                            <span className="ml-auto text-xs text-[#6B6B6B]">
+                                              {unitPrice.toLocaleString()} ₸/шт.
+                                            </span>
+                                          )}
+
+                                          <button
+                                            type="button"
+                                            onClick={() => removeServiceRow(index)}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
+                                            aria-label="Удалить услугу"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {services.length === 0 && !servicesError && (
+                                  <p className="text-xs text-[#6B6B6B]">
+                                    Добавьте услуги, чтобы мы подготовили упаковку под ваши вещи.
+                                  </p>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    ensureServiceOptions();
+                                    addServiceRow();
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#273655]/40 px-3 py-2 text-xs sm:text-sm font-semibold text-[#273655] hover:bg-[#273655]/5 transition-colors"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Добавить услугу
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Блок с расчетом стоимости */}
@@ -1808,11 +2096,11 @@ const WarehouseData = () => {
                             </div>
                           </div>
                         )}
-                        {(previewStorage && (pricePreview || serviceSummary.total > 0)) && (
+                        {((previewStorage && pricePreview) || serviceSummary.total > 0) && (
                           <div className="flex items-center justify-between border-t border-dashed border-[#273655]/20 pt-3 text-base font-bold text-[#273655]">
                             <span>Всего</span>
                             <span>
-                              {(costSummary.combinedTotal || 0).toLocaleString()} ₸
+                              {(costSummary.combinedTotal || serviceSummary.total || 0).toLocaleString()} ₸
                             </span>
                           </div>
                         )}
