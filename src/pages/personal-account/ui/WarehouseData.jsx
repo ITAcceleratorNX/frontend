@@ -21,6 +21,8 @@ import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/
 import { Truck, Package, X, Info, Plus, Trash2, User } from 'lucide-react';
 import { Dropdown } from '../../../shared/components/Dropdown';
 import ClientSelector from '../../../shared/components/ClientSelector';
+import PendingOrderModal from './PendingOrderModal';
+import { ordersApi } from '../../../shared/api/ordersApi';
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -92,6 +94,10 @@ const WarehouseData = () => {
   const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderError, setOrderError] = useState(null);
+  const [pendingOrder, setPendingOrder] = useState(null);
+  const [isPendingOrderModalOpen, setIsPendingOrderModalOpen] = useState(false);
+  const [isLoadingPendingOrder, setIsLoadingPendingOrder] = useState(false);
+  const [isUnbooking, setIsUnbooking] = useState(false);
   
   // Проверка, является ли пользователь менеджером или админом
   const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
@@ -1972,7 +1978,31 @@ const WarehouseData = () => {
                             showControls={true}
                             isCompact={true}
                             onViewMore={() => setIsMapModalOpen(true)}
-                            onBoxSelect={setPreviewStorage}
+                            onBoxSelect={async (storage) => {
+                              // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
+                              if (storage?.status === 'PENDING' && isAdminOrManager) {
+                                setIsLoadingPendingOrder(true);
+                                try {
+                                  const order = await ordersApi.getPendingOrderByStorageId(storage.id);
+                                  if (order) {
+                                    setPendingOrder(order);
+                                    setIsPendingOrderModalOpen(true);
+                                  } else {
+                                    // Если заказа нет, просто выбираем бокс
+                                    setPreviewStorage(storage);
+                                  }
+                                } catch (error) {
+                                  console.error('Ошибка при загрузке заказа:', error);
+                                  // В случае ошибки все равно выбираем бокс
+                                  setPreviewStorage(storage);
+                                } finally {
+                                  setIsLoadingPendingOrder(false);
+                                }
+                              } else {
+                                // Для обычных боксов просто выбираем
+                                setPreviewStorage(storage);
+                              }
+                            }}
                             selectedStorage={previewStorage}
                             className="w-full"
                           />
@@ -2501,7 +2531,32 @@ const WarehouseData = () => {
                       isViewOnly={true}
                       showControls={true}
                       isFullscreen={true}
-                      onBoxSelect={setPreviewStorage}
+                      onBoxSelect={async (storage) => {
+                        // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
+                        if (storage?.status === 'PENDING' && isAdminOrManager) {
+                          setIsLoadingPendingOrder(true);
+                          try {
+                            const order = await ordersApi.getPendingOrderByStorageId(storage.id);
+                            if (order) {
+                              setPendingOrder(order);
+                              setIsPendingOrderModalOpen(true);
+                              setIsMapModalOpen(false); // Закрываем модальное окно карты
+                            } else {
+                              // Если заказа нет, просто выбираем бокс
+                              setPreviewStorage(storage);
+                            }
+                          } catch (error) {
+                            console.error('Ошибка при загрузке заказа:', error);
+                            // В случае ошибки все равно выбираем бокс
+                            setPreviewStorage(storage);
+                          } finally {
+                            setIsLoadingPendingOrder(false);
+                          }
+                        } else {
+                          // Для обычных боксов просто выбираем
+                          setPreviewStorage(storage);
+                        }
+                      }}
                       selectedStorage={previewStorage}
                       className="w-full h-full"
                     />
@@ -2539,7 +2594,32 @@ const WarehouseData = () => {
                       isViewOnly={true}
                       showControls={true}
                       isFullscreen={true}
-                      onBoxSelect={setPreviewStorage}
+                      onBoxSelect={async (storage) => {
+                        // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
+                        if (storage?.status === 'PENDING' && isAdminOrManager) {
+                          setIsLoadingPendingOrder(true);
+                          try {
+                            const order = await ordersApi.getPendingOrderByStorageId(storage.id);
+                            if (order) {
+                              setPendingOrder(order);
+                              setIsPendingOrderModalOpen(true);
+                              setIsMapModalOpen(false); // Закрываем модальное окно карты
+                            } else {
+                              // Если заказа нет, просто выбираем бокс
+                              setPreviewStorage(storage);
+                            }
+                          } catch (error) {
+                            console.error('Ошибка при загрузке заказа:', error);
+                            // В случае ошибки все равно выбираем бокс
+                            setPreviewStorage(storage);
+                          } finally {
+                            setIsLoadingPendingOrder(false);
+                          }
+                        } else {
+                          // Для обычных боксов просто выбираем
+                          setPreviewStorage(storage);
+                        }
+                      }}
                       selectedStorage={previewStorage}
                       className="w-full h-full"
                     />
@@ -2564,6 +2644,52 @@ const WarehouseData = () => {
             }
           }}
         />
+      )}
+
+      {/* Модальное окно информации о заказе PENDING */}
+      {isAdminOrManager && (
+        <PendingOrderModal
+          isOpen={isPendingOrderModalOpen}
+          order={pendingOrder}
+          onClose={() => {
+            setIsPendingOrderModalOpen(false);
+            setPendingOrder(null);
+          }}
+          onUnbook={async (orderId) => {
+            setIsUnbooking(true);
+            try {
+              // Обновляем данные склада после разбронирования
+              const updatedWarehouse = await warehouseApi.getWarehouseById(warehouseId);
+              setWarehouse(updatedWarehouse);
+              
+              // Сбрасываем выбранный бокс
+              setPreviewStorage(null);
+              setPricePreview(null);
+              setPriceError(null);
+              
+              // Обновляем список складов
+              const data = await warehouseApi.getAllWarehouses();
+              setAllWarehouses(Array.isArray(data) ? data : []);
+            } catch (error) {
+              console.error('Ошибка при обновлении данных:', error);
+            } finally {
+              setIsUnbooking(false);
+            }
+          }}
+          isUnbooking={isUnbooking}
+        />
+      )}
+
+      {/* Индикатор загрузки заказа */}
+      {isLoadingPendingOrder && (
+        <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+              <span className="text-sm font-medium text-[#273655]">Загрузка информации о заказе...</span>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -277,4 +277,24 @@ export const ordersApi = {
       throw error;
     }
   },
+
+  // Получение заказа со статусом PENDING по storage_id (для MANAGER и ADMIN)
+  getPendingOrderByStorageId: async (storageId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Получение заказа PENDING для storage_id ${storageId}`);
+      }
+      const response = await api.get(`/orders/storage/${storageId}`);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Получен заказ PENDING:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return null; // Заказ не найден - это нормально
+      }
+      console.error('OrdersAPI: Ошибка при получении заказа PENDING:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 }; 
