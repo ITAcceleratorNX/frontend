@@ -15,6 +15,7 @@ import OrderManagement from './ui/OrderManagement';
 import UserPayments from './ui/UserPayments';
 import UserDelivery from './ui/UserDelivery';
 import ItemSearch from './ui/ItemSearch';
+import Statistics from './ui/Statistics';
 import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
 import MobileSidebar from './ui/MobileSidebar';
 import '@szhsin/react-menu/dist/index.css';
@@ -151,6 +152,7 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'payments' && <UserPayments />}
           {activeNav === 'delivery' && <UserDelivery />}
           {activeNav === 'itemsearch' && <ItemSearch />}
+          {activeNav === 'statistics' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <Statistics />}
         </main>
       </div>
     </div>

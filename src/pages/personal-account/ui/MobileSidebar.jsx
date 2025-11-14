@@ -17,6 +17,7 @@ import icon1 from '../../../assets/1.svg';
 import icon2 from '../../../assets/2.svg';
 import icon3 from '../../../assets/3.svg';
 import icon4 from '../../../assets/4.svg';
+import icon5 from '../../../assets/5.svg';
 import icon6 from '../../../assets/6.svg';
 import icon8 from '../../../assets/8.svg';
 import icon9 from '../../../assets/9.svg';
@@ -41,6 +42,7 @@ const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Мувинг', icon: icon9, key: 'managermoving' },
   { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
@@ -54,6 +56,7 @@ const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
   { label: 'Запрос', icon: icon11, key: 'request' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },

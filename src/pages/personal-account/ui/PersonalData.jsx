@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import ChangePasswordModal from './ChangePasswordModal';
 import { Lock } from 'lucide-react';
+import IinTooltip from '../../../shared/ui/IinTooltip';
 
 
 // Мемоизированный компонент личных данных с дополнительной оптимизацией
@@ -216,7 +217,13 @@ const PersonalData = memo(() => {
             className="bg-slate-50 rounded-md"
           />
           <Input
-            label="ИИН"
+            id="iin"
+            label={
+              <span className="flex items-center gap-2">
+                ИИН
+                <IinTooltip />
+              </span>
+            }
             placeholder="XXXXXXXXXXXX"
             disabled={!isEditing}
             {...register('iin', {
