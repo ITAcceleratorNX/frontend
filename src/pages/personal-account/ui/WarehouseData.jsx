@@ -18,8 +18,9 @@ import {
   Switch,
 } from '../../../components/ui';
 import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
-import { Truck, Package, X, Info, Plus, Trash2 } from 'lucide-react';
+import { Truck, Package, X, Info, Plus, Trash2, User } from 'lucide-react';
 import { Dropdown } from '../../../shared/components/Dropdown';
+import ClientSelector from '../../../shared/components/ClientSelector';
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -87,6 +88,13 @@ const WarehouseData = () => {
   const [servicesError, setServicesError] = useState(null);
   const [services, setServices] = useState([]);
   const [gazelleService, setGazelleService] = useState(null);
+  const [selectedClientUser, setSelectedClientUser] = useState(null);
+  const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [orderError, setOrderError] = useState(null);
+  
+  // Проверка, является ли пользователь менеджером или админом
+  const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   const {
     register,
@@ -429,6 +437,27 @@ const WarehouseData = () => {
   const removeServiceRow = useCallback((index) => {
     setServices((prev) => prev.filter((_, i) => i !== index));
   }, []);
+
+  // Синхронизация услуги "Газель" по количеству перевозок (2 для туда и обратно)
+  const syncGazelleService = useCallback((currentServices) => {
+    if (!gazelleService || !includeMoving) {
+      return currentServices.filter((s) => s.service_id?.toString() !== gazelleService?.id?.toString());
+    }
+
+    const gazelleId = gazelleService.id?.toString();
+    const existingIndex = currentServices.findIndex((s) => s.service_id?.toString() === gazelleId);
+    const updated = [...currentServices];
+
+    if (existingIndex >= 0) {
+      // Обновляем количество (2 для туда и обратно)
+      updated[existingIndex] = { ...updated[existingIndex], count: 2 };
+    } else {
+      // Добавляем "Газель" с количеством 2
+      updated.push({ service_id: gazelleService.id, count: 2 });
+    }
+
+    return updated;
+  }, [gazelleService, includeMoving]);
 
   // Автоматическое добавление услуги GAZELLE при включении перевозки
   useEffect(() => {
@@ -1724,14 +1753,159 @@ const WarehouseData = () => {
                         <p>Перевозка и упаковка включены в стоимость.</p>
                       </div>
 
+                      {/* Блок выбора пользователя для менеджеров/админов */}
+                      {isAdminOrManager && (
+                        <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                              <User className="w-5 h-5 shrink-0" />
+                              <span>Клиент</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsClientSelectorOpen(true)}
+                              className="px-4 py-2 text-sm font-medium text-[#273655] border border-[#273655] rounded-lg hover:bg-[#273655] hover:text-white transition-colors"
+                            >
+                              {selectedClientUser ? 'Изменить' : 'Выбрать клиента'}
+                            </button>
+                          </div>
+                          {selectedClientUser && (
+                            <div className="bg-[#273655]/5 rounded-lg p-3">
+                              <div className="text-sm font-medium text-[#273655]">
+                                {selectedClientUser.name || 'Без имени'}
+                              </div>
+                              <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
+                              {selectedClientUser.phone && (
+                                <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <SmartButton
                         variant="success"
                         size="lg"
                         className="w-full h-[56px] text-base font-semibold"
-                        onClick={() => navigate('/warehouse-order', { state: { warehouseType: 'CLOUD', warehouseId: warehouse.id } })}
+                        onClick={async () => {
+                          if (isAdminOrManager && !selectedClientUser) {
+                            toast.error('Выберите клиента для создания заказа');
+                            return;
+                          }
+
+                          if (!warehouse?.storage?.[0]) {
+                            toast.error('Склад не имеет доступных мест для хранения');
+                            return;
+                          }
+
+                          if (!cloudVolume || cloudVolume <= 0) {
+                            toast.error('Укажите габариты вещей для расчета объема');
+                            return;
+                          }
+
+                          if (!cloudPickupAddress.trim()) {
+                            toast.error('Укажите адрес забора вещей');
+                            return;
+                          }
+
+                          setIsCreatingOrder(true);
+                          setOrderError(null);
+
+                          try {
+                            // Синхронизируем услуги с газелью
+                            let finalServices = [...services];
+                            if (includeMoving && gazelleService) {
+                              finalServices = syncGazelleService(finalServices);
+                            }
+
+                            const validServices = finalServices.filter(
+                              (service) => service.service_id && service.count > 0
+                            );
+
+                            const orderData = {
+                              storage_id: warehouse.storage[0].id,
+                              months: cloudMonthsNumber,
+                              order_items: [{
+                                name: 'Облачное хранение',
+                                volume: cloudVolume,
+                                cargo_mark: 'NO'
+                              }],
+                              is_selected_moving: includeMoving,
+                              is_selected_package: includePacking && validServices.length > 0,
+                            };
+
+                            // Добавляем user_id для менеджеров/админов
+                            if (isAdminOrManager && selectedClientUser) {
+                              orderData.user_id = selectedClientUser.id;
+                            }
+
+                            // Добавляем перевозки
+                            if (includeMoving) {
+                              orderData.moving_orders = [
+                                {
+                                  moving_date: new Date().toISOString(),
+                                  status: 'PENDING_FROM',
+                                  address: cloudPickupAddress.trim(),
+                                },
+                                {
+                                  moving_date: new Date().toISOString(),
+                                  status: 'PENDING_TO',
+                                  address: cloudPickupAddress.trim(),
+                                }
+                              ];
+                            }
+
+                            // Добавляем услуги
+                            if (includePacking && validServices.length > 0) {
+                              orderData.services = validServices.map((service) => ({
+                                service_id: Number(service.service_id),
+                                count: service.count,
+                              }));
+                            }
+
+                            await warehouseApi.createOrder(orderData);
+
+                            toast.success(
+                              <div>
+                                <div><strong>Заказ успешно создан!</strong></div>
+                                <div style={{ marginTop: 5 }}>
+                                  СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заказа менеджером.
+                                </div>
+                              </div>,
+                              { autoClose: 4000 }
+                            );
+
+                            // Перенаправляем на страницу заказов (для админа/менеджера - на запросы, для обычных пользователей - на платежи)
+                            setTimeout(() => {
+                              navigate('/personal-account', { state: { activeSection: isAdminOrManager ? 'request' : 'payments' } });
+                            }, 1500);
+                          } catch (error) {
+                            console.error('Ошибка при создании заказа:', error);
+                            const errorMessage = error.response?.data?.message || 
+                                                error.response?.data?.details?.[0]?.message ||
+                                                'Не удалось создать заказ. Попробуйте позже.';
+                            setOrderError(errorMessage);
+                            toast.error(errorMessage);
+                          } finally {
+                            setIsCreatingOrder(false);
+                          }
+                        }}
+                        disabled={
+                          (isAdminOrManager && !selectedClientUser) ||
+                          isCreatingOrder ||
+                          !cloudVolume ||
+                          cloudVolume <= 0 ||
+                          !cloudPickupAddress.trim()
+                        }
                       >
-                        Забронировать бокс
+                        {isCreatingOrder ? 'Создание заказа...' : 'Забронировать бокс'}
                       </SmartButton>
+                      
+                      {orderError && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-sm text-red-600">{orderError}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -2111,14 +2285,167 @@ const WarehouseData = () => {
                         )}
                       </div>
 
+                      {/* Блок выбора пользователя для менеджеров/админов */}
+                      {isAdminOrManager && (
+                        <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                              <User className="w-5 h-5 shrink-0" />
+                              <span>Клиент</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsClientSelectorOpen(true)}
+                              className="px-4 py-2 text-sm font-medium text-[#273655] border border-[#273655] rounded-lg hover:bg-[#273655] hover:text-white transition-colors"
+                            >
+                              {selectedClientUser ? 'Изменить' : 'Выбрать клиента'}
+                            </button>
+                          </div>
+                          {selectedClientUser && (
+                            <div className="bg-[#273655]/5 rounded-lg p-3">
+                              <div className="text-sm font-medium text-[#273655]">
+                                {selectedClientUser.name || 'Без имени'}
+                              </div>
+                              <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
+                              {selectedClientUser.phone && (
+                                <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <SmartButton
                         variant="success"
                         size="lg"
                         className="w-full h-[56px] text-base font-semibold"
-                        onClick={() => navigate('/warehouse-order', { state: { warehouseType: 'INDIVIDUAL', warehouseId: warehouse.id } })}
+                        onClick={async () => {
+                          if (isAdminOrManager && !selectedClientUser) {
+                            toast.error('Выберите клиента для создания заказа');
+                            return;
+                          }
+
+                          if (!previewStorage) {
+                            toast.error('Выберите бокс на схеме склада');
+                            return;
+                          }
+
+                          if (!monthsNumber || monthsNumber <= 0) {
+                            toast.error('Выберите срок аренды');
+                            return;
+                          }
+
+                          if (includeMoving && !movingAddressFrom.trim()) {
+                            toast.error('Укажите адрес забора вещей');
+                            return;
+                          }
+
+                          setIsCreatingOrder(true);
+                          setOrderError(null);
+
+                          try {
+                            // Синхронизируем услуги с газелью
+                            let finalServices = [...services];
+                            if (includeMoving && gazelleService) {
+                              finalServices = syncGazelleService(finalServices);
+                            }
+
+                            const validServices = finalServices.filter(
+                              (service) => service.service_id && service.count > 0
+                            );
+
+                            // Проверка услуг для обычных пользователей
+                            if (includePacking && validServices.length === 0 && !isAdminOrManager) {
+                              toast.error('Добавьте хотя бы одну услугу для упаковки');
+                              setIsCreatingOrder(false);
+                              return;
+                            }
+
+                            const orderData = {
+                              storage_id: previewStorage.id,
+                              months: monthsNumber,
+                              order_items: [{
+                                name: previewStorage.name || `Бокс ${previewStorage.id}`,
+                                volume: 0,
+                                cargo_mark: 'NO'
+                              }],
+                              is_selected_moving: includeMoving,
+                              is_selected_package: includePacking && validServices.length > 0,
+                            };
+
+                            // Добавляем user_id для менеджеров/админов
+                            if (isAdminOrManager && selectedClientUser) {
+                              orderData.user_id = selectedClientUser.id;
+                            }
+
+                            // Добавляем перевозки
+                            if (includeMoving && movingAddressFrom.trim()) {
+                              orderData.moving_orders = [
+                                {
+                                  moving_date: new Date().toISOString(),
+                                  status: 'PENDING_FROM',
+                                  address: movingAddressFrom.trim(),
+                                },
+                                {
+                                  moving_date: new Date().toISOString(),
+                                  status: 'PENDING_TO',
+                                  address: movingAddressFrom.trim(),
+                                }
+                              ];
+                            }
+
+                            // Добавляем услуги
+                            if (includePacking && validServices.length > 0) {
+                              orderData.services = validServices.map((service) => ({
+                                service_id: Number(service.service_id),
+                                count: service.count,
+                              }));
+                            }
+
+                            const result = await warehouseApi.createOrder(orderData);
+
+                            toast.success(
+                              <div>
+                                <div><strong>Заказ успешно создан!</strong></div>
+                                <div style={{ marginTop: 5 }}>
+                                  СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заказа менеджером.
+                                </div>
+                              </div>,
+                              { autoClose: 4000 }
+                            );
+
+                            // Перенаправляем на страницу заказов (для админа/менеджера - на запросы, для обычных пользователей - на платежи)
+                            setTimeout(() => {
+                              navigate('/personal-account', { state: { activeSection: isAdminOrManager ? 'request' : 'payments' } });
+                            }, 1500);
+                          } catch (error) {
+                            console.error('Ошибка при создании заказа:', error);
+                            const errorMessage = error.response?.data?.message || 
+                                                error.response?.data?.details?.[0]?.message ||
+                                                'Не удалось создать заказ. Попробуйте позже.';
+                            setOrderError(errorMessage);
+                            toast.error(errorMessage);
+                          } finally {
+                            setIsCreatingOrder(false);
+                          }
+                        }}
+                        disabled={
+                          (isAdminOrManager && !selectedClientUser) ||
+                          isCreatingOrder ||
+                          !previewStorage ||
+                          !monthsNumber ||
+                          monthsNumber <= 0 ||
+                          (includeMoving && !movingAddressFrom.trim())
+                        }
                       >
-                        Забронировать бокс
+                        {isCreatingOrder ? 'Создание заказа...' : 'Забронировать бокс'}
                       </SmartButton>
+                      
+                      {orderError && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-sm text-red-600">{orderError}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -2222,6 +2549,21 @@ const WarehouseData = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Модальное окно выбора пользователя для менеджеров/админов */}
+      {isAdminOrManager && (
+        <ClientSelector
+          isOpen={isClientSelectorOpen}
+          onClose={() => setIsClientSelectorOpen(false)}
+          selectedUser={selectedClientUser}
+          onUserSelect={(user) => {
+            setSelectedClientUser(user);
+            if (user) {
+              setIsClientSelectorOpen(false);
+            }
+          }}
+        />
       )}
     </div>
   );

@@ -49,5 +49,31 @@ export const usersApi = {
       console.error('Ошибка при удалении пользователя:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Поиск пользователей по email, phone или name (для ADMIN и MANAGER)
+  searchUsers: async (query) => {
+    try {
+      console.log('Отправка запроса на поиск пользователей:', query);
+      const response = await api.get('/users/search', { params: { query } });
+      console.log('Пользователи найдены:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Создание пользователя без пароля (для ADMIN и MANAGER)
+  createUserByManager: async (userData) => {
+    try {
+      console.log('Отправка запроса на создание пользователя:', userData);
+      const response = await api.post('/users/create', userData);
+      console.log('Пользователь успешно создан:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при создании пользователя:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 
