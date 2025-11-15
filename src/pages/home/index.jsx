@@ -36,6 +36,7 @@ import { Truck, Package, X, Info, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
+import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -104,6 +105,8 @@ const HomePage = memo(() => {
   const [submitError, setSubmitError] = useState(null);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const [callbackModalContext, setCallbackModalContext] = useState('callback');
+  const [isLeadSourceModalOpen, setIsLeadSourceModalOpen] = useState(false);
+  const { leadSource, saveLeadSource } = useLeadSource();
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -375,6 +378,18 @@ const HomePage = memo(() => {
       combinedTotal,
     };
   }, [pricePreview, serviceSummary.total]);
+
+  // Показываем модальное окно источника лида при первом посещении
+  useEffect(() => {
+    if (!isAuthenticated && shouldShowLeadSourceModal()) {
+      // Небольшая задержка для лучшего UX
+      const timer = setTimeout(() => {
+        setIsLeadSourceModalOpen(true);
+      }, 2000); // Показываем через 2 секунды после загрузки страницы
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2063,6 +2078,12 @@ const HomePage = memo(() => {
         onOpenChange={handleCallbackModalOpenChange}
         showRegisterPrompt={!isAuthenticated}
         description={callbackModalDescription}
+      />
+
+      <LeadSourceModal
+        open={isLeadSourceModalOpen}
+        onOpenChange={setIsLeadSourceModalOpen}
+        onSelect={saveLeadSource}
       />
 
       <Footer />

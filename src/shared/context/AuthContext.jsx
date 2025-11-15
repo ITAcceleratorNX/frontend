@@ -102,14 +102,18 @@ export const AuthProvider = ({ children }) => {
   }, [queryClient, refetch]);
 
   // Мемоизированная функция для регистрации
-  const register = useCallback(async (email, uniqueCode, password) => {
+  const register = useCallback(async (email, uniqueCode, password, leadSource = null) => {
     try {
-      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации:', email);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации:', email, 'lead_source:', leadSource);
       
-      const response = await authApi.register(email, uniqueCode, password);
+      const response = await authApi.register(email, uniqueCode, password, leadSource);
       
       if (response.success) {
         if (import.meta.env.DEV) console.log('AuthContext: Регистрация успешна');
+        // Очищаем сохраненный источник после успешной регистрации
+        if (leadSource) {
+          localStorage.removeItem('extraspace_lead_source');
+        }
         return { success: true };
       } else {
         throw new Error('Не удалось завершить регистрацию');

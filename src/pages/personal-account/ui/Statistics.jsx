@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { useQuery } from '@tanstack/react-query';
+import { statisticsApi } from '../../../shared/api/statisticsApi';
 
 const INITIAL_FILTERS = {
   period: 'year',
@@ -7,6 +9,7 @@ const INITIAL_FILTERS = {
   storageType: 'all',
   applicationStatus: 'all',
   paymentStatus: 'all',
+  contractStatus: 'all',
   leadSource: 'all',
 };
 
@@ -20,10 +23,9 @@ const PERIOD_OPTIONS = [
 
 const WAREHOUSE_OPTIONS = [
   { value: 'all', label: 'Все склады' },
-  { value: 'mega', label: 'Мега' },
-  { value: 'komfort', label: 'Комфорт' },
-  { value: 'esentai', label: 'Есентай' },
-  { value: 'atlas', label: 'Atlas' },
+  { value: 'Mega', label: 'ЖК Mega Towers' },
+  { value: 'Комфорт', label: 'ЖК Комфорт Сити' },
+  { value: 'Есентай', label: 'ЖК Есентай' },
 ];
 
 const STORAGE_TYPE_OPTIONS = [
@@ -35,17 +37,24 @@ const STORAGE_TYPE_OPTIONS = [
 
 const APPLICATION_STATUS_OPTIONS = [
   { value: 'all', label: 'Все статусы' },
-  { value: 'new', label: 'Новая' },
-  { value: 'in_progress', label: 'В работе' },
-  { value: 'completed', label: 'Завершена' },
-  { value: 'cancelled', label: 'Отменена' },
+  { value: 'INACTIVE', label: 'Неактивна' },
+  { value: 'ACTIVE', label: 'Активна' },
+  { value: 'APPROVED', label: 'Одобрена' },
+  { value: 'PROCESSING', label: 'В обработке' },
+  { value: 'CANCELED', label: 'Отменена' },
+  { value: 'FINISHED', label: 'Завершена' },
 ];
 
 const PAYMENT_STATUS_OPTIONS = [
   { value: 'all', label: 'Все' },
-  { value: 'paid', label: 'Оплачено' },
-  { value: 'unpaid', label: 'Не оплачено' },
-  { value: 'partial', label: 'Частично оплачено' },
+  { value: 'PAID', label: 'Оплачено' },
+  { value: 'UNPAID', label: 'Не оплачено' },
+];
+
+const CONTRACT_STATUS_OPTIONS = [
+  { value: 'all', label: 'Все' },
+  { value: 'SIGNED', label: 'Подписан' },
+  { value: 'UNSIGNED', label: 'Не подписан' },
 ];
 
 const LEAD_SOURCE_OPTIONS = [
@@ -54,28 +63,29 @@ const LEAD_SOURCE_OPTIONS = [
   { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'telegram', label: 'Telegram' },
   { value: 'instagram', label: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok' },
   { value: 'ads', label: 'Реклама' },
-  { value: 'referral', label: 'Реферальная программа' },
 ];
 
 const REQUEST_STATUS_OPTIONS = [
   { value: 'all', label: 'Все статусы' },
-  { value: 'new', label: 'Новый' },
-  { value: 'processing', label: 'В обработке' },
-  { value: 'active', label: 'Активен' },
-  { value: 'completed', label: 'Завершено' },
-  { value: 'cancelled', label: 'Отменено' },
+  { value: 'INACTIVE', label: 'Неактивна' },
+  { value: 'ACTIVE', label: 'Активна' },
+  { value: 'APPROVED', label: 'Одобрена' },
+  { value: 'PROCESSING', label: 'В обработке' },
+  { value: 'CANCELED', label: 'Отменена' },
+  { value: 'FINISHED', label: 'Завершена' },
 ];
 
 const REQUESTS_DATA = [
-  { id: 251, client: 'Юлия', warehouse: 'Box 127', status: 'completed', amount: 16000 },
-  { id: 250, client: 'Максим', warehouse: 'ЖК Средний', status: 'new', amount: 27000 },
-  { id: 249, client: 'Анна', warehouse: 'Box 214', status: 'processing', amount: 10000 },
-  { id: 248, client: 'Иван', warehouse: 'Центр', status: 'active', amount: 42000 },
-  { id: 247, client: 'Сергей', warehouse: 'Комфорт', status: 'completed', amount: 35500 },
-  { id: 246, client: 'Дарья', warehouse: 'Atlas', status: 'processing', amount: 18500 },
-  { id: 245, client: 'Алексей', warehouse: 'Мега', status: 'cancelled', amount: 0 },
-  { id: 244, client: 'Лейла', warehouse: 'Есентай', status: 'active', amount: 33200 },
+  { id: 251, client: 'Юлия', warehouse: 'Box 127', status: 'FINISHED', amount: 16000 },
+  { id: 250, client: 'Максим', warehouse: 'ЖК Средний', status: 'INACTIVE', amount: 27000 },
+  { id: 249, client: 'Анна', warehouse: 'Box 214', status: 'PROCESSING', amount: 10000 },
+  { id: 248, client: 'Иван', warehouse: 'Центр', status: 'ACTIVE', amount: 42000 },
+  { id: 247, client: 'Сергей', warehouse: 'Комфорт', status: 'FINISHED', amount: 35500 },
+  { id: 246, client: 'Дарья', warehouse: 'Atlas', status: 'PROCESSING', amount: 18500 },
+  { id: 245, client: 'Алексей', warehouse: 'Мега', status: 'CANCELED', amount: 0 },
+  { id: 244, client: 'Лейла', warehouse: 'Есентай', status: 'ACTIVE', amount: 33200 },
 ];
 
 const ACTION_TYPE_OPTIONS = [
@@ -146,19 +156,21 @@ const ACTION_LOGS_DATA = [
 ];
 
 const STATUS_BADGE_STYLES = {
-  new: 'bg-emerald-100 text-emerald-600',
-  processing: 'bg-amber-100 text-amber-600',
-  active: 'bg-sky-100 text-sky-600',
-  completed: 'bg-slate-100 text-slate-700',
-  cancelled: 'bg-rose-100 text-rose-600',
+  INACTIVE: 'bg-emerald-100 text-emerald-600',
+  ACTIVE: 'bg-sky-100 text-sky-600',
+  APPROVED: 'bg-blue-100 text-blue-600',
+  PROCESSING: 'bg-amber-100 text-amber-600',
+  CANCELED: 'bg-rose-100 text-rose-600',
+  FINISHED: 'bg-slate-100 text-slate-700',
 };
 
 const STATUS_LABELS = {
-  new: 'Новый',
-  processing: 'В обработке',
-  active: 'Активен',
-  completed: 'Завершено',
-  cancelled: 'Отменено',
+  INACTIVE: 'Неактивна',
+  ACTIVE: 'Активна',
+  APPROVED: 'Одобрена',
+  PROCESSING: 'В обработке',
+  CANCELED: 'Отменена',
+  FINISHED: 'Завершена',
 };
 
 const BASE_SUMMARY = {
@@ -346,77 +358,85 @@ const adjustValue = (baseValue, filters, seedSuffix, scale = 0.12) => {
   return Math.max(0, adjusted);
 };
 
-const useStatisticsData = (filters) =>
-  useMemo(() => {
-    const period = filters.period;
-    const summaryBase = BASE_SUMMARY[period] || BASE_SUMMARY.year;
-    const seriesBase = BASE_SERIES[period] || BASE_SERIES.year;
-    const leadsBase = BASE_LEAD_SOURCES[period] || BASE_LEAD_SOURCES.year;
+const useStatisticsData = (filters) => {
+  // Запросы к API
+  const { data: summaryData, isLoading: isSummaryLoading } = useQuery({
+    queryKey: ['statistics', 'summary', filters],
+    queryFn: () => statisticsApi.getSummary(filters),
+    staleTime: 5 * 60 * 1000, // 5 минут
+    retry: 2,
+  });
 
-    const summary = Object.entries(summaryBase).map(([key, value]) => {
-      const adjusted =
-        key === 'occupancy'
-          ? Math.min(
-              100,
-              Math.max(5, Math.round(adjustValue(value, filters, `summary-${key}`, 0.08))),
-            )
-          : Math.round(adjustValue(value, filters, `summary-${key}`, 0.15));
+  const { data: lineChartData, isLoading: isChartLoading } = useQuery({
+    queryKey: ['statistics', 'line-chart', filters],
+    queryFn: () => statisticsApi.getLineChartData(filters),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
 
-      const formattedValue =
-        key === 'salesTotal'
-          ? formatCurrency(adjusted)
-          : key === 'occupancy'
-            ? `${adjusted}%`
-            : formatNumber(adjusted);
+  const { data: leadSourcesData, isLoading: isLeadSourcesLoading } = useQuery({
+    queryKey: ['statistics', 'lead-sources', filters],
+    queryFn: () => statisticsApi.getLeadSources(filters),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  return useMemo(() => {
+    const isLoading = isSummaryLoading || isChartLoading || isLeadSourcesLoading;
+
+    // Если данные загружаются, возвращаем пустые данные
+    if (isLoading || !summaryData || !lineChartData || !leadSourcesData) {
+      return {
+        summary: [],
+        lineChartData: { labels: [], datasets: [] },
+        leadSources: [],
+        tableRows: [],
+        isLoading: true,
+      };
+    }
+
+    // Форматируем сводную статистику
+    const summary = Object.entries(SUMMARY_TITLES).map(([key, title]) => {
+      let value;
+      let rawValue;
+
+      if (key === 'salesTotal') {
+        rawValue = summaryData.salesTotal || 0;
+        value = formatCurrency(rawValue);
+      } else if (key === 'occupancy') {
+        rawValue = summaryData.occupancy || 0;
+        value = `${rawValue}%`;
+      } else {
+        rawValue = summaryData[key] || 0;
+        value = formatNumber(rawValue);
+      }
 
       return {
         key,
-        title: SUMMARY_TITLES[key],
-        value: formattedValue,
-        rawValue: adjusted,
+        title,
+        value,
+        rawValue,
       };
     });
 
-    const lineChartData = {
-      labels: seriesBase.labels,
-      datasets: [
-        {
-          name: 'Заявки',
-          color: '#3B82F6',
-          values: seriesBase.requests.map((value, idx) =>
-            Math.round(adjustValue(value, filters, `requests-${idx}`, 0.12)),
-          ),
-        },
-        {
-          name: 'Продажи',
-          color: '#22C55E',
-          values: seriesBase.sales.map((value, idx) =>
-            Math.round(adjustValue(value, filters, `sales-${idx}`, 0.12)),
-          ),
-        },
-      ],
-    };
-
-    const leadSourceValues = leadsBase.map((item, idx) => ({
-      ...item,
-      value: Math.max(
-        3,
-        Math.round(adjustValue(item.value, filters, `lead-${item.key}-${idx}`, 0.15)),
-      ),
-    }));
-
-    const totalLeadValue = leadSourceValues.reduce((acc, item) => acc + item.value, 0);
-    const normalizedLeadSources = leadSourceValues.map((item) => ({
-      ...item,
-      value: Math.round((item.value / totalLeadValue) * 100),
-    }));
+    // Нормализуем источники лидов (преобразуем в проценты)
+    const totalLeadValue = leadSourcesData.reduce((acc, item) => acc + (item.value || 0), 0);
+    const normalizedLeadSources = totalLeadValue > 0
+      ? leadSourcesData.map((item) => ({
+          ...item,
+          value: Math.round(((item.value || 0) / totalLeadValue) * 100),
+        }))
+      : leadSourcesData;
 
     // Корректируем округление, чтобы сумма равнялась 100
-    const diff = 100 - normalizedLeadSources.reduce((acc, item) => acc + item.value, 0);
+    const totalPercent = normalizedLeadSources.reduce((acc, item) => acc + item.value, 0);
+    const diff = 100 - totalPercent;
     if (diff !== 0 && normalizedLeadSources.length > 0) {
       normalizedLeadSources[0].value += diff;
     }
 
+    // Формируем данные для экспорта
+    const period = filters.period || 'year';
     const tableRows = [
       ['Показатель', 'Значение'],
       ...summary.map(({ title, value }) => [title, value]),
@@ -424,10 +444,10 @@ const useStatisticsData = (filters) =>
       ['Период', PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? period],
       [],
       ['Динамика', 'Заявки', 'Продажи'],
-      ...lineChartData.labels.map((label, idx) => [
+      ...(lineChartData.labels || []).map((label, idx) => [
         label,
-        lineChartData.datasets[0].values[idx],
-        lineChartData.datasets[1].values[idx],
+        lineChartData.datasets?.[0]?.values?.[idx] || 0,
+        lineChartData.datasets?.[1]?.values?.[idx] || 0,
       ]),
       [],
       ['Источник лидов', 'Доля'],
@@ -436,11 +456,13 @@ const useStatisticsData = (filters) =>
 
     return {
       summary,
-      lineChartData,
+      lineChartData: lineChartData || { labels: [], datasets: [] },
       leadSources: normalizedLeadSources,
       tableRows,
+      isLoading: false,
     };
-  }, [filters]);
+  }, [summaryData, lineChartData, leadSourcesData, filters, isSummaryLoading, isChartLoading, isLeadSourcesLoading]);
+};
 
 const SummaryCard = ({ title, value, styleKey }) => (
   <div
@@ -687,11 +709,29 @@ const Statistics = () => {
   const [logsSearch, setLogsSearch] = useState('');
   const [requestStatusFilter, setRequestStatusFilter] = useState('all');
   const [logTypeFilter, setLogTypeFilter] = useState('all');
+  const [requestsPage, setRequestsPage] = useState(1);
 
-  const { summary, lineChartData, leadSources, tableRows } = useStatisticsData(filters);
+  const { summary, lineChartData, leadSources, tableRows, isLoading: isStatisticsLoading } = useStatisticsData(filters);
+
+  // Запрос заявок
+  const { data: requestsData, isLoading: isRequestsLoading } = useQuery({
+    queryKey: ['statistics', 'requests', filters, requestsPage],
+    queryFn: () => statisticsApi.getRequests(filters, requestsPage, 50),
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+
+  // Запрос логов действий
+  const { data: logsData, isLoading: isLogsLoading } = useQuery({
+    queryKey: ['statistics', 'action-logs', filters],
+    queryFn: () => statisticsApi.getActionLogs(filters, 1, 50),
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
   const filteredRequests = useMemo(() => {
+    const requests = requestsData?.data || [];
     const normalizedSearch = requestsSearch.trim().toLowerCase();
-    return REQUESTS_DATA.filter((item) => {
+    return requests.filter((item) => {
       const matchesStatus =
         requestStatusFilter === 'all' ? true : item.status === requestStatusFilter;
       const statusLabel = STATUS_LABELS[item.status] ?? '';
@@ -704,28 +744,34 @@ const Statistics = () => {
         formatCurrency(item.amount).toLowerCase().includes(normalizedSearch);
       return matchesStatus && matchesSearch;
     });
-  }, [requestsSearch, requestStatusFilter]);
+  }, [requestsData, requestsSearch, requestStatusFilter]);
 
   const filteredLogs = useMemo(() => {
+    const logs = logsData?.data || [];
     const normalizedSearch = logsSearch.trim().toLowerCase();
-    return ACTION_LOGS_DATA.filter((item) => {
+    return logs.filter((item) => {
       const matchesType = logTypeFilter === 'all' ? true : item.type === logTypeFilter;
       const matchesSearch =
         !normalizedSearch ||
         `${item.id}`.includes(normalizedSearch) ||
-        item.user.toLowerCase().includes(normalizedSearch) ||
-        item.action.toLowerCase().includes(normalizedSearch) ||
-        item.target.toLowerCase().includes(normalizedSearch);
+        item.user?.toLowerCase().includes(normalizedSearch) ||
+        item.action?.toLowerCase().includes(normalizedSearch) ||
+        item.target?.toLowerCase().includes(normalizedSearch);
       return matchesType && matchesSearch;
     });
-  }, [logsSearch, logTypeFilter]);
+  }, [logsData, logsSearch, logTypeFilter]);
 
   const handleFilterChange = (field) => (event) => {
     const value = event.target.value;
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    console.log('Filter change:', field, 'value:', value);
+    setFilters((prev) => {
+      const newFilters = {
+        ...prev,
+        [field]: value,
+      };
+      console.log('New filters:', newFilters);
+      return newFilters;
+    });
   };
 
   const handleResetFilters = () => {
@@ -834,7 +880,7 @@ const Statistics = () => {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
             <FilterSelect
               label="Период"
               value={filters.period}
@@ -866,6 +912,12 @@ const Statistics = () => {
               options={PAYMENT_STATUS_OPTIONS}
             />
             <FilterSelect
+              label="Контракт"
+              value={filters.contractStatus}
+              onChange={handleFilterChange('contractStatus')}
+              options={CONTRACT_STATUS_OPTIONS}
+            />
+            <FilterSelect
               label="Источник лида"
               value={filters.leadSource}
               onChange={handleFilterChange('leadSource')}
@@ -882,6 +934,7 @@ const Statistics = () => {
                   storageType: STORAGE_TYPE_OPTIONS,
                   applicationStatus: APPLICATION_STATUS_OPTIONS,
                   paymentStatus: PAYMENT_STATUS_OPTIONS,
+                  contractStatus: CONTRACT_STATUS_OPTIONS,
                   leadSource: LEAD_SOURCE_OPTIONS,
                 };
 
@@ -923,60 +976,84 @@ const Statistics = () => {
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {summary.map((card) => (
-          <SummaryCard key={card.key} title={card.title} value={card.value} styleKey={card.key} />
-        ))}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-2 pb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Заявки и продажи</h2>
-            <p className="text-sm text-slate-500">
-              Динамика заявок и оплаченных продаж по выбранному периоду.
-            </p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <LineChart data={lineChartData} />
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-6">
-            {lineChartData.datasets.map((dataset) => (
-              <div key={dataset.name} className="flex items-center gap-2 text-sm text-slate-600">
-                <span
-                  className="inline-block h-3 w-3 rounded-full"
-                  style={{ backgroundColor: dataset.color }}
-                />
-                {dataset.name}
-              </div>
-            ))}
-          </div>
+      {isStatisticsLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-slate-500">Загрузка статистики...</div>
         </div>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {summary.map((card) => (
+            <SummaryCard key={card.key} title={card.title} value={card.value} styleKey={card.key} />
+          ))}
+        </div>
+      )}
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-2 pb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Источники лидов</h2>
-            <p className="text-sm text-slate-500">
-              Распределение лидов по каналам привлечения за выбранный период.
-            </p>
-          </div>
-          <PieChart data={leadSources} highlightedKey={filters.leadSource} />
-          <div className="mt-4 space-y-2">
-            {leadSources.map((item) => (
-              <div key={item.label} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span
-                    className="inline-block h-3 w-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  {item.label}
+      {isStatisticsLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-slate-500">Загрузка графиков...</div>
+        </div>
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2 pb-4">
+              <h2 className="text-lg font-semibold text-slate-900">Заявки и продажи</h2>
+              <p className="text-sm text-slate-500">
+                Динамика заявок и оплаченных продаж по выбранному периоду.
+              </p>
+            </div>
+            {lineChartData.labels && lineChartData.labels.length > 0 ? (
+              <>
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <LineChart data={lineChartData} />
                 </div>
-                <span className="font-medium text-slate-900">{item.value}%</span>
-              </div>
-            ))}
+                <div className="mt-4 flex flex-wrap items-center gap-6">
+                  {lineChartData.datasets?.map((dataset) => (
+                    <div key={dataset.name} className="flex items-center gap-2 text-sm text-slate-600">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full"
+                        style={{ backgroundColor: dataset.color }}
+                      />
+                      {dataset.name}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="py-12 text-center text-slate-500">Нет данных для отображения</div>
+            )}
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2 pb-4">
+              <h2 className="text-lg font-semibold text-slate-900">Источники лидов</h2>
+              <p className="text-sm text-slate-500">
+                Распределение лидов по каналам привлечения за выбранный период.
+              </p>
+            </div>
+            {leadSources && leadSources.length > 0 ? (
+              <>
+                <PieChart data={leadSources} highlightedKey={filters.leadSource} />
+                <div className="mt-4 space-y-2">
+                  {leadSources.map((item) => (
+                    <div key={item.label} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        {item.label}
+                      </div>
+                      <span className="font-medium text-slate-900">{item.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="py-12 text-center text-slate-500">Нет данных для отображения</div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4">
@@ -1076,7 +1153,13 @@ const Statistics = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredRequests.length ? (
+                  {isRequestsLoading ? (
+                    <tr>
+                      <td className="px-4 py-6 text-center text-sm text-slate-400" colSpan={5}>
+                        Загрузка заявок...
+                      </td>
+                    </tr>
+                  ) : filteredRequests.length ? (
                     filteredRequests.map((item) => (
                       <tr key={item.id} className="text-slate-700">
                         <td className="px-4 py-3 font-medium text-slate-900">{item.id}</td>
@@ -1120,7 +1203,13 @@ const Statistics = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredLogs.length ? (
+                  {isLogsLoading ? (
+                    <tr>
+                      <td className="px-4 py-6 text-center text-sm text-slate-400" colSpan={5}>
+                        Загрузка логов...
+                      </td>
+                    </tr>
+                  ) : filteredLogs.length ? (
                     filteredLogs.map((item) => (
                       <tr key={item.id} className="text-slate-700">
                         <td className="px-4 py-3 font-medium text-slate-900">{item.id}</td>

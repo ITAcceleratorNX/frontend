@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight, Shield, UserPlus, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
+import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
@@ -121,8 +122,11 @@ export const RegisterForm = () => {
         return;
       }
       
+      // Получаем сохраненный источник лида
+      const leadSource = getStoredLeadSource();
+      
       // Отправляем данные регистрации через контекст
-      const result = await registerUser(data.email, data.unique_code, data.password);
+      const result = await registerUser(data.email, data.unique_code, data.password, leadSource);
       
       console.log('RegisterForm: Ответ от регистрации:', result);
       

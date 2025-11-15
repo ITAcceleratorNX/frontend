@@ -29,10 +29,15 @@ export const authApi = {
   },
 
   // Регистрация нового пользователя
-  register: async (email, unique_code, password) => {
+  register: async (email, unique_code, password, lead_source = null) => {
     try {
-      console.log(`Отправка запроса на регистрацию пользователя: ${email}`);
-      const response = await api.post('/auth/register', { email, unique_code, password });
+      console.log(`Отправка запроса на регистрацию пользователя: ${email}`, lead_source ? `с источником: ${lead_source}` : '');
+      const response = await api.post('/auth/register', { 
+        email, 
+        unique_code, 
+        password,
+        lead_source 
+      });
       console.log('Успешная регистрация пользователя');
       return response.data;
     } catch (error) {
