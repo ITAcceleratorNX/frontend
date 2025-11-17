@@ -311,6 +311,18 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 0,
   }).format(Math.round(value));
 
+// Сокращенный формат для отображения на диаграмме
+const formatCompactNumber = (value) => {
+  const num = Math.round(value);
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1).replace('.0', '')}M`;
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(1).replace('.0', '')}K`;
+  }
+  return num.toString();
+};
+
 const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
   return {
@@ -423,7 +435,7 @@ const useStatisticsData = (filters) => {
     const totalLeadValue = leadSourcesData.reduce((acc, item) => acc + (item.value || 0), 0);
     const normalizedLeadSources = totalLeadValue > 0
       ? leadSourcesData.map((item) => ({
-          ...item,
+      ...item,
           value: Math.round(((item.value || 0) / totalLeadValue) * 100),
         }))
       : leadSourcesData;
@@ -447,7 +459,7 @@ const useStatisticsData = (filters) => {
       ...(lineChartData.labels || []).map((label, idx) => [
         label,
         lineChartData.datasets?.[0]?.values?.[idx] || 0,
-        lineChartData.datasets?.[1]?.values?.[idx] || 0,
+        formatCurrency(lineChartData.datasets?.[1]?.values?.[idx] || 0),
       ]),
       [],
       ['Источник лидов', 'Доля'],
@@ -535,6 +547,10 @@ const LineChart = ({ data }) => {
       {Array.from({ length: yTicks + 1 }).map((_, idx) => {
         const y = margin.top + (idx / yTicks) * chartHeight;
         const value = Math.round(maxValue - (idx / yTicks) * maxValue);
+        // Форматируем ось Y, если есть датасет "Продажи" (обычно это второй датасет с большими значениями)
+        const hasSalesDataset = data.datasets.some(d => d.name === 'Продажи');
+        // Используем сокращенный формат для оси Y, чтобы значения помещались
+        const displayValue = hasSalesDataset && maxValue > 1000 ? formatCompactNumber(value) : value;
         return (
           <g key={`grid-${idx}`}>
             <line
@@ -553,14 +569,14 @@ const LineChart = ({ data }) => {
               fontSize="12"
               fill="#475569"
             >
-              {value}
+              {displayValue}
             </text>
           </g>
         );
       })}
 
       {/* Paths and points */}
-      {data.datasets.map((dataset) => (
+      {data.datasets.map((dataset, datasetIdx) => (
         <g key={dataset.name}>
           <path
             d={buildPath(dataset.values)}
@@ -572,6 +588,9 @@ const LineChart = ({ data }) => {
           />
           {dataset.values.map((value, idx) => {
             const point = getPoint(value, idx, dataset.values.length);
+            // Для продаж (второй датасет) используем сокращенный формат для компактности
+            // В экспорте будет полная сумма
+            const displayValue = datasetIdx === 1 && value > 0 ? formatCompactNumber(value) : value;
             return (
               <g key={`${dataset.name}-${idx}`}>
                 <circle cx={point.x} cy={point.y} r="4.5" fill="#fff" stroke={dataset.color} strokeWidth="2.5" />
@@ -579,10 +598,10 @@ const LineChart = ({ data }) => {
                   x={point.x}
                   y={point.y - 12}
                   textAnchor="middle"
-                  fontSize="11"
+                  fontSize="10"
                   fill={dataset.color}
                 >
-                  {value}
+                  {displayValue}
                 </text>
               </g>
             );
@@ -766,8 +785,8 @@ const Statistics = () => {
     console.log('Filter change:', field, 'value:', value);
     setFilters((prev) => {
       const newFilters = {
-        ...prev,
-        [field]: value,
+      ...prev,
+      [field]: value,
       };
       console.log('New filters:', newFilters);
       return newFilters;
@@ -808,7 +827,7 @@ const Statistics = () => {
     const dynamicsRows = lineChartData.labels
       .map(
         (label, idx) =>
-          `<tr><td style="padding:6px 10px;border:1px solid #e2e8f0;">${label}</td><td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${lineChartData.datasets[0].values[idx]}</td><td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${lineChartData.datasets[1].values[idx]}</td></tr>`,
+          `<tr><td style="padding:6px 10px;border:1px solid #e2e8f0;">${label}</td><td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${lineChartData.datasets[0].values[idx]}</td><td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${formatCurrency(lineChartData.datasets[1].values[idx] || 0)}</td></tr>`,
       )
       .join('');
 
@@ -981,11 +1000,11 @@ const Statistics = () => {
           <div className="text-slate-500">Загрузка статистики...</div>
         </div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {summary.map((card) => (
-            <SummaryCard key={card.key} title={card.title} value={card.value} styleKey={card.key} />
-          ))}
-        </div>
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {summary.map((card) => (
+          <SummaryCard key={card.key} title={card.title} value={card.value} styleKey={card.key} />
+        ))}
+      </div>
       )}
 
       {isStatisticsLoading ? (
@@ -993,66 +1012,66 @@ const Statistics = () => {
           <div className="text-slate-500">Загрузка графиков...</div>
         </div>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-2 pb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Заявки и продажи</h2>
-              <p className="text-sm text-slate-500">
-                Динамика заявок и оплаченных продаж по выбранному периоду.
-              </p>
-            </div>
+      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-2 pb-4">
+            <h2 className="text-lg font-semibold text-slate-900">Заявки и продажи</h2>
+            <p className="text-sm text-slate-500">
+              Динамика заявок и оплаченных продаж по выбранному периоду.
+            </p>
+          </div>
             {lineChartData.labels && lineChartData.labels.length > 0 ? (
               <>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <LineChart data={lineChartData} />
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-6">
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <LineChart data={lineChartData} />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-6">
                   {lineChartData.datasets?.map((dataset) => (
-                    <div key={dataset.name} className="flex items-center gap-2 text-sm text-slate-600">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full"
-                        style={{ backgroundColor: dataset.color }}
-                      />
-                      {dataset.name}
-                    </div>
-                  ))}
-                </div>
+              <div key={dataset.name} className="flex items-center gap-2 text-sm text-slate-600">
+                <span
+                  className="inline-block h-3 w-3 rounded-full"
+                  style={{ backgroundColor: dataset.color }}
+                />
+                {dataset.name}
+              </div>
+            ))}
+          </div>
               </>
             ) : (
               <div className="py-12 text-center text-slate-500">Нет данных для отображения</div>
             )}
-          </div>
+        </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-2 pb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Источники лидов</h2>
-              <p className="text-sm text-slate-500">
-                Распределение лидов по каналам привлечения за выбранный период.
-              </p>
-            </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-2 pb-4">
+            <h2 className="text-lg font-semibold text-slate-900">Источники лидов</h2>
+            <p className="text-sm text-slate-500">
+              Распределение лидов по каналам привлечения за выбранный период.
+            </p>
+          </div>
             {leadSources && leadSources.length > 0 ? (
               <>
-                <PieChart data={leadSources} highlightedKey={filters.leadSource} />
-                <div className="mt-4 space-y-2">
-                  {leadSources.map((item) => (
-                    <div key={item.label} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-slate-600">
-                        <span
-                          className="inline-block h-3 w-3 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        {item.label}
-                      </div>
-                      <span className="font-medium text-slate-900">{item.value}%</span>
-                    </div>
-                  ))}
+          <PieChart data={leadSources} highlightedKey={filters.leadSource} />
+          <div className="mt-4 space-y-2">
+            {leadSources.map((item) => (
+              <div key={item.label} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  {item.label}
                 </div>
+                <span className="font-medium text-slate-900">{item.value}%</span>
+              </div>
+            ))}
+          </div>
               </>
             ) : (
               <div className="py-12 text-center text-slate-500">Нет данных для отображения</div>
             )}
-          </div>
         </div>
+      </div>
       )}
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
