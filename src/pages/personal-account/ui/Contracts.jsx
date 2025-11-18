@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import smallBox from '../../../assets/small_box.png';
 import { useContracts, useCancelContract, useDownloadContract, useContractDetails, useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 import { 
   Check, 
@@ -523,6 +522,30 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
   );
 };
 
+// Функция для определения названия склада из адреса
+const getWarehouseName = (address) => {
+  if (!address) return 'Облачное хранение';
+  
+  const addressLower = address.toLowerCase();
+  
+  // Проверяем по ключевым словам в адресе
+  if (addressLower.includes('мега') || addressLower.includes('mega')) {
+    return 'Мега';
+  }
+  if (addressLower.includes('есентай') || addressLower.includes('esentai')) {
+    return 'Есентай';
+  }
+  if (addressLower.includes('комфорт') || addressLower.includes('komfort')) {
+    return 'Комфорт Сити';
+  }
+  if (addressLower.includes('облач') || addressLower.includes('cloud')) {
+    return 'Облачное хранение';
+  }
+  
+  // Если не найдено, возвращаем адрес или "Облачное хранение" по умолчанию
+  return 'Облачное хранение';
+};
+
 const Contracts = () => {
   const navigate = useNavigate(); // <— добавь
   // ...
@@ -602,9 +625,10 @@ const Contracts = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-50 text-gray-700 text-sm font-medium">
-                  <th className="text-left px-6 py-4 font-medium">НАЗВАНИЕ</th>
-                  <th className="text-left px-6 py-4 font-medium">ЛОКАЦИЯ-НОМЕР БОКСА</th>
-                  <th className="text-left px-6 py-4 font-medium">ВРЕМЯ</th>
+                  <th className="text-left px-6 py-4 font-medium">НОМЕР ЗАЯВКИ</th>
+                  <th className="text-left px-6 py-4 font-medium">СКЛАД</th>
+                  <th className="text-left px-6 py-4 font-medium">ТИП ПОМЕЩЕНИЯ</th>
+                  <th className="text-left px-6 py-4 font-medium">ПЕРИОД АРЕНДЫ</th>
                   <th className="text-left px-6 py-4 font-medium">СТАТУС</th>
                   <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
                 </tr>
@@ -616,11 +640,22 @@ const Contracts = () => {
                     className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/80 transition-colors duration-200 cursor-pointer"
                     onClick={() => handleRowClick(row)}
                   >
-                    <td className="flex items-center gap-3 px-6 py-5 font-medium text-gray-900 text-base">
-                      <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
-                      <span className="text-blue-600 hover:text-blue-800 transition-colors">{`Storage (${row.total_volume} м²)`}</span>
+                    <td className="px-6 py-5 font-medium text-gray-900 text-base">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-9 h-9 flex-shrink-0 text-[#273655]" />
+                        <span 
+                          className="text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRowClick(row);
+                          }}
+                        >
+                          {`Заявка № ${row.order_id}`}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-5 text-gray-600 text-sm">{row.warehouse_address}</td>
+                    <td className="px-6 py-5 text-gray-600 text-sm">{getWarehouseName(row.warehouse_address)}</td>
+                    <td className="px-6 py-5 text-gray-600 text-sm">{row.storage_name || '-'}</td>
                     <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
                     <td className="px-6 py-5">
                       <StatusBadge status={row.order_status} type="order" />
@@ -667,19 +702,29 @@ const Contracts = () => {
                 role="button"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <img src={smallBox} alt="box" className="w-9 h-9 flex-shrink-0" />
-                  <div className="text-base font-semibold text-[#1e2c4f]">
-                    {`Storage (${row.total_volume} м²)`}
-                  </div>
+                  <FileText className="w-9 h-9 flex-shrink-0 text-[#273655]" />
+                  <span 
+                    className="text-base font-semibold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRowClick(row);
+                    }}
+                  >
+                    {`Заявка № ${row.order_id}`}
+                  </span>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-start gap-2 text-gray-700">
                     <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
-                    <span>{row.warehouse_address}</span>
+                    <span><strong>Склад:</strong> {getWarehouseName(row.warehouse_address)}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-gray-700">
+                    <Package className="w-4 h-4 mt-0.5 text-gray-500" />
+                    <span><strong>Тип помещения:</strong> {row.storage_name || '-'}</span>
                   </div>
                   <div className="flex items-start gap-2 text-gray-700">
                     <Calendar className="w-4 h-4 mt-0.5 text-gray-500" />
-                    <span>{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</span>
+                    <span><strong>Период аренды:</strong> {`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 mb-3">

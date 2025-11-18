@@ -1,78 +1,239 @@
-import React, { forwardRef } from 'react';
-import { DateInput } from "@nextui-org/react";
-import { parseDate } from '@internationalized/date';
-import 'dayjs/locale/ru';
-
+import React, { forwardRef, useMemo, useState, useRef, useEffect } from 'react';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/shared/lib/utils';
 
 const DatePicker = forwardRef(({ 
   label, 
   value, 
   onChange, 
+  onBlur,
   error, 
   disabled = false,
   className = '',
-  placeholder = '',
+  placeholder = 'ДД.ММ.ГГГГ',
   ...props 
 }, ref) => {
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef(null);
   
-  // Преобразование строкового значения в объект DateValue
-  const dateValue = value ? parseDate(value) : null;
-  
-  // Обработчик изменения даты
-  const handleChange = (newValue) => {
-    if (newValue) {
-      // Отправляем дату в формате YYYY-MM-DD
-      onChange(newValue.toString());
+  // Преобразование строкового значения в объект Date
+  const dateValue = useMemo(() => {
+    if (!value || typeof value !== 'string' || value.trim() === '') {
+      return undefined;
+    }
+    
+    try {
+      // Проверяем, что значение в формате YYYY-MM-DD
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(value)) {
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      }
+      // Если формат другой, пытаемся преобразовать
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+      return undefined;
+    } catch (error) {
+      console.warn('Ошибка при парсинге даты:', error);
+      return undefined;
+    }
+  }, [value]);
+
+  // Обновляем inputValue при изменении value
+  useEffect(() => {
+    if (dateValue) {
+      setInputValue(format(dateValue, 'dd.MM.yyyy', { locale: ru }));
     } else {
-      onChange('');
+      setInputValue('');
+    }
+  }, [dateValue]);
+  
+  // Обработчик выбора даты из календаря
+  const handleSelect = (date) => {
+    if (onChange) {
+      if (date) {
+        // Преобразуем дату в формат YYYY-MM-DD
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        onChange(dateString);
+        // Закрываем календарь после выбора
+        setOpen(false);
+      } else {
+        onChange('');
+      }
+    }
+    if (onBlur) {
+      onBlur();
+    }
+  };
+
+  // Форматирование введенного текста с маской ДД.ММ.ГГГГ
+  const formatInputValue = (text) => {
+    // Удаляем все нецифровые символы
+    const digits = text.replace(/\D/g, '');
+    
+    // Ограничиваем до 8 цифр (ддммгггг)
+    const limitedDigits = digits.slice(0, 8);
+    
+    // Форматируем с точками
+    let formatted = '';
+    for (let i = 0; i < limitedDigits.length; i++) {
+      if (i === 2 || i === 4) {
+        formatted += '.';
+      }
+      formatted += limitedDigits[i];
+    }
+    
+    return formatted;
+  };
+
+  // Обработчик изменения текстового ввода
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    const formatted = formatInputValue(newValue);
+    setInputValue(formatted);
+
+    // Если введена полная дата (10 символов: ДД.ММ.ГГГГ), пытаемся преобразовать
+    if (formatted.length === 10) {
+      const [day, month, year] = formatted.split('.').map(Number);
+      
+      // Валидация даты
+      if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
+        const date = new Date(year, month - 1, day);
+        
+        // Проверяем, что дата валидна (например, не 31 февраля)
+        if (date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year) {
+          // Проверяем, что дата не в будущем
+          if (date <= new Date()) {
+            const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            if (onChange) {
+              onChange(dateString);
+            }
+            return;
+          }
+        }
+      }
+    }
+  };
+
+  // Обработчик потери фокуса
+  const handleInputBlur = (e) => {
+    // Если значение неполное или невалидное, очищаем или оставляем как есть
+    if (inputValue && inputValue.length < 10) {
+      // Если введена неполная дата, пытаемся восстановить из value
+      if (dateValue) {
+        setInputValue(format(dateValue, 'dd.MM.yyyy', { locale: ru }));
+      } else {
+        setInputValue('');
+      }
+    }
+    
+    if (onBlur) {
+      onBlur();
+    }
+  };
+
+  // Обработчик нажатия клавиш
+  const handleKeyDown = (e) => {
+    // Разрешаем удаление, навигацию и т.д.
+    if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key)) {
+      return;
+    }
+    
+    // Разрешаем только цифры
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
     }
   };
 
   return (
-    <div className={`w-full ${className}`}>
+    <div className={cn('w-full', className)}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
         </label>
       )}
-      <DateInput
-        ref={ref}
-        value={dateValue}
-          onChange={handleChange}
-        isDisabled={disabled}
-        label={placeholder}
-        errorMessage={error}
-        isInvalid={!!error}
-        granularity="day"
-        classNames={{
-          inputWrapper: [
-            "h-[40px]",
-            "min-h-[40px]",
-            "bg-slate-50",
-            "rounded-md",
-            "border",
-            "border-gray-300",
-            "hover:bg-gray-100",
-            "data-[focus=true]:border-2",
-            "data-[focus=true]:border-[#1e2c4f]",
-            "group-data-[invalid=true]:border-2",
-            "group-data-[invalid=true]:border-red-500",
-          ],
-          input: [
-            "text-base",
-            "text-[#222]",
-            "placeholder:text-[#A6A6A6]",
-          ],
-          label: "hidden",
-          errorMessage: [
-            "text-xs",
-            "text-red-500",
-            "ml-0",
-            "mt-1",
-          ],
+      <div className="relative flex items-center">
+        <input
+          ref={(node) => {
+            inputRef.current = node;
+            if (typeof ref === 'function') {
+              ref(node);
+            } else if (ref) {
+              ref.current = node;
+            }
           }}
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          placeholder={placeholder}
+          maxLength={10}
+          className={cn(
+            "w-full h-[40px] px-3 pr-10 bg-slate-50 rounded-md border border-gray-300",
+            "text-base text-[#222] placeholder:text-[#A6A6A6]",
+            "focus:outline-none focus:border-2 focus:border-[#1e2c4f]",
+            "hover:bg-gray-100 transition-colors",
+            error && "border-red-500 border-2",
+            disabled && "cursor-not-allowed opacity-50"
+          )}
           {...props}
         />
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={disabled}
+              className={cn(
+                "absolute right-1 h-8 w-8 p-0 hover:bg-gray-200",
+                "text-gray-600 hover:text-gray-900",
+                disabled && "cursor-not-allowed opacity-50"
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!disabled) {
+                  setOpen(!open);
+                }
+              }}
+            >
+              <CalendarIcon className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={dateValue}
+              onSelect={handleSelect}
+              initialFocus
+              locale={ru}
+              disabled={(date) => {
+                // Отключаем будущие даты
+                return date > new Date();
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      {error && (
+        <p className="text-xs text-red-500 mt-1 ml-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 });

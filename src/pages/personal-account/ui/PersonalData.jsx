@@ -251,7 +251,9 @@ const PersonalData = memo(() => {
               rules={{
                 required: 'Дата рождения обязательна для заполнения',
                 validate: (value) => {
-                  if (!value?.trim()) return 'Дата рождения обязательна для заполнения';
+                  if (!value || (typeof value === 'string' && !value.trim())) {
+                    return 'Дата рождения обязательна для заполнения';
+                  }
 
                   const birthDate = new Date(value);
                   const today = new Date();
@@ -276,8 +278,11 @@ const PersonalData = memo(() => {
                   label="Дата рождения"
                   placeholder="ДД.ММ.ГГГГ"
                   disabled={!isEditing}
-                  value={field.value}
-                  onChange={field.onChange}
+                  value={field.value || ''}
+                  onChange={(value) => {
+                    field.onChange(value);
+                  }}
+                  onBlur={field.onBlur}
                   error={errors.bday?.message}
                   className="w-full"
                 />
