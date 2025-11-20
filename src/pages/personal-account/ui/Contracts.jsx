@@ -28,6 +28,18 @@ import { Badge } from '../../../components/ui/badge';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import {useNavigate} from "react-router-dom";
 
+const CANCEL_REASON_OPTIONS = [
+  { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
+  { value: 'too_expensive', label: 'Слишком дорого' },
+  { value: 'moving_to_new_location', label: 'Переезжаю в другой район / город / страну' },
+  { value: 'using_other_storage', label: 'Пользуюсь другим местом хранения' },
+  { value: 'ordered_by_mistake', label: 'Оформил(а) заказ по ошибке' },
+  { value: 'service_quality_issues', label: 'Есть замечания по качеству услуги' },
+  { value: 'not_satisfied_with_terms', label: 'Не устроили условия или сервис' },
+  { value: 'rarely_use', label: 'Редко пользуюсь, бокс пустует' },
+  { value: 'other', label: 'Другая причина (укажите ниже)', requiresComment: true },
+];
+
 const getContractStatusInfo = (statusText) => {
   const statusMap = {
     // Активные статусы
@@ -546,10 +558,90 @@ const getWarehouseName = (address) => {
   return 'Облачное хранение';
 };
 
+const CancelSurveyModal = ({
+  isOpen,
+  onClose,
+  selectedReason,
+  onSelectReason,
+  comment,
+  onCommentChange,
+  onSubmit,
+  isSubmitting,
+  error,
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[560px]">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили отменить?</DialogTitle>
+          <DialogDescription>
+            Ваш ответ поможет улучшить сервис и условия хранения. Пожалуйста, выберите подходящую причину.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+          {CANCEL_REASON_OPTIONS.map((option) => (
+            <label
+              key={option.value}
+              className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                selectedReason === option.value
+                  ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                  : 'border-gray-200 hover:border-[#c7d2fe]'
+              }`}
+            >
+              <input
+                type="radio"
+                name="cancel-reason"
+                className="mt-1 h-4 w-4"
+                checked={selectedReason === option.value}
+                onChange={() => onSelectReason(option.value)}
+              />
+              <span className="text-sm text-gray-800">{option.label}</span>
+            </label>
+          ))}
+        </div>
+
+        {selectedReason === 'other' && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
+            <textarea
+              className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
+              rows={4}
+              placeholder="Например: хочу поделиться предложениями по улучшению..."
+              value={comment}
+              onChange={(e) => onCommentChange(e.target.value)}
+            />
+          </div>
+        )}
+
+        {error && <p className="text-sm text-red-600">{error}</p>}
+
+        <DialogFooter className="gap-2 sm:gap-4">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            Закрыть
+          </Button>
+          <Button
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+          >
+            {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const Contracts = () => {
   const navigate = useNavigate(); // <— добавь
   // ...
   const [isDebtModalOpen, setIsDebtModalOpen] = useState(false);
+  const [isCancelSurveyOpen, setIsCancelSurveyOpen] = useState(false);
+  const [pendingCancelData, setPendingCancelData] = useState(null);
+  const [selectedCancelReason, setSelectedCancelReason] = useState('');
+  const [cancelReasonComment, setCancelReasonComment] = useState('');
+  const [cancelFormError, setCancelFormError] = useState('');
   const { data: contracts, isLoading, error } = useContracts();
   const cancelContractMutation = useCancelContract();
   const downloadContractMutation = useDownloadContract();
@@ -569,8 +661,8 @@ const Contracts = () => {
     { enabled: !!selectedContract && isDetailModalOpen }
   );
 
-  const handleCancelContract = (orderId, documentId) => {
-    cancelContractMutation.mutate({ orderId, documentId });
+  const handleCancelContract = ({ orderId, documentId, cancelReason, cancelComment }, callbacks = {}) => {
+    cancelContractMutation.mutate({ orderId, documentId, cancelReason, cancelComment }, callbacks);
   };
 
   const handleDownloadContract = (documentId) => {
@@ -590,6 +682,61 @@ const Contracts = () => {
     setIsDetailModalOpen(false);
   };
 
+  const resetCancelSurvey = () => {
+    setPendingCancelData(null);
+    setSelectedCancelReason('');
+    setCancelReasonComment('');
+    setCancelFormError('');
+  };
+
+  const openCancelSurvey = (row) => {
+    setPendingCancelData({
+      orderId: row.order_id,
+      documentId: row.contract_data?.document_id,
+    });
+    setIsCancelSurveyOpen(true);
+    setSelectedCancelReason('');
+    setCancelReasonComment('');
+    setCancelFormError('');
+  };
+
+  const closeCancelSurvey = () => {
+    setIsCancelSurveyOpen(false);
+    resetCancelSurvey();
+  };
+
+  const handleSubmitCancelSurvey = () => {
+    if (!pendingCancelData?.orderId || !pendingCancelData?.documentId) {
+      setCancelFormError('Не удалось определить договор. Попробуйте ещё раз.');
+      return;
+    }
+
+    if (!selectedCancelReason) {
+      setCancelFormError('Пожалуйста, выберите причину отмены.');
+      return;
+    }
+
+    if (selectedCancelReason === 'other' && !cancelReasonComment.trim()) {
+      setCancelFormError('Пожалуйста, опишите причину в комментарии.');
+      return;
+    }
+
+    setCancelFormError('');
+    handleCancelContract(
+      {
+        orderId: pendingCancelData.orderId,
+        documentId: pendingCancelData.documentId,
+        cancelReason: selectedCancelReason,
+        cancelComment: cancelReasonComment.trim(),
+      },
+      {
+        onSuccess: () => {
+          closeCancelSurvey();
+        },
+      }
+    );
+  };
+
   const formatDate = (date) => {
     if (!date) return '';
     return new Date(date).toLocaleDateString('ru-RU');
@@ -601,7 +748,7 @@ const Contracts = () => {
       setIsDebtModalOpen(true); // <— показываем модалку
       return;
     }
-    handleCancelContract(row.order_id, row.contract_data?.document_id);
+    openCancelSurvey(row);
   };
 
   const { isMobile } = useDeviceType();
@@ -771,6 +918,17 @@ const Contracts = () => {
         error={detailsError}
         onDownloadItemFile={handleDownloadItemFile}
         isDownloadingItem={downloadItemFileMutation.isPending}
+      />
+      <CancelSurveyModal
+        isOpen={isCancelSurveyOpen}
+        onClose={closeCancelSurvey}
+        selectedReason={selectedCancelReason}
+        onSelectReason={setSelectedCancelReason}
+        comment={cancelReasonComment}
+        onCommentChange={setCancelReasonComment}
+        onSubmit={handleSubmitCancelSurvey}
+        isSubmitting={cancelContractMutation.isPending}
+        error={cancelFormError}
       />
       <Dialog open={isDebtModalOpen} onOpenChange={setIsDebtModalOpen}>
         <DialogContent className="sm:max-w-[460px]">

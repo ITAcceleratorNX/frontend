@@ -120,12 +120,16 @@ export const ordersApi = {
   },
 
   // Отмена договора
-  cancelContract: async (orderId, documentId) => {
+  cancelContract: async ({ orderId, documentId, cancelReason, cancelComment }) => {
     try {
       if (isDevelopment) {
         console.log(`OrdersAPI: Отмена договора для заказа ${orderId} с документом ${documentId}`);
       }
-      const response = await api.put(`/orders/${orderId}/cancel`, { document_id: documentId });
+      const response = await api.put(`/orders/${orderId}/cancel`, {
+        document_id: documentId,
+        cancel_reason: cancelReason,
+        cancel_comment: cancelComment,
+      });
       if (isDevelopment) {
         console.log('OrdersAPI: Договор успешно отменен:', response.data);
       }

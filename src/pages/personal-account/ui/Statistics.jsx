@@ -311,6 +311,15 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 0,
   }).format(Math.round(value));
 
+const formatDateShort = (value) => {
+  if (!value) return '';
+  return new Date(value).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
 // Сокращенный формат для отображения на диаграмме
 const formatCompactNumber = (value) => {
   const num = Math.round(value);
@@ -393,15 +402,25 @@ const useStatisticsData = (filters) => {
     retry: 2,
   });
 
+  const { data: cancelReasonsData, isLoading: isCancelReasonsLoading } = useQuery({
+    queryKey: ['statistics', 'cancel-reasons', filters],
+    queryFn: () => statisticsApi.getCancelReasons(filters),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
   return useMemo(() => {
-    const isLoading = isSummaryLoading || isChartLoading || isLeadSourcesLoading;
+    const isLoading =
+      isSummaryLoading || isChartLoading || isLeadSourcesLoading || isCancelReasonsLoading;
 
     // Если данные загружаются, возвращаем пустые данные
-    if (isLoading || !summaryData || !lineChartData || !leadSourcesData) {
+    if (isLoading || !summaryData || !lineChartData || !leadSourcesData || !cancelReasonsData) {
       return {
         summary: [],
         lineChartData: { labels: [], datasets: [] },
         leadSources: [],
+        cancelReasons: [],
+        cancelReasonComments: [],
         tableRows: [],
         isLoading: true,
       };
@@ -449,6 +468,17 @@ const useStatisticsData = (filters) => {
 
     // Формируем данные для экспорта
     const period = filters.period || 'year';
+    const cancelReasonsRaw = cancelReasonsData.reasons || [];
+    const cancelReasonsTotal = cancelReasonsData.total || 0;
+    const cancelReasons = cancelReasonsTotal > 0
+      ? cancelReasonsRaw.map((item) => ({
+          ...item,
+          percent: Math.round((item.value / cancelReasonsTotal) * 100),
+        }))
+      : cancelReasonsRaw;
+
+    const cancelReasonComments = cancelReasonsData.comments || [];
+
     const tableRows = [
       ['Показатель', 'Значение'],
       ...summary.map(({ title, value }) => [title, value]),
@@ -464,16 +494,31 @@ const useStatisticsData = (filters) => {
       [],
       ['Источник лидов', 'Доля'],
       ...normalizedLeadSources.map((item) => [item.label, `${item.value}%`]),
+      [],
+      ['Причины отмен', 'Количество', 'Доля'],
+      ...cancelReasons.map((item) => [item.label, formatNumber(item.value), `${item.percent || 0}%`]),
     ];
 
     return {
       summary,
       lineChartData: lineChartData || { labels: [], datasets: [] },
       leadSources: normalizedLeadSources,
+      cancelReasons,
+      cancelReasonComments,
       tableRows,
       isLoading: false,
     };
-  }, [summaryData, lineChartData, leadSourcesData, filters, isSummaryLoading, isChartLoading, isLeadSourcesLoading]);
+  }, [
+    summaryData,
+    lineChartData,
+    leadSourcesData,
+    cancelReasonsData,
+    filters,
+    isSummaryLoading,
+    isChartLoading,
+    isLeadSourcesLoading,
+    isCancelReasonsLoading,
+  ]);
 };
 
 const SummaryCard = ({ title, value, styleKey }) => (
@@ -730,7 +775,15 @@ const Statistics = () => {
   const [logTypeFilter, setLogTypeFilter] = useState('all');
   const [requestsPage, setRequestsPage] = useState(1);
 
-  const { summary, lineChartData, leadSources, tableRows, isLoading: isStatisticsLoading } = useStatisticsData(filters);
+  const {
+    summary,
+    lineChartData,
+    leadSources,
+    cancelReasons,
+    cancelReasonComments,
+    tableRows,
+    isLoading: isStatisticsLoading,
+  } = useStatisticsData(filters);
 
   // Запрос заявок
   const { data: requestsData, isLoading: isRequestsLoading } = useQuery({
@@ -1073,6 +1126,54 @@ const Statistics = () => {
         </div>
       </div>
       )}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+          <div className="flex flex-col gap-2 pb-4">
+            <h2 className="text-lg font-semibold text-slate-900">Причины отмен (лиды оттока)</h2>
+            <p className="text-sm text-slate-500">
+              Фиксируем ответы пользователей при отмене договора, чтобы понимать основные причины ухода.
+            </p>
+          </div>
+          {cancelReasons && cancelReasons.length > 0 ? (
+            <>
+              <div className="space-y-4">
+                {cancelReasons.map((reason) => (
+                  <div key={reason.key}>
+                    <div className="flex items-center justify-between text-sm font-medium text-slate-600">
+                      <span className="pr-4 text-slate-700">{reason.label}</span>
+                      <span className="text-slate-900">
+                        {formatNumber(reason.value)} · {reason.percent || 0}%
+                      </span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-slate-100">
+                      <div
+                        className="h-2 rounded-full bg-rose-500 transition-all"
+                        style={{ width: `${Math.max(reason.percent || 0, 4)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {cancelReasonComments && cancelReasonComments.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-900">Комментарии клиентов</h3>
+                  {cancelReasonComments.map((comment) => (
+                    <div key={`${comment.orderId}-${comment.date}`} className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-sm text-slate-700">{comment.comment}</p>
+                      <span className="mt-2 block text-xs text-slate-400">
+                        Заказ #{comment.orderId} · {formatDateShort(comment.date)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="py-10 text-center text-slate-500">Нет данных об отменах для выбранных фильтров</div>
+          )}
+        </div>
+      </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4">

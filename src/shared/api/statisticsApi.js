@@ -78,6 +78,34 @@ export const statisticsApi = {
     }
   },
 
+  // Получение причин отмен
+  getCancelReasons: async (filters = {}) => {
+    try {
+      if (isDevelopment) {
+        console.log('StatisticsAPI: Отправка запроса на получение причин отмен', filters);
+      }
+      const response = await api.get('/statistics/cancel-reasons', {
+        params: filters,
+        paramsSerializer: (params) => {
+          const searchParams = new URLSearchParams();
+          Object.keys(params).forEach((key) => {
+            if (params[key] !== undefined && params[key] !== null) {
+              searchParams.append(key, params[key]);
+            }
+          });
+          return searchParams.toString();
+        },
+      });
+      if (isDevelopment) {
+        console.log('StatisticsAPI: Получены причины отмен:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('StatisticsAPI: Ошибка при получении причин отмен:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Получение списка заявок
   getRequests: async (filters = {}, page = 1, limit = 50) => {
     try {
