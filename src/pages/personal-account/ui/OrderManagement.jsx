@@ -11,7 +11,8 @@ import {
   useUpdateOrderStatus,
   useDeleteOrder,
   useSearchOrders,
-  useOrdersStats
+  useOrdersStats,
+  useApproveCancelOrder
 } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
@@ -56,15 +57,22 @@ const OrderManagement = () => {
 
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
+  const approveCancelOrder = useApproveCancelOrder();
 
   // Проверяем загрузку мутаций
-  const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading;
+  const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading || approveCancelOrder.isPending;
 
   // Определяем какие данные показывать
   const ordersToShow = isSearchActive ? searchedOrders : allOrders;
 
-  // Фильтрация по статусу
+  // Фильтрация по статусу и возвратам
   const filteredOrders = useMemo(() => {
+    if (statusFilter === 'RETURN') {
+      // Фильтр для возвратов: заказы с cancel_status === 'PENDING' или 'APPROVED'
+      return ordersToShow.filter(order => 
+        order.cancel_status === 'PENDING' || order.cancel_status === 'APPROVED'
+      );
+    }
     if (statusFilter === 'ALL') return ordersToShow;
     return ordersToShow.filter(order => order.status === statusFilter);
   }, [ordersToShow, statusFilter]);
@@ -138,6 +146,19 @@ const OrderManagement = () => {
 
     } else if (action === 'update') {
 
+    }
+  };
+
+  const handleApproveReturn = async (orderId) => {
+    try {
+      await approveCancelOrder.mutateAsync(orderId);
+    } catch (error) {
+      console.error(error);
+      toast.error('Ошибка', {
+        duration: 2000,
+        position: 'top-right',
+        description: error.response?.data?.message || error.message,
+      });
     }
   };
 
@@ -318,7 +339,7 @@ const OrderManagement = () => {
                 Фильтр по статусу заказа
               </label>
               <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-                <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full">
+                <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full">
                   <TabsTrigger value="ALL" className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7l2 2-2 2m0 10l2-2-2-2" />
@@ -348,6 +369,12 @@ const OrderManagement = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     Активные
+                  </TabsTrigger>
+                  <TabsTrigger value="RETURN" className="flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    Возврат
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -418,6 +445,7 @@ const OrderManagement = () => {
               onUpdate={() => openConfirmModal('update', order)}
               onDelete={() => openConfirmModal('delete', order)}
               onApprove={() => openConfirmModal('approve', order)}
+              onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
               isLoading={isMutating}
             />
           ))

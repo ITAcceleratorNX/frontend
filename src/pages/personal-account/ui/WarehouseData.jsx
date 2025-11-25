@@ -1979,8 +1979,7 @@ const WarehouseData = () => {
                             isCompact={true}
                             onViewMore={() => setIsMapModalOpen(true)}
                             onBoxSelect={async (storage) => {
-                              // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
-                              if (storage?.status === 'PENDING' && isAdminOrManager) {
+                              if (storage?.status === 'PENDING' && storage?.status === 'OCCUPIED' && isAdminOrManager) {
                                 setIsLoadingPendingOrder(true);
                                 try {
                                   const order = await ordersApi.getPendingOrderByStorageId(storage.id);

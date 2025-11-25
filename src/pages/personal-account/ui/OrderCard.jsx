@@ -17,7 +17,7 @@ const getStorageTypeText = (type) => {
   return type;
 };
 
-const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) => {
+const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLoading = false }) => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   // Функции для форматирования
@@ -651,38 +651,56 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, isLoading = false }) 
 
 
         {/* Кнопки действий */}
-        {order.status !== 'ACTIVE' && (
+        {/* Кнопка подтверждения возврата для заказов с cancel_status === 'PENDING' */}
+        {order.cancel_status === 'PENDING' && onApproveReturn && (
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+            <Button
+              onClick={() => onApproveReturn(order.id)}
+              disabled={isLoading}
+              variant="default"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Подтвердить возврат
+            </Button>
+          </div>
+        )}
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-          <Button
-            onClick={onDelete}
-            disabled={isLoading}
-            variant="destructive"
-            className="w-full sm:w-auto flex items-center justify-center gap-2"
-          >
-            Удалить заказ
-          </Button>
-          {order.status === 'INACTIVE' && (
-             <Button
-                  onClick={onUpdate}
-                  disabled={isLoading}
-                  variant="secondary"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2"
-              >
-                Редактировать
-              </Button>
-          )}
-          {order.status === 'INACTIVE' && (
-              <Button
-                  onClick={onApprove}
-                  disabled={isLoading}
-                  variant="primary"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2"
-              >
-                Подтвердить
-              </Button>
-          )}
-        </div> )}
+        {/* Обычные кнопки действий для не-ACTIVE заказов */}
+        {order.status !== 'ACTIVE' && order.cancel_status !== 'PENDING' && (
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+            <Button
+              onClick={onDelete}
+              disabled={isLoading}
+              variant="destructive"
+              className="w-full sm:w-auto flex items-center justify-center gap-2"
+            >
+              Удалить заказ
+            </Button>
+            {order.status === 'INACTIVE' && (
+               <Button
+                    onClick={onUpdate}
+                    disabled={isLoading}
+                    variant="secondary"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2"
+                >
+                  Редактировать
+                </Button>
+            )}
+            {order.status === 'INACTIVE' && (
+                <Button
+                    onClick={onApprove}
+                    disabled={isLoading}
+                    variant="primary"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2"
+                >
+                  Подтвердить
+                </Button>
+            )}
+          </div>
+        )}
 
         {/* Модальное окно редактирования локации */}
         <EditLocationModal

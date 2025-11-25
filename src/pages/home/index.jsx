@@ -536,8 +536,8 @@ const HomePage = memo(() => {
 
       const orderItems = [
         {
-          name: "Предварительная бронь",
-          volume: 0,
+          name: "Вещь",
+          volume: 1,
           cargo_mark: "NO",
         },
       ];

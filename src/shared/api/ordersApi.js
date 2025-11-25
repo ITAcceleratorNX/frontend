@@ -119,7 +119,7 @@ export const ordersApi = {
     }
   },
 
-  // Отмена договора
+  // Отмена договора (для USER с document_id и reason)
   cancelContract: async ({ orderId, documentId, cancelReason, cancelComment }) => {
     try {
       if (isDevelopment) {
@@ -136,6 +136,43 @@ export const ordersApi = {
       return response.data;
     } catch (error) {
       console.error('OrdersAPI: Ошибка при отмене договора:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Расторжение заказа (для USER без document_id, только с reason)
+  cancelOrder: async ({ orderId, cancelReason, cancelComment }) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Расторжение заказа ${orderId}`);
+      }
+      const response = await api.put(`/orders/${orderId}/cancel`, {
+        cancel_reason: cancelReason,
+        cancel_comment: cancelComment,
+      });
+      if (isDevelopment) {
+        console.log('OrdersAPI: Заказ успешно расторгнут:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при расторжении заказа:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Подтверждение возврата (для ADMIN/MANAGER без параметров)
+  approveCancelOrder: async (orderId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Подтверждение возврата заказа ${orderId}`);
+      }
+      const response = await api.put(`/orders/${orderId}/cancel`, {});
+      if (isDevelopment) {
+        console.log('OrdersAPI: Возврат успешно подтвержден:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при подтверждении возврата:', error.response?.data || error.message);
       throw error;
     }
   },

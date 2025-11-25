@@ -241,10 +241,58 @@ export const useCancelContract = () => {
     onSuccess: () => {
       showGenericSuccess('Договор успешно отменен');
       queryClient.invalidateQueries({ queryKey: ['contracts', 'user'] });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
     },
     onError: (error) => {
       console.error('Ошибка при отмене договора:', error);
       showGenericError(error.response?.data?.message || 'Не удалось отменить договор');
+    }
+  });
+};
+
+/**
+ * Хук для расторжения заказа (для USER)
+ */
+export const useCancelOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, cancelReason, cancelComment }) =>
+      ordersApi.cancelOrder({ orderId, cancelReason, cancelComment }),
+    onSuccess: () => {
+      showGenericSuccess('Запрос на расторжение контракта отправлен');
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['contracts', 'user'] });
+    },
+    onError: (error) => {
+      console.error('Ошибка при расторжении заказа:', error);
+      showGenericError(error.response?.data?.message || 'Не удалось расторгнуть контракт');
+    }
+  });
+};
+
+/**
+ * Хук для подтверждения возврата (для ADMIN/MANAGER)
+ */
+export const useApproveCancelOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderId) => ordersApi.approveCancelOrder(orderId),
+    onSuccess: () => {
+      showGenericSuccess('Возврат успешно подтвержден');
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['contracts', 'user'] });
+    },
+    onError: (error) => {
+      console.error('Ошибка при подтверждении возврата:', error);
+      showGenericError(error.response?.data?.message || 'Не удалось подтвердить возврат');
     }
   });
 };

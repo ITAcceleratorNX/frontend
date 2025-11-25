@@ -240,7 +240,11 @@ function MonthSelector() {
   );
 }
 
-const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error, onDownloadItemFile, isDownloadingItem }) => {
+const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error, onDownloadItemFile, isDownloadingItem, onDownloadContract }) => {
+  // Получаем первый контракт для загрузки
+  const firstContract = contract?.contracts && contract.contracts.length > 0 
+    ? contract.contracts.sort((a, b) => a.contract_id - b.contract_id)[0]
+    : null;
   const { isMobile } = useDeviceType();
   if (!contract) return null;
   
@@ -285,16 +289,6 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600">Статус договора:</p>
-                <Badge 
-                  className={`${statusStyles[getContractStatusInfo(contract.contract_status).style]} justify-center py-2 px-3`}
-                >
-                  {getContractStatusInfo(contract.contract_status).icon}
-                  {contract.contract_status}
-                </Badge>
-              </div>
-              
-              <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-600">Статус заказа:</p>
                 <Badge 
                   className={`${statusStyles[getOrderStatusInfo(contract.order_status).style]} justify-center py-2 px-3`}
@@ -311,7 +305,54 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                   {getPaymentStatusInfo(contract.payment_status).message}
                 </Badge>
               </div>
+
+              {contract.contracts && contract.contracts.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">Контракты:</p>
+                  <Badge variant="outline" className="justify-center py-2 px-3">
+                    {contract.contracts.length} {contract.contracts.length === 1 ? 'контракт' : 'контракта'}
+                  </Badge>
+                </div>
+              )}
             </div>
+            
+            {/* Список статусов всех контрактов */}
+            {contract.contracts && contract.contracts.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium text-gray-600 mb-2">Статусы контрактов:</p>
+                <div className="space-y-2">
+                  {contract.contracts.map((c, index) => {
+                    const contractStatusInfo = getContractStatusInfo(c.status);
+                    return (
+                      <div key={c.contract_id || index} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">#{index + 1}</span>
+                          <Badge 
+                            className={`${statusStyles[contractStatusInfo.style]} justify-center py-1 px-2 text-xs`}
+                          >
+                            {contractStatusInfo.icon}
+                            {c.status}
+                          </Badge>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDownloadContract?.(c.document_id);
+                          }}
+                          disabled={isDownloadingItem}
+                          className="text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Скачать
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -690,9 +731,20 @@ const Contracts = () => {
   };
 
   const openCancelSurvey = (row) => {
+    // Получаем первый контракт для отмены
+    const sortedContracts = (row.contracts || []).sort((a, b) => {
+      return a.contract_id - b.contract_id;
+    });
+    const firstContract = sortedContracts.length > 0 ? sortedContracts[0] : null;
+
+    if (!firstContract) {
+      setCancelFormError('Не найдено контракта для отмены.');
+      return;
+    }
+
     setPendingCancelData({
       orderId: row.order_id,
-      documentId: row.contract_data?.document_id,
+      documentId: firstContract.document_id,
     });
     setIsCancelSurveyOpen(true);
     setSelectedCancelReason('');
@@ -745,10 +797,17 @@ const Contracts = () => {
     e.stopPropagation();
     const payment = (row?.payment_status || '').toUpperCase();
     if (payment !== 'PAID') {
-      setIsDebtModalOpen(true); // <— показываем модалку
+      setIsDebtModalOpen(true);
       return;
     }
-    openCancelSurvey(row);
+    
+    // Если row уже содержит contract_data (из десктопа), используем его
+    // Иначе получаем первый контракт из массива contracts
+    if (row.contract_data?.document_id) {
+      openCancelSurvey(row);
+    } else {
+      openCancelSurvey(row);
+    }
   };
 
   const { isMobile } = useDeviceType();
@@ -777,62 +836,91 @@ const Contracts = () => {
                   <th className="text-left px-6 py-4 font-medium">ТИП ПОМЕЩЕНИЯ</th>
                   <th className="text-left px-6 py-4 font-medium">ПЕРИОД АРЕНДЫ</th>
                   <th className="text-left px-6 py-4 font-medium">СТАТУС</th>
+                  <th className="text-left px-6 py-4 font-medium">КОНТРАКТЫ</th>
                   <th className="text-left px-6 py-4 text-center font-medium">ДЕЙСТВИЯ</th>
                 </tr>
               </thead>
               <tbody>
-                {contracts && contracts.map((row, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/80 transition-colors duration-200 cursor-pointer"
-                    onClick={() => handleRowClick(row)}
-                  >
-                    <td className="px-6 py-5 font-medium text-gray-900 text-base">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-9 h-9 flex-shrink-0 text-[#273655]" />
-                        <span 
-                          className="text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRowClick(row);
-                          }}
-                        >
-                          {`Заявка № ${row.order_id}`}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-gray-600 text-sm">{getWarehouseName(row.warehouse_address)}</td>
-                    <td className="px-6 py-5 text-gray-600 text-sm">{row.storage_name || '-'}</td>
-                    <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
-                    <td className="px-6 py-5">
-                      <StatusBadge status={row.order_status} type="order" />
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex items-center justify-center space-x-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadContract(row.contract_data.document_id);
-                          }}
-                          disabled={downloadContractMutation.isPending}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#1e2c4f] hover:bg-[#162540] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                        >
-                          <Download size={16} className="mr-2" />
-                          {downloadContractMutation.isPending ? 'Загрузка...' : 'Скачать'}
-                        </button>
-                        {row.order_status === 'ACTIVE' && (
+                {contracts && contracts.map((row, idx) => {
+                  // Получаем первый контракт (самый ранний по created_at)
+                  const sortedContracts = (row.contracts || []).sort((a, b) => {
+                    // Сортируем по contract_id (меньший ID = раньше создан)
+                    return a.contract_id - b.contract_id;
+                  });
+                  const firstContract = sortedContracts.length > 0 ? sortedContracts[0] : null;
+                  const hasMultipleContracts = (row.contracts || []).length > 1;
+
+                  return (
+                    <tr
+                      key={idx}
+                      className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/80 transition-colors duration-200 cursor-pointer"
+                      onClick={() => handleRowClick(row)}
+                    >
+                      <td className="px-6 py-5 font-medium text-gray-900 text-base">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-9 h-9 flex-shrink-0 text-[#273655]" />
+                          <span 
+                            className="text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowClick(row);
+                            }}
+                          >
+                            {`Заявка № ${row.order_id}`}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-gray-600 text-sm">{getWarehouseName(row.warehouse_address)}</td>
+                      <td className="px-6 py-5 text-gray-600 text-sm">{row.storage_name || '-'}</td>
+                      <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
+                      <td className="px-6 py-5">
+                        <StatusBadge status={row.order_status} type="order" />
+                      </td>
+                      <td className="px-6 py-5 text-gray-600 text-sm">
+                        <div className="flex flex-col gap-1">
+                          {row.contracts && row.contracts.length > 0 ? (
+                            <>
+                              <Badge variant="outline" className="text-xs w-fit">
+                                {row.contracts.length} {row.contracts.length === 1 ? 'контракт' : 'контракта'}
+                              </Badge>
+                              {hasMultipleContracts && (
+                                <span className="text-xs text-gray-500">Нажмите для просмотра</span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-400">Нет контрактов</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <div className="flex items-center justify-center space-x-3">
+                          {firstContract && (
                             <button
-                                onClick={(e) => handleCancelClick(e, row)}
-                                disabled={cancelContractMutation.isPending}
-                                className="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md shadow-sm text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadContract(firstContract.document_id);
+                              }}
+                              disabled={downloadContractMutation.isPending}
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#1e2c4f] hover:bg-[#162540] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                             >
-                              {cancelContractMutation.isPending ? 'Отмена...' : 'Отменить'}
+                              <Download size={16} className="mr-2" />
+                              {downloadContractMutation.isPending ? 'Загрузка...' : 'Скачать'}
                             </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          )}
+                          {row.order_status === 'ACTIVE' && firstContract && row.cancel_status === 'NO' && (
+                              <button
+                                  onClick={(e) => handleCancelClick(e, { ...row, contract_data: { document_id: firstContract.document_id } })}
+                                  disabled={cancelContractMutation.isPending}
+                                  className="inline-flex items-center px-4 py-2 border border-red-600 text-sm font-medium rounded-md shadow-sm text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                              >
+                                {cancelContractMutation.isPending ? 'Отмена...' : 'Отменить'}
+                              </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -841,69 +929,89 @@ const Contracts = () => {
         {/* Mobile cards */}
         {isMobile && (
           <div className="space-y-4">
-            {contracts && contracts.map((row, idx) => (
-              <div
-                key={idx}
-                className="border rounded-2xl p-4 bg-white shadow-sm"
-                onClick={() => handleRowClick(row)}
-                role="button"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <FileText className="w-9 h-9 flex-shrink-0 text-[#273655]" />
-                  <span 
-                    className="text-base font-semibold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRowClick(row);
-                    }}
-                  >
-                    {`Заявка № ${row.order_id}`}
-                  </span>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2 text-gray-700">
-                    <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
-                    <span><strong>Склад:</strong> {getWarehouseName(row.warehouse_address)}</span>
+            {contracts && contracts.map((row, idx) => {
+              // Получаем первый контракт (самый ранний по created_at)
+              const sortedContracts = (row.contracts || []).sort((a, b) => {
+                // Сортируем по contract_id (меньший ID = раньше создан)
+                return a.contract_id - b.contract_id;
+              });
+              const firstContract = sortedContracts.length > 0 ? sortedContracts[0] : null;
+              const hasMultipleContracts = (row.contracts || []).length > 1;
+
+              return (
+                <div
+                  key={idx}
+                  className="border rounded-2xl p-4 bg-white shadow-sm"
+                  onClick={() => handleRowClick(row)}
+                  role="button"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <FileText className="w-9 h-9 flex-shrink-0 text-[#273655]" />
+                    <span 
+                      className="text-base font-semibold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRowClick(row);
+                      }}
+                    >
+                      {`Заявка № ${row.order_id}`}
+                    </span>
                   </div>
-                  <div className="flex items-start gap-2 text-gray-700">
-                    <Package className="w-4 h-4 mt-0.5 text-gray-500" />
-                    <span><strong>Тип помещения:</strong> {row.storage_name || '-'}</span>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2 text-gray-700">
+                      <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
+                      <span><strong>Склад:</strong> {getWarehouseName(row.warehouse_address)}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-gray-700">
+                      <Package className="w-4 h-4 mt-0.5 text-gray-500" />
+                      <span><strong>Тип помещения:</strong> {row.storage_name || '-'}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-gray-700">
+                      <Calendar className="w-4 h-4 mt-0.5 text-gray-500" />
+                      <span><strong>Период аренды:</strong> {`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-gray-700">
+                      <FileText className="w-4 h-4 mt-0.5 text-gray-500" />
+                      <span>
+                        <strong>Контракты:</strong> {row.contracts && row.contracts.length > 0 
+                          ? `${row.contracts.length} ${row.contracts.length === 1 ? 'контракт' : 'контракта'}`
+                          : 'Нет контрактов'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-start gap-2 text-gray-700">
-                    <Calendar className="w-4 h-4 mt-0.5 text-gray-500" />
-                    <span><strong>Период аренды:</strong> {`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</span>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={row.order_status} type="order" />
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={row.order_status} type="order" />
-                  </div>
-                </div>
-                <div className="mt-3 grid grid-cols-1 gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownloadContract(row.contract_data.document_id);
-                    }}
-                    disabled={downloadContractMutation.isPending}
-                    className="w-full h-11 inline-flex items-center justify-center rounded-lg bg-[#1e2c4f] text-white font-medium hover:bg-[#162540] transition-colors disabled:opacity-50"
-                  >
-                    {downloadContractMutation.isPending ? 'Загрузка…' : (
-                      <span className="inline-flex items-center gap-2"><Download className="w-4 h-4" /> Скачать</span>
-                    )}
-                  </button>
-                  {row.order_status === 'ACTIVE' && (
+                  <div className="mt-3 grid grid-cols-1 gap-2">
+                    {firstContract && (
                       <button
-                          onClick={(e) => handleCancelClick(e, row)}
-                          disabled={cancelContractMutation.isPending}
-                          className="w-full h-11 inline-flex items-center justify-center rounded-lg border border-red-600 text-red-600 bg-white font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadContract(firstContract.document_id);
+                        }}
+                        disabled={downloadContractMutation.isPending}
+                        className="w-full h-11 inline-flex items-center justify-center rounded-lg bg-[#1e2c4f] text-white font-medium hover:bg-[#162540] transition-colors disabled:opacity-50"
                       >
-                        {cancelContractMutation.isPending ? 'Отмена…' : 'Отменить'}
+                        {downloadContractMutation.isPending ? 'Загрузка…' : (
+                          <span className="inline-flex items-center gap-2"><Download className="w-4 h-4" /> Скачать</span>
+                        )}
                       </button>
-                  )}
+                    )}
+                    {row.order_status === 'ACTIVE' && firstContract && row.cancel_status === "NO" && (
+                        <button
+                            onClick={(e) => handleCancelClick(e, { ...row, contract_data: { document_id: firstContract.document_id } })}
+                            disabled={cancelContractMutation.isPending}
+                            className="w-full h-11 inline-flex items-center justify-center rounded-lg border border-red-600 text-red-600 bg-white font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                          {cancelContractMutation.isPending ? 'Отмена…' : 'Отменить'}
+                        </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -918,6 +1026,7 @@ const Contracts = () => {
         error={detailsError}
         onDownloadItemFile={handleDownloadItemFile}
         isDownloadingItem={downloadItemFileMutation.isPending}
+        onDownloadContract={handleDownloadContract}
       />
       <CancelSurveyModal
         isOpen={isCancelSurveyOpen}

@@ -18,10 +18,12 @@ import {
   MapPin,
   Phone,
   Mail,
-  Trash2
+  Trash2,
+  FileX
 } from 'lucide-react';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { toast } from 'react-toastify';
+import { useCancelOrder } from '../../../shared/lib/hooks/use-orders';
 
 const getServiceTypeName = (type) => {
   if (!type) return 'Услуга';
@@ -96,6 +98,28 @@ const translateCargoMark = (mark) => {
   return markMap[mark] || mark;
 };
 
+const translateCancelStatus = (status) => {
+  if (!status) return 'Нет';
+  const statusMap = {
+    'NO': 'Нет',
+    'PENDING': 'В ожидании',
+    'APPROVED': 'Подтвержден',
+  };
+  return statusMap[status] || status;
+};
+
+const CANCEL_REASON_OPTIONS = [
+  { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
+  { value: 'too_expensive', label: 'Слишком дорого' },
+  { value: 'moving_to_new_location', label: 'Переезжаю в другой район / город / страну' },
+  { value: 'using_other_storage', label: 'Пользуюсь другим местом хранения' },
+  { value: 'ordered_by_mistake', label: 'Оформил(а) заказ по ошибке' },
+  { value: 'service_quality_issues', label: 'Есть замечания по качеству услуги' },
+  { value: 'not_satisfied_with_terms', label: 'Не устроили условия или сервис' },
+  { value: 'rarely_use', label: 'Редко пользуюсь, бокс пустует' },
+  { value: 'other', label: 'Другая причина (укажите ниже)', requiresComment: true },
+];
+
 // Вычисление количества месяцев между датами
 const calculateMonths = (startDate, endDate) => {
   if (!startDate || !endDate) return 0;
@@ -159,11 +183,20 @@ const getMonthWord = (months) => {
 
 const PendingOrderModal = ({ isOpen, order, onClose, onUnbook, isUnbooking = false }) => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false);
+  const [isCancelSurveyOpen, setIsCancelSurveyOpen] = React.useState(false);
+  const [selectedCancelReason, setSelectedCancelReason] = React.useState('');
+  const [cancelReasonComment, setCancelReasonComment] = React.useState('');
+  const [cancelFormError, setCancelFormError] = React.useState('');
+  const cancelOrderMutation = useCancelOrder();
 
   // Сброс состояния подтверждения при закрытии основного модального окна
   React.useEffect(() => {
     if (!isOpen) {
       setIsConfirmDialogOpen(false);
+      setIsCancelSurveyOpen(false);
+      setSelectedCancelReason('');
+      setCancelReasonComment('');
+      setCancelFormError('');
     }
   }, [isOpen]);
 
@@ -194,6 +227,52 @@ const PendingOrderModal = ({ isOpen, order, onClose, onUnbook, isUnbooking = fal
       toast.error(errorMessage);
     }
   };
+
+  const handleCancelOrderClick = () => {
+    setIsCancelSurveyOpen(true);
+  };
+
+  const handleCloseCancelSurvey = () => {
+    setIsCancelSurveyOpen(false);
+    setSelectedCancelReason('');
+    setCancelReasonComment('');
+    setCancelFormError('');
+  };
+
+  const handleSubmitCancelOrder = async () => {
+    if (!selectedCancelReason) {
+      setCancelFormError('Пожалуйста, выберите причину расторжения.');
+      return;
+    }
+
+    if (selectedCancelReason === 'other' && !cancelReasonComment.trim()) {
+      setCancelFormError('Пожалуйста, опишите причину в комментарии.');
+      return;
+    }
+
+    setCancelFormError('');
+    
+    try {
+      await cancelOrderMutation.mutateAsync({
+        orderId: order.id,
+        cancelReason: selectedCancelReason,
+        cancelComment: cancelReasonComment.trim(),
+      });
+      handleCloseCancelSurvey();
+      if (onUnbook) {
+        await onUnbook(order.id);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Ошибка при расторжении контракта:', error);
+      setCancelFormError(error.response?.data?.message || 'Не удалось расторгнуть контракт. Попробуйте позже.');
+    }
+  };
+
+  // Определяем, можно ли разбронировать бокс
+  const canUnbook = order.status !== 'ACTIVE';
+  // Определяем, можно ли расторгнуть контракт
+  const canCancelContract = order.status === 'ACTIVE' && order.cancel_status === 'NO';
 
   // Расчет общей стоимости услуг
   const getServicesTotal = () => {
@@ -310,6 +389,23 @@ const PendingOrderModal = ({ isOpen, order, onClose, onUnbook, isUnbooking = fal
                     <span className="text-sm text-gray-600">Статус оплаты:</span>
                     <Badge variant="outline" className="ml-2 text-xs">
                       {translatePaymentStatus(order.payment_status)}
+                    </Badge>
+                  </div>
+                )}
+                {order.cancel_status && (
+                  <div>
+                    <span className="text-sm text-gray-600">Статус расторжения:</span>
+                    <Badge 
+                      variant="outline" 
+                      className={`ml-2 text-xs ${
+                        order.cancel_status === 'PENDING' 
+                          ? 'bg-yellow-100 text-yellow-800 border-yellow-200' 
+                          : order.cancel_status === 'APPROVED'
+                          ? 'bg-green-100 text-green-800 border-green-200'
+                          : ''
+                      }`}
+                    >
+                      {translateCancelStatus(order.cancel_status)}
                     </Badge>
                   </div>
                 )}
@@ -485,22 +581,37 @@ const PendingOrderModal = ({ isOpen, order, onClose, onUnbook, isUnbooking = fal
           <Button
             variant="outline"
             onClick={onClose}
-            disabled={isUnbooking}
+            disabled={isUnbooking || cancelOrderMutation.isPending}
             className="flex-1"
           >
             Закрыть
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleUnbookClick}
-            disabled={isUnbooking}
-            className="flex-1 bg-red-600 hover:bg-red-700"
-          >
-            <div className="flex items-center gap-2">
-              <Trash2 className="w-4 h-4" />
-              Разбронировать бокс
-            </div>
-          </Button>
+          {canCancelContract && (
+            <Button
+              variant="destructive"
+              onClick={handleCancelOrderClick}
+              disabled={isUnbooking || cancelOrderMutation.isPending}
+              className="flex-1 bg-red-600 hover:bg-red-700"
+            >
+              <div className="flex items-center gap-2">
+                <FileX className="w-4 h-4" />
+                Расторгнуть контракт
+              </div>
+            </Button>
+          )}
+          {canUnbook && (
+            <Button
+              variant="destructive"
+              onClick={handleUnbookClick}
+              disabled={isUnbooking || cancelOrderMutation.isPending}
+              className="flex-1 bg-red-600 hover:bg-red-700"
+            >
+              <div className="flex items-center gap-2">
+                <Trash2 className="w-4 h-4" />
+                Разбронировать бокс
+              </div>
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
 
@@ -579,6 +690,80 @@ const PendingOrderModal = ({ isOpen, order, onClose, onUnbook, isUnbooking = fal
                   <Trash2 className="w-4 h-4" />
                   Разбронировать
                 </div>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Модальное окно опроса о причине расторжения */}
+      <Dialog open={isCancelSurveyOpen} onOpenChange={(open) => !open && handleCloseCancelSurvey()}>
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили расторгнуть контракт?</DialogTitle>
+            <DialogDescription>
+              Ваш ответ поможет улучшить сервис и условия хранения. Пожалуйста, выберите подходящую причину.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+            {CANCEL_REASON_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                  selectedCancelReason === option.value
+                    ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                    : 'border-gray-200 hover:border-[#c7d2fe]'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="cancel-reason"
+                  className="mt-1 h-4 w-4"
+                  checked={selectedCancelReason === option.value}
+                  onChange={() => setSelectedCancelReason(option.value)}
+                />
+                <span className="text-sm text-gray-800">{option.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {selectedCancelReason === 'other' && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
+              <textarea
+                className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
+                rows={4}
+                placeholder="Например: хочу поделиться предложениями по улучшению..."
+                value={cancelReasonComment}
+                onChange={(e) => setCancelReasonComment(e.target.value)}
+              />
+            </div>
+          )}
+
+          {cancelFormError && <p className="text-sm text-red-600">{cancelFormError}</p>}
+
+          <DialogFooter className="gap-2 sm:gap-4">
+            <Button 
+              variant="outline" 
+              onClick={handleCloseCancelSurvey} 
+              disabled={cancelOrderMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleSubmitCancelOrder}
+              disabled={cancelOrderMutation.isPending}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            >
+              {cancelOrderMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                  Отправка…
+                </div>
+              ) : (
+                'Подтвердить расторжение'
               )}
             </Button>
           </DialogFooter>

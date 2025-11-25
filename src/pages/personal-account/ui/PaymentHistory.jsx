@@ -227,7 +227,7 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
               <div className="flex items-center gap-6">
                   <div className="text-right">
                   <p className="text-2xl font-bold text-[#1e2c4f] mb-2">
-                      {formatPrice(order.total_price)} ₸
+                      {formatPrice(order.full_total_price)} ₸
                     </p>
                   <Badge variant="outline" className="border-[#1e2c4f] text-[#1e2c4f] font-semibold text-sm">
                     {order.status}
