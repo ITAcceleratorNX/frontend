@@ -4,11 +4,8 @@ import { Header } from "../../widgets";
 import vectorImg from "../../assets/vector.png";
 import backgroundTextImg from "../../assets/background-text.png";
 import boxesImg from "../../assets/boxes.png";
-import beigeCircle from "../../assets/beige_circle.svg";
-import houseOnBeigeCircle from "../../assets/house_on_beige_circle.svg";
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
 import Footer from "../../widgets/Footer";
-import FAQ from "../../components/FAQ";
 import WarehouseMap from "../../components/WarehouseMap";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
 import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
@@ -16,7 +13,6 @@ import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
 import ChatButton from "../../shared/components/ChatButton";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
-import VolumeSelector from "../../components/VolumeSelector.jsx";
 import { Dropdown } from '../../shared/components/Dropdown.jsx';
 import { SmartButton } from "../../shared/components/SmartButton.jsx";
 import {
@@ -113,7 +109,7 @@ const HomePage = memo(() => {
       () => [
         {
           id: 1,
-          name: "ЖК Есентай",
+          name: "Есентай, жилой комплекс",
           address: "Касымова улица, 32",
           phone: "+7 727 123 4567",
           // workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
@@ -126,7 +122,7 @@ const HomePage = memo(() => {
         },
         {
           id: 2,
-          name: "ЖК Mega Towers",
+          name: "Mega Tower Almaty, жилой комплекс",
           address: "Абиша Кекилбайулы, 270 блок 4",
           phone: "+7 727 987 6543",
           // workingHours: "Ежедневно: 08:00-22:00",
@@ -139,7 +135,7 @@ const HomePage = memo(() => {
         },
         {
           id: 3,
-          name: "ЖК Комфорт Сити",
+          name: "Жилой комплекс «Комфорт Сити»",
           address: "Проспект Серкебаева, 146/3",
           phone: "+7 727 987 6543",
           workingHours: "Круглосуточно",
@@ -896,13 +892,13 @@ const HomePage = memo(() => {
   }, [selectedWarehouse]);
 
   useEffect(() => {
-    if (selectedWarehouse?.name !== "ЖК Комфорт Сити") {
+    if (selectedWarehouse?.name !== "Жилой комплекс «Комфорт Сити»") {
       setKomfortSelectedMap(1);
     }
   }, [selectedWarehouse]);
 
   useEffect(() => {
-    if (selectedWarehouse?.name === "ЖК Комфорт Сити") {
+    if (selectedWarehouse?.name === "Жилой комплекс «Комфорт Сити»") {
       setPreviewStorage(null);
     }
   }, [komfortSelectedMap, selectedWarehouse]);
@@ -1110,16 +1106,16 @@ const HomePage = memo(() => {
       isViewOnly: true,
     };
 
-    const isKomfortWarehouse = selectedWarehouse.name === "ЖК Комфорт Сити";
+    const isKomfortWarehouse = selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»";
     if (isKomfortWarehouse) {
       canvasProps.selectedMap = komfortSelectedMap;
     }
 
     let canvas = null;
 
-    if (selectedWarehouse.name === "ЖК Mega Towers") {
+    if (selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс") {
       canvas = <InteractiveWarehouseCanvas {...canvasProps} />;
-    } else if (selectedWarehouse.name === "ЖК Есентай") {
+    } else if (selectedWarehouse.name === "Есентай, жилой комплекс") {
       canvas = <MainWarehouseCanvas {...canvasProps} />;
     } else if (isKomfortWarehouse) {
       canvas = <ZhkKomfortCanvas {...canvasProps} />;
@@ -1137,7 +1133,7 @@ const HomePage = memo(() => {
       <div
         className={`flex ${isFullscreen ? "flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : "items-center justify-center gap-3"} flex-wrap`}
       >
-        <span className="text-sm font-semibold text-[#273655]">Карта ЖК Комфорт Сити</span>
+        <span className="text-sm font-semibold text-[#273655]">Карта Жилой комплекс «Комфорт Сити»</span>
         <div className="inline-flex rounded-xl border border-[#d7dbe6] bg-white p-1 shadow-sm">
           {[1, 2].map((mapNumber) => {
             const isActive = komfortSelectedMap === mapNumber;
@@ -1870,10 +1866,6 @@ const HomePage = memo(() => {
           </Tabs>
         </div>
       </section>
-      {/* Третий фрейм: карточка склада */}
-      <section className="w-full flex justify-center items-center px-4 py-8 font-['Montserrat']">
-        <VolumeSelector />
-      </section>
 
       {isMapModalOpen && (
         <div className="fixed inset-0 z-[1200]">
@@ -1962,113 +1954,15 @@ const HomePage = memo(() => {
           </h2>
         </div>
 
-        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-8 px-4 md:px-8">
-          {/* Карта */}
-          <div className="w-full md:w-[45%] rounded-2xl overflow-hidden bg-[#f3f3f3] shadow-md">
-            <div style={{ width: "100%", height: 340 }}>
+        <div className="w-full max-w-6xl mx-auto px-4 md:px-8">
+          {/* Карта на всю ширину */}
+          <div className="w-full rounded-2xl overflow-hidden bg-[#f3f3f3] shadow-md">
+            <div style={{ width: "100%", height: 500 }}>
               <WarehouseMap warehouses={warehouses} mapId="home-branches-map" />
-            </div>
-          </div>
-
-          {/* Карточка склада */}
-          <div className="relative w-full md:w-[55%] bg-white rounded-2xl shadow-md p-6">
-            {warehousesLoading && (
-              <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10 rounded-2xl">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]" />
-              </div>
-            )}
-
-            <div className="flex flex-col md:flex-row items-start gap-6">
-              {/* Логотип */}
-              <div className="w-full md:w-[200px] h-[200px] flex-shrink-0">
-                <img
-                  src={selectedWarehouse?.image || extraspaceLogo}
-                  alt="logo"
-                  className="w-full h-full rounded-xl object-cover bg-[#273655]"
-                />
-              </div>
-
-              {/* Инфо */}
-              <div className="flex flex-col flex-1 gap-2">
-                <h3 className="text-xl font-semibold text-[#273655]">
-                  {selectedWarehouse?.name || "Загрузка..."}
-                </h3>
-
-                {selectedWarehouse && (
-                  <>
-                    <p className="text-sm text-[#3E4958]">
-                      Статус:{" "}
-                      <span
-                        className={`font-medium ${selectedWarehouse.status === "AVAILABLE" ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {selectedWarehouse.status === "AVAILABLE"
-                          ? "Доступен"
-                          : "Недоступен"}
-                      </span>
-                    </p>
-                    <p className="text-sm text-[#3E4958]">
-                      {selectedWarehouse.work_start &&
-                      selectedWarehouse.work_end ? (
-                        selectedWarehouse.work_start === "00:00" && selectedWarehouse.work_end === "00:00" ? (
-                          "Режим: Круглосуточно"
-                        ) : (
-                          `Режим: ${selectedWarehouse.work_start} - ${selectedWarehouse.work_end}`
-                        )
-                      ) : (
-                        "Режим работы уточняется"
-                      )}
-                    </p>
-                    {selectedWarehouse?.address && (
-                        <div className="flex items-center gap-2 text-sm text-[#273655] mt-2">
-                          <span className="relative w-6 h-6">
-                            <img
-                                src={beigeCircle}
-                                alt=""
-                                className="absolute w-full h-full"
-                            />
-                            <img
-                                src={houseOnBeigeCircle}
-                                alt=""
-                                className="absolute w-4 h-4 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                            />
-                          </span>
-                          {selectedWarehouse?.address}
-                        </div>
-                    )}
-                  </>
-                )}
-
-                {warehousesError && (
-                  <p className="text-sm text-red-600">{warehousesError}</p>
-                )}
-
-                {/* Dropdown */}
-                <div className="relative mt-4 w-full max-w-xs">
-                  <Dropdown
-                    items={dropdownItems}
-                    value={selectedWarehouse ? (selectedWarehouse.id ?? selectedWarehouse.value) : undefined}
-                    onChange={(_, item) => setSelectedWarehouse(item)}
-                    placeholder="Выбрать склад"
-                    searchable={false}
-                    getKey={(w) => w.id}
-                    getLabel={(w) => w.name}
-                    getDescription={(w) => w.address}
-                    className="bg-[#273655] text-white border-0"
-                    popoverProps={{ className: "p-0" }}
-                  />
-                </div>
-
-                {/* Бронирование */}
-                {selectedWarehouse?.status === "AVAILABLE" && (
-                  <SmartButton variant="outline" onClick={handleHeroBookingClick}>Забронировать бокс</SmartButton>
-                )}
-              </div>
             </div>
           </div>
         </div>
       </section>
-      {/* Секция FAQ */}
-      <FAQ />
 
       {/* Плавающая кнопка чата */}
       <ChatButton />

@@ -15,7 +15,7 @@ export default function AboutWarehouseRentPage() {
   const warehouses = useMemo(() => [
     {
       id: 1,
-      name: "ЖК Есентай",
+      name: "Есентай, жилой комплекс",
       address: "Касымова улица, 32, Алматы",
       phone: "+7 727 123 4567",
       // workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
@@ -26,7 +26,7 @@ export default function AboutWarehouseRentPage() {
     },
     {
       id: 2,
-      name: "ЖК Mega Towers",
+      name: "Mega Tower Almaty, жилой комплекс",
       address: "Абиша Кекилбайулы, 270 блок 4, Алматы",
       phone: "+7 727 987 6543",
       // workingHours: "Ежедневно: 08:00-22:00",
@@ -37,7 +37,7 @@ export default function AboutWarehouseRentPage() {
     },
     {
       id: 3,
-      name: "ЖК Комфорт Сити",
+      name: "Жилой комплекс «Комфорт Сити»",
       address: "Проспект Серкебаева, 146/3",
       phone: "+7 727 987 6543",
       workingHours: "Круглосуточно",

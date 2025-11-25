@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-const SCROLL_TOP_PATHS = ["/", "/moving", "/about-warehouse-rental", "/cloud-storage"];
+const SCROLL_TOP_PATHS = ["/", "/about-warehouse-rental"];
 
 export default function ScrollToTop() {
     const { pathname } = useLocation();

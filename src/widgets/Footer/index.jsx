@@ -9,7 +9,7 @@ const Footer = () => {
 
   return (
       <>
-        <footer className="bg-[#0A142F] w-full text-white font-['Montserrat'] mt-16 pt-10 pb-6">
+        <footer className="bg-[#0A142F] w-full text-white font-['San Francisco Pro Text'] mt-16 pt-10 pb-6">
           <div className="max-w-[1240px] mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-start gap-10">
               {/* Логотип и описание */}

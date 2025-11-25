@@ -723,11 +723,11 @@ const WarehouseOrderPage = memo(() => {
                 <div 
                   className="min-w-max mx-auto relative"
                   style={{
-                    minWidth: selectedWarehouse.name === "ЖК Mega Towers" ? '615px' :
-                              selectedWarehouse.name === "ЖК Есентай" ? '1120px' : 'auto'
+                    minWidth: selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? '615px' :
+                              selectedWarehouse.name === "Есентай, жилой комплекс" ? '1120px' : 'auto'
                   }}
                 >
-                  {selectedWarehouse.name === "ЖК Mega Towers" ? (
+                  {selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? (
                     <InteractiveWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}
@@ -735,7 +735,7 @@ const WarehouseOrderPage = memo(() => {
                       userRole={user?.role}
                       isViewOnly={isAdminOrManager}
                     />
-                  ) : selectedWarehouse.name === "ЖК Есентай" ? (
+                  ) : selectedWarehouse.name === "Есентай, жилой комплекс" ? (
                     <MainWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}
@@ -743,7 +743,7 @@ const WarehouseOrderPage = memo(() => {
                       userRole={user?.role}
                       isViewOnly={isAdminOrManager}
                     />
-                  ) : selectedWarehouse.name === "ЖК Комфорт Сити" ? (
+                  ) : selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»" ? (
                       <>
                         {/* Селектор карты для ЖК Комфорт Сити */}
                         <div className="mb-4 flex justify-center">

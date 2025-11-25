@@ -1,5 +1,86 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
+/* San Francisco Pro Text Font Faces */
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-RegularItalic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-Semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-SemiboldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'San Francisco Pro Text';
+  src: url('../assets/fonts/San_Francisco_Pro_Text/SFProText-Heavy.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: oklch(1 0 0);
