@@ -177,12 +177,12 @@ const WarehouseCanvasViewer = memo(({
     );
   }
 
-  // Элементы управления для склада ЖК Комфорт Сити
+  // Элементы управления для склада Жилой комплекс «Комфорт Сити»
   const komfortControls = isKomfortWarehouse && showControls ? (
     <div
       className={`flex ${isFullscreen ? "flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : "items-center justify-center gap-3"} flex-wrap`}
     >
-      <span className="text-sm font-semibold text-[#273655]">Карта ЖК Комфорт Сити</span>
+      <span className="text-sm font-semibold text-[#273655]">Карта Жилой комплекс «Комфорт Сити»</span>
       <div className="inline-flex rounded-xl border border-[#d7dbe6] bg-white p-1 shadow-sm">
         {[1, 2].map((mapNumber) => {
           const isActive = komfortSelectedMap === mapNumber;

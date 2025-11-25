@@ -23,9 +23,9 @@ const PERIOD_OPTIONS = [
 
 const WAREHOUSE_OPTIONS = [
   { value: 'all', label: 'Все склады' },
-  { value: 'Mega', label: 'ЖК Mega Towers' },
-  { value: 'Комфорт', label: 'ЖК Комфорт Сити' },
-  { value: 'Есентай', label: 'ЖК Есентай' },
+  { value: 'Mega', label: 'Mega Tower Almaty, жилой комплекс' },
+  { value: 'Комфорт', label: 'Жилой комплекс «Комфорт Сити»' },
+  { value: 'Есентай', label: 'Есентай, жилой комплекс' },
 ];
 
 const STORAGE_TYPE_OPTIONS = [

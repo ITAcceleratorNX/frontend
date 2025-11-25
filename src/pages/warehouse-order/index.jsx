@@ -62,7 +62,7 @@ const WarehouseOrderPage = memo(() => {
 
   const [gazelleService, setGazelleService] = useState(null);
   const [isCloud, setIsCloud] = useState(false);
-  // Состояние для выбора карты склада ЖК Комфорт Сити
+  // Состояние для выбора карты склада Жилой комплекс «Комфорт Сити»
   const [selectedMap, setSelectedMap] = useState(1);
 
   // Функция для смены карты с сбросом выбранного бокса
@@ -745,7 +745,7 @@ const WarehouseOrderPage = memo(() => {
                     />
                   ) : selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»" ? (
                       <>
-                        {/* Селектор карты для ЖК Комфорт Сити */}
+                        {/* Селектор карты для Жилой комплекс «Комфорт Сити» */}
                         <div className="mb-4 flex justify-center">
                           <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
                             <button
