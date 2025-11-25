@@ -9,7 +9,7 @@ const Footer = () => {
 
   return (
       <>
-        <footer className="bg-[#0A142F] w-full text-white font-['San Francisco Pro Text'] mt-16 pt-10 pb-6">
+        <footer className="bg-[#0A142F] w-full text-white font-['SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif] mt-16 pt-10 pb-6" style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
           <div className="max-w-[1240px] mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-start gap-10">
               {/* Логотип и описание */}

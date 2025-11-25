@@ -11,7 +11,7 @@ export default {
 		fontFamily: {
 			sans: ['Montserrat', ...defaultTheme.fontFamily.sans],
 			serif: ['Montserrat', ...defaultTheme.fontFamily.serif],
-			'sf-pro-text': ['San Francisco Pro Text', ...defaultTheme.fontFamily.sans],
+			'sf-pro-text': ['SF Pro Text', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', ...defaultTheme.fontFamily.sans],
 		},
   		colors: {
   			background: 'var(--background)',
