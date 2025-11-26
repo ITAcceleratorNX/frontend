@@ -6,6 +6,7 @@ import { Header } from "../../widgets";
 import Footer from "../../widgets/Footer";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
+import { ordersApi } from "../../shared/api/ordersApi";
 import { useAuth } from "../../shared/context/AuthContext";
 import ChatButton from "../../shared/components/ChatButton";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
@@ -344,6 +345,9 @@ const WarehouseOrderPage = memo(() => {
   // Состояние для цены аренды склада
   const [storagePrice, setStoragePrice] = useState(0);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  // Состояние для информации о бронировании занятого бокса
+  const [bookingInfo, setBookingInfo] = useState(null);
+  const [isLoadingBookingInfo, setIsLoadingBookingInfo] = useState(false);
 
   // Функция расчета цены аренды склада через новый API
   const calculateStoragePrice = async () => {
@@ -430,6 +434,69 @@ const WarehouseOrderPage = memo(() => {
       calculateStoragePrice();
     }
   }, [selectedStorage, months]);
+
+  // Загрузка информации о бронировании для занятого бокса
+  useEffect(() => {
+    const fetchBookingInfo = async () => {
+      if (!selectedStorage) {
+        setBookingInfo(null);
+        return;
+      }
+
+      // Проверяем, является ли бокс занятым
+      const isOccupied = selectedStorage.status === 'OCCUPIED' || selectedStorage.status === 'PENDING';
+      
+      if (isOccupied && selectedStorage.id) {
+        try {
+          setIsLoadingBookingInfo(true);
+          
+          // Пробуем получить заказ через специальный endpoint
+          let order = null;
+          try {
+            order = await ordersApi.getPendingOrderByStorageId(selectedStorage.id);
+          } catch (error) {
+            // Если endpoint не существует, пробуем найти через список заказов
+            if (error.response?.status === 404 || error.response?.status === 405) {
+              // Для ADMIN/MANAGER используем getAllOrders, для USER - getUserOrders
+              let orders = [];
+              if (isAdminOrManager) {
+                const response = await ordersApi.getAllOrders(1);
+                orders = response?.data || response || [];
+              } else if (isAuthenticated) {
+                orders = await ordersApi.getUserOrders();
+              }
+              
+              // Ищем заказ по storage_id среди активных/ожидающих заказов
+              order = orders.find(o => 
+                o.storage_id === selectedStorage.id && 
+                (o.status === 'ACTIVE' || o.status === 'APPROVED' || o.status === 'PROCESSING' || o.status === 'INACTIVE' || o.status === 'PENDING')
+              );
+            } else {
+              throw error;
+            }
+          }
+          
+          if (order && order.start_date && order.end_date) {
+            setBookingInfo({
+              start_date: order.start_date,
+              end_date: order.end_date
+            });
+          } else {
+            setBookingInfo(null);
+          }
+        } catch (error) {
+          console.error('Ошибка при получении информации о бронировании:', error);
+          setBookingInfo(null);
+        } finally {
+          setIsLoadingBookingInfo(false);
+        }
+      } else {
+        setBookingInfo(null);
+      }
+    };
+
+    fetchBookingInfo();
+  }, [selectedStorage, isAdminOrManager, isAuthenticated]);
 
   // Функция расчета общей стоимости
   const calculateTotalPrice = () => {
@@ -812,6 +879,40 @@ const WarehouseOrderPage = memo(() => {
                           {selectedStorage.name}
                         </span>
                         </p>
+                        {/* Информация о бронировании для занятых боксов */}
+                        {selectedStorage && (selectedStorage.status === 'OCCUPIED' || selectedStorage.status === 'PENDING') && (
+                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#273655]">
+                                ИТОГ
+                              </div>
+                              <div className="text-4xl font-black text-[#273655] tracking-tight">
+                                {selectedStorage.name}
+                              </div>
+                            </div>
+                            {isLoadingBookingInfo ? (
+                              <div className="text-sm text-[#6B6B6B] flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#273655]"></div>
+                                Загрузка информации о бронировании...
+                              </div>
+                            ) : bookingInfo ? (
+                              <p className="text-sm text-[#6B6B6B]">
+                                Бокс стоит о бронировании с{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(bookingInfo.start_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                                , по{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(bookingInfo.end_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                              </p>
+                            ) : (
+                              <p className="text-sm text-[#6B6B6B]">
+                                Бокс занят
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <p className="text-[#6B6B6B] mb-2">
                           {selectedWarehouse?.type === 'CLOUD' 
                             ? 'Доступный объем:' 

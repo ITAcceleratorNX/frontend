@@ -37,6 +37,14 @@ import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/sha
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
 
+// Функция для правильного склонения слова "месяц"
+const getMonthLabel = (months) => {
+  const num = parseInt(months, 10);
+  if (num === 1) return "1 месяц";
+  if (num >= 2 && num <= 4) return `${num} месяца`;
+  return `${num} месяцев`;
+};
+
 const getServiceTypeName = (type) => {
   switch (type) {
     case "LOADER":
@@ -506,7 +514,7 @@ const HomePage = memo(() => {
     }
 
     if (includePacking && packagingServicesForOrder.length === 0) {
-      setSubmitError("Добавьте хотя бы одну услугу упаковки или отключите опцию.");
+      setSubmitError("Добавьте хотя бы одну дополнительную услугу или отключите опцию.");
       return;
     }
 
@@ -1361,11 +1369,11 @@ const HomePage = memo(() => {
                         <SelectValue placeholder="Выберите срок" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">1 месяц</SelectItem>
-                        <SelectItem value="2">2 месяца</SelectItem>
-                        <SelectItem value="3">3 месяца</SelectItem>
-                        <SelectItem value="6">6 месяцев</SelectItem>
-                        <SelectItem value="12">12 месяцев</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                          <SelectItem key={month} value={String(month)}>
+                            {getMonthLabel(month)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1423,14 +1431,14 @@ const HomePage = memo(() => {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2 text-[#273655] font-semibold">
                         <Package className="w-5 h-5 shrink-0" />
-                        <span>Услуги упаковки</span>
+                        <span>Дополнительные услуги</span>
                         <InfoHint
                           description={
                             <span>
-                              Выберите дополнительные услуги упаковки — всё, что нужно, чтобы подготовить вещи к хранению.
+                              Выберите дополнительные услуги — всё, что нужно, чтобы подготовить вещи к хранению.
                             </span>
                           }
-                          ariaLabel="Подробнее об услугах упаковки"
+                          ariaLabel="Подробнее о дополнительных услугах"
                           align="start"
                         />
                       </div>
@@ -1564,11 +1572,56 @@ const HomePage = memo(() => {
                     <div className="flex items-center justify-between text-[#273655]">
                       <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
                       {previewStorage && (
-                        <span className="text-xs text-[#6B6B6B]">
+                        <span className="text-xl font-black text-[#273655] tracking-tight">
                           {previewStorage.name}
                         </span>
                       )}
                     </div>
+                    {/* Информация о боксе */}
+                    {previewStorage && (
+                      <div className="space-y-1 pb-2 border-b border-dashed border-[#273655]/20">
+                        {(() => {
+                          const area = parseFloat(
+                            previewStorage?.available_volume ??
+                            previewStorage?.total_volume ??
+                            previewStorage?.area ??
+                            previewStorage?.square ??
+                            previewStorage?.volume ??
+                            0
+                          );
+                          const totalArea = parseFloat(previewStorage?.total_volume ?? 0);
+                          
+                          return (
+                            <>
+                              {area > 0 && (
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-[#6B6B6B]">Доступная площадь:</span>
+                                  <span className="font-medium text-[#273655]">
+                                    {area.toFixed(2)} м²
+                                  </span>
+                                </div>
+                              )}
+                              {totalArea > 0 && totalArea !== area && (
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-[#6B6B6B]">Общая площадь:</span>
+                                  <span className="font-medium text-[#273655]">
+                                    {totalArea.toFixed(2)} м²
+                                  </span>
+                                </div>
+                              )}
+                              {previewStorage?.height && (
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-[#6B6B6B]">Высота:</span>
+                                  <span className="font-medium text-[#273655]">
+                                    {previewStorage.height} м
+                                  </span>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
                     {isPriceCalculating ? (
                       <div className="flex items-center justify-center gap-2 text-base font-semibold">
                         <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
@@ -1727,10 +1780,27 @@ const HomePage = memo(() => {
                     <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3">
                       <div className="flex items-center justify-between text-[#273655]">
                         <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
-                        <span className="text-xs text-[#6B6B6B]">
+                        <span className="text-4xl font-black text-[#273655] tracking-tight">
                           {cloudVolume.toFixed(2)} м³
                         </span>
                       </div>
+                      {/* Информация о габаритах */}
+                      {cloudVolume > 0 && (
+                        <div className="space-y-1 pb-2 border-b border-dashed border-[#273655]/20">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[#6B6B6B]">Габариты:</span>
+                            <span className="font-medium text-[#273655]">
+                              {cloudDimensions.width} × {cloudDimensions.height} × {cloudDimensions.length} м
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[#6B6B6B]">Объём:</span>
+                            <span className="font-medium text-[#273655]">
+                              {cloudVolume.toFixed(2)} м³
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       {isCloudPriceCalculating ? (
                         <div className="flex items-center justify-center gap-2 text-base font-semibold">
                           <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
@@ -1807,11 +1877,11 @@ const HomePage = memo(() => {
                         <SelectValue placeholder="Выберите срок" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">1 месяц</SelectItem>
-                        <SelectItem value="2">2 месяца</SelectItem>
-                        <SelectItem value="3">3 месяца</SelectItem>
-                        <SelectItem value="6">6 месяцев</SelectItem>
-                        <SelectItem value="12">12 месяцев</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                          <SelectItem key={month} value={String(month)}>
+                            {getMonthLabel(month)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
