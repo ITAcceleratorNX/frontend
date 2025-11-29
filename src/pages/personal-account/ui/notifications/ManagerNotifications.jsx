@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Settings, Plus, History, Loader2, AlertCircle, Shield, BarChart3 } from 'lucide-react';
 import { useNotifications, useSearchNotifications } from '../../../../shared/lib/hooks/use-notifications';
-import { toast } from 'react-toastify';
 import NotificationCard from './NotificationCard';
 import CreateNotificationForm from './CreateNotificationForm';
 import { NotificationSearch } from '../../../../components/ui/NotificationSearch';
@@ -50,7 +49,6 @@ const ManagerNotifications = () => {
     try {
       await sendNotification(notification);
       setActiveTab('history');
-      toast.success('Уведомление успешно отправлено!');
     } catch (error) {
       console.error('Send notification error:', error);
     }

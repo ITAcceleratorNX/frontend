@@ -2,7 +2,7 @@ import {useQuery, useMutation, useQueryClient, useInfiniteQuery} from '@tanstack
 import { notificationApi } from '../../api/notificationApi';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 
 // Query keys для уведомлений
 export const NOTIFICATION_QUERY_KEYS = {
@@ -65,6 +65,7 @@ export const useNotificationUsers = () => {
 // Хук для отправки уведомления
 export const useSendNotification = () => {
   const queryClient = useQueryClient();
+  const lastToastTimeRef = useRef(0);
 
   return useMutation({
     mutationFn: (notification) => notificationApi.sendNotification(notification),
@@ -82,7 +83,12 @@ export const useSendNotification = () => {
         };
       });
 
-      toast.success('Уведомление успешно отправлено!');
+      // Защита от дублирования: показываем toast только если прошло больше 500ms с последнего показа
+      const now = Date.now();
+      if (now - lastToastTimeRef.current > 500) {
+        lastToastTimeRef.current = now;
+        toast.success('Уведомление успешно отправлено!');
+      }
     },
     onError: (error) => {
       console.error('Error sending notification:', error);
