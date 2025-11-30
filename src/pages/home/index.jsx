@@ -33,6 +33,7 @@ import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
+import DatePicker from "../../shared/ui/DatePicker";
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -84,12 +85,32 @@ const HomePage = memo(() => {
   const [warehousesError, setWarehousesError] = useState(null);
   const [activeStorageTab, setActiveStorageTab] = useState("INDIVIDUAL");
   const [individualMonths, setIndividualMonths] = useState("1");
+  const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
+  const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [includeMoving, setIncludeMoving] = useState(false);
   const [includePacking, setIncludePacking] = useState(false);
   const [cloudMonths, setCloudMonths] = useState("1");
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
   const [movingAddressFrom, setMovingAddressFrom] = useState("");
+  const [movingPickupDate, setMovingPickupDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [cloudPickupAddress, setCloudPickupAddress] = useState("");
+  const [cloudPickupDate, setCloudPickupDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [previewStorage, setPreviewStorage] = useState(null);
   const [pricePreview, setPricePreview] = useState(null);
   const [isPriceCalculating, setIsPriceCalculating] = useState(false);
@@ -463,12 +484,21 @@ const HomePage = memo(() => {
     cloudPricePreview,
   ]);
 
-  const buildMovingOrders = useCallback((address, months) => {
+  const buildMovingOrders = useCallback((address, months, pickupDateString = null) => {
     const monthsCount = Math.max(1, Number(months) || 1);
-    const start = new Date();
-    const pickupDate = new Date(start);
-    const returnDate = new Date(start);
+    
+    // Используем переданную дату забора или текущую дату
+    const pickupDate = pickupDateString 
+      ? new Date(pickupDateString)
+      : new Date();
+    
+    // Устанавливаем время на начало дня для даты забора
+    pickupDate.setHours(10, 0, 0, 0); // 10:00 утра для забора
+    
+    // Дата возврата = дата забора + количество месяцев
+    const returnDate = new Date(pickupDate);
     returnDate.setMonth(returnDate.getMonth() + monthsCount);
+    returnDate.setHours(10, 0, 0, 0); // 10:00 утра для возврата
 
     return [
       {
@@ -540,8 +570,8 @@ const HomePage = memo(() => {
 
       const orderItems = [
         {
-          name: "Предварительная бронь",
-          volume: 0,
+          name: "Вещь",
+          volume: 1,
           cargo_mark: "NO",
         },
       ];
@@ -577,16 +607,26 @@ const HomePage = memo(() => {
         });
       }
 
+      // Формируем дату начала бронирования
+      const startDate = individualBookingStartDate ? new Date(individualBookingStartDate).toISOString() : new Date().toISOString();
+
+      // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
+      const hasPackagingServices = packagingEntries.length > 0;
+      // Проверяем наличие услуги "Газель" в finalServices (она добавляется выше, если includeMoving включен)
+      const hasGazelleService = includeMoving && finalServices.length > packagingEntries.length;
+      const isPackageSelected = hasPackagingServices || hasGazelleService;
+
       const orderData = {
         storage_id: storageId,
         months: monthsNumber,
+        start_date: startDate,
         order_items: orderItems,
         is_selected_moving: includeMoving,
-        is_selected_package: packagingEntries.length > 0,
+        is_selected_package: isPackageSelected,
       };
 
       if (includeMoving) {
-        orderData.moving_orders = buildMovingOrders(trimmedAddress, monthsNumber);
+        orderData.moving_orders = buildMovingOrders(trimmedAddress, monthsNumber, movingPickupDate);
       }
 
       if (finalServices.length > 0) {
@@ -692,14 +732,46 @@ const HomePage = memo(() => {
         },
       ];
 
+      // Формируем дату начала бронирования для облачного хранения
+      const cloudStartDate = cloudBookingStartDate ? new Date(cloudBookingStartDate).toISOString() : new Date().toISOString();
+
+      // Для облачного хранения всегда включена перевозка, нужно добавить услугу "Газель"
+      let availableOptions = serviceOptions;
+      if (serviceOptions.length === 0) {
+        const loadedOptions = await ensureServiceOptions();
+        if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
+          availableOptions = loadedOptions;
+        }
+      }
+
+      const gazelleOption =
+        gazelleService ||
+        availableOptions?.find((option) => option.type === "GAZELLE");
+      const gazelleId =
+        gazelleOption?.id ?? gazelleOption?.service_id ?? gazelleOption ?? null;
+
+      // Для облачного хранения перевозка всегда включена, и если есть услуга "Газель", то is_selected_package = true
+      const hasGazelleForCloud = gazelleId && Number.isFinite(Number(gazelleId));
+
       const orderData = {
         storage_id: Number(cloudStorage.id),
         months: cloudMonthsNumber,
+        start_date: cloudStartDate,
         order_items: orderItems,
         is_selected_moving: true,
-        is_selected_package: false,
-        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber),
+        is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
+        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudPickupDate),
       };
+
+      // Добавляем услугу "Газель" для перевозки
+      if (hasGazelleForCloud) {
+        orderData.services = [
+          {
+            service_id: Number(gazelleId),
+            count: 2, // 2 поездки: забор и возврат
+          },
+        ];
+      }
 
       await warehouseApi.createOrder(orderData);
 
@@ -1356,6 +1428,22 @@ const HomePage = memo(() => {
 
                   <div className="space-y-2 sm:space-y-2.5">
                     <span className="text-sm font-semibold text-[#273655]">
+                      Дата начала бронирования
+                    </span>
+                    <DatePicker
+                      value={individualBookingStartDate}
+                      onChange={(value) => {
+                        setIndividualBookingStartDate(value);
+                        setSubmitError(null);
+                      }}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      allowFutureDates={true}
+                      placeholder="ДД.ММ.ГГГГ"
+                    />
+                  </div>
+
+                  <div className="space-y-2 sm:space-y-2.5">
+                    <span className="text-sm font-semibold text-[#273655]">
                       Срок аренды (месяцы)
                     </span>
                     <Select
@@ -1410,6 +1498,19 @@ const HomePage = memo(() => {
 
                       {includeMoving && (
                         <div className="mt-3 space-y-3">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата забора вещей</label>
+                            <DatePicker
+                              value={movingPickupDate}
+                              onChange={(value) => {
+                                setMovingPickupDate(value);
+                                setSubmitError(null);
+                              }}
+                              minDate={new Date().toISOString().split('T')[0]}
+                              allowFutureDates={true}
+                              placeholder="ДД.ММ.ГГГГ"
+                            />
+                          </div>
                           <div className="flex flex-col gap-1">
                             <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора</label>
                             <input
@@ -1863,6 +1964,23 @@ const HomePage = memo(() => {
                   </div>
 
                   <div className="space-y-2 sm:space-y-2.5">
+                    <DatePicker
+                      label="Дата начала бронирования"
+                      value={cloudBookingStartDate}
+                      onChange={(value) => {
+                        setCloudBookingStartDate(value);
+                        setSubmitError(null);
+                      }}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      allowFutureDates={true}
+                      placeholder="ДД.ММ.ГГГГ"
+                    />
+                    <p className="text-xs text-[#6B6B6B]">
+                      Выберите дату, с которой начнется срок аренды
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 sm:space-y-2.5">
                     <span className="text-sm font-semibold text-[#273655]">
                       Срок аренды (месяцы)
                     </span>
@@ -1897,7 +2015,20 @@ const HomePage = memo(() => {
                         </div>
                       </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs text-[#6B6B6B]">Адрес забора вещей</span>
+                      <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата забора вещей</span>
+                      <DatePicker
+                        value={cloudPickupDate}
+                        onChange={(value) => {
+                          setCloudPickupDate(value);
+                          setSubmitError(null);
+                        }}
+                        minDate={new Date().toISOString().split('T')[0]}
+                        allowFutureDates={true}
+                        placeholder="ДД.ММ.ГГГГ"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора вещей</span>
                       <input
                         type="text"
                         value={cloudPickupAddress}

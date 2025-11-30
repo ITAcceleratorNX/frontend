@@ -23,6 +23,7 @@ import { Dropdown } from '../../../shared/components/Dropdown';
 import ClientSelector from '../../../shared/components/ClientSelector';
 import PendingOrderModal from './PendingOrderModal';
 import { ordersApi } from '../../../shared/api/ordersApi';
+import DatePicker from '../../../shared/ui/DatePicker';
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -70,12 +71,32 @@ const WarehouseData = () => {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [individualMonths, setIndividualMonths] = useState('1');
+  const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [cloudMonths, setCloudMonths] = useState('1');
+  const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
   const [includeMoving, setIncludeMoving] = useState(false);
   const [includePacking, setIncludePacking] = useState(false);
   const [movingAddressFrom, setMovingAddressFrom] = useState('');
+  const [movingPickupDate, setMovingPickupDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [cloudPickupAddress, setCloudPickupAddress] = useState('');
+  const [cloudPickupDate, setCloudPickupDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [previewStorage, setPreviewStorage] = useState(null);
   const [pricePreview, setPricePreview] = useState(null);
   const [isPriceCalculating, setIsPriceCalculating] = useState(false);
@@ -1717,6 +1738,19 @@ const WarehouseData = () => {
 
                       <div className="space-y-2 sm:space-y-2.5">
                         <span className="text-sm font-semibold text-[#273655]">
+                          Дата начала бронирования
+                        </span>
+                        <DatePicker
+                          value={cloudBookingStartDate}
+                          onChange={(value) => setCloudBookingStartDate(value)}
+                          minDate={new Date().toISOString().split('T')[0]}
+                          allowFutureDates={true}
+                          placeholder="ДД.ММ.ГГГГ"
+                        />
+                      </div>
+
+                      <div className="space-y-2 sm:space-y-2.5">
+                        <span className="text-sm font-semibold text-[#273655]">
                           Срок аренды (месяцы)
                         </span>
                         <Select
@@ -1747,7 +1781,17 @@ const WarehouseData = () => {
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-xs text-[#6B6B6B]">Адрес забора вещей</span>
+                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата забора вещей</span>
+                          <DatePicker
+                            value={cloudPickupDate}
+                            onChange={(value) => setCloudPickupDate(value)}
+                            minDate={new Date().toISOString().split('T')[0]}
+                            allowFutureDates={true}
+                            placeholder="ДД.ММ.ГГГГ"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора вещей</span>
                           <input
                             type="text"
                             value={cloudPickupAddress}
@@ -1828,16 +1872,43 @@ const WarehouseData = () => {
                               (service) => service.service_id && service.count > 0
                             );
 
+                            // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
+                            const hasPackagingServices = includePacking && validServices.some(s => {
+                              if (!gazelleService) return true; // Если gazelleService не установлен, считаем все услуги упаковкой
+                              const serviceId = s.service_id?.toString();
+                              const gazelleId = gazelleService.id?.toString();
+                              return serviceId !== gazelleId; // услуги кроме Газели
+                            });
+                            // Проверяем наличие услуги "Газель" в validServices
+                            const hasGazelleService = includeMoving && (() => {
+                              if (gazelleService) {
+                                const gazelleId = gazelleService.id?.toString();
+                                return validServices.some(s => s.service_id?.toString() === gazelleId);
+                              }
+                              // Если gazelleService не установлен, проверяем по типу из serviceOptions
+                              const gazelleOption = serviceOptions.find(opt => opt.type === "GAZELLE");
+                              if (gazelleOption) {
+                                const gazelleId = gazelleOption.id?.toString();
+                                return validServices.some(s => s.service_id?.toString() === gazelleId);
+                              }
+                              return false;
+                            })();
+                            const isPackageSelected = hasPackagingServices || hasGazelleService;
+
+                            // Формируем дату начала бронирования для облачного хранения
+                            const cloudStartDate = cloudBookingStartDate ? new Date(cloudBookingStartDate).toISOString() : new Date().toISOString();
+
                             const orderData = {
                               storage_id: warehouse.storage[0].id,
                               months: cloudMonthsNumber,
+                              start_date: cloudStartDate,
                               order_items: [{
                                 name: 'Облачное хранение',
                                 volume: cloudVolume,
                                 cargo_mark: 'NO'
                               }],
                               is_selected_moving: includeMoving,
-                              is_selected_package: includePacking && validServices.length > 0,
+                              is_selected_package: isPackageSelected,
                             };
 
                             // Добавляем user_id для менеджеров/админов
@@ -1847,22 +1918,33 @@ const WarehouseData = () => {
 
                             // Добавляем перевозки
                             if (includeMoving) {
+                              // Используем выбранную дату забора или текущую дату
+                              const pickupDate = cloudPickupDate 
+                                ? new Date(cloudPickupDate)
+                                : new Date();
+                              pickupDate.setHours(10, 0, 0, 0);
+                              
+                              // Дата возврата = дата забора + количество месяцев
+                              const returnDate = new Date(pickupDate);
+                              returnDate.setMonth(returnDate.getMonth() + cloudMonthsNumber);
+                              returnDate.setHours(10, 0, 0, 0);
+                              
                               orderData.moving_orders = [
                                 {
-                                  moving_date: new Date().toISOString(),
+                                  moving_date: pickupDate.toISOString(),
                                   status: 'PENDING_FROM',
                                   address: cloudPickupAddress.trim(),
                                 },
                                 {
-                                  moving_date: new Date().toISOString(),
+                                  moving_date: returnDate.toISOString(),
                                   status: 'PENDING_TO',
                                   address: cloudPickupAddress.trim(),
                                 }
                               ];
                             }
 
-                            // Добавляем услуги
-                            if (includePacking && validServices.length > 0) {
+                            // Добавляем услуги (включая Газель при перевозке, даже если упаковка не включена)
+                            if (validServices.length > 0) {
                               orderData.services = validServices.map((service) => ({
                                 service_id: Number(service.service_id),
                                 count: service.count,
@@ -2030,6 +2112,19 @@ const WarehouseData = () => {
 
                       <div className="space-y-2 sm:space-y-2.5">
                         <span className="text-sm font-semibold text-[#273655]">
+                          Дата начала бронирования
+                        </span>
+                        <DatePicker
+                          value={individualBookingStartDate}
+                          onChange={(value) => setIndividualBookingStartDate(value)}
+                          minDate={new Date().toISOString().split('T')[0]}
+                          allowFutureDates={true}
+                          placeholder="ДД.ММ.ГГГГ"
+                        />
+                      </div>
+
+                      <div className="space-y-2 sm:space-y-2.5">
+                        <span className="text-sm font-semibold text-[#273655]">
                           Срок аренды (месяцы)
                         </span>
                         <Select
@@ -2084,7 +2179,15 @@ const WarehouseData = () => {
                         {includeMoving && (
                           <div className="mt-3 space-y-3">
                             <div className="flex flex-col gap-1">
-                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора</label>
+                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата забора вещей</label>
+                              <DatePicker
+                                value={movingPickupDate}
+                                onChange={(value) => setMovingPickupDate(value)}
+                                minDate={new Date().toISOString().split('T')[0]}
+                                allowFutureDates={true}
+                                placeholder="ДД.ММ.ГГГГ"
+                              />
+                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mt-2">Адрес забора</label>
                               <input
                                 type="text"
                                 value={movingAddressFrom}
@@ -2384,23 +2487,58 @@ const WarehouseData = () => {
                               (service) => service.service_id && service.count > 0
                             );
 
-                            // Проверка услуг для обычных пользователей
+                            // Проверка услуг для обычных пользователей (только для упаковки, не для перевозки)
                             if (includePacking && validServices.length === 0 && !isAdminOrManager) {
-                              toast.error('Добавьте хотя бы одну услугу для упаковки');
-                              setIsCreatingOrder(false);
-                              return;
+                              // Проверяем, есть ли хотя бы услуга "Газель" при перевозке
+                              const hasGazelle = includeMoving && validServices.some(s => {
+                                const serviceId = s.service_id?.toString();
+                                const gazelleId = gazelleService?.id?.toString();
+                                return serviceId === gazelleId;
+                              });
+                              if (!hasGazelle) {
+                                toast.error('Добавьте хотя бы одну услугу для упаковки');
+                                setIsCreatingOrder(false);
+                                return;
+                              }
                             }
+
+                            // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
+                            const hasPackagingServices = includePacking && validServices.some(s => {
+                              if (!gazelleService) return true; // Если gazelleService не установлен, считаем все услуги упаковкой
+                              const serviceId = s.service_id?.toString();
+                              const gazelleId = gazelleService.id?.toString();
+                              return serviceId !== gazelleId; // услуги кроме Газели
+                            });
+                            // Проверяем наличие услуги "Газель" в validServices
+                            const hasGazelleService = includeMoving && (() => {
+                              if (gazelleService) {
+                                const gazelleId = gazelleService.id?.toString();
+                                return validServices.some(s => s.service_id?.toString() === gazelleId);
+                              }
+                              // Если gazelleService не установлен, проверяем по типу из serviceOptions
+                              const gazelleOption = serviceOptions.find(opt => opt.type === "GAZELLE");
+                              if (gazelleOption) {
+                                const gazelleId = gazelleOption.id?.toString();
+                                return validServices.some(s => s.service_id?.toString() === gazelleId);
+                              }
+                              return false;
+                            })();
+                            const isPackageSelected = hasPackagingServices || hasGazelleService;
+
+                            // Формируем дату начала бронирования для индивидуального хранения
+                            const individualStartDate = individualBookingStartDate ? new Date(individualBookingStartDate).toISOString() : new Date().toISOString();
 
                             const orderData = {
                               storage_id: previewStorage.id,
                               months: monthsNumber,
+                              start_date: individualStartDate,
                               order_items: [{
                                 name: previewStorage.name || `Бокс ${previewStorage.id}`,
                                 volume: 0,
                                 cargo_mark: 'NO'
                               }],
                               is_selected_moving: includeMoving,
-                              is_selected_package: includePacking && validServices.length > 0,
+                              is_selected_package: isPackageSelected,
                             };
 
                             // Добавляем user_id для менеджеров/админов
@@ -2410,22 +2548,33 @@ const WarehouseData = () => {
 
                             // Добавляем перевозки
                             if (includeMoving && movingAddressFrom.trim()) {
+                              // Используем выбранную дату забора или текущую дату
+                              const pickupDate = movingPickupDate 
+                                ? new Date(movingPickupDate)
+                                : new Date();
+                              pickupDate.setHours(10, 0, 0, 0);
+                              
+                              // Дата возврата = дата забора + количество месяцев
+                              const returnDate = new Date(pickupDate);
+                              returnDate.setMonth(returnDate.getMonth() + monthsNumber);
+                              returnDate.setHours(10, 0, 0, 0);
+                              
                               orderData.moving_orders = [
                                 {
-                                  moving_date: new Date().toISOString(),
+                                  moving_date: pickupDate.toISOString(),
                                   status: 'PENDING_FROM',
                                   address: movingAddressFrom.trim(),
                                 },
                                 {
-                                  moving_date: new Date().toISOString(),
+                                  moving_date: returnDate.toISOString(),
                                   status: 'PENDING_TO',
                                   address: movingAddressFrom.trim(),
                                 }
                               ];
                             }
 
-                            // Добавляем услуги
-                            if (includePacking && validServices.length > 0) {
+                            // Добавляем услуги (включая Газель при перевозке, даже если упаковка не включена)
+                            if (validServices.length > 0) {
                               orderData.services = validServices.map((service) => ({
                                 service_id: Number(service.service_id),
                                 count: service.count,

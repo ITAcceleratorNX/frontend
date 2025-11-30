@@ -30,6 +30,7 @@ import {
   Truck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import DatePicker from "../../shared/ui/DatePicker";
 
 const WarehouseOrderPage = memo(() => {
   const navigate = useNavigate();
@@ -45,6 +46,12 @@ const WarehouseOrderPage = memo(() => {
     { name: "", length: "", width: "", height: "", volume: "", cargo_mark: "NO" },
   ]);
   const [months, setMonths] = useState(1);
+  const [bookingStartDate, setBookingStartDate] = useState(() => {
+    // Устанавливаем минимальную дату - сегодня
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCloudVolume, setSelectedCloudVolume] = useState(3);
   // Состояния для дополнительных услуг
@@ -597,9 +604,13 @@ const WarehouseOrderPage = memo(() => {
         return;
       }
 
+      // Формируем дату начала бронирования
+      const startDate = bookingStartDate ? new Date(bookingStartDate).toISOString() : new Date().toISOString();
+
       const orderData = {
         storage_id: selectedStorage.id,
         months: months,
+        start_date: startDate,
         order_items: validItems.map((item) => ({
           name: item.name.trim(),
           volume: selectedWarehouse?.type === 'CLOUD' ? (parseFloat(item.volume) || 0) : 0,
@@ -1099,13 +1110,19 @@ const WarehouseOrderPage = memo(() => {
                                   ? 'Дата забора вещей'
                                   : 'Дата доставки вещей'}
                             </label>
-                            <input
-                                type="datetime-local"
-                                value={order.moving_date.slice(0, 16)}
-                                onChange={(e) =>
-                                    updateMovingOrder(index, 'moving_date', e.target.value + ':00')
+                            <DatePicker
+                              value={order.moving_date ? new Date(order.moving_date).toISOString().split('T')[0] : ''}
+                              onChange={(value) => {
+                                if (value) {
+                                  const existingDate = order.moving_date ? new Date(order.moving_date) : new Date();
+                                  const newDate = new Date(value);
+                                  newDate.setHours(existingDate.getHours() || 10, existingDate.getMinutes() || 0, 0, 0);
+                                  updateMovingOrder(index, 'moving_date', newDate.toISOString());
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              }}
+                              minDate={order.status === 'PENDING_FROM' ? new Date().toISOString().split('T')[0] : undefined}
+                              allowFutureDates={true}
+                              placeholder="ДД.ММ.ГГГГ"
                             />
                           </div>
                           {!isCloud && (
@@ -1289,7 +1306,20 @@ const WarehouseOrderPage = memo(() => {
                 })()}. Укажите срок аренды
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <DatePicker
+                      label="Дата начала бронирования"
+                      value={bookingStartDate}
+                      onChange={(value) => setBookingStartDate(value)}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      allowFutureDates={true}
+                      placeholder="ДД.ММ.ГГГГ"
+                    />
+                    <p className="text-xs text-[#6B6B6B] mt-1">
+                      Выберите дату, с которой начнется срок аренды
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-[#273655] mb-2">
                       Срок аренды (месяцы)
@@ -1310,6 +1340,7 @@ const WarehouseOrderPage = memo(() => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
                   
                   {/* Отображение стоимости */}
                   {selectedStorage && (
@@ -1415,7 +1446,6 @@ const WarehouseOrderPage = memo(() => {
                   </button>
                 </div>
               </div>
-            </div>
           )}
           {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && !isAuthenticated && (
               <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
