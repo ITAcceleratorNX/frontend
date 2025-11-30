@@ -330,6 +330,9 @@ const HomePage = memo(() => {
     if (callbackModalContext === 'booking') {
       return 'Оставьте контакты, и менеджер поможет подобрать бокс и оформить бронирование.';
     }
+    if (callbackModalContext === 'max_orders_limit') {
+      return 'Вы уже забронировали максимальное количество боксов (2). Для аренды дополнительных боксов оставьте заявку, и наш менеджер свяжется с вами.';
+    }
     return undefined;
   }, [callbackModalContext]);
 
@@ -656,8 +659,26 @@ const HomePage = memo(() => {
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
-      const message =
-        error.response?.data?.message || "Не удалось создать заказ. Попробуйте позже.";
+      const errorData = error.response?.data;
+      const message = errorData?.message || errorData?.error || error.message || "Не удалось создать заказ. Попробуйте позже.";
+
+      // Проверяем, достигнут ли лимит активных заказов
+      const isMaxOrdersError = error.response?.status === 403 && (
+          message.includes('максимальное количество боксов') ||
+          message.includes('MAX_ORDERS_LIMIT_REACHED') ||
+          errorData?.error?.includes('максимальное количество боксов') ||
+          errorData?.message?.includes('максимальное количество боксов')
+      );
+
+      if (isMaxOrdersError) {
+        // Показываем модал обратного звонка вместо обычной ошибки
+        setCallbackModalContext('max_orders_limit');
+        openCallbackModal('max_orders_limit');
+        setSubmitError(null);
+        setIsSubmittingOrder(false);
+        return;
+      }
+
       setSubmitError(message);
       toast.error(message, {
         position: "top-right",
@@ -682,6 +703,7 @@ const HomePage = memo(() => {
     selectedWarehouse,
     serviceOptions,
     movingAddressFrom,
+    openCallbackModal,
   ]);
 
   const handleCreateCloudOrder = useCallback(async () => {
@@ -796,8 +818,26 @@ const HomePage = memo(() => {
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);
-      const message =
-        error.response?.data?.message || "Не удалось создать заказ. Попробуйте позже.";
+      const errorData = error.response?.data;
+      const message = errorData?.message || errorData?.error || error.message || "Не удалось создать заказ. Попробуйте позже.";
+
+      // Проверяем, достигнут ли лимит активных заказов
+      const isMaxOrdersError = error.response?.status === 403 && (
+          message.includes('максимальное количество боксов') ||
+          message.includes('MAX_ORDERS_LIMIT_REACHED') ||
+          errorData?.error?.includes('максимальное количество боксов') ||
+          errorData?.message?.includes('максимальное количество боксов')
+      );
+
+      if (isMaxOrdersError) {
+        // Показываем модал обратного звонка вместо обычной ошибки
+        setCallbackModalContext('max_orders_limit');
+        openCallbackModal('max_orders_limit');
+        setSubmitError(null);
+        setIsSubmittingOrder(false);
+        return;
+      }
+
       setSubmitError(message);
       toast.error(message, {
         position: "top-right",
@@ -1691,7 +1731,7 @@ const HomePage = memo(() => {
                             0
                           );
                           const totalArea = parseFloat(previewStorage?.total_volume ?? 0);
-                          
+
                           return (
                             <>
                               {area > 0 && (
@@ -2172,6 +2212,7 @@ const HomePage = memo(() => {
         open={isCallbackModalOpen}
         onOpenChange={handleCallbackModalOpenChange}
         showRegisterPrompt={!isAuthenticated}
+        title={callbackModalContext === 'max_orders_limit' ? 'Связаться с поддержкой' : undefined}
         description={callbackModalDescription}
       />
 

@@ -14,6 +14,7 @@ import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
 import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
 import MiniVolumeSelector from "../../components/MiniVolumeSelector";
 import ProfileValidationGuard from "../../shared/components/ProfileValidationGuard";
+import CallbackRequestModal from "../../shared/components/CallbackRequestModal.jsx";
 // Импорт компонентов UI
 import {
   Switch,
@@ -41,6 +42,7 @@ const WarehouseOrderPage = memo(() => {
   const [selectedStorage, setSelectedStorage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   // Состояния для формы заказа
   const [orderItems, setOrderItems] = useState([
     { name: "", length: "", width: "", height: "", volume: "", cargo_mark: "NO" },
@@ -657,9 +659,24 @@ const WarehouseOrderPage = memo(() => {
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
-      const errorMessage =
-          error.response?.data?.message ||
-          "Не удалось создать заказ. Попробуйте позже.";
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || errorData?.error || error.message || "Не удалось создать заказ. Попробуйте позже.";
+      
+      // Проверяем, достигнут ли лимит активных заказов
+      const isMaxOrdersError = error.response?.status === 403 && (
+          errorMessage.includes('максимальное количество боксов') || 
+          errorMessage.includes('MAX_ORDERS_LIMIT_REACHED') ||
+          errorData?.error?.includes('максимальное количество боксов') ||
+          errorData?.message?.includes('максимальное количество боксов')
+      );
+      
+      if (isMaxOrdersError) {
+        // Показываем модал обратного звонка вместо обычной ошибки
+        setIsCallbackModalOpen(true);
+        setError(null);
+        return;
+      }
+      
       setError(errorMessage);
       toast.error(errorMessage, {
         position: "top-right",
@@ -1475,6 +1492,13 @@ const WarehouseOrderPage = memo(() => {
         <ChatButton />
         <Footer />
       </div>
+      
+      <CallbackRequestModal
+        open={isCallbackModalOpen}
+        onOpenChange={setIsCallbackModalOpen}
+        title="Связаться с поддержкой"
+        description="Вы уже забронировали максимальное количество боксов (2). Для аренды дополнительных боксов оставьте заявку, и наш менеджер свяжется с вами."
+      />
     </ProfileValidationGuard>
   );
 });
