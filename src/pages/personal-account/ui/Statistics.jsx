@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { useQuery } from '@tanstack/react-query';
 import { statisticsApi } from '../../../shared/api/statisticsApi';
@@ -774,6 +774,16 @@ const Statistics = () => {
   const [requestStatusFilter, setRequestStatusFilter] = useState('all');
   const [logTypeFilter, setLogTypeFilter] = useState('all');
   const [requestsPage, setRequestsPage] = useState(1);
+  const [logsPage, setLogsPage] = useState(1);
+
+  // Сброс пагинации при изменении фильтров
+  useEffect(() => {
+    setRequestsPage(1);
+  }, [filters, requestStatusFilter]);
+
+  useEffect(() => {
+    setLogsPage(1);
+  }, [filters, logTypeFilter]);
 
   const {
     summary,
@@ -795,11 +805,12 @@ const Statistics = () => {
 
   // Запрос логов действий
   const { data: logsData, isLoading: isLogsLoading } = useQuery({
-    queryKey: ['statistics', 'action-logs', filters],
-    queryFn: () => statisticsApi.getActionLogs(filters, 1, 50),
+    queryKey: ['statistics', 'action-logs', filters, logsPage],
+    queryFn: () => statisticsApi.getActionLogs(filters, logsPage, 50),
     staleTime: 2 * 60 * 1000,
     retry: 2,
   });
+  // Для заявок фильтрация на клиенте (поиск и статус)
   const filteredRequests = useMemo(() => {
     const requests = requestsData?.data || [];
     const normalizedSearch = requestsSearch.trim().toLowerCase();
@@ -818,6 +829,7 @@ const Statistics = () => {
     });
   }, [requestsData, requestsSearch, requestStatusFilter]);
 
+  // Для логов фильтрация на клиенте (поиск и тип)
   const filteredLogs = useMemo(() => {
     const logs = logsData?.data || [];
     const normalizedSearch = logsSearch.trim().toLowerCase();
@@ -832,6 +844,10 @@ const Statistics = () => {
       return matchesType && matchesSearch;
     });
   }, [logsData, logsSearch, logTypeFilter]);
+
+  // Метаданные пагинации
+  const requestsMeta = requestsData?.meta || { total: 0, page: 1, pageSize: 50, totalPages: 0 };
+  const logsMeta = logsData?.meta || { total: 0, page: 1, pageSize: 50, totalPages: 0 };
 
   const handleFilterChange = (field) => (event) => {
     const value = event.target.value;
@@ -1309,6 +1325,61 @@ const Statistics = () => {
                   )}
                 </tbody>
               </table>
+              {/* Пагинация для заявок */}
+              {requestsMeta.totalPages > 1 && (
+                <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
+                  <div className="text-sm text-slate-600">
+                    Показано {((requestsPage - 1) * requestsMeta.pageSize) + 1} - {Math.min(requestsPage * requestsMeta.pageSize, requestsMeta.total)} из {requestsMeta.total}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRequestsPage(prev => Math.max(1, prev - 1))}
+                      disabled={requestsPage === 1}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Назад
+                    </button>
+                    <div className="flex gap-1">
+                      {Array.from({ length: Math.min(5, requestsMeta.totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (requestsMeta.totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (requestsPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (requestsPage >= requestsMeta.totalPages - 2) {
+                          pageNum = requestsMeta.totalPages - 4 + i;
+                        } else {
+                          pageNum = requestsPage - 2 + i;
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => setRequestsPage(pageNum)}
+                            className={clsx(
+                              'rounded-lg px-3 py-2 text-sm font-medium transition',
+                              requestsPage === pageNum
+                                ? 'bg-[#273655] text-white'
+                                : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                            )}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRequestsPage(prev => Math.min(requestsMeta.totalPages, prev + 1))}
+                      disabled={requestsPage === requestsMeta.totalPages}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Вперед
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1350,6 +1421,61 @@ const Statistics = () => {
                   )}
                 </tbody>
               </table>
+              {/* Пагинация для логов */}
+              {logsMeta.totalPages > 1 && (
+                <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
+                  <div className="text-sm text-slate-600">
+                    Показано {((logsPage - 1) * logsMeta.pageSize) + 1} - {Math.min(logsPage * logsMeta.pageSize, logsMeta.total)} из {logsMeta.total}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLogsPage(prev => Math.max(1, prev - 1))}
+                      disabled={logsPage === 1}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Назад
+                    </button>
+                    <div className="flex gap-1">
+                      {Array.from({ length: Math.min(5, logsMeta.totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (logsMeta.totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (logsPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (logsPage >= logsMeta.totalPages - 2) {
+                          pageNum = logsMeta.totalPages - 4 + i;
+                        } else {
+                          pageNum = logsPage - 2 + i;
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => setLogsPage(pageNum)}
+                            className={clsx(
+                              'rounded-lg px-3 py-2 text-sm font-medium transition',
+                              logsPage === pageNum
+                                ? 'bg-[#273655] text-white'
+                                : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                            )}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLogsPage(prev => Math.min(logsMeta.totalPages, prev + 1))}
+                      disabled={logsPage === logsMeta.totalPages}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Вперед
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
