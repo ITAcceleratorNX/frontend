@@ -87,7 +87,7 @@ export const useSendNotification = () => {
       const now = Date.now();
       if (now - lastToastTimeRef.current > 500) {
         lastToastTimeRef.current = now;
-      toast.success('Уведомление успешно отправлено!');
+        toast.success('Уведомление успешно отправлено!');
       }
     },
     onError: (error) => {
