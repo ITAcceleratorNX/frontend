@@ -132,6 +132,8 @@ const HomePage = memo(() => {
   const [callbackModalContext, setCallbackModalContext] = useState('callback');
   const [isLeadSourceModalOpen, setIsLeadSourceModalOpen] = useState(false);
   const { leadSource, saveLeadSource } = useLeadSource();
+  // Состояние для цен услуг (для расчета процента скидки)
+  const [servicePrices, setServicePrices] = useState({});
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -1017,6 +1019,30 @@ const HomePage = memo(() => {
     }
   }, [selectedWarehouse]);
 
+  // Загрузка цен услуг для расчета процента скидки (только для индивидуальных складов)
+  useEffect(() => {
+    const loadServicePrices = async () => {
+      if (!selectedWarehouse || selectedWarehouse.type !== 'INDIVIDUAL') {
+        setServicePrices({});
+        return;
+      }
+
+      try {
+        const prices = await warehouseApi.getWarehouseServicePrices(selectedWarehouse.id);
+        const pricesMap = {};
+        prices.forEach(price => {
+          pricesMap[price.service_type] = parseFloat(price.price);
+        });
+        setServicePrices(pricesMap);
+      } catch (error) {
+        console.error('Ошибка при загрузке цен услуг для расчета скидки:', error);
+        setServicePrices({});
+      }
+    };
+
+    loadServicePrices();
+  }, [selectedWarehouse]);
+
   useEffect(() => {
     if (selectedWarehouse?.name === "Жилой комплекс «Комфорт Сити»") {
       setPreviewStorage(null);
@@ -1776,11 +1802,133 @@ const HomePage = memo(() => {
                             {costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸
                           </span>
                         </div>
+                        {/* Показываем варианты скидок для 6 и 12 месяцев */}
+                        {selectedWarehouse?.type === 'INDIVIDUAL' && servicePrices['M2_UP_6M'] && (
+                          <div className="space-y-2">
+                            {/* Скидка за 6 месяцев */}
+                            {monthsNumber < 6 && servicePrices['M2_6_12M'] && (() => {
+                              const rawArea = parseFloat(
+                                previewStorage.available_volume ??
+                                previewStorage.total_volume ??
+                                previewStorage.area ??
+                                previewStorage.square ??
+                                previewStorage.volume ??
+                                0
+                              );
+                              
+                              if (!rawArea || rawArea <= 0) return null;
+                              
+                              const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                              const discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
+                              
+                              if (!basePricePerM2 || !discountPricePerM2) return null;
+                              
+                              const basePrice = basePricePerM2 * rawArea * 6;
+                              const discountPrice = discountPricePerM2 * rawArea * 6;
+                              
+                              if (basePrice <= 0) return null;
+                              
+                              const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                              if (discountPercent <= 0) return null;
+                              
+                              return (
+                                <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg bg-red-50">
+                                  <span className="text-xs">
+                                    <span className="text-[#6B6B6B]">За 6 мес </span>
+                                    <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
+                                  </span>
+                                  <span className="text-sm font-semibold text-[#273655]">
+                                    {Math.round(discountPrice).toLocaleString()} ₸
+                                  </span>
+                                </div>
+                              );
+                            })()}
+                            
+                            {/* Скидка за 12 месяцев */}
+                            {monthsNumber < 12 && servicePrices['M2_OVER_12M'] && (() => {
+                              const rawArea = parseFloat(
+                                previewStorage.available_volume ??
+                                previewStorage.total_volume ??
+                                previewStorage.area ??
+                                previewStorage.square ??
+                                previewStorage.volume ??
+                                0
+                              );
+                              
+                              if (!rawArea || rawArea <= 0) return null;
+                              
+                              const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                              const discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
+                              
+                              if (!basePricePerM2 || !discountPricePerM2) return null;
+                              
+                              const basePrice = basePricePerM2 * rawArea * 12;
+                              const discountPrice = discountPricePerM2 * rawArea * 12;
+                              
+                              if (basePrice <= 0) return null;
+                              
+                              const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                              if (discountPercent <= 0) return null;
+                              
+                              return (
+                                <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg bg-red-50">
+                                  <span className="text-xs">
+                                    <span className="text-[#6B6B6B]">За 12 мес </span>
+                                    <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
+                                  </span>
+                                  <span className="text-sm font-semibold text-[#273655]">
+                                    {Math.round(discountPrice).toLocaleString()} ₸
+                                  </span>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between">
                           <span className="text-[#6B6B6B]">За {monthsNumber} мес</span>
-                          <span className="text-lg font-bold text-[#273655]">
-                            {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {/* Показываем процент скидки для выбранного периода */}
+                            {selectedWarehouse?.type === 'INDIVIDUAL' && (monthsNumber === 6 || monthsNumber === 12) && servicePrices['M2_UP_6M'] && (() => {
+                              const rawArea = parseFloat(
+                                previewStorage.available_volume ??
+                                previewStorage.total_volume ??
+                                previewStorage.area ??
+                                previewStorage.square ??
+                                previewStorage.volume ??
+                                0
+                              );
+                              
+                              if (!rawArea || rawArea <= 0) return null;
+                              
+                              const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                              let discountPricePerM2 = 0;
+                              
+                              if (monthsNumber === 6) {
+                                discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
+                              } else if (monthsNumber === 12) {
+                                discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
+                              }
+                              
+                              if (!basePricePerM2 || !discountPricePerM2) return null;
+                              
+                              const basePrice = basePricePerM2 * rawArea * monthsNumber;
+                              const discountPrice = discountPricePerM2 * rawArea * monthsNumber;
+                              
+                              if (basePrice <= 0) return null;
+                              
+                              const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                              if (discountPercent <= 0) return null;
+                              
+                              return (
+                                <span className="text-xs text-red-600 font-semibold">
+                                  скидка {discountPercent}%!
+                                </span>
+                              );
+                            })()}
+                            <span className="text-lg font-bold text-[#273655]">
+                              {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
+                            </span>
+                          </div>
                         </div>
                         {pricePreview.isFallback && (
                           <p className="text-xs text-[#C67A00]">

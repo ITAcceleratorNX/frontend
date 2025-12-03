@@ -357,6 +357,8 @@ const WarehouseOrderPage = memo(() => {
   // Состояние для информации о бронировании занятого бокса
   const [bookingInfo, setBookingInfo] = useState(null);
   const [isLoadingBookingInfo, setIsLoadingBookingInfo] = useState(false);
+  // Состояние для цен услуг (для расчета процента скидки)
+  const [servicePrices, setServicePrices] = useState({});
 
   // Функция расчета цены аренды склада через новый API
   const calculateStoragePrice = async () => {
@@ -443,6 +445,30 @@ const WarehouseOrderPage = memo(() => {
       calculateStoragePrice();
     }
   }, [selectedStorage, months]);
+
+  // Загрузка цен услуг для расчета процента скидки (только для индивидуальных складов)
+  useEffect(() => {
+    const loadServicePrices = async () => {
+      if (!selectedWarehouse || selectedWarehouse.type !== 'INDIVIDUAL') {
+        setServicePrices({});
+        return;
+      }
+
+      try {
+        const prices = await warehouseApi.getWarehouseServicePrices(selectedWarehouse.id);
+        const pricesMap = {};
+        prices.forEach(price => {
+          pricesMap[price.service_type] = parseFloat(price.price);
+        });
+        setServicePrices(pricesMap);
+      } catch (error) {
+        console.error('Ошибка при загрузке цен услуг для расчета скидки:', error);
+        setServicePrices({});
+      }
+    };
+
+    loadServicePrices();
+  }, [selectedWarehouse]);
 
   // Загрузка информации о бронировании для занятого бокса
   useEffect(() => {
@@ -1391,9 +1417,132 @@ const WarehouseOrderPage = memo(() => {
                               </div>
                             )}
 
+                            {/* Показываем варианты скидок для 6 и 12 месяцев (только для индивидуальных складов) */}
+                            {selectedWarehouse?.type === 'INDIVIDUAL' && selectedStorage && servicePrices['M2_UP_6M'] && (
+                              <div className="space-y-2 mb-3">
+                                {/* Скидка за 6 месяцев */}
+                                {months < 6 && servicePrices['M2_6_12M'] && (() => {
+                                  const rawArea = parseFloat(
+                                    selectedStorage.available_volume ??
+                                    selectedStorage.total_volume ??
+                                    selectedStorage.area ??
+                                    selectedStorage.square ??
+                                    selectedStorage.volume ??
+                                    0
+                                  );
+                                  
+                                  if (!rawArea || rawArea <= 0) return null;
+                                  
+                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                                  const discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
+                                  
+                                  if (!basePricePerM2 || !discountPricePerM2) return null;
+                                  
+                                  const basePrice = basePricePerM2 * rawArea * 6;
+                                  const discountPrice = discountPricePerM2 * rawArea * 6;
+                                  
+                                  if (basePrice <= 0) return null;
+                                  
+                                  const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                                  if (discountPercent <= 0) return null;
+                                  
+                                  return (
+                                    <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg bg-red-50">
+                                      <span className="text-xs">
+                                        <span className="text-[#6B6B6B]">За 6 мес </span>
+                                        <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
+                                      </span>
+                                      <span className="text-sm font-semibold text-[#273655]">
+                                        {Math.round(discountPrice).toLocaleString()} ₸
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
+                                
+                                {/* Скидка за 12 месяцев */}
+                                {months < 12 && servicePrices['M2_OVER_12M'] && (() => {
+                                  const rawArea = parseFloat(
+                                    selectedStorage.available_volume ??
+                                    selectedStorage.total_volume ??
+                                    selectedStorage.area ??
+                                    selectedStorage.square ??
+                                    selectedStorage.volume ??
+                                    0
+                                  );
+                                  
+                                  if (!rawArea || rawArea <= 0) return null;
+                                  
+                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                                  const discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
+                                  
+                                  if (!basePricePerM2 || !discountPricePerM2) return null;
+                                  
+                                  const basePrice = basePricePerM2 * rawArea * 12;
+                                  const discountPrice = discountPricePerM2 * rawArea * 12;
+                                  
+                                  if (basePrice <= 0) return null;
+                                  
+                                  const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                                  if (discountPercent <= 0) return null;
+                                  
+                                  return (
+                                    <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg bg-red-50">
+                                      <span className="text-xs">
+                                        <span className="text-[#6B6B6B]">За 12 мес </span>
+                                        <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
+                                      </span>
+                                      <span className="text-sm font-semibold text-[#273655]">
+                                        {Math.round(discountPrice).toLocaleString()} ₸
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            )}
+
                             {/* Общая стоимость */}
                             <div className="border-t border-green-300 pt-3">
-                              <div className="text-[14px] text-[#6B6B6B] mb-1">Общая стоимость:</div>
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="text-[14px] text-[#6B6B6B]">Общая стоимость:</div>
+                                {/* Показываем процент скидки для выбранного периода */}
+                                {selectedWarehouse?.type === 'INDIVIDUAL' && (months === 6 || months === 12) && servicePrices['M2_UP_6M'] && selectedStorage && (() => {
+                                  const rawArea = parseFloat(
+                                    selectedStorage.available_volume ??
+                                    selectedStorage.total_volume ??
+                                    selectedStorage.area ??
+                                    selectedStorage.square ??
+                                    selectedStorage.volume ??
+                                    0
+                                  );
+                                  
+                                  if (!rawArea || rawArea <= 0) return null;
+                                  
+                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                                  let discountPricePerM2 = 0;
+                                  
+                                  if (months === 6) {
+                                    discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
+                                  } else if (months === 12) {
+                                    discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
+                                  }
+                                  
+                                  if (!basePricePerM2 || !discountPricePerM2) return null;
+                                  
+                                  const basePrice = basePricePerM2 * rawArea * months;
+                                  const discountPrice = discountPricePerM2 * rawArea * months;
+                                  
+                                  if (basePrice <= 0) return null;
+                                  
+                                  const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                                  if (discountPercent <= 0) return null;
+                                  
+                                  return (
+                                    <span className="text-xs text-red-600 font-semibold">
+                                      скидка {discountPercent}%!
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                               <div className="text-[20px] font-bold text-[#273655]">
                                 {calculateTotalPrice().toLocaleString()} ₸
                               </div>
