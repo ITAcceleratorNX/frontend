@@ -134,6 +134,9 @@ const HomePage = memo(() => {
   const { leadSource, saveLeadSource } = useLeadSource();
   // Состояние для цен услуг (для расчета процента скидки)
   const [servicePrices, setServicePrices] = useState({});
+  // Состояние для цен доставки
+  const [gazelleFromPrice, setGazelleFromPrice] = useState(null);
+  const [gazelleToPrice, setGazelleToPrice] = useState(null);
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -296,13 +299,18 @@ const HomePage = memo(() => {
     const breakdown = [];
     let total = 0;
 
-    if (includeMoving && gazelleService) {
-      const count = 2;
-      const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
-      total += amount;
+    if (includeMoving && gazelleService && gazelleFromPrice !== null && gazelleToPrice !== null) {
+      // Для индивидуального хранения: GAZELLE_FROM + GAZELLE_TO
+      const totalMovingPrice = gazelleFromPrice + gazelleToPrice;
+      
+      total += totalMovingPrice;
       breakdown.push({
-        label: gazelleService.name || "Перевозка вещей",
-        amount,
+        label: "Забор вещей (с клиента на склад)",
+        amount: gazelleFromPrice,
+      });
+      breakdown.push({
+        label: "Возврат вещей (со склада к клиенту)",
+        amount: gazelleToPrice,
       });
     }
 
@@ -326,7 +334,7 @@ const HomePage = memo(() => {
       total,
       breakdown,
     };
-  }, [includeMoving, includePacking, gazelleService, services, serviceOptions]);
+  }, [includeMoving, includePacking, gazelleService, services, serviceOptions, gazelleFromPrice, gazelleToPrice]);
 
   const callbackModalDescription = useMemo(() => {
     if (callbackModalContext === 'booking') {
@@ -385,15 +393,14 @@ const HomePage = memo(() => {
   }, [cloudStorage, cloudMonthsNumber, cloudPickupAddress, cloudVolume]);
 
   const movingServicePrice = useMemo(() => {
-    if (gazelleService?.price) {
-      return gazelleService.price;
+    // Для индивидуального хранения: GAZELLE_FROM + GAZELLE_TO
+    // Общая стоимость доставки (забор + возврат)
+    if (gazelleFromPrice !== null && gazelleToPrice !== null) {
+      return gazelleFromPrice + gazelleToPrice;
     }
-    const gazelleOption = serviceOptions.find((option) => option.type === "GAZELLE");
-    if (gazelleOption?.price) {
-      return gazelleOption.price;
-    }
-    return MOVING_SERVICE_ESTIMATE;
-  }, [gazelleService, serviceOptions]);
+    // Fallback на дефолтные значения, если цены еще не загружены
+    return 44000;
+  }, [gazelleFromPrice, gazelleToPrice]);
 
   const costSummary = useMemo(() => {
     const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
@@ -1024,6 +1031,7 @@ const HomePage = memo(() => {
     const loadServicePrices = async () => {
       if (!selectedWarehouse || selectedWarehouse.type !== 'INDIVIDUAL') {
         setServicePrices({});
+        setGazelleFromPrice(null);
         return;
       }
 
@@ -1032,16 +1040,41 @@ const HomePage = memo(() => {
         const pricesMap = {};
         prices.forEach(price => {
           pricesMap[price.service_type] = parseFloat(price.price);
+          // Сохраняем цену GAZELLE_FROM отдельно для расчета доставки
+          if (price.service_type === 'GAZELLE_FROM') {
+            setGazelleFromPrice(parseFloat(price.price));
+          }
         });
         setServicePrices(pricesMap);
       } catch (error) {
         console.error('Ошибка при загрузке цен услуг для расчета скидки:', error);
         setServicePrices({});
+        setGazelleFromPrice(null);
       }
     };
 
     loadServicePrices();
   }, [selectedWarehouse]);
+
+  // Загрузка цены GAZELLE_TO из общего списка услуг
+  useEffect(() => {
+    const loadGazelleToPrice = async () => {
+      try {
+        const pricesData = await paymentsApi.getPrices();
+        const gazelleTo = pricesData.find(price => price.type === 'GAZELLE_TO');
+        if (gazelleTo) {
+          setGazelleToPrice(parseFloat(gazelleTo.price));
+        } else {
+          setGazelleToPrice(null);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке цены GAZELLE_TO:', error);
+        setGazelleToPrice(null);
+      }
+    };
+
+    loadGazelleToPrice();
+  }, []);
 
   useEffect(() => {
     if (selectedWarehouse?.name === "Жилой комплекс «Комфорт Сити»") {
@@ -1540,7 +1573,11 @@ const HomePage = memo(() => {
                           <InfoHint
                             description={
                               <span>
-                                Заберём и привезём ваши вещи по указанному адресу. Стоимость услуги — {movingServicePrice.toLocaleString()} ₸, добавится при оформлении заявки.
+                                Заберём и привезём ваши вещи по указанному адресу. Стоимость услуги: {gazelleFromPrice !== null && gazelleToPrice !== null ? (
+                                  <>забор вещей (с клиента на склад) — {gazelleFromPrice.toLocaleString()} ₸, возврат вещей (со склада к клиенту) — {gazelleToPrice.toLocaleString()} ₸. Общая стоимость — {movingServicePrice.toLocaleString()} ₸</>
+                                ) : (
+                                  <>общая стоимость — {movingServicePrice.toLocaleString()} ₸</>
+                                )}, добавится при оформлении заявки.
                               </span>
                             }
                             ariaLabel="Подробнее о перевозке вещей"

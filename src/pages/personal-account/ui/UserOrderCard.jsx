@@ -29,6 +29,7 @@ import { Pencil } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
+import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -569,6 +570,9 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             </p>
           </div>
         )}
+
+        {/* Таймер обратного отсчета до автоотмены */}
+        <OrderCancelTimer order={order} />
 
         {/* Дополнительная информация о выбранных услугах */}
         {hasAdditionalServices && (
