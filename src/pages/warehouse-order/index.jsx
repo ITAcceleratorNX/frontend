@@ -470,68 +470,37 @@ const WarehouseOrderPage = memo(() => {
     loadServicePrices();
   }, [selectedWarehouse]);
 
-  // Загрузка информации о бронировании для занятого бокса
+  // Получение информации о бронировании из поля occupancy
   useEffect(() => {
-    const fetchBookingInfo = async () => {
-      if (!selectedStorage) {
-        setBookingInfo(null);
-        return;
-      }
+    if (!selectedStorage) {
+      setBookingInfo(null);
+      setIsLoadingBookingInfo(false);
+      return;
+    }
 
-      // Проверяем, является ли бокс занятым
-      const isOccupied = selectedStorage.status === 'OCCUPIED' || selectedStorage.status === 'PENDING';
+    // Проверяем, является ли бокс занятым
+    const isOccupied = selectedStorage.status === 'OCCUPIED' || selectedStorage.status === 'PENDING';
+    
+    if (isOccupied && selectedStorage.occupancy && Array.isArray(selectedStorage.occupancy) && selectedStorage.occupancy.length > 0) {
+      // Находим активное бронирование
+      const activeBooking = selectedStorage.occupancy.find(
+        (booking) => booking.status === 'ACTIVE'
+      ) || selectedStorage.occupancy[0]; // Если нет ACTIVE, берем первое
       
-      if (isOccupied && selectedStorage.id) {
-        try {
-          setIsLoadingBookingInfo(true);
-          
-          // Пробуем получить заказ через специальный endpoint
-          let order = null;
-          try {
-            order = await ordersApi.getPendingOrderByStorageId(selectedStorage.id);
-          } catch (error) {
-            // Если endpoint не существует, пробуем найти через список заказов
-            if (error.response?.status === 404 || error.response?.status === 405) {
-              // Для ADMIN/MANAGER используем getAllOrders, для USER - getUserOrders
-              let orders = [];
-              if (isAdminOrManager) {
-                const response = await ordersApi.getAllOrders(1);
-                orders = response?.data || response || [];
-              } else if (isAuthenticated) {
-                orders = await ordersApi.getUserOrders();
-              }
-              
-              // Ищем заказ по storage_id среди активных/ожидающих заказов
-              order = orders.find(o => 
-                o.storage_id === selectedStorage.id && 
-                (o.status === 'ACTIVE' || o.status === 'APPROVED' || o.status === 'PROCESSING' || o.status === 'INACTIVE' || o.status === 'PENDING')
-              );
-            } else {
-              throw error;
-            }
-          }
-          
-          if (order && order.start_date && order.end_date) {
-            setBookingInfo({
-              start_date: order.start_date,
-              end_date: order.end_date
-            });
-          } else {
-            setBookingInfo(null);
-          }
-        } catch (error) {
-          console.error('Ошибка при получении информации о бронировании:', error);
-          setBookingInfo(null);
-        } finally {
-          setIsLoadingBookingInfo(false);
-        }
+      if (activeBooking && activeBooking.start_date && activeBooking.end_date) {
+        setBookingInfo({
+          start_date: activeBooking.start_date,
+          end_date: activeBooking.end_date
+        });
       } else {
         setBookingInfo(null);
       }
-    };
-
-    fetchBookingInfo();
-  }, [selectedStorage, isAdminOrManager, isAuthenticated]);
+      setIsLoadingBookingInfo(false);
+    } else {
+      setBookingInfo(null);
+      setIsLoadingBookingInfo(false);
+    }
+  }, [selectedStorage]);
 
   // Функция расчета общей стоимости
   const calculateTotalPrice = () => {

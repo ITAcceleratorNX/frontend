@@ -1826,6 +1826,40 @@ const HomePage = memo(() => {
                         })()}
                       </div>
                     )}
+                    {/* Информация о бронировании для занятых боксов */}
+                    {previewStorage && (previewStorage.status === 'OCCUPIED' || previewStorage.status === 'PENDING') && previewStorage.occupancy && previewStorage.occupancy.length > 0 && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#273655] mb-2">
+                          ИТОГ
+                        </div>
+                        {(() => {
+                          // Находим активное бронирование
+                          const activeBooking = previewStorage.occupancy.find(
+                            (booking) => booking.status === 'ACTIVE'
+                          ) || previewStorage.occupancy[0]; // Если нет ACTIVE, берем первое
+                          
+                          if (activeBooking && activeBooking.start_date && activeBooking.end_date) {
+                            return (
+                              <p className="text-sm text-[#6B6B6B]">
+                                Бокс стоит о бронировании с{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(activeBooking.start_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                                , по{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(activeBooking.end_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                              </p>
+                            );
+                          }
+                          return (
+                            <p className="text-sm text-[#6B6B6B]">
+                              Бокс занят
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    )}
                     {isPriceCalculating ? (
                       <div className="flex items-center justify-center gap-2 text-base font-semibold">
                         <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
