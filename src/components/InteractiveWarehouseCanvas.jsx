@@ -132,8 +132,8 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
     const boxData = getBoxData(boxName);
     
     // Теперь можно ховерить на любой бокс для просмотра информации
-    if (boxData) {
-      setHoveredId(boxName);
+      if (boxData) {
+        setHoveredId(boxName);
     }
   };
 

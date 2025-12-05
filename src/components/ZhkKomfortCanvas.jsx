@@ -140,8 +140,8 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
         const status = getBoxStatus(boxName);
         const boxData = getBoxData(boxName);
         // Теперь можно ховерить на любой бокс для просмотра информации
-        if (boxData) {
-            setHoveredId(boxName);
+            if (boxData) {
+                setHoveredId(boxName);
         }
     };
 
