@@ -35,7 +35,6 @@ import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 import DatePicker from "../../shared/ui/DatePicker";
 
-const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
 
 // Функция для правильного склонения слова "месяц"
@@ -56,6 +55,10 @@ const getServiceTypeName = (type) => {
       return "Мебельщик";
     case "GAZELLE":
       return "Газель";
+    case "GAZELLE_FROM":
+      return "Газель - забор вещей";
+    case "GAZELLE_TO":
+      return "Газель - возврат вещей";
     case "STRETCH_FILM":
       return "Стрейч-плёнка";
     case "BOX_SIZE":
@@ -68,6 +71,8 @@ const getServiceTypeName = (type) => {
       return "Воздушно-пузырчатая плёнка 10м";
     case "BUBBLE_WRAP_2":
       return "Воздушно-пузырчатая плёнка 120м";
+    case "RACK_RENTAL":
+      return "Аренда стеллажей";
     default:
       return "Услуга";
   }
@@ -105,6 +110,10 @@ const HomePage = memo(() => {
     today.setHours(0, 0, 0, 0);
     return today.toISOString().split('T')[0];
   });
+  // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
+  const [movingOrders, setMovingOrders] = useState([]);
+  // Состояние для адреса возврата (GAZELLE_TO)
+  const [movingAddressTo, setMovingAddressTo] = useState("");
   const [cloudPickupAddress, setCloudPickupAddress] = useState("");
   const [cloudPickupDate, setCloudPickupDate] = useState(() => {
     const today = new Date();
@@ -134,9 +143,8 @@ const HomePage = memo(() => {
   const { leadSource, saveLeadSource } = useLeadSource();
   // Состояние для цен услуг (для расчета процента скидки)
   const [servicePrices, setServicePrices] = useState({});
-  // Состояние для цен доставки
+  // Состояние для цены доставки (только забор вещей)
   const [gazelleFromPrice, setGazelleFromPrice] = useState(null);
-  const [gazelleToPrice, setGazelleToPrice] = useState(null);
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -243,24 +251,91 @@ const HomePage = memo(() => {
     setSubmitError(null);
   }, []);
 
+  const monthsNumber = useMemo(() => {
+    const parsed = parseInt(individualMonths, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }, [individualMonths]);
+
   const updateServiceRow = useCallback((index, field, value) => {
-    setServices((prev) =>
-      prev.map((service, i) =>
+    setServices((prev) => {
+      const updated = prev.map((service, i) =>
         i === index
           ? {
               ...service,
               [field]: field === "count" ? Math.max(1, Number(value) || 1) : value,
             }
           : service
-      )
-    );
+      );
+      
+      // Если изменился service_id, проверяем добавление/удаление GAZELLE_TO
+      if (field === "service_id") {
+        const oldService = prev[index];
+        const newService = updated[index];
+        
+        // Проверяем, была ли добавлена услуга GAZELLE_TO
+        if (value && serviceOptions.length > 0) {
+          const selectedOption = serviceOptions.find(opt => String(opt.id) === String(value));
+          if (selectedOption && selectedOption.type === "GAZELLE_TO") {
+            console.log("✅ GAZELLE_TO выбрана в updateServiceRow");
+            
+            // Добавляем moving_order для возврата вещей
+            // Дата возврата = дата начала бронирования + количество месяцев
+            const startDate = individualBookingStartDate ? new Date(individualBookingStartDate) : new Date();
+            const returnDate = new Date(startDate);
+            returnDate.setMonth(returnDate.getMonth() + monthsNumber);
+            returnDate.setHours(10, 0, 0, 0);
+            
+            setMovingOrders(prev => {
+              // Проверяем, нет ли уже такого moving_order
+              const exists = prev.some(order => order.status === "PENDING_TO");
+              if (exists) {
+                console.log("⚠️ moving_order PENDING_TO уже существует");
+                return prev;
+              }
+              
+              const newOrder = {
+                moving_date: returnDate.toISOString(),
+                status: "PENDING_TO",
+                address: movingAddressTo || movingAddressFrom || "",
+              };
+              
+              console.log("✅ Создан новый moving_order:", newOrder);
+              return [...prev, newOrder];
+            });
+          }
+        }
+        
+        // Проверяем, была ли удалена услуга GAZELLE_TO
+        if (oldService?.service_id) {
+          const oldOption = serviceOptions.find(opt => String(opt.id) === String(oldService.service_id));
+          if (oldOption && oldOption.type === "GAZELLE_TO") {
+            // Удаляем moving_order для возврата вещей
+            setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+          }
+        }
+      }
+      
+      return updated;
+    });
     setSubmitError(null);
-  }, []);
+  }, [serviceOptions, individualBookingStartDate, monthsNumber, movingAddressFrom, movingAddressTo]);
 
   const removeServiceRow = useCallback((index) => {
-    setServices((prev) => prev.filter((_, i) => i !== index));
+    setServices((prev) => {
+      const serviceToRemove = prev[index];
+      
+      // Если удаляется GAZELLE_TO, удаляем соответствующий moving_order
+      if (serviceToRemove?.service_id && serviceOptions.length > 0) {
+        const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
+        if (option && option.type === "GAZELLE_TO") {
+          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+        }
+      }
+      
+      return prev.filter((_, i) => i !== index);
+    });
     setSubmitError(null);
-  }, []);
+  }, [serviceOptions]);
 
   const InfoHint = ({ description, ariaLabel = "Подробнее", align = "end", side = "bottom" }) => (
     <Popover>
@@ -285,11 +360,6 @@ const HomePage = memo(() => {
     </Popover>
   );
 
-  const monthsNumber = useMemo(() => {
-    const parsed = parseInt(individualMonths, 10);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }, [individualMonths]);
-
   const cloudMonthsNumber = useMemo(() => {
     const parsed = parseInt(cloudMonths, 10);
     return Number.isNaN(parsed) ? 0 : parsed;
@@ -299,18 +369,12 @@ const HomePage = memo(() => {
     const breakdown = [];
     let total = 0;
 
-    if (includeMoving && gazelleService && gazelleFromPrice !== null && gazelleToPrice !== null) {
-      // Для индивидуального хранения: GAZELLE_FROM + GAZELLE_TO
-      const totalMovingPrice = gazelleFromPrice + gazelleToPrice;
-      
-      total += totalMovingPrice;
+    if (includeMoving && gazelleService && gazelleFromPrice !== null) {
+      // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
+      total += gazelleFromPrice;
       breakdown.push({
         label: "Забор вещей (с клиента на склад)",
         amount: gazelleFromPrice,
-      });
-      breakdown.push({
-        label: "Возврат вещей (со склада к клиенту)",
-        amount: gazelleToPrice,
       });
     }
 
@@ -334,7 +398,7 @@ const HomePage = memo(() => {
       total,
       breakdown,
     };
-  }, [includeMoving, includePacking, gazelleService, services, serviceOptions, gazelleFromPrice, gazelleToPrice]);
+  }, [includeMoving, includePacking, gazelleService, services, serviceOptions, gazelleFromPrice]);
 
   const callbackModalDescription = useMemo(() => {
     if (callbackModalContext === 'booking') {
@@ -393,14 +457,13 @@ const HomePage = memo(() => {
   }, [cloudStorage, cloudMonthsNumber, cloudPickupAddress, cloudVolume]);
 
   const movingServicePrice = useMemo(() => {
-    // Для индивидуального хранения: GAZELLE_FROM + GAZELLE_TO
-    // Общая стоимость доставки (забор + возврат)
-    if (gazelleFromPrice !== null && gazelleToPrice !== null) {
-      return gazelleFromPrice + gazelleToPrice;
+    // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
+    if (gazelleFromPrice !== null) {
+      return gazelleFromPrice;
     }
     // Fallback на дефолтные значения, если цены еще не загружены
-    return 44000;
-  }, [gazelleFromPrice, gazelleToPrice]);
+    return 14000;
+  }, [gazelleFromPrice]);
 
   const costSummary = useMemo(() => {
     const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
@@ -497,8 +560,6 @@ const HomePage = memo(() => {
   ]);
 
   const buildMovingOrders = useCallback((address, months, pickupDateString = null) => {
-    const monthsCount = Math.max(1, Number(months) || 1);
-    
     // Используем переданную дату забора или текущую дату
     const pickupDate = pickupDateString 
       ? new Date(pickupDateString)
@@ -506,21 +567,12 @@ const HomePage = memo(() => {
     
     // Устанавливаем время на начало дня для даты забора
     pickupDate.setHours(10, 0, 0, 0); // 10:00 утра для забора
-    
-    // Дата возврата = дата забора + количество месяцев
-    const returnDate = new Date(pickupDate);
-    returnDate.setMonth(returnDate.getMonth() + monthsCount);
-    returnDate.setHours(10, 0, 0, 0); // 10:00 утра для возврата
 
+    // Возвращаем только забор вещей (PENDING_FROM)
     return [
       {
         moving_date: pickupDate.toISOString(),
         status: "PENDING_FROM",
-        address,
-      },
-      {
-        moving_date: returnDate.toISOString(),
-        status: "PENDING_TO",
         address,
       },
     ];
@@ -601,21 +653,23 @@ const HomePage = memo(() => {
         );
 
       if (includeMoving) {
-        const gazelleOption =
+        // Ищем GAZELLE_FROM (забор вещей)
+        const gazelleFromOption =
           gazelleService ||
-          availableOptions?.find((option) => option.type === "GAZELLE");
-        const gazelleId =
-          gazelleOption?.id ?? gazelleOption?.service_id ?? gazelleOption ?? null;
+          availableOptions?.find((option) => option.type === "GAZELLE_FROM");
+        const gazelleFromId =
+          gazelleFromOption?.id ?? gazelleFromOption?.service_id ?? gazelleFromOption ?? null;
 
-        if (!gazelleId || !Number.isFinite(Number(gazelleId))) {
+        if (!gazelleFromId || !Number.isFinite(Number(gazelleFromId))) {
           setSubmitError("Услуга перевозки временно недоступна. Попробуйте позже.");
           setIsSubmittingOrder(false);
           return;
         }
 
+        // Добавляем только GAZELLE_FROM с count: 1
         finalServices.push({
-          service_id: Number(gazelleId),
-          count: 2,
+          service_id: Number(gazelleFromId),
+          count: 1,
         });
       }
 
@@ -625,7 +679,10 @@ const HomePage = memo(() => {
       // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
       const hasPackagingServices = packagingEntries.length > 0;
       // Проверяем наличие услуги "Газель" в finalServices (она добавляется выше, если includeMoving включен)
-      const hasGazelleService = includeMoving && finalServices.length > packagingEntries.length;
+      const hasGazelleService = includeMoving && finalServices.some(s => {
+        const service = availableOptions.find(opt => opt.id === s.service_id);
+        return service && service.type === "GAZELLE_FROM";
+      });
       const isPackageSelected = hasPackagingServices || hasGazelleService;
 
       const orderData = {
@@ -637,13 +694,80 @@ const HomePage = memo(() => {
         is_selected_package: isPackageSelected,
       };
 
+      // Проверяем наличие GAZELLE_TO в услугах (независимо от includeMoving)
+      const hasGazelleTo = finalServices.some(s => {
+        const service = availableOptions.find(opt => opt.id === s.service_id);
+        const isGazelleTo = service && service.type === "GAZELLE_TO";
+        console.log("🔍 Проверка услуги:", { 
+          serviceId: s.service_id, 
+          serviceType: service?.type,
+          isGazelleTo 
+        });
+        return isGazelleTo;
+      });
+
+      console.log("🔍 Проверка GAZELLE_TO:", {
+        hasGazelleTo,
+        finalServices,
+        availableOptions: availableOptions.length,
+        movingOrders,
+        movingAddressTo,
+      });
+
+      // Создаем moving_orders
+      const allMovingOrders = [];
+      
       if (includeMoving) {
-        orderData.moving_orders = buildMovingOrders(trimmedAddress, monthsNumber, movingPickupDate);
+        // Добавляем забор вещей (PENDING_FROM)
+        const pickupOrder = buildMovingOrders(trimmedAddress, monthsNumber, movingPickupDate)[0];
+        allMovingOrders.push(pickupOrder);
       }
+      
+      // Добавляем возврат вещей, если есть GAZELLE_TO в услугах
+      if (hasGazelleTo) {
+        console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
+        
+        // Используем moving_order из состояния или создаем новый
+        const returnOrder = movingOrders.find(order => order.status === "PENDING_TO");
+        if (returnOrder) {
+          console.log("✅ Используем существующий moving_order из состояния");
+          allMovingOrders.push({
+            moving_date: returnOrder.moving_date,
+            status: "PENDING_TO",
+            address: returnOrder.address || movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
+          });
+        } else {
+          console.log("✅ Создаем новый moving_order для PENDING_TO");
+          // Создаем дату возврата: дата начала бронирования + количество месяцев
+          const startDate = new Date(individualBookingStartDate || new Date());
+          const returnDate = new Date(startDate);
+          returnDate.setMonth(returnDate.getMonth() + monthsNumber);
+          returnDate.setHours(10, 0, 0, 0);
+          
+          allMovingOrders.push({
+            moving_date: returnDate.toISOString(),
+            status: "PENDING_TO",
+            address: movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
+          });
+        }
+      }
+      
+      console.log("📦 Финальные moving_orders:", allMovingOrders);
+      
+      // Добавляем moving_orders только если они есть
+      if (allMovingOrders.length > 0) {
+        orderData.moving_orders = allMovingOrders;
+        // Если есть moving_orders, устанавливаем is_selected_moving в true
+        orderData.is_selected_moving = true;
+      }
+
+      console.log("📤 Отправляемые данные заказа:", orderData);
 
       if (finalServices.length > 0) {
         orderData.services = finalServices;
       }
+
+      console.log("📤 Отправляемые данные заказа (home):", orderData);
 
       await warehouseApi.createOrder(orderData);
 
@@ -713,6 +837,8 @@ const HomePage = memo(() => {
     serviceOptions,
     movingAddressFrom,
     openCallbackModal,
+    movingOrders,
+    individualBookingStartDate,
   ]);
 
   const handleCreateCloudOrder = useCallback(async () => {
@@ -775,14 +901,15 @@ const HomePage = memo(() => {
         }
       }
 
-      const gazelleOption =
+      // Ищем GAZELLE_FROM для облачного хранения
+      const gazelleFromOption =
         gazelleService ||
-        availableOptions?.find((option) => option.type === "GAZELLE");
-      const gazelleId =
-        gazelleOption?.id ?? gazelleOption?.service_id ?? gazelleOption ?? null;
+        availableOptions?.find((option) => option.type === "GAZELLE_FROM");
+      const gazelleFromId =
+        gazelleFromOption?.id ?? gazelleFromOption?.service_id ?? gazelleFromOption ?? null;
 
       // Для облачного хранения перевозка всегда включена, и если есть услуга "Газель", то is_selected_package = true
-      const hasGazelleForCloud = gazelleId && Number.isFinite(Number(gazelleId));
+      const hasGazelleForCloud = gazelleFromId && Number.isFinite(Number(gazelleFromId));
 
       const orderData = {
         storage_id: Number(cloudStorage.id),
@@ -794,12 +921,12 @@ const HomePage = memo(() => {
         moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudPickupDate),
       };
 
-      // Добавляем услугу "Газель" для перевозки
+      // Добавляем услугу "Газель - забор" для перевозки (только GAZELLE_FROM)
       if (hasGazelleForCloud) {
         orderData.services = [
           {
-            service_id: Number(gazelleId),
-            count: 2, // 2 поездки: забор и возврат
+            service_id: Number(gazelleFromId),
+            count: 1, // только забор вещей
           },
         ];
       }
@@ -1056,25 +1183,8 @@ const HomePage = memo(() => {
     loadServicePrices();
   }, [selectedWarehouse]);
 
-  // Загрузка цены GAZELLE_TO из общего списка услуг
-  useEffect(() => {
-    const loadGazelleToPrice = async () => {
-      try {
-        const pricesData = await paymentsApi.getPrices();
-        const gazelleTo = pricesData.find(price => price.type === 'GAZELLE_TO');
-        if (gazelleTo) {
-          setGazelleToPrice(parseFloat(gazelleTo.price));
-        } else {
-          setGazelleToPrice(null);
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке цены GAZELLE_TO:', error);
-        setGazelleToPrice(null);
-      }
-    };
-
-    loadGazelleToPrice();
-  }, []);
+  // Удаляем загрузку GAZELLE_TO, так как теперь используется только GAZELLE_FROM по умолчанию
+  // GAZELLE_TO можно выбрать вручную в дополнительных услугах
 
   useEffect(() => {
     if (selectedWarehouse?.name === "Жилой комплекс «Комфорт Сити»") {
@@ -1121,12 +1231,13 @@ const HomePage = memo(() => {
       return;
     }
 
-    const gazelle = serviceOptions.find((option) => option.type === "GAZELLE");
-    if (gazelle) {
+    // Ищем GAZELLE_FROM вместо GAZELLE
+    const gazelleFrom = serviceOptions.find((option) => option.type === "GAZELLE_FROM");
+    if (gazelleFrom) {
       setGazelleService({
-        id: String(gazelle.id),
-        name: getServiceTypeName(gazelle.type) || gazelle.description || "Газель",
-        price: gazelle.price,
+        id: String(gazelleFrom.id),
+        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+        price: gazelleFrom.price,
       });
     } else {
       setGazelleService(null);
@@ -1573,11 +1684,11 @@ const HomePage = memo(() => {
                           <InfoHint
                             description={
                               <span>
-                                Заберём и привезём ваши вещи по указанному адресу. Стоимость услуги: {gazelleFromPrice !== null && gazelleToPrice !== null ? (
-                                  <>забор вещей (с клиента на склад) — {gazelleFromPrice.toLocaleString()} ₸, возврат вещей (со склада к клиенту) — {gazelleToPrice.toLocaleString()} ₸. Общая стоимость — {movingServicePrice.toLocaleString()} ₸</>
+                                Заберём ваши вещи по указанному адресу и доставим на склад. Стоимость услуги: {gazelleFromPrice !== null ? (
+                                  <>забор вещей (с клиента на склад) — {gazelleFromPrice.toLocaleString()} ₸</>
                                 ) : (
-                                  <>общая стоимость — {movingServicePrice.toLocaleString()} ₸</>
-                                )}, добавится при оформлении заявки.
+                                  <>стоимость — {movingServicePrice.toLocaleString()} ₸</>
+                                )}, добавится при оформлении заявки. Возврат вещей можно заказать отдельно как дополнительную услугу.
                               </span>
                             }
                             ariaLabel="Подробнее о перевозке вещей"
@@ -1682,6 +1793,9 @@ const HomePage = memo(() => {
                                   
                                   // Фильтруем уже выбранные услуги (кроме текущей)
                                   const availableOptions = serviceOptions.filter((option) => {
+                                    // Скрываем GAZELLE_FROM (добавляется автоматически при перевозке)
+                                    if (option.type === "GAZELLE_FROM") return false;
+                                    // Скрываем старый тип GAZELLE (для обратной совместимости)
                                     if (option.type === "GAZELLE") return false;
                                     // Исключаем услуги, которые уже выбраны в других строках
                                     const isAlreadySelected = services.some((s, i) => 
@@ -1690,60 +1804,91 @@ const HomePage = memo(() => {
                                     return !isAlreadySelected;
                                   });
 
+                                  // Проверяем, выбрана ли услуга GAZELLE_TO для текущей строки
+                                  const isGazelleToService = selectedOption && selectedOption.type === "GAZELLE_TO";
+                                  
                                   return (
-                                    <div
-                                      key={index}
-                                      className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2"
-                                    >
-                                      <Select
-                                        value={service.service_id}
-                                        onValueChange={(value) => updateServiceRow(index, "service_id", value)}
-                                      >
-                                        <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
-                                          <SelectValue placeholder="Услуга" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {availableOptions.length > 0 ? (
-                                            availableOptions.map((option) => (
-                                              <SelectItem key={option.id} value={String(option.id)}>
-                                                {getServiceTypeName(option.type) || option.description || `Услуга ${option.id}`}
-                                              </SelectItem>
-                                            ))
-                                          ) : (
-                                            <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
-                                              Нет доступных услуг
-                                            </div>
-                                          )}
-                                        </SelectContent>
-                                      </Select>
+                                    <div key={index} className="space-y-2">
+                                      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2">
+                                        <Select
+                                          value={service.service_id}
+                                          onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                        >
+                                          <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
+                                            <SelectValue placeholder="Услуга" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {availableOptions.length > 0 ? (
+                                              availableOptions.map((option) => {
+                                                // Используем description если есть, иначе getServiceTypeName, иначе не показываем
+                                                const serviceName = option.description || getServiceTypeName(option.type);
+                                                if (!serviceName) return null;
+                                                return (
+                                                  <SelectItem key={option.id} value={String(option.id)}>
+                                                    {serviceName}
+                                                  </SelectItem>
+                                                );
+                                              }).filter(Boolean)
+                                            ) : (
+                                              <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
+                                                Нет доступных услуг
+                                              </div>
+                                            )}
+                                          </SelectContent>
+                                        </Select>
 
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
-                                          Кол-во
-                                        </span>
-                                        <input
-                                          type="number"
-                                          min="1"
-                                          value={service.count}
-                                          onChange={(e) => updateServiceRow(index, "count", e.target.value)}
-                                          className="w-16 h-10 rounded-lg border border-[#d7dbe6] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
+                                            Кол-во
+                                          </span>
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            value={service.count}
+                                            onChange={(e) => updateServiceRow(index, "count", e.target.value)}
+                                            className="w-16 h-10 rounded-lg border border-[#d7dbe6] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                                          />
+                                        </div>
+
+                                        {service.service_id && (
+                                          <span className="ml-auto text-xs text-[#6B6B6B]">
+                                            {unitPrice.toLocaleString()} ₸/шт.
+                                          </span>
+                                        )}
+
+                                        <button
+                                          type="button"
+                                          onClick={() => removeServiceRow(index)}
+                                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
+                                          aria-label="Удалить услугу"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
                                       </div>
-
-                                      {service.service_id && (
-                                        <span className="ml-auto text-xs text-[#6B6B6B]">
-                                          {unitPrice.toLocaleString()} ₸/шт.
-                                        </span>
+                                      
+                                      {/* Показываем поле адреса, если выбрана услуга GAZELLE_TO */}
+                                      {isGazelleToService && (
+                                        <div className="pl-3 pr-11">
+                                          <label className="block text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mb-1">
+                                            Адрес доставки вещей
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={movingAddressTo}
+                                            onChange={(e) => {
+                                              setMovingAddressTo(e.target.value);
+                                              // Обновляем адрес в moving_order
+                                              setMovingOrders(prev => prev.map(order => 
+                                                order.status === "PENDING_TO" 
+                                                  ? { ...order, address: e.target.value }
+                                                  : order
+                                              ));
+                                            }}
+                                            placeholder="Например: г. Алматы, Абая 25"
+                                            className="w-full h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                                          />
+                                        </div>
                                       )}
-
-                                      <button
-                                        type="button"
-                                        onClick={() => removeServiceRow(index)}
-                                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
-                                        aria-label="Удалить услугу"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
                                     </div>
                                   );
                                 })}

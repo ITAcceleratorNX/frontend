@@ -58,12 +58,15 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             PACKER: "Упаковщик",
             FURNITURE_SPECIALIST: "Мебельщик",
             GAZELLE: "Газель",
+            GAZELLE_FROM: "Газель - забор вещей",
+            GAZELLE_TO: "Газель - возврат вещей",
             STRETCH_FILM: "Стрейч-пленка",
             BOX_SIZE: "Коробка",
             MARKER: "Маркер",
             UTILITY_KNIFE: "Канцелярский нож",
             BUBBLE_WRAP_1: "Воздушно-пузырчатая пленка 10м",
             BUBBLE_WRAP_2: "Воздушно-пузырчатая пленка 120м",
+            RACK_RENTAL: "Аренда стеллажей",
         }
         return names[type] || "Услуга"
     }

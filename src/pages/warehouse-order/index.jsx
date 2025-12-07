@@ -1,5 +1,5 @@
 // src/pages/warehouse-order/index.jsx
-import React, { useState, useEffect, memo } from "react";
+import React, {useState, useEffect, memo, useCallback} from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Header } from "../../widgets";
@@ -99,11 +99,11 @@ const WarehouseOrderPage = memo(() => {
         setIsSelectedPackage(true);
         // Не сбрасываем movingOrders, если уже есть
         if (movingOrders.length === 0) {
+          // Для облачного хранения создаем только забор вещей (PENDING_FROM)
           setMovingOrders([
-            { moving_date: new Date().toISOString(), status: 'PENDING_FROM', address: '' },
-            { moving_date: new Date().toISOString(), status: 'PENDING_TO', address: '' }
+            { moving_date: new Date().toISOString(), status: 'PENDING_FROM', address: '' }
           ]);
-          setMovingOrderErrors([{}, {}]);
+          setMovingOrderErrors([{}]);
         }
       } else {
         // Для индивидуальных складов сбрасываем movingOrders
@@ -116,12 +116,13 @@ const WarehouseOrderPage = memo(() => {
 
   useEffect(() => {
     if (isSelectedMoving && prices.length > 0 && !gazelleService) {
-      const gazelle = prices.find((price) => price.type === "GAZELLE");
-      if (gazelle) {
+      // Ищем GAZELLE_FROM вместо GAZELLE
+      const gazelleFrom = prices.find((price) => price.type === "GAZELLE_FROM");
+      if (gazelleFrom) {
         setGazelleService({
-          id: String(gazelle.id),
-          type: gazelle.type,
-          name: getServiceTypeName(gazelle.type),
+          id: String(gazelleFrom.id),
+          type: gazelleFrom.type,
+          name: getServiceTypeName(gazelleFrom.type),
         });
       }
     } else if (!isSelectedMoving) {
@@ -129,28 +130,59 @@ const WarehouseOrderPage = memo(() => {
     }
   }, [isSelectedMoving, prices, gazelleService]);
 
-  // Синхронизация услуги "Газель" по количеству перевозок
-  const syncGazelleService = (movingCount, currentServices) => {
-    if (!gazelleService || movingCount === 0) {
-      // Удаляем "Газель", если нет перевозок
-      if (!gazelleService) return currentServices;
-      return currentServices.filter((s) => s.service_id?.toString() !== gazelleService.id?.toString());
+  // Синхронизация услуг перевозки на основе moving_orders
+  const syncMovingServices = useCallback((currentServices, currentMovingOrders) => {
+    if (!prices || prices.length === 0) return currentServices;
+    
+    let updated = [...currentServices];
+    
+    // Получаем типы перевозок из moving_orders
+    const hasPickup = currentMovingOrders.some(order => order.status === "PENDING_FROM");
+    const hasReturn = currentMovingOrders.some(order => order.status === "PENDING_TO");
+    
+    // Находим услуги GAZELLE_FROM и GAZELLE_TO
+    const gazelleFromOption = prices.find(p => p.type === "GAZELLE_FROM");
+    const gazelleToOption = prices.find(p => p.type === "GAZELLE_TO");
+    
+    // Синхронизируем GAZELLE_FROM
+    if (hasPickup && gazelleFromOption) {
+      const existingIndex = updated.findIndex(s => String(s.service_id) === String(gazelleFromOption.id));
+      if (existingIndex >= 0) {
+        // Обновляем количество
+        updated[existingIndex] = { ...updated[existingIndex], count: 1 };
+      } else {
+        // Добавляем услугу
+        updated.push({ service_id: gazelleFromOption.id.toString(), count: 1 });
+      }
+    } else if (!hasPickup && gazelleFromOption) {
+      // Удаляем услугу, если нет забора
+      updated = updated.filter(s => String(s.service_id) !== String(gazelleFromOption.id));
     }
-
-    const gazelleId = gazelleService.id?.toString();
-    const existingIndex = currentServices.findIndex((s) => s.service_id?.toString() === gazelleId);
-    const updated = [...currentServices];
-
-    if (existingIndex >= 0) {
-      // Обновляем количество
-      updated[existingIndex] = { ...updated[existingIndex], count: movingCount };
-    } else {
-      // Добавляем "Газель" с количеством = кол-во перевозок
-      updated.push({ service_id: gazelleService.id, count: movingCount });
+    
+    // Синхронизируем GAZELLE_TO
+    if (hasReturn && gazelleToOption) {
+      const existingIndex = updated.findIndex(s => String(s.service_id) === String(gazelleToOption.id));
+      if (existingIndex >= 0) {
+        // Обновляем количество
+        updated[existingIndex] = { ...updated[existingIndex], count: 1 };
+      } else {
+        // Добавляем услугу
+        updated.push({ service_id: gazelleToOption.id.toString(), count: 1 });
+      }
+    } else if (!hasReturn && gazelleToOption) {
+      // Удаляем услугу, если нет возврата
+      updated = updated.filter(s => String(s.service_id) !== String(gazelleToOption.id));
     }
-
+    
     return updated;
-  };
+  }, [prices]);
+
+  // Автоматическая синхронизация услуг при изменении moving_orders
+  useEffect(() => {
+    if (prices.length > 0 && movingOrders.length > 0) {
+      setServices(prev => syncMovingServices(prev, movingOrders));
+    }
+  }, [movingOrders, prices, syncMovingServices]);
 
   // Загрузка складов при монтировании
   useEffect(() => {
@@ -276,7 +308,7 @@ const WarehouseOrderPage = memo(() => {
     return errors;
   };
 
-  // Функция добавления даты перевозки
+  // Функция добавления даты перевозки (только забор вещей)
   const addMovingOrder = () => {
     const newOrder = {
       moving_date: new Date().toISOString(),
@@ -285,13 +317,8 @@ const WarehouseOrderPage = memo(() => {
     };
     setMovingOrders([...movingOrders, newOrder]);
     setMovingOrderErrors([...movingOrderErrors, {}]);
-
-    // Синхронизируем "Газель"
-    if (gazelleService) {
-      const updatedServices = syncGazelleService(movingOrders.length + 1, services);
-      setServices(updatedServices);
-      setIsSelectedPackage(true); // Упаковка становится активной, если добавлена перевозка
-    }
+    setIsSelectedPackage(true); // Упаковка становится активной, если добавлена перевозка
+    // Синхронизация услуг произойдет автоматически через useEffect
   };
 
   // Функция удаления даты перевозки
@@ -299,12 +326,7 @@ const WarehouseOrderPage = memo(() => {
     const newMovingOrders = movingOrders.filter((_, i) => i !== index);
     setMovingOrders(newMovingOrders);
     setMovingOrderErrors(movingOrderErrors.filter((_, i) => i !== index));
-
-    // Синхронизируем "Газель"
-    if (gazelleService) {
-      const updatedServices = syncGazelleService(newMovingOrders.length, services);
-      setServices(updatedServices);
-    }
+    // Синхронизация услуг произойдет автоматически через useEffect
   };
 
   // Функция обновления даты перевозки
@@ -313,6 +335,8 @@ const WarehouseOrderPage = memo(() => {
       i === index ? { ...order, [field]: value } : order
     );
     setMovingOrders(updatedMovingOrders);
+    // Синхронизация услуг произойдет автоматически через useEffect при изменении типа перевозки
+    
     // Валидация при изменении поля адреса
     if (field === "address") {
       const updatedOrder = updatedMovingOrders[index];
@@ -334,6 +358,10 @@ const WarehouseOrderPage = memo(() => {
         return "Мебельщик";
       case "GAZELLE":
         return "Газель";
+      case "GAZELLE_FROM":
+        return "Газель - забор вещей";
+      case "GAZELLE_TO":
+        return "Газель - возврат вещей";
       case "STRETCH_FILM":
         return "Стрейч-пленка";
       case "BOX_SIZE":
@@ -346,6 +374,8 @@ const WarehouseOrderPage = memo(() => {
         return "Воздушно-пузырчатая пленка 10м";
       case "BUBBLE_WRAP_2":
         return "Воздушно-пузырчатая пленка 120м";
+      case "RACK_RENTAL":
+        return "Аренда стеллажей";
       default:
         return "Услуга";
     }
@@ -579,16 +609,9 @@ const WarehouseOrderPage = memo(() => {
       setIsSubmitting(true);
       setError(null);
 
-      // Финальная синхронизация "Газели"
-      let finalServices = [...services];
-      const movingCount = movingOrders.length;
-
-      if (isSelectedMoving && movingCount > 0 && gazelleService) {
-        finalServices = syncGazelleService(movingCount, finalServices);
-      } else if (gazelleService) {
-        const gazelleId = gazelleService.id?.toString();
-        finalServices = finalServices.filter((s) => s.service_id?.toString() !== gazelleId);
-      }
+      // Финальная синхронизация "Газель - забор" (GAZELLE_FROM)
+      // Синхронизируем услуги перевозки на основе moving_orders
+      let finalServices = syncMovingServices(services, movingOrders);
 
       // Фильтрация валидных услуг
       const validServices = finalServices.filter(
@@ -1253,15 +1276,29 @@ const WarehouseOrderPage = memo(() => {
                                       <SelectValue placeholder="Выберите услугу" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {prices.map((price) => (
-                                        <SelectItem
-                                          key={price.id}
-                                          value={price.id.toString()}
-                                          disabled={price.type === "GAZELLE"}
-                                        >
-                                          {price.description || getServiceTypeName(price.type) || `Услуга ${price.id}`}
-                                        </SelectItem>
-                                      ))}
+                                      {prices
+                                        .filter((price) => {
+                                          // Скрываем GAZELLE_FROM, GAZELLE_TO и GAZELLE (добавляются автоматически при перевозке)
+                                          if (price.type === "GAZELLE_FROM") return false;
+                                          if (price.type === "GAZELLE_TO") return false;
+                                          if (price.type === "GAZELLE") return false;
+                                          return true;
+                                        })
+                                        .map((price) => {
+                                          // Используем description если есть, иначе getServiceTypeName
+                                          const serviceName = price.description || getServiceTypeName(price.type);
+                                          // Не показываем услуги без названия
+                                          if (!serviceName) return null;
+                                          return (
+                                            <SelectItem
+                                              key={price.id}
+                                              value={price.id.toString()}
+                                            >
+                                              {serviceName}
+                                            </SelectItem>
+                                          );
+                                        })
+                                        .filter(Boolean)}
                                     </SelectContent>
                                   </Select>
                                 </div>

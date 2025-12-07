@@ -30,12 +30,15 @@ const getServiceTypeName = (type) => {
     "PACKER": "Упаковщик",
     "FURNITURE_SPECIALIST": "Мебельщик",
     "GAZELLE": "Газель",
+    "GAZELLE_FROM": "Газель - забор вещей",
+    "GAZELLE_TO": "Газель - возврат вещей",
     "STRETCH_FILM": "Стрейч-плёнка",
     "BOX_SIZE": "Коробка",
     "MARKER": "Маркер",
     "UTILITY_KNIFE": "Канцелярский нож",
     "BUBBLE_WRAP_1": "Воздушно-пузырчатая плёнка 10м",
     "BUBBLE_WRAP_2": "Воздушно-пузырчатая плёнка 120м",
+    "RACK_RENTAL": "Аренда стеллажей",
   };
   return serviceNames[type] || type;
 };
