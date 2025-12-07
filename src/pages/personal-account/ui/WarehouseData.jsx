@@ -38,6 +38,10 @@ const getServiceTypeName = (type) => {
       return "Мебельщик";
     case "GAZELLE":
       return "Газель";
+    case "GAZELLE_FROM":
+      return "Газель - забор вещей";
+    case "GAZELLE_TO":
+      return "Газель - возврат вещей";
     case "STRETCH_FILM":
       return "Стрейч-плёнка";
     case "BOX_SIZE":
@@ -50,6 +54,8 @@ const getServiceTypeName = (type) => {
       return "Воздушно-пузырчатая плёнка 10м";
     case "BUBBLE_WRAP_2":
       return "Воздушно-пузырчатая плёнка 120м";
+    case "RACK_RENTAL":
+      return "Аренда стеллажей";
     default:
       return "Услуга";
   }
@@ -91,6 +97,10 @@ const WarehouseData = () => {
     today.setHours(0, 0, 0, 0);
     return today.toISOString().split('T')[0];
   });
+  // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
+  const [movingOrders, setMovingOrders] = useState([]);
+  // Состояние для адреса возврата (GAZELLE_TO)
+  const [movingAddressTo, setMovingAddressTo] = useState('');
   const [cloudPickupAddress, setCloudPickupAddress] = useState('');
   const [cloudPickupDate, setCloudPickupDate] = useState(() => {
     const today = new Date();
@@ -445,23 +455,88 @@ const WarehouseData = () => {
   }, []);
 
   const updateServiceRow = useCallback((index, field, value) => {
-    setServices((prev) =>
-      prev.map((service, i) =>
+    setServices((prev) => {
+      const updated = prev.map((service, i) =>
         i === index
           ? {
               ...service,
               [field]: field === "count" ? Math.max(1, Number(value) || 1) : value,
             }
           : service
-      )
-    );
-  }, []);
+      );
+      
+      return updated;
+    });
+    
+    // Обрабатываем изменение service_id отдельно, вне setServices
+    if (field === "service_id") {
+      // Получаем текущую услугу
+      const currentService = services[index];
+      
+      // Проверяем, была ли добавлена услуга GAZELLE_TO
+      if (value && serviceOptions.length > 0) {
+        const selectedOption = serviceOptions.find(opt => String(opt.id) === String(value));
+        
+        if (selectedOption && selectedOption.type === "GAZELLE_TO") {
+          console.log("✅ GAZELLE_TO выбрана, создаем moving_order");
+          
+          // Добавляем moving_order для возврата вещей
+          // Дата возврата = дата начала бронирования + количество месяцев
+          const startDate = individualBookingStartDate ? new Date(individualBookingStartDate) : new Date();
+          const returnDate = new Date(startDate);
+          returnDate.setMonth(returnDate.getMonth() + monthsNumber);
+          returnDate.setHours(10, 0, 0, 0);
+          
+          setMovingOrders(prevOrders => {
+            // Проверяем, нет ли уже такого moving_order
+            const exists = prevOrders.some(order => order.status === "PENDING_TO");
+            if (exists) {
+              console.log("⚠️ moving_order PENDING_TO уже существует");
+              return prevOrders;
+            }
+            
+            const newOrder = {
+              moving_date: returnDate.toISOString(),
+              status: "PENDING_TO",
+              address: movingAddressTo || movingAddressFrom || "",
+            };
+            
+            console.log("✅ Создан новый moving_order:", newOrder);
+            return [...prevOrders, newOrder];
+          });
+        }
+      }
+      
+      // Проверяем, была ли удалена услуга GAZELLE_TO
+      if (currentService?.service_id && serviceOptions.length > 0) {
+        const oldOption = serviceOptions.find(opt => String(opt.id) === String(currentService.service_id));
+        if (oldOption && oldOption.type === "GAZELLE_TO") {
+          console.log("🗑️ GAZELLE_TO удалена, удаляем moving_order");
+          // Удаляем moving_order для возврата вещей
+          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+        }
+      }
+    }
+  }, [serviceOptions, individualBookingStartDate, monthsNumber, movingAddressFrom, movingAddressTo, services]);
 
   const removeServiceRow = useCallback((index) => {
-    setServices((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    setServices((prev) => {
+      const serviceToRemove = prev[index];
+      
+      // Если удаляется GAZELLE_TO, удаляем соответствующий moving_order
+      if (serviceToRemove?.service_id && serviceOptions.length > 0) {
+        const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
+        if (option && option.type === "GAZELLE_TO") {
+          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+        }
+      }
+      
+      return prev.filter((_, i) => i !== index);
+    });
+  }, [serviceOptions]);
 
-  // Синхронизация услуги "Газель" по количеству перевозок (2 для туда и обратно)
+  // Синхронизация услуги "Газель - забор" (GAZELLE_FROM)
+  // Добавляем только GAZELLE_FROM с count: 1 при включении перевозки
   const syncGazelleService = useCallback((currentServices) => {
     if (!gazelleService || !includeMoving) {
       return currentServices.filter((s) => s.service_id?.toString() !== gazelleService?.id?.toString());
@@ -472,17 +547,17 @@ const WarehouseData = () => {
     const updated = [...currentServices];
 
     if (existingIndex >= 0) {
-      // Обновляем количество (2 для туда и обратно)
-      updated[existingIndex] = { ...updated[existingIndex], count: 2 };
+      // Обновляем количество (всегда 1 для GAZELLE_FROM)
+      updated[existingIndex] = { ...updated[existingIndex], count: 1 };
     } else {
-      // Добавляем "Газель" с количеством 2
-      updated.push({ service_id: gazelleService.id, count: 2 });
+      // Добавляем "Газель - забор" с количеством 1
+      updated.push({ service_id: gazelleService.id, count: 1 });
     }
 
     return updated;
   }, [gazelleService, includeMoving]);
 
-  // Автоматическое добавление услуги GAZELLE при включении перевозки
+  // Автоматическое добавление услуги GAZELLE_FROM при включении перевозки
   useEffect(() => {
     if (!includeMoving) {
       setGazelleService(null);
@@ -494,13 +569,14 @@ const WarehouseData = () => {
       return;
     }
 
-    const gazelle = serviceOptions.find((option) => option.type === "GAZELLE");
-    if (gazelle) {
+    // Ищем GAZELLE_FROM вместо GAZELLE
+    const gazelleFrom = serviceOptions.find((option) => option.type === "GAZELLE_FROM");
+    if (gazelleFrom) {
       setGazelleService({
-        id: String(gazelle.id),
-        type: gazelle.type,
-        name: getServiceTypeName(gazelle.type) || gazelle.description || "Газель",
-        price: gazelle.price,
+        id: String(gazelleFrom.id),
+        type: gazelleFrom.type,
+        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+        price: gazelleFrom.price,
       });
     } else {
       setGazelleService(null);
@@ -512,13 +588,13 @@ const WarehouseData = () => {
     const breakdown = [];
     let total = 0;
 
-    // Перевозка вещей (туда и обратно)
+    // Перевозка вещей (только забор)
     if (includeMoving && gazelleService) {
-      const count = 2; // Забор и доставка
+      const count = 1; // Только забор вещей
       const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
       total += amount;
       breakdown.push({
-        label: gazelleService.name || "Перевозка вещей",
+        label: gazelleService.name || "Забор вещей (с клиента на склад)",
         amount,
       });
     }
@@ -1857,15 +1933,43 @@ const WarehouseData = () => {
                           setOrderError(null);
 
                           try {
+                            // Загружаем опции услуг если еще не загружены
+                            let availableOptions = serviceOptions;
+                            if (serviceOptions.length === 0) {
+                              const loadedOptions = await ensureServiceOptions();
+                              if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
+                                availableOptions = loadedOptions;
+                                // Обновляем serviceOptions для использования в других местах
+                                setServiceOptions(loadedOptions);
+                              }
+                            }
+
                             // Синхронизируем услуги с газелью
                             let finalServices = [...services];
                             if (includeMoving && gazelleService) {
                               finalServices = syncGazelleService(finalServices);
                             }
 
-                            const validServices = finalServices.filter(
-                              (service) => service.service_id && service.count > 0
-                            );
+                            // Преобразуем в правильный формат как в home/index.jsx
+                            const validServices = finalServices
+                              .map((service) => ({
+                                service_id: Number(service.service_id),
+                                count: service.count,
+                              }))
+                              .filter(
+                                (service) =>
+                                  Number.isFinite(service.service_id) && service.service_id > 0 && Number.isFinite(service.count) && service.count > 0
+                              );
+
+                            console.log("🔍 Проверка услуг для индивидуального хранения:", {
+                              services,
+                              finalServices,
+                              validServices,
+                              availableOptions: availableOptions.length,
+                              serviceOptions: serviceOptions.length,
+                              availableOptionsIds: availableOptions.map(opt => ({ id: opt.id, type: opt.type })),
+                              validServicesIds: validServices.map(s => s.service_id),
+                            });
 
                             // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
                             const hasPackagingServices = includePacking && validServices.some(s => {
@@ -1881,9 +1985,9 @@ const WarehouseData = () => {
                                 return validServices.some(s => s.service_id?.toString() === gazelleId);
                               }
                               // Если gazelleService не установлен, проверяем по типу из serviceOptions
-                              const gazelleOption = serviceOptions.find(opt => opt.type === "GAZELLE");
-                              if (gazelleOption) {
-                                const gazelleId = gazelleOption.id?.toString();
+                              const gazelleFromOption = serviceOptions.find(opt => opt.type === "GAZELLE_FROM");
+                              if (gazelleFromOption) {
+                                const gazelleId = gazelleFromOption.id?.toString();
                                 return validServices.some(s => s.service_id?.toString() === gazelleId);
                               }
                               return false;
@@ -2152,13 +2256,14 @@ const WarehouseData = () => {
                                 const loadedOptions = await ensureServiceOptions();
                                 // Устанавливаем gazelleService сразу после загрузки опций
                                 if (loadedOptions && loadedOptions.length > 0) {
-                                  const gazelle = loadedOptions.find((option) => option.type === "GAZELLE");
-                                  if (gazelle) {
+                                  // Ищем GAZELLE_FROM вместо GAZELLE
+                                  const gazelleFrom = loadedOptions.find((option) => option.type === "GAZELLE_FROM");
+                                  if (gazelleFrom) {
                                     setGazelleService({
-                                      id: String(gazelle.id),
-                                      type: gazelle.type,
-                                      name: getServiceTypeName(gazelle.type) || gazelle.description || "Газель",
-                                      price: gazelle.price,
+                                      id: String(gazelleFrom.id),
+                                      type: gazelleFrom.type,
+                                      name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+                                      price: gazelleFrom.price,
                                     });
                                   }
                                 }
@@ -2246,6 +2351,9 @@ const WarehouseData = () => {
                                       
                                       // Фильтруем уже выбранные услуги (кроме текущей)
                                       const availableOptions = serviceOptions.filter((option) => {
+                                        // Скрываем GAZELLE_FROM (добавляется автоматически при перевозке)
+                                        if (option.type === "GAZELLE_FROM") return false;
+                                        // Скрываем старый тип GAZELLE (для обратной совместимости)
                                         if (option.type === "GAZELLE") return false;
                                         // Исключаем услуги, которые уже выбраны в других строках
                                         const isAlreadySelected = services.some((s, i) => 
@@ -2254,32 +2362,41 @@ const WarehouseData = () => {
                                         return !isAlreadySelected;
                                       });
 
+                                      // Проверяем, выбрана ли услуга GAZELLE_TO для текущей строки
+                                      const isGazelleToService = selectedOption && selectedOption.type === "GAZELLE_TO";
+                                      
                                       return (
-                                        <div
-                                          key={index}
-                                          className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2"
-                                        >
-                                          <Select
-                                            value={service.service_id}
-                                            onValueChange={(value) => updateServiceRow(index, "service_id", value)}
-                                          >
-                                            <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
-                                              <SelectValue placeholder="Услуга" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {availableOptions.length > 0 ? (
-                                                availableOptions.map((option) => (
-                                                  <SelectItem key={option.id} value={String(option.id)}>
-                                                    {getServiceTypeName(option.type) || option.description || `Услуга ${option.id}`}
-                                                  </SelectItem>
-                                                ))
-                                              ) : (
-                                                <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
-                                                  Нет доступных услуг
-                                                </div>
-                                              )}
-                                            </SelectContent>
-                                          </Select>
+                                        <div key={index} className="space-y-2">
+                                          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2">
+                                            <Select
+                                              value={service.service_id}
+                                              onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                            >
+                                              <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
+                                                <SelectValue placeholder="Услуга" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {availableOptions.length > 0 ? (
+                                                  availableOptions
+                                                    .map((option) => {
+                                                      // Используем description если есть, иначе getServiceTypeName
+                                                      const serviceName = option.description || getServiceTypeName(option.type);
+                                                      // Не показываем услуги без названия
+                                                      if (!serviceName) return null;
+                                                      return (
+                                                        <SelectItem key={option.id} value={String(option.id)}>
+                                                          {serviceName}
+                                                        </SelectItem>
+                                                      );
+                                                    })
+                                                    .filter(Boolean)
+                                                ) : (
+                                                  <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
+                                                    Нет доступных услуг
+                                                  </div>
+                                                )}
+                                              </SelectContent>
+                                            </Select>
 
                                           <div className="flex items-center gap-2">
                                             <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
@@ -2300,14 +2417,39 @@ const WarehouseData = () => {
                                             </span>
                                           )}
 
-                                          <button
-                                            type="button"
-                                            onClick={() => removeServiceRow(index)}
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
-                                            aria-label="Удалить услугу"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => removeServiceRow(index)}
+                                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
+                                              aria-label="Удалить услугу"
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                          
+                                          {/* Показываем поле адреса, если выбрана услуга GAZELLE_TO */}
+                                          {isGazelleToService && (
+                                            <div className="pl-3 pr-11">
+                                              <label className="block text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mb-1">
+                                                Адрес доставки вещей
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={movingAddressTo}
+                                                onChange={(e) => {
+                                                  setMovingAddressTo(e.target.value);
+                                                  // Обновляем адрес в moving_order
+                                                  setMovingOrders(prev => prev.map(order => 
+                                                    order.status === "PENDING_TO" 
+                                                      ? { ...order, address: e.target.value }
+                                                      : order
+                                                  ));
+                                                }}
+                                                placeholder="Например: г. Алматы, Абая 25"
+                                                className="w-full h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                                              />
+                                            </div>
+                                          )}
                                         </div>
                                       );
                                     })}
@@ -2597,15 +2739,43 @@ const WarehouseData = () => {
                           setOrderError(null);
 
                           try {
+                            // Загружаем опции услуг если еще не загружены
+                            let availableOptions = serviceOptions;
+                            if (serviceOptions.length === 0) {
+                              const loadedOptions = await ensureServiceOptions();
+                              if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
+                                availableOptions = loadedOptions;
+                                // Обновляем serviceOptions для использования в других местах
+                                setServiceOptions(loadedOptions);
+                              }
+                            }
+
                             // Синхронизируем услуги с газелью
                             let finalServices = [...services];
                             if (includeMoving && gazelleService) {
                               finalServices = syncGazelleService(finalServices);
                             }
 
-                            const validServices = finalServices.filter(
-                              (service) => service.service_id && service.count > 0
-                            );
+                            // Преобразуем в правильный формат как в home/index.jsx
+                            const validServices = finalServices
+                              .map((service) => ({
+                                service_id: Number(service.service_id),
+                                count: service.count,
+                              }))
+                              .filter(
+                                (service) =>
+                                  Number.isFinite(service.service_id) && service.service_id > 0 && Number.isFinite(service.count) && service.count > 0
+                              );
+
+                            console.log("🔍 Проверка услуг для индивидуального хранения:", {
+                              services,
+                              finalServices,
+                              validServices,
+                              availableOptions: availableOptions.length,
+                              serviceOptions: serviceOptions.length,
+                              availableOptionsIds: availableOptions.map(opt => ({ id: opt.id, type: opt.type })),
+                              validServicesIds: validServices.map(s => s.service_id),
+                            });
 
                             // Проверка услуг для обычных пользователей (только для упаковки, не для перевозки)
                             if (includePacking && validServices.length === 0 && !isAdminOrManager) {
@@ -2636,9 +2806,9 @@ const WarehouseData = () => {
                                 return validServices.some(s => s.service_id?.toString() === gazelleId);
                               }
                               // Если gazelleService не установлен, проверяем по типу из serviceOptions
-                              const gazelleOption = serviceOptions.find(opt => opt.type === "GAZELLE");
-                              if (gazelleOption) {
-                                const gazelleId = gazelleOption.id?.toString();
+                              const gazelleFromOption = serviceOptions.find(opt => opt.type === "GAZELLE_FROM");
+                              if (gazelleFromOption) {
+                                const gazelleId = gazelleFromOption.id?.toString();
                                 return validServices.some(s => s.service_id?.toString() === gazelleId);
                               }
                               return false;
@@ -2647,6 +2817,96 @@ const WarehouseData = () => {
 
                             // Формируем дату начала бронирования для индивидуального хранения
                             const individualStartDate = individualBookingStartDate ? new Date(individualBookingStartDate).toISOString() : new Date().toISOString();
+
+                            // Проверяем наличие GAZELLE_TO в услугах (независимо от includeMoving) ДО создания orderData
+                            const hasGazelleTo = validServices.some(s => {
+                              // Нормализуем ID для сравнения (приводим к числу)
+                              const serviceId = Number(s.service_id);
+                              // Используем availableOptions вместо serviceOptions
+                              const service = availableOptions.find(opt => Number(opt.id) === serviceId);
+                              const isGazelleTo = service && service.type === "GAZELLE_TO";
+                              console.log("🔍 Проверка услуги:", { 
+                                serviceId: s.service_id,
+                                normalizedServiceId: serviceId,
+                                foundService: service ? { id: service.id, type: service.type } : null,
+                                serviceType: service?.type,
+                                isGazelleTo,
+                                availableOptionsCount: availableOptions.length,
+                                availableOptionsIds: availableOptions.map(opt => ({ id: opt.id, type: opt.type }))
+                              });
+                              return isGazelleTo;
+                            });
+
+                            console.log("🔍 Проверка GAZELLE_TO:", {
+                              hasGazelleTo,
+                              validServices,
+                              availableOptions: availableOptions.length,
+                              serviceOptions: serviceOptions.length,
+                              movingOrders,
+                              movingAddressTo,
+                              includeMoving,
+                            });
+
+                            // Создаем moving_orders
+                            const allMovingOrders = [];
+                            
+                            if (includeMoving && movingAddressFrom.trim()) {
+                              // Добавляем забор вещей (PENDING_FROM)
+                              const pickupDate = movingPickupDate 
+                                ? new Date(movingPickupDate)
+                                : new Date();
+                              pickupDate.setHours(10, 0, 0, 0);
+                              
+                              allMovingOrders.push({
+                                moving_date: pickupDate.toISOString(),
+                                status: 'PENDING_FROM',
+                                address: movingAddressFrom.trim(),
+                              });
+                            }
+                            
+                            // Добавляем возврат вещей, если есть GAZELLE_TO в услугах
+                            if (hasGazelleTo) {
+                              console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
+                              
+                              // Используем moving_order из состояния или создаем новый
+                              const returnOrder = movingOrders.find(order => order.status === "PENDING_TO");
+                              if (returnOrder && returnOrder.address && returnOrder.address.trim()) {
+                                console.log("✅ Используем существующий moving_order из состояния");
+                                allMovingOrders.push({
+                                  moving_date: returnOrder.moving_date,
+                                  status: "PENDING_TO",
+                                  address: returnOrder.address.trim(),
+                                });
+                              } else {
+                                console.log("✅ Создаем новый moving_order для PENDING_TO");
+                                // Создаем дату возврата: дата начала бронирования + количество месяцев
+                                const startDate = new Date(individualBookingStartDate || new Date());
+                                const returnDate = new Date(startDate);
+                                returnDate.setMonth(returnDate.getMonth() + monthsNumber);
+                                returnDate.setHours(10, 0, 0, 0);
+                                
+                                // Используем movingAddressTo, если он указан, иначе movingAddressFrom (если includeMoving), иначе пустая строка
+                                const returnAddress = movingAddressTo.trim() || (includeMoving ? movingAddressFrom.trim() : "");
+                                
+                                if (!returnAddress) {
+                                  console.error("❌ Адрес для возврата не указан!");
+                                  toast.error('Укажите адрес доставки вещей для услуги "Газель - возврат вещей"');
+                                  setIsCreatingOrder(false);
+                                  return;
+                                }
+                                
+                                allMovingOrders.push({
+                                  moving_date: returnDate.toISOString(),
+                                  status: "PENDING_TO",
+                                  address: returnAddress,
+                                });
+                              }
+                            }
+                            
+                            console.log("📦 Финальные moving_orders:", allMovingOrders);
+
+                            // is_selected_moving должен быть true, если есть любые moving_orders (включая PENDING_TO от GAZELLE_TO)
+                            const isMovingSelected = includeMoving || hasGazelleTo || allMovingOrders.length > 0;
 
                             const orderData = {
                               storage_id: previewStorage.id,
@@ -2657,7 +2917,7 @@ const WarehouseData = () => {
                                 volume: 0,
                                 cargo_mark: 'NO'
                               }],
-                              is_selected_moving: includeMoving,
+                              is_selected_moving: isMovingSelected,
                               is_selected_package: isPackageSelected,
                             };
 
@@ -2665,41 +2925,23 @@ const WarehouseData = () => {
                             if (isAdminOrManager && selectedClientUser) {
                               orderData.user_id = selectedClientUser.id;
                             }
-
-                            // Добавляем перевозки
-                            if (includeMoving && movingAddressFrom.trim()) {
-                              // Используем выбранную дату забора или текущую дату
-                              const pickupDate = movingPickupDate 
-                                ? new Date(movingPickupDate)
-                                : new Date();
-                              pickupDate.setHours(10, 0, 0, 0);
-                              
-                              // Дата возврата = дата забора + количество месяцев
-                              const returnDate = new Date(pickupDate);
-                              returnDate.setMonth(returnDate.getMonth() + monthsNumber);
-                              returnDate.setHours(10, 0, 0, 0);
-                              
-                              orderData.moving_orders = [
-                                {
-                                  moving_date: pickupDate.toISOString(),
-                                  status: 'PENDING_FROM',
-                                  address: movingAddressFrom.trim(),
-                                },
-                                {
-                                  moving_date: returnDate.toISOString(),
-                                  status: 'PENDING_TO',
-                                  address: movingAddressFrom.trim(),
-                                }
-                              ];
+                            
+                            // Добавляем moving_orders только если они есть
+                            if (allMovingOrders.length > 0) {
+                              orderData.moving_orders = allMovingOrders;
+                              // Дополнительно убеждаемся, что is_selected_moving = true
+                              orderData.is_selected_moving = true;
                             }
 
                             // Добавляем услуги (включая Газель при перевозке, даже если упаковка не включена)
                             if (validServices.length > 0) {
                               orderData.services = validServices.map((service) => ({
-                                service_id: Number(service.service_id),
+                                service_id: Number(service.service_id), // Уже Number после преобразования выше
                                 count: service.count,
                               }));
                             }
+
+                            console.log("📤 Отправляемые данные заказа:", orderData);
 
                             const result = await warehouseApi.createOrder(orderData);
 

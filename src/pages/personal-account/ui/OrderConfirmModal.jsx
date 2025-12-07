@@ -51,8 +51,6 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
   // Функция для получения русского названия типа услуги
   const getServiceTypeName = (type) => {
     switch (type) {
-      case 'DEPOSIT':
-        return 'Залог';
       case 'LOADER':
         return 'Грузчик';
       case 'PACKER':
@@ -61,6 +59,10 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
         return 'Мебельщик';
       case 'GAZELLE':
         return 'Газель';
+      case 'GAZELLE_FROM':
+        return 'Газель - забор вещей';
+      case 'GAZELLE_TO':
+        return 'Газель - возврат вещей';
       case 'STRETCH_FILM':
         return 'Стрейч-пленка';
       case 'BOX_SIZE':
@@ -73,6 +75,8 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
         return 'Воздушно-пузырчатая пленка 10м';
       case 'BUBBLE_WRAP_2':
         return 'Воздушно-пузырчатая пленка 120м';
+      case 'RACK_RENTAL':
+        return 'Аренда стеллажей';
       default:
         return 'Услуга';
     }
