@@ -6,6 +6,8 @@ import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '../../../components/ui/pagination';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import {
   useAllOrders,
   useUpdateOrderStatus,
@@ -16,11 +18,53 @@ import {
 } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
+import OrderDetailView from './OrderDetailView';
 import OrderDeleteModal from "./OrderDeleteModal";
 import {toast} from "react-toastify";
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import {useNavigate} from "react-router-dom";
 import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
+
+// Функция для расчета месяцев аренды
+const calculateRentalMonths = (startDate, endDate) => {
+  if (!startDate || !endDate) return 0;
+
+  try {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return 0;
+    }
+
+    const yearsDiff = end.getFullYear() - start.getFullYear();
+    const monthsDiff = end.getMonth() - start.getMonth();
+    const daysDiff = end.getDate() - start.getDate();
+
+    // Общее количество месяцев
+    let totalMonths = yearsDiff * 12 + monthsDiff;
+
+    // Если разница в днях больше 15, считаем как дополнительный месяц
+    if (daysDiff > 15) {
+      totalMonths += 1;
+    }
+
+    return Math.max(1, totalMonths); // Минимум 1 месяц
+  } catch (error) {
+    console.error('Ошибка при вычислении месяцев:', error);
+    return 0;
+  }
+};
+
+// Функция для получения текста типа хранения
+const getStorageTypeText = (type) => {
+  if (type === 'INDIVIDUAL') {
+    return 'Индивидуальное';
+  } else if (type === 'CLOUD') {
+    return 'Облачное';
+  }
+  return type || 'Не указано';
+};
 
 const OrderManagement = () => {
   const navigate = useNavigate();
@@ -29,6 +73,8 @@ const OrderManagement = () => {
   const [modalData, setModalData] = useState(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
 
   // Хуки для данных
   const {
@@ -69,7 +115,7 @@ const OrderManagement = () => {
   const filteredOrders = useMemo(() => {
     if (statusFilter === 'RETURN') {
       // Фильтр для возвратов: заказы с cancel_status === 'PENDING' или 'APPROVED'
-      return ordersToShow.filter(order => 
+      return ordersToShow.filter(order =>
         order.cancel_status === 'PENDING' || order.cancel_status === 'APPROVED'
       );
     }
@@ -142,11 +188,24 @@ const OrderManagement = () => {
     if (action === 'delete') {
       await handleDeleteOrder(order.id);
       closeModal();
-    } else if (action === 'approve') {
-
-    } else if (action === 'update') {
-
     }
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return '0';
+    return parseFloat(price).toLocaleString('ru-RU') + ' ₸';
+  };
+
+  // Обработчик открытия детальной информации о заказе
+  const handleOrderClick = (order) => {
+    setSelectedOrder(order);
+    setIsOrderDetailOpen(true);
+  };
+
+  // Обработчик закрытия модального окна
+  const handleCloseOrderDetail = () => {
+    setIsOrderDetailOpen(false);
+    setSelectedOrder(null);
   };
 
   const handleApproveReturn = async (orderId) => {
@@ -403,23 +462,26 @@ const OrderManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Список заказов */}
-      <div className="space-y-4">
-        {filteredOrders.length === 0 ? (
-          <Card className="border-dashed border-gray-300 bg-gray-50">
-            <CardContent className="p-12 text-center">
+      {/* Таблица заказов */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Список заказов</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredOrders.length === 0 ? (
+            <div className="p-12 text-center">
               <div className="flex items-center justify-center mb-4">
                 <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
               <div className="text-gray-500 text-lg mb-2 font-medium">Заказы не найдены</div>
-            <div className="text-gray-400">
-              {searchQuery || statusFilter !== 'ALL' 
-                ? 'Попробуйте изменить критерии поиска или фильтры'
-                : 'Пока нет заказов для отображения'
-              }
-            </div>
+              <div className="text-gray-400">
+                {searchQuery || statusFilter !== 'ALL'
+                  ? 'Попробуйте изменить критерии поиска или фильтры'
+                  : 'Пока нет заказов для отображения'
+                }
+              </div>
               {(searchQuery || statusFilter !== 'ALL') && (
                 <Button
                   variant="outline"
@@ -435,22 +497,79 @@ const OrderManagement = () => {
                   Сбросить фильтры
                 </Button>
               )}
-            </CardContent>
-          </Card>
-        ) : (
-          filteredOrders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              onUpdate={() => openConfirmModal('update', order)}
-              onDelete={() => openConfirmModal('delete', order)}
-              onApprove={() => openConfirmModal('approve', order)}
-              onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
-              isLoading={isMutating}
-            />
-          ))
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[100px]">Номер заявки</TableHead>
+                    <TableHead className="min-w-[150px]">Клиент</TableHead>
+                    <TableHead className="min-w-[120px]">Склад/Бокс</TableHead>
+                    <TableHead className="min-w-[120px]">Тип хранения</TableHead>
+                    <TableHead className="min-w-[100px]">Объем (м³)</TableHead>
+                    <TableHead className="min-w-[120px]">Срок аренды</TableHead>
+                    <TableHead className="min-w-[120px]">Итоговая сумма</TableHead>
+                    <TableHead className="min-w-[180px]">Оплата и договор</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order) => (
+                    <TableRow
+                      key={order.id}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleOrderClick(order)}
+                    >
+                      <TableCell className="font-medium">
+                        #{order.id}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{order.user?.name || 'Не указано'}</span>
+                          <span className="text-sm text-gray-500">{order.user?.phone || order.user?.email || ''}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {order.storage?.name || 'Не указано'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {getStorageTypeText(order.storage?.storage_type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {order.total_volume} м³
+                      </TableCell>
+                      <TableCell>
+                        {calculateRentalMonths(order.start_date, order.end_date)} мес.
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {formatPrice(order.total_price)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Badge
+                            variant={order.payment_status === 'PAID' ? 'default' : 'destructive'}
+                            className="w-fit"
+                          >
+                            {order.payment_status === 'PAID' ? 'Оплачено' : 'Не оплачено'}
+                          </Badge>
+                          <Badge
+                            variant={order.contract_status === 'SIGNED' ? 'default' : 'secondary'}
+                            className="w-fit"
+                          >
+                            {order.contract_status === 'SIGNED' ? 'Подписан' : 'Не подписан'}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Пагинация */}
       {!isSearchActive && meta.totalPages > 1 && (
@@ -537,6 +656,38 @@ const OrderManagement = () => {
               onClose={() => closeModal()}
           />
       )}
+
+      {/* Модальное окно с детальной информацией о заказе */}
+      <Dialog open={isOrderDetailOpen} onOpenChange={setIsOrderDetailOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-6">
+          <DialogHeader className="pb-6 border-b">
+            <DialogTitle className="text-2xl font-semibold text-gray-900">
+              Детальная информация о заказе
+            </DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="mt-6">
+              <OrderDetailView
+                order={selectedOrder}
+                onUpdate={() => {
+                  handleCloseOrderDetail();
+                  openConfirmModal('update', selectedOrder);
+                }}
+                onDelete={() => {
+                  handleCloseOrderDetail();
+                  openConfirmModal('delete', selectedOrder);
+                }}
+                onApprove={() => {
+                  handleCloseOrderDetail();
+                  openConfirmModal('approve', selectedOrder);
+                }}
+                isLoading={isMutating}
+                onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

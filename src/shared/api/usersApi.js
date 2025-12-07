@@ -75,5 +75,20 @@ export const usersApi = {
       console.error('Ошибка при создании пользователя:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Обновление разрешения на превышение лимита заказов (для ADMIN и MANAGER)
+  updateOrderLimitPermission: async (userId, canExceed) => {
+    try {
+      console.log('Отправка запроса на обновление разрешения лимита заказов:', { userId, canExceed });
+      const response = await api.patch(`/users/${userId}/order-limit-permission`, { 
+        can_exceed_order_limit: canExceed 
+      });
+      console.log('Разрешение успешно обновлено:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении разрешения:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

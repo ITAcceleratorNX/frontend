@@ -126,14 +126,11 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                 }
             }
         } else {
-            if (status === 'VACANT' && boxData) {
+            // Для обычных пользователей можно выбрать любой бокс (включая занятые) для просмотра информации о бронировании
+            if (boxData) {
                 onBoxSelect(boxData);
                 if (import.meta.env.DEV) {
-                    console.log('Выбран бокс:', boxData);
-                }
-            } else {
-                if (import.meta.env.DEV) {
-                    console.log('Бокс недоступен:', boxName, status);
+                    console.log('Выбран бокс:', boxData, 'статус:', status);
                 }
             }
         }
@@ -142,14 +139,9 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
     const handleMouseEnter = (boxName) => {
         const status = getBoxStatus(boxName);
         const boxData = getBoxData(boxName);
-        if (isViewOnly) {
+        // Теперь можно ховерить на любой бокс для просмотра информации
             if (boxData) {
                 setHoveredId(boxName);
-            }
-        } else {
-            if (status === 'VACANT') {
-                setHoveredId(boxName);
-            }
         }
     };
 
@@ -208,7 +200,11 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
 
                 let fillColor;
                 if (isSelected) fillColor = 'rgba(39, 54, 85, 0.7)';
-                else if (isHovered && (isViewOnly || status === 'VACANT')) fillColor = 'rgba(254, 243, 178, 0.9)';
+                else if (isHovered) {
+                    // При hover показываем подсветку для всех боксов
+                    if (status === 'VACANT') fillColor = 'rgba(254, 243, 178, 0.9)';
+                    else fillColor = 'rgba(220, 220, 220, 0.9)';
+                }
                 else if (status === 'VACANT') fillColor = '#fef3b2';
                 else fillColor = 'rgba(200, 200, 200, 0.8)';
 
@@ -222,7 +218,8 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                 else if (status === 'VACANT') textColor = '#92400e';
                 else textColor = '#6b7280';
 
-                const cursorStyle = isViewOnly ? 'pointer' : (status === 'VACANT' ? 'pointer' : 'not-allowed');
+                // Теперь все боксы кликабельны для просмотра информации о бронировании
+                const cursorStyle = 'pointer';
 
                 return (
                   <React.Fragment key={box.name}>

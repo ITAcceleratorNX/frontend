@@ -124,15 +124,11 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
         }
       }
     } else {
-      // Для обычных пользователей работает старая логика - только свободные боксы
-      if (status === 'VACANT' && boxData) {
+      // Для обычных пользователей можно выбрать любой бокс (включая занятые) для просмотра информации о бронировании
+      if (boxData) {
         onBoxSelect(boxData);
         if (import.meta.env.DEV) {
-          console.log('Выбран бокс:', boxData);
-        }
-      } else {
-        if (import.meta.env.DEV) {
-          console.log('Бокс недоступен:', boxName, status);
+          console.log('Выбран бокс:', boxData, 'статус:', status);
         }
       }
     }
@@ -143,16 +139,9 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
     const status = getBoxStatus(boxName);
     const boxData = getBoxData(boxName);
     
-    if (isViewOnly) {
-      // В режиме просмотра можно ховерить на любой бокс
+    // Теперь можно ховерить на любой бокс для просмотра информации
       if (boxData) {
         setHoveredId(boxName);
-      }
-    } else {
-      // Для обычных пользователей - только на свободные боксы
-      if (status === 'VACANT') {
-        setHoveredId(boxName);
-      }
     }
   };
 
@@ -218,8 +207,13 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
             let fillColor;
             if (isSelected) {
               fillColor = "rgba(39, 54, 85, 0.7)"; // Тёмно-синий для выбранного
-            } else if (isHovered && (isViewOnly || status === 'VACANT')) {
-              fillColor = "rgba(254, 243, 178, 0.9)"; // Более яркий жёлтый при hover
+            } else if (isHovered) {
+              // При hover показываем подсветку для всех боксов
+              if (status === 'VACANT') {
+                fillColor = "rgba(254, 243, 178, 0.9)"; // Более яркий жёлтый при hover для свободных
+              } else {
+                fillColor = "rgba(220, 220, 220, 0.9)"; // Более светлый серый при hover для занятых
+              }
             } else if (status === 'VACANT') {
               fillColor = "#fef3b2"; // Жёлтый для свободных
             } else {
@@ -250,10 +244,8 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
               textColor = "#6b7280"; // Серый текст для занятых
             }
 
-            // Определяем стиль курсора
-            const cursorStyle = isViewOnly 
-              ? 'pointer' // В режиме просмотра все боксы кликабельны
-              : (status === 'VACANT' ? 'pointer' : 'not-allowed');
+            // Определяем стиль курсора - теперь все боксы кликабельны для просмотра информации о бронировании
+            const cursorStyle = 'pointer';
 
             return (
               <React.Fragment key={box.name}>

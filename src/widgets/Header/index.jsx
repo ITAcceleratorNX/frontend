@@ -141,8 +141,6 @@ export const Header = memo(() => {
                 />
               </div>
               <nav className="hidden md:flex gap-3">
-                <NavLink to="/cloud-storage" className={getNavLinkClass}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
-                <NavLink to="/moving" className={getNavLinkClass}>МУВИНГ</NavLink>
               </nav>
             </div>
 
@@ -180,8 +178,6 @@ export const Header = memo(() => {
 
           {isMobileMenuOpen && (
               <div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-md z-40 py-4 px-6 space-y-4 flex flex-col items-center">
-                <NavLink to="/cloud-storage" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>ОБЛАЧНОЕ ХРАНЕНИЕ</NavLink>
-                <NavLink to="/moving" className={getNavLinkClass} onClick={() => setIsMobileMenuOpen(false)}>МУВИНГ</NavLink>
                 <div className="relative">
                   {authButtons}
                 </div>

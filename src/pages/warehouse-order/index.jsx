@@ -6,6 +6,7 @@ import { Header } from "../../widgets";
 import Footer from "../../widgets/Footer";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
+import { ordersApi } from "../../shared/api/ordersApi";
 import { useAuth } from "../../shared/context/AuthContext";
 import ChatButton from "../../shared/components/ChatButton";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
@@ -13,6 +14,7 @@ import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
 import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
 import MiniVolumeSelector from "../../components/MiniVolumeSelector";
 import ProfileValidationGuard from "../../shared/components/ProfileValidationGuard";
+import CallbackRequestModal from "../../shared/components/CallbackRequestModal.jsx";
 // Импорт компонентов UI
 import {
   Switch,
@@ -29,6 +31,7 @@ import {
   Truck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import DatePicker from "../../shared/ui/DatePicker";
 
 const WarehouseOrderPage = memo(() => {
   const navigate = useNavigate();
@@ -39,11 +42,18 @@ const WarehouseOrderPage = memo(() => {
   const [selectedStorage, setSelectedStorage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   // Состояния для формы заказа
   const [orderItems, setOrderItems] = useState([
     { name: "", length: "", width: "", height: "", volume: "", cargo_mark: "NO" },
   ]);
   const [months, setMonths] = useState(1);
+  const [bookingStartDate, setBookingStartDate] = useState(() => {
+    // Устанавливаем минимальную дату - сегодня
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCloudVolume, setSelectedCloudVolume] = useState(3);
   // Состояния для дополнительных услуг
@@ -62,7 +72,7 @@ const WarehouseOrderPage = memo(() => {
 
   const [gazelleService, setGazelleService] = useState(null);
   const [isCloud, setIsCloud] = useState(false);
-  // Состояние для выбора карты склада ЖК Комфорт Сити
+  // Состояние для выбора карты склада Жилой комплекс «Комфорт Сити»
   const [selectedMap, setSelectedMap] = useState(1);
 
   // Функция для смены карты с сбросом выбранного бокса
@@ -344,6 +354,11 @@ const WarehouseOrderPage = memo(() => {
   // Состояние для цены аренды склада
   const [storagePrice, setStoragePrice] = useState(0);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  // Состояние для информации о бронировании занятого бокса
+  const [bookingInfo, setBookingInfo] = useState(null);
+  const [isLoadingBookingInfo, setIsLoadingBookingInfo] = useState(false);
+  // Состояние для цен услуг (для расчета процента скидки)
+  const [servicePrices, setServicePrices] = useState({});
 
   // Функция расчета цены аренды склада через новый API
   const calculateStoragePrice = async () => {
@@ -430,6 +445,62 @@ const WarehouseOrderPage = memo(() => {
       calculateStoragePrice();
     }
   }, [selectedStorage, months]);
+
+  // Загрузка цен услуг для расчета процента скидки (только для индивидуальных складов)
+  useEffect(() => {
+    const loadServicePrices = async () => {
+      if (!selectedWarehouse || selectedWarehouse.type !== 'INDIVIDUAL') {
+        setServicePrices({});
+        return;
+      }
+
+      try {
+        const prices = await warehouseApi.getWarehouseServicePrices(selectedWarehouse.id);
+        const pricesMap = {};
+        prices.forEach(price => {
+          pricesMap[price.service_type] = parseFloat(price.price);
+        });
+        setServicePrices(pricesMap);
+      } catch (error) {
+        console.error('Ошибка при загрузке цен услуг для расчета скидки:', error);
+        setServicePrices({});
+      }
+    };
+
+    loadServicePrices();
+  }, [selectedWarehouse]);
+
+  // Получение информации о бронировании из поля occupancy
+  useEffect(() => {
+    if (!selectedStorage) {
+      setBookingInfo(null);
+      setIsLoadingBookingInfo(false);
+      return;
+    }
+
+    // Проверяем, является ли бокс занятым
+    const isOccupied = selectedStorage.status === 'OCCUPIED' || selectedStorage.status === 'PENDING';
+    
+    if (isOccupied && selectedStorage.occupancy && Array.isArray(selectedStorage.occupancy) && selectedStorage.occupancy.length > 0) {
+      // Находим активное бронирование
+      const activeBooking = selectedStorage.occupancy.find(
+        (booking) => booking.status === 'ACTIVE'
+      ) || selectedStorage.occupancy[0]; // Если нет ACTIVE, берем первое
+      
+      if (activeBooking && activeBooking.start_date && activeBooking.end_date) {
+        setBookingInfo({
+          start_date: activeBooking.start_date,
+          end_date: activeBooking.end_date
+        });
+      } else {
+        setBookingInfo(null);
+      }
+      setIsLoadingBookingInfo(false);
+    } else {
+      setBookingInfo(null);
+      setIsLoadingBookingInfo(false);
+    }
+  }, [selectedStorage]);
 
   // Функция расчета общей стоимости
   const calculateTotalPrice = () => {
@@ -530,9 +601,13 @@ const WarehouseOrderPage = memo(() => {
         return;
       }
 
+      // Формируем дату начала бронирования
+      const startDate = bookingStartDate ? new Date(bookingStartDate).toISOString() : new Date().toISOString();
+
       const orderData = {
         storage_id: selectedStorage.id,
         months: months,
+        start_date: startDate,
         order_items: validItems.map((item) => ({
           name: item.name.trim(),
           volume: selectedWarehouse?.type === 'CLOUD' ? (parseFloat(item.volume) || 0) : 0,
@@ -579,9 +654,24 @@ const WarehouseOrderPage = memo(() => {
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
-      const errorMessage =
-          error.response?.data?.message ||
-          "Не удалось создать заказ. Попробуйте позже.";
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || errorData?.error || error.message || "Не удалось создать заказ. Попробуйте позже.";
+      
+      // Проверяем, достигнут ли лимит активных заказов
+      const isMaxOrdersError = error.response?.status === 403 && (
+          errorMessage.includes('максимальное количество боксов') || 
+          errorMessage.includes('MAX_ORDERS_LIMIT_REACHED') ||
+          errorData?.error?.includes('максимальное количество боксов') ||
+          errorData?.message?.includes('максимальное количество боксов')
+      );
+      
+      if (isMaxOrdersError) {
+        // Показываем модал обратного звонка вместо обычной ошибки
+        setIsCallbackModalOpen(true);
+        setError(null);
+        return;
+      }
+      
       setError(errorMessage);
       toast.error(errorMessage, {
         position: "top-right",
@@ -723,11 +813,11 @@ const WarehouseOrderPage = memo(() => {
                 <div 
                   className="min-w-max mx-auto relative"
                   style={{
-                    minWidth: selectedWarehouse.name === "ЖК Mega Towers" ? '615px' :
-                              selectedWarehouse.name === "ЖК Есентай" ? '1120px' : 'auto'
+                    minWidth: selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? '615px' :
+                              selectedWarehouse.name === "Есентай, жилой комплекс" ? '1120px' : 'auto'
                   }}
                 >
-                  {selectedWarehouse.name === "ЖК Mega Towers" ? (
+                  {selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? (
                     <InteractiveWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}
@@ -735,7 +825,7 @@ const WarehouseOrderPage = memo(() => {
                       userRole={user?.role}
                       isViewOnly={isAdminOrManager}
                     />
-                  ) : selectedWarehouse.name === "ЖК Есентай" ? (
+                  ) : selectedWarehouse.name === "Есентай, жилой комплекс" ? (
                     <MainWarehouseCanvas
                       storageBoxes={selectedWarehouse.storage}
                       onBoxSelect={setSelectedStorage}
@@ -743,9 +833,9 @@ const WarehouseOrderPage = memo(() => {
                       userRole={user?.role}
                       isViewOnly={isAdminOrManager}
                     />
-                  ) : selectedWarehouse.name === "ЖК Комфорт Сити" ? (
+                  ) : selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»" ? (
                       <>
-                        {/* Селектор карты для ЖК Комфорт Сити */}
+                        {/* Селектор карты для Жилой комплекс «Комфорт Сити» */}
                         <div className="mb-4 flex justify-center">
                           <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
                             <button
@@ -812,6 +902,40 @@ const WarehouseOrderPage = memo(() => {
                           {selectedStorage.name}
                         </span>
                         </p>
+                        {/* Информация о бронировании для занятых боксов */}
+                        {selectedStorage && (selectedStorage.status === 'OCCUPIED' || selectedStorage.status === 'PENDING') && (
+                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#273655]">
+                                ИТОГ
+                              </div>
+                              <div className="text-4xl font-black text-[#273655] tracking-tight">
+                                {selectedStorage.name}
+                              </div>
+                            </div>
+                            {isLoadingBookingInfo ? (
+                              <div className="text-sm text-[#6B6B6B] flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#273655]"></div>
+                                Загрузка информации о бронировании...
+                              </div>
+                            ) : bookingInfo ? (
+                              <p className="text-sm text-[#6B6B6B]">
+                                Бокс стоит о бронировании с{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(bookingInfo.start_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                                , по{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(bookingInfo.end_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                              </p>
+                            ) : (
+                              <p className="text-sm text-[#6B6B6B]">
+                                Бокс занят
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <p className="text-[#6B6B6B] mb-2">
                           {selectedWarehouse?.type === 'CLOUD' 
                             ? 'Доступный объем:' 
@@ -998,13 +1122,19 @@ const WarehouseOrderPage = memo(() => {
                                   ? 'Дата забора вещей'
                                   : 'Дата доставки вещей'}
                             </label>
-                            <input
-                                type="datetime-local"
-                                value={order.moving_date.slice(0, 16)}
-                                onChange={(e) =>
-                                    updateMovingOrder(index, 'moving_date', e.target.value + ':00')
+                            <DatePicker
+                              value={order.moving_date ? new Date(order.moving_date).toISOString().split('T')[0] : ''}
+                              onChange={(value) => {
+                                if (value) {
+                                  const existingDate = order.moving_date ? new Date(order.moving_date) : new Date();
+                                  const newDate = new Date(value);
+                                  newDate.setHours(existingDate.getHours() || 10, existingDate.getMinutes() || 0, 0, 0);
+                                  updateMovingOrder(index, 'moving_date', newDate.toISOString());
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              }}
+                              minDate={order.status === 'PENDING_FROM' ? new Date().toISOString().split('T')[0] : undefined}
+                              allowFutureDates={true}
+                              placeholder="ДД.ММ.ГГГГ"
                             />
                           </div>
                           {!isCloud && (
@@ -1188,7 +1318,20 @@ const WarehouseOrderPage = memo(() => {
                 })()}. Укажите срок аренды
               </h2>
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <DatePicker
+                      label="Дата начала бронирования"
+                      value={bookingStartDate}
+                      onChange={(value) => setBookingStartDate(value)}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      allowFutureDates={true}
+                      placeholder="ДД.ММ.ГГГГ"
+                    />
+                    <p className="text-xs text-[#6B6B6B] mt-1">
+                      Выберите дату, с которой начнется срок аренды
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-[#273655] mb-2">
                       Срок аренды (месяцы)
@@ -1209,6 +1352,7 @@ const WarehouseOrderPage = memo(() => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
                   
                   {/* Отображение стоимости */}
                   {selectedStorage && (
@@ -1242,9 +1386,132 @@ const WarehouseOrderPage = memo(() => {
                               </div>
                             )}
 
+                            {/* Показываем варианты скидок для 6 и 12 месяцев (только для индивидуальных складов) */}
+                            {selectedWarehouse?.type === 'INDIVIDUAL' && selectedStorage && servicePrices['M2_UP_6M'] && (
+                              <div className="space-y-2 mb-3">
+                                {/* Скидка за 6 месяцев */}
+                                {months < 6 && servicePrices['M2_6_12M'] && (() => {
+                                  const rawArea = parseFloat(
+                                    selectedStorage.available_volume ??
+                                    selectedStorage.total_volume ??
+                                    selectedStorage.area ??
+                                    selectedStorage.square ??
+                                    selectedStorage.volume ??
+                                    0
+                                  );
+                                  
+                                  if (!rawArea || rawArea <= 0) return null;
+                                  
+                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                                  const discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
+                                  
+                                  if (!basePricePerM2 || !discountPricePerM2) return null;
+                                  
+                                  const basePrice = basePricePerM2 * rawArea * 6;
+                                  const discountPrice = discountPricePerM2 * rawArea * 6;
+                                  
+                                  if (basePrice <= 0) return null;
+                                  
+                                  const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                                  if (discountPercent <= 0) return null;
+                                  
+                                  return (
+                                    <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg bg-red-50">
+                                      <span className="text-xs">
+                                        <span className="text-[#6B6B6B]">За 6 мес </span>
+                                        <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
+                                      </span>
+                                      <span className="text-sm font-semibold text-[#273655]">
+                                        {Math.round(discountPrice).toLocaleString()} ₸
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
+                                
+                                {/* Скидка за 12 месяцев */}
+                                {months < 12 && servicePrices['M2_OVER_12M'] && (() => {
+                                  const rawArea = parseFloat(
+                                    selectedStorage.available_volume ??
+                                    selectedStorage.total_volume ??
+                                    selectedStorage.area ??
+                                    selectedStorage.square ??
+                                    selectedStorage.volume ??
+                                    0
+                                  );
+                                  
+                                  if (!rawArea || rawArea <= 0) return null;
+                                  
+                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                                  const discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
+                                  
+                                  if (!basePricePerM2 || !discountPricePerM2) return null;
+                                  
+                                  const basePrice = basePricePerM2 * rawArea * 12;
+                                  const discountPrice = discountPricePerM2 * rawArea * 12;
+                                  
+                                  if (basePrice <= 0) return null;
+                                  
+                                  const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                                  if (discountPercent <= 0) return null;
+                                  
+                                  return (
+                                    <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg bg-red-50">
+                                      <span className="text-xs">
+                                        <span className="text-[#6B6B6B]">За 12 мес </span>
+                                        <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
+                                      </span>
+                                      <span className="text-sm font-semibold text-[#273655]">
+                                        {Math.round(discountPrice).toLocaleString()} ₸
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            )}
+
                             {/* Общая стоимость */}
                             <div className="border-t border-green-300 pt-3">
-                              <div className="text-[14px] text-[#6B6B6B] mb-1">Общая стоимость:</div>
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="text-[14px] text-[#6B6B6B]">Общая стоимость:</div>
+                                {/* Показываем процент скидки для выбранного периода */}
+                                {selectedWarehouse?.type === 'INDIVIDUAL' && (months === 6 || months === 12) && servicePrices['M2_UP_6M'] && selectedStorage && (() => {
+                                  const rawArea = parseFloat(
+                                    selectedStorage.available_volume ??
+                                    selectedStorage.total_volume ??
+                                    selectedStorage.area ??
+                                    selectedStorage.square ??
+                                    selectedStorage.volume ??
+                                    0
+                                  );
+                                  
+                                  if (!rawArea || rawArea <= 0) return null;
+                                  
+                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
+                                  let discountPricePerM2 = 0;
+                                  
+                                  if (months === 6) {
+                                    discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
+                                  } else if (months === 12) {
+                                    discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
+                                  }
+                                  
+                                  if (!basePricePerM2 || !discountPricePerM2) return null;
+                                  
+                                  const basePrice = basePricePerM2 * rawArea * months;
+                                  const discountPrice = discountPricePerM2 * rawArea * months;
+                                  
+                                  if (basePrice <= 0) return null;
+                                  
+                                  const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
+                                  if (discountPercent <= 0) return null;
+                                  
+                                  return (
+                                    <span className="text-xs text-red-600 font-semibold">
+                                      скидка {discountPercent}%!
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                               <div className="text-[20px] font-bold text-[#273655]">
                                 {calculateTotalPrice().toLocaleString()} ₸
                               </div>
@@ -1314,7 +1581,6 @@ const WarehouseOrderPage = memo(() => {
                   </button>
                 </div>
               </div>
-            </div>
           )}
           {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && !isAuthenticated && (
               <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
@@ -1344,6 +1610,13 @@ const WarehouseOrderPage = memo(() => {
         <ChatButton />
         <Footer />
       </div>
+      
+      <CallbackRequestModal
+        open={isCallbackModalOpen}
+        onOpenChange={setIsCallbackModalOpen}
+        title="Связаться с поддержкой"
+        description="Вы уже забронировали максимальное количество боксов (2). Для аренды дополнительных боксов оставьте заявку, и наш менеджер свяжется с вами."
+      />
     </ProfileValidationGuard>
   );
 });

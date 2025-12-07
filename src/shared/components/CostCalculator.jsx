@@ -125,13 +125,13 @@ const CostCalculator = () => {
         // Для индивидуального хранения используем м2
         serviceType = `M2_${pricingType}`;
       } else if (type === 'CLOUD') {
-        // Для облачного хранения используем м3
-        // Если объем меньше 1 м³, используем 0.1 м³ тарифы
-        if (area < 1) {
-          serviceType = `M3_01_${pricingType}`;
-        } else {
-          serviceType = `M3_${pricingType}`;
-        }
+        // Для облачного хранения: до 18м3 - 9500тг, от 18м3+ - 9000тг (без скидки по месяцам)
+        const cloudPrice = area < 18 ? 9500 : 9000;
+        const total = cloudPrice * area * month;
+        setTotalCost(Math.round(total));
+        localStorage.setItem("calculated_price", Math.round(total))
+        setError(null);
+        return;
       } else {
         // Для остальных типов используем старую логику
         const selectedPrice = prices.find(price => price.type === type);

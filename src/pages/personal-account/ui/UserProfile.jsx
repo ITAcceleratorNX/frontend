@@ -76,6 +76,7 @@ const UserProfile = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [isUpdatingOrderLimit, setIsUpdatingOrderLimit] = useState(false);
 
   // Функция для обработки навигации в сайдбаре
   const handleNavClick = (navKey) => {
@@ -141,6 +142,38 @@ const UserProfile = () => {
       toast.error('Не удалось обновить роль пользователя');
     } finally {
       setIsUpdatingRole(false);
+    }
+  };
+
+  // Обновление разрешения на превышение лимита заказов (для MANAGER и ADMIN)
+  const handleOrderLimitPermissionUpdate = async (canExceed) => {
+    if (!isAdminOrManager || !selectedUser) {
+      toast.error('Только менеджер или администратор может изменять разрешения');
+      return;
+    }
+
+    if (selectedUser.role !== 'USER') {
+      toast.error('Разрешение может быть установлено только для пользователей с ролью USER');
+      return;
+    }
+
+    try {
+      setIsUpdatingOrderLimit(true);
+      const updatedUser = await usersApi.updateOrderLimitPermission(selectedUser.id, canExceed);
+      
+      // Обновляем локальное состояние
+      setSelectedUser(prev => ({ ...prev, can_exceed_order_limit: canExceed }));
+      
+      toast.success(
+        canExceed 
+          ? 'Разрешение на аренду более 2 боксов предоставлено' 
+          : 'Разрешение на аренду более 2 боксов отозвано'
+      );
+    } catch (error) {
+      console.error('Ошибка при обновлении разрешения:', error);
+      toast.error('Не удалось обновить разрешение');
+    } finally {
+      setIsUpdatingOrderLimit(false);
     }
   };
 
@@ -405,6 +438,60 @@ const UserProfile = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Управление разрешением на превышение лимита заказов (для MANAGER и ADMIN, только для USER) */}
+                    {isAdminOrManager && selectedUser?.role === 'USER' && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                          <svg className="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                          Разрешение на заказы
+                        </h3>
+                        <div className="space-y-4">
+                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-900 mb-1">
+                                  Разрешить аренду более 2 боксов
+                                </label>
+                                <p className="text-xs text-gray-600">
+                                  При включении клиент сможет заказывать более 2 активных боксов одновременно
+                                </p>
+                              </div>
+                              <div className="ml-4">
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedUser.can_exceed_order_limit || false}
+                                    onChange={(e) => handleOrderLimitPermissionUpdate(e.target.checked)}
+                                    disabled={isUpdatingOrderLimit}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                              </div>
+                            </div>
+                            {isUpdatingOrderLimit && (
+                              <div className="flex items-center text-sm text-gray-600 mt-2">
+                                <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Обновление...
+                              </div>
+                            )}
+                            <div className="mt-3 pt-3 border-t border-blue-200">
+                              <p className="text-xs text-blue-800">
+                                {selectedUser.can_exceed_order_limit 
+                                  ? '✓ Клиент может заказывать более 2 боксов' 
+                                  : '✗ Клиент ограничен 2 активными боксами'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Дополнительные действия для администратора */}
                     {isAdmin && (

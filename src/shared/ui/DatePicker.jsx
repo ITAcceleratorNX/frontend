@@ -16,6 +16,9 @@ const DatePicker = forwardRef(({
   disabled = false,
   className = '',
   placeholder = 'ДД.ММ.ГГГГ',
+  minDate = null, // Минимальная дата (по умолчанию null - нет ограничения)
+  maxDate = null, // Максимальная дата (по умолчанию null - нет ограничения)
+  allowFutureDates = false, // Разрешить будущие даты (по умолчанию false - только прошлые)
   ...props 
 }, ref) => {
   const [open, setOpen] = useState(false);
@@ -113,8 +116,29 @@ const DatePicker = forwardRef(({
         
         // Проверяем, что дата валидна (например, не 31 февраля)
         if (date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year) {
-          // Проверяем, что дата не в будущем
-          if (date <= new Date()) {
+          // Проверяем минимальную дату, если указана
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const checkDate = new Date(date);
+          checkDate.setHours(0, 0, 0, 0);
+          
+          let isValid = true;
+          
+          // Если указана минимальная дата, проверяем её
+          if (minDate) {
+            const min = new Date(minDate);
+            min.setHours(0, 0, 0, 0);
+            if (checkDate < min) {
+              isValid = false;
+            }
+          }
+          
+          // Если не разрешены будущие даты, проверяем это
+          if (!allowFutureDates && checkDate > today) {
+            isValid = false;
+          }
+          
+          if (isValid) {
             const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             if (onChange) {
               onChange(dateString);
@@ -222,8 +246,35 @@ const DatePicker = forwardRef(({
               initialFocus
               locale={ru}
               disabled={(date) => {
-                // Отключаем будущие даты
-                return date > new Date();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const checkDate = new Date(date);
+                checkDate.setHours(0, 0, 0, 0);
+                
+                // Если указана минимальная дата, блокируем даты раньше неё
+                if (minDate) {
+                  const min = new Date(minDate);
+                  min.setHours(0, 0, 0, 0);
+                  if (checkDate < min) {
+                    return true;
+                  }
+                }
+                
+                // Если указана максимальная дата, блокируем даты позже неё
+                if (maxDate) {
+                  const max = new Date(maxDate);
+                  max.setHours(0, 0, 0, 0);
+                  if (checkDate > max) {
+                    return true;
+                  }
+                }
+                
+                // Если не разрешены будущие даты, блокируем их
+                if (!allowFutureDates && checkDate > today) {
+                  return true;
+                }
+                
+                return false;
               }}
             />
           </PopoverContent>
