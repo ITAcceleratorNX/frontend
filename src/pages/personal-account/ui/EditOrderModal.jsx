@@ -16,6 +16,7 @@ import { useUpdateOrder } from "@/shared/lib/hooks/useUpdateOrder"
 import { paymentsApi } from "@/shared/api/paymentsApi"
 import dayjs from "dayjs";
 import {useAuth} from "@/shared/index.js";
+import { getServiceTypeName } from "@/shared/lib/utils/serviceNames";
 
 export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [error, setError] = useState("")
@@ -35,6 +36,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [isPricesLoading, setIsPricesLoading] = useState(false)
     const [movingOrderErrors, setMovingOrderErrors] = useState([])
     const [gazelleService, setGazelleService] = useState(null) // { id, type, name }
+    const [movingAddressTo, setMovingAddressTo] = useState('') // Адрес для возврата вещей (GAZELLE_TO)
+    const [serviceOptions, setServiceOptions] = useState([]) // Все доступные услуги
 
     const startDate = dayjs(order.start_date);
     const endDate = dayjs(order.end_date);
@@ -52,24 +55,6 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     }, 0);
     const storage_available_volume = Number(order.storage.available_volume) + Number(order.total_volume);
 
-    const getServiceTypeName = (type) => {
-        const names = {
-            LOADER: "Грузчик",
-            PACKER: "Упаковщик",
-            FURNITURE_SPECIALIST: "Мебельщик",
-            GAZELLE: "Газель",
-            GAZELLE_FROM: "Газель - забор вещей",
-            GAZELLE_TO: "Газель - возврат вещей",
-            STRETCH_FILM: "Стрейч-пленка",
-            BOX_SIZE: "Коробка",
-            MARKER: "Маркер",
-            UTILITY_KNIFE: "Канцелярский нож",
-            BUBBLE_WRAP_1: "Воздушно-пузырчатая пленка 10м",
-            BUBBLE_WRAP_2: "Воздушно-пузырчатая пленка 120м",
-            RACK_RENTAL: "Аренда стеллажей",
-        }
-        return names[type] || "Услуга"
-    }
 
     const addOrderItem = () => {
         setFormData((prev) => ({
@@ -112,6 +97,12 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 type: s.type,
                 count: s.OrderService?.count || 1,
             }))
+            
+            // Находим адрес для возврата вещей (PENDING_TO)
+            const returnOrder = order.moving_orders?.find(mo => mo.status === 'PENDING_TO');
+            const returnAddress = returnOrder?.address || '';
+            setMovingAddressTo(returnAddress);
+            
             setFormData({
                 start_date: new Date(order.start_date),
                 end_date: new Date(order.end_date),
@@ -145,11 +136,29 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             try {
                 setIsPricesLoading(true)
                 const pricesData = await paymentsApi.getPrices()
-                const filteredPrices = pricesData.filter((price) => price.id > 4)
+                // Фильтруем исключенные типы
+                const excludedTypes = [
+                    "DEPOSIT",
+                    "M2_UP_6M",
+                    "M2_6_12M",
+                    "M2_OVER_12M",
+                    "M3_UP_6M",
+                    "M3_6_12M",
+                    "M3_OVER_12M",
+                    "CLOUD_PRICE_LOW",
+                    "CLOUD_PRICE_HIGH",
+                ];
+                const filteredPrices = pricesData.filter((price) => price.id > 4 && !excludedTypes.includes(price.type))
                 setPrices(filteredPrices)
-                const gazelle = filteredPrices.find((p) => p.type === "GAZELLE")
-                if (gazelle) {
-                    setGazelleService({ id: String(gazelle.id), type: gazelle.type, name: getServiceTypeName(gazelle.type) })
+                setServiceOptions(filteredPrices)
+                // Ищем GAZELLE_FROM (для забора вещей)
+                const gazelleFrom = filteredPrices.find((p) => p.type === "GAZELLE_FROM")
+                if (gazelleFrom) {
+                    setGazelleService({ 
+                        id: String(gazelleFrom.id), 
+                        type: gazelleFrom.type, 
+                        name: getServiceTypeName(gazelleFrom.type) || "Газель - забор вещей" 
+                    })
                 }
             } catch (err) {
                 console.error("Ошибка при загрузке цен:", err)
@@ -164,22 +173,48 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
         }
     }, [formData.is_selected_package, prices.length])
 
-    // Синхронизация "Газель" при изменении moving_orders
-    const syncGazelleService = (movingCount, currentServices) => {
-        if (!gazelleService || movingCount === 0) return currentServices.filter((s) => s.service_id !== gazelleService.id)
-        const existingIndex = currentServices.findIndex((s) => s.service_id === gazelleService.id)
-        const updated = [...currentServices]
-        if (existingIndex >= 0) {
-            updated[existingIndex] = { ...updated[existingIndex], count: movingCount }
-        } else {
-            updated.push({ service_id: gazelleService.id, count: movingCount })
+    // Синхронизация услуг GAZELLE_FROM и GAZELLE_TO при изменении moving_orders
+    const syncMovingServices = (movingOrders, currentServices) => {
+        const hasPendingFrom = movingOrders.some(mo => mo.status === 'PENDING_FROM');
+        const hasPendingTo = movingOrders.some(mo => mo.status === 'PENDING_TO');
+        
+        let updated = [...currentServices];
+        
+        // Синхронизируем GAZELLE_FROM (забор вещей)
+        if (gazelleService && gazelleService.type === 'GAZELLE_FROM') {
+            const existingIndex = updated.findIndex((s) => s.service_id === gazelleService.id);
+            if (hasPendingFrom) {
+                if (existingIndex >= 0) {
+                    updated[existingIndex] = { ...updated[existingIndex], count: 1 };
+                } else {
+                    updated.push({ service_id: gazelleService.id, count: 1 });
+                }
+            } else {
+                updated = updated.filter((s) => s.service_id !== gazelleService.id);
+            }
         }
-        return updated
+        
+        // Синхронизируем GAZELLE_TO (возврат вещей)
+        const gazelleToService = serviceOptions.find(opt => opt.type === 'GAZELLE_TO');
+        if (gazelleToService) {
+            const gazelleToId = String(gazelleToService.id);
+            const existingToIndex = updated.findIndex((s) => s.service_id === gazelleToId);
+            if (hasPendingTo) {
+                if (existingToIndex >= 0) {
+                    updated[existingToIndex] = { ...updated[existingToIndex], count: 1 };
+                } else {
+                    updated.push({ service_id: gazelleToId, count: 1 });
+                }
+            } else {
+                updated = updated.filter((s) => s.service_id !== gazelleToId);
+            }
+        }
+        
+        return updated;
     }
 
     // Добавить перевозку
     const addMovingOrder = () => {
-        if (!gazelleService) return
         setFormData((prev) => {
             const newMovingOrders = [
                 ...prev.moving_orders,
@@ -189,12 +224,13 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     address: "",
                 },
             ]
-            const updatedServices = syncGazelleService(newMovingOrders.length, prev.services)
+            const updatedServices = syncMovingServices(newMovingOrders, prev.services)
             return {
                 ...prev,
                 moving_orders: newMovingOrders,
                 services: updatedServices,
                 is_selected_package: true,
+                is_selected_moving: true,
             }
         })
         setMovingOrderErrors([...movingOrderErrors, {}])
@@ -202,22 +238,49 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
     // Удалить перевозку
     const removeMovingOrder = (index) => {
-        if (!gazelleService) return
         setFormData((prev) => {
-            const newMovingOrders = prev.moving_orders.filter((_, i) => i !== index)
-            const updatedServices = syncGazelleService(newMovingOrders.length, prev.services)
+            const movingOrderToRemove = prev.moving_orders[index];
+            const newMovingOrders = prev.moving_orders.filter((_, i) => i !== index);
+            const updatedServices = syncMovingServices(newMovingOrders, prev.services);
+            
+            // Если удаляем PENDING_TO, очищаем адрес возврата
+            if (movingOrderToRemove?.status === 'PENDING_TO') {
+                setMovingAddressTo('');
+            }
+            
             return {
                 ...prev,
                 moving_orders: newMovingOrders,
                 services: updatedServices,
+                is_selected_moving: newMovingOrders.length > 0,
             }
         })
         setMovingOrderErrors(movingOrderErrors.filter((_, i) => i !== index))
     }
 
     const updateMovingOrder = (index, field, value) => {
-        const updated = formData.moving_orders.map((mo, i) => (i === index ? { ...mo, [field]: value } : mo))
-        setFormData((prev) => ({ ...prev, moving_orders: updated }))
+        setFormData((prev) => {
+            const updated = prev.moving_orders.map((mo, i) => {
+                if (i === index) {
+                    const updatedMo = { ...mo, [field]: value };
+                    // Если меняем статус на PENDING_TO, добавляем GAZELLE_TO в услуги
+                    if (field === 'status' && value === 'PENDING_TO') {
+                        // Адрес будет обновлен через movingAddressTo
+                        updatedMo.address = movingAddressTo || updatedMo.address;
+                    }
+                    return updatedMo;
+                }
+                return mo;
+            });
+            // Синхронизируем услуги при изменении статуса
+            const updatedServices = syncMovingServices(updated, prev.services);
+            return { 
+                ...prev, 
+                moving_orders: updated,
+                services: updatedServices,
+                is_selected_moving: updated.length > 0 || prev.is_selected_moving,
+            };
+        });
     }
 
     // Услуги
@@ -230,29 +293,79 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
     const removeService = (index) => {
         setFormData((prev) => {
-            const newServices = prev.services.filter((_, i) => i !== index)
-            // Если удалили "Газель", восстановим при необходимости
-            const movingCount = prev.moving_orders.length
-            if (gazelleService && movingCount > 0) {
-                return {
-                    ...prev,
-                    services: syncGazelleService(movingCount, newServices),
+            const serviceToRemove = prev.services[index];
+            const newServices = prev.services.filter((_, i) => i !== index);
+            
+            // Если удаляем GAZELLE_TO, удаляем соответствующий moving_order PENDING_TO
+            if (serviceToRemove?.service_id) {
+                const serviceOption = serviceOptions.find(opt => String(opt.id) === serviceToRemove.service_id);
+                if (serviceOption?.type === 'GAZELLE_TO') {
+                    const updatedMovingOrders = prev.moving_orders.filter(mo => mo.status !== 'PENDING_TO');
+                    const updatedServices = syncMovingServices(updatedMovingOrders, newServices);
+                    setMovingAddressTo('');
+                    return {
+                        ...prev,
+                        services: updatedServices,
+                        moving_orders: updatedMovingOrders,
+                        is_selected_moving: updatedMovingOrders.length > 0,
+                    };
                 }
             }
-            return { ...prev, services: newServices }
+            
+            // Если удалили GAZELLE_FROM или GAZELLE_TO, синхронизируем
+            const updatedServices = syncMovingServices(prev.moving_orders, newServices);
+            return { ...prev, services: updatedServices };
         })
     }
 
     const updateService = (index, field, value) => {
         setFormData((prev) => {
-            const updated = prev.services.map((s, i) => {
-                if (i === index && s.service_id === gazelleService?.id) {
-                    return s // ❌ Нельзя менять "Газель"
+            const currentService = prev.services[index];
+            const serviceOption = serviceOptions.find(opt => String(opt.id) === currentService?.service_id);
+            const isGazelleFrom = serviceOption?.type === 'GAZELLE_FROM';
+            const isGazelleTo = serviceOption?.type === 'GAZELLE_TO';
+            
+            // Нельзя редактировать GAZELLE_FROM и GAZELLE_TO (они синхронизируются автоматически)
+            if (isGazelleFrom || isGazelleTo) {
+                return prev;
+            }
+            
+            // Если добавляем GAZELLE_TO, создаем соответствующий moving_order
+            if (field === 'service_id' && value) {
+                const selectedOption = serviceOptions.find(opt => String(opt.id) === value);
+                if (selectedOption?.type === 'GAZELLE_TO') {
+                    // Создаем moving_order для возврата вещей
+                    const startDate = new Date(formData.start_date);
+                    const returnDate = new Date(startDate);
+                    returnDate.setMonth(returnDate.getMonth() + months);
+                    returnDate.setHours(10, 0, 0, 0);
+                    
+                    const newMovingOrder = {
+                        moving_date: returnDate,
+                        status: 'PENDING_TO',
+                        address: movingAddressTo || '',
+                    };
+                    
+                    const updatedMovingOrders = [...prev.moving_orders, newMovingOrder];
+                    const updatedServices = prev.services.map((s, i) => 
+                        i === index ? { ...s, [field]: value } : s
+                    );
+                    const syncedServices = syncMovingServices(updatedMovingOrders, updatedServices);
+                    
+                    return {
+                        ...prev,
+                        services: syncedServices,
+                        moving_orders: updatedMovingOrders,
+                        is_selected_moving: true,
+                    };
                 }
-                return i === index ? { ...s, [field]: field === "count" ? Number(value) : value } : s
-            })
-            return { ...prev, services: updated }
-        })
+            }
+            
+            const updated = prev.services.map((s, i) => 
+                i === index ? { ...s, [field]: field === "count" ? Number(value) : value } : s
+            );
+            return { ...prev, services: updated };
+        });
     }
 
     // Валидация
@@ -262,13 +375,39 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             setError("Добавьте хотя бы один товар с названием и объёмом")
             return false
         }
-        if (formData.is_selected_moving && formData.moving_orders.length === 0) {
-            setError("Добавьте хотя бы одну дату перевозки")
-            return false
+        
+        // Проверяем наличие GAZELLE_TO в услугах
+        const hasGazelleTo = formData.services.some(s => {
+            const serviceOption = serviceOptions.find(opt => String(opt.id) === s.service_id);
+            return serviceOption?.type === 'GAZELLE_TO';
+        });
+        
+        // Если есть GAZELLE_TO, должен быть moving_order PENDING_TO с адресом
+        if (hasGazelleTo) {
+            const pendingToOrder = formData.moving_orders.find(mo => mo.status === 'PENDING_TO');
+            if (!pendingToOrder) {
+                setError("При выборе услуги 'Газель - возврат вещей' необходимо добавить доставку вещей клиенту")
+                return false
+            }
+            if (!pendingToOrder.address?.trim() && !movingAddressTo.trim()) {
+                setError("Укажите адрес доставки для услуги 'Газель - возврат вещей'")
+                return false
+            }
         }
-        if (formData.is_selected_moving) {
+        
+        if (formData.is_selected_moving || formData.moving_orders.length > 0) {
+            if (formData.moving_orders.length === 0) {
+                setError("Добавьте хотя бы одну дату перевозки")
+                return false
+            }
             const invalidOrders = formData.moving_orders
-                .map((mo, i) => (!mo.address?.trim() ? `#${i + 1}` : null))
+                .map((mo, i) => {
+                    // Для PENDING_TO используем movingAddressTo если адрес пустой
+                    const address = mo.status === 'PENDING_TO' && !mo.address?.trim() 
+                        ? movingAddressTo 
+                        : mo.address;
+                    return !address?.trim() ? `#${i + 1}` : null;
+                })
                 .filter(Boolean)
             if (invalidOrders.length > 0) {
                 setError(`Укажите адрес для перевозки: ${invalidOrders.join(", ")}`)
@@ -286,18 +425,30 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
         return true
     }
 
-    // Отправка формы — финальная синхронизация "Газель"
+    // Отправка формы — финальная синхронизация услуг
     const handleSubmit = async () => {
         if (!validate()) return
         setIsSubmitting(true)
         try {
-            let finalServices = [...formData.services]
-            const movingCount = formData.moving_orders.length
-            if (formData.is_selected_moving && movingCount > 0 && gazelleService) {
-                finalServices = syncGazelleService(movingCount, finalServices)
-            } else if (gazelleService) {
-                finalServices = finalServices.filter((s) => s.id !== gazelleService.id)
-            }
+            // Финальная синхронизация услуг с moving_orders
+            let finalServices = syncMovingServices(formData.moving_orders, formData.services);
+            
+            // Проверяем наличие GAZELLE_TO
+            const hasGazelleTo = finalServices.some(s => {
+                const serviceOption = serviceOptions.find(opt => String(opt.id) === s.service_id);
+                return serviceOption?.type === 'GAZELLE_TO';
+            });
+            
+            // Обновляем адреса в moving_orders для PENDING_TO
+            const updatedMovingOrders = formData.moving_orders.map(mo => {
+                if (mo.status === 'PENDING_TO' && movingAddressTo.trim()) {
+                    return { ...mo, address: movingAddressTo.trim() };
+                }
+                return mo;
+            });
+
+            // is_selected_moving должен быть true если есть любые moving_orders или GAZELLE_TO
+            const isMovingSelected = formData.is_selected_moving || updatedMovingOrders.length > 0 || hasGazelleTo;
 
             const payload = {
                 id: order.id,
@@ -307,7 +458,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     volume: Number.parseFloat(item.volume) || 0,
                     cargo_mark: item.cargo_mark,
                 })),
-                is_selected_moving: formData.is_selected_moving,
+                is_selected_moving: isMovingSelected,
                 is_selected_package: formData.is_selected_package && finalServices.length > 0,
             }
 
@@ -318,7 +469,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                         count: s.count,
                     };
 
-                    if (totalPrice != null && totalPrice !== "" && Number(gazelleService.id) === Number(s.service_id)) {
+                    // Для GAZELLE_FROM (старая логика для админов/менеджеров)
+                    if (totalPrice != null && totalPrice !== "" && gazelleService && Number(gazelleService.id) === Number(s.service_id)) {
                         serviceObj.total_price = Number(totalPrice);
                     }
 
@@ -326,13 +478,16 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 });
             }
 
-            if (formData.is_selected_moving && formData.moving_orders.length > 0) {
-                payload.moving_orders = formData.moving_orders.map((mo) => ({
-                    moving_date: mo.moving_date.toISOString(),
+            // Добавляем moving_orders если они есть
+            if (updatedMovingOrders.length > 0 || hasGazelleTo) {
+                payload.moving_orders = updatedMovingOrders.map((mo) => ({
+                    moving_date: mo.moving_date instanceof Date ? mo.moving_date.toISOString() : new Date(mo.moving_date).toISOString(),
                     status: mo.status,
-                    address: mo.address,
+                    address: mo.address?.trim() || '',
                 }))
             }
+
+            console.log("📤 Отправка обновления заказа:", payload);
 
             await updateOrderMutation.mutateAsync(payload)
             toast.success("Заказ успешно обновлён!", { autoClose: 3000 })
@@ -617,66 +772,100 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                     <>
                                         {formData.services.map((service, index) => {
                                             const serviceData = prices.find((p) => String(p.id) === service.service_id)
-                                            const isGazelle = serviceData?.type === "GAZELLE"
+                                            const isGazelleFrom = serviceData?.type === "GAZELLE_FROM"
+                                            const isGazelleTo = serviceData?.type === "GAZELLE_TO"
+                                            const isGazelle = isGazelleFrom || isGazelleTo || serviceData?.type === "GAZELLE"
                                             return (
-                                                <div key={index} className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-end">
-                                                    <div className="flex-1">
-                                                        <Label className="text-sm">Услуга</Label>
-                                                        <Select
-                                                            value={service.service_id}
-                                                            onValueChange={(val) => !isGazelle && updateService(index, "service_id", val)}
-                                                            disabled={isGazelle}
-                                                        >
-                                                            <SelectTrigger className="h-10 text-sm" disabled={isGazelle}>
-                                                                <SelectValue placeholder={getServiceTypeName(service.type)} />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {prices.map((price) => (
-                                                                    <SelectItem
-                                                                        key={price.id}
-                                                                        value={String(price.id)}
-                                                                        disabled={price.type === "GAZELLE"}
-                                                                    >
-                                                                        {getServiceTypeName(price.type)} (₸{price.price})
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="w-full sm:w-24">
-                                                        <Label className="text-sm">Кол-во</Label>
-                                                        <Input
-                                                            type="number"
-                                                            min="1"
-                                                            value={service.count}
-                                                            onChange={(e) =>
-                                                                !isGazelle && updateService(index, "count", Number.parseInt(e.target.value) || 1)
-                                                            }
-                                                            disabled={isGazelle}
-                                                            className="h-10 text-sm"
-                                                        />
-                                                    </div>
-                                                    {/* Итоговая цена для Газели (только для ADMIN или MANAGER) */}
-                                                    {(isGazelle && (user.role === "ADMIN" || user.role === "MANAGER")) && (
-                                                        <div className="w-full sm:w-32">
-                                                            <Label className="text-sm">Итог (₸)</Label>
+                                                <div key={index} className="space-y-2">
+                                                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-end">
+                                                        <div className="flex-1">
+                                                            <Label className="text-sm">Услуга</Label>
+                                                            <Select
+                                                                value={service.service_id}
+                                                                onValueChange={(val) => !isGazelle && updateService(index, "service_id", val)}
+                                                                disabled={isGazelle}
+                                                            >
+                                                                <SelectTrigger className="h-10 text-sm" disabled={isGazelle}>
+                                                                    <SelectValue placeholder={getServiceTypeName(service.type)} />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {prices
+                                                                        .filter(price => {
+                                                                            // Скрываем старый GAZELLE
+                                                                            if (price.type === "GAZELLE") return false;
+                                                                            return true;
+                                                                        })
+                                                                        .map((price) => (
+                                                                            <SelectItem
+                                                                                key={price.id}
+                                                                                value={String(price.id)}
+                                                                            >
+                                                                                {getServiceTypeName(price.type) || price.description || "Услуга"} (₸{price.price})
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="w-full sm:w-24">
+                                                            <Label className="text-sm">Кол-во</Label>
                                                             <Input
                                                                 type="number"
-                                                                value={totalPrice}
-                                                                onChange={(e) => setTotalPrice(e.target.value ? Number(e.target.value) : "")}
-                                                                className="h-10 text-sm bg-gray-100"
+                                                                min="1"
+                                                                value={service.count}
+                                                                onChange={(e) =>
+                                                                    !isGazelle && updateService(index, "count", Number.parseInt(e.target.value) || 1)
+                                                                }
+                                                                disabled={isGazelle}
+                                                                className="h-10 text-sm"
+                                                            />
+                                                        </div>
+                                                        {/* Итоговая цена для GAZELLE_FROM (только для ADMIN или MANAGER) */}
+                                                        {(isGazelleFrom && (user.role === "ADMIN" || user.role === "MANAGER")) && (
+                                                            <div className="w-full sm:w-32">
+                                                                <Label className="text-sm">Итог (₸)</Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    value={totalPrice}
+                                                                    onChange={(e) => setTotalPrice(e.target.value ? Number(e.target.value) : "")}
+                                                                    className="h-10 text-sm bg-gray-100"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => !isGazelle && removeService(index)}
+                                                            className={`${isGazelle ? "invisible" : "text-red-500"} h-10 w-10 sm:h-auto sm:w-auto`}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                    
+                                                    {/* Поле адреса для GAZELLE_TO */}
+                                                    {isGazelleTo && (
+                                                        <div className="pl-0 sm:pl-0">
+                                                            <Label className="block text-xs sm:text-sm text-gray-700 mb-1">
+                                                                Адрес доставки вещей
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                value={movingAddressTo}
+                                                                onChange={(e) => {
+                                                                    setMovingAddressTo(e.target.value);
+                                                                    // Обновляем адрес в moving_order
+                                                                    const updatedMovingOrders = formData.moving_orders.map(mo =>
+                                                                        mo.status === 'PENDING_TO' 
+                                                                            ? { ...mo, address: e.target.value }
+                                                                            : mo
+                                                                    );
+                                                                    setFormData(prev => ({ ...prev, moving_orders: updatedMovingOrders }));
+                                                                }}
+                                                                placeholder="Например: г. Алматы, Абая 25"
+                                                                className="h-10 text-sm"
                                                             />
                                                         </div>
                                                     )}
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => !isGazelle && removeService(index)}
-                                                        className={`${isGazelle ? "invisible" : "text-red-500"} h-10 w-10 sm:h-auto sm:w-auto`}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
                                                 </div>
                                             )
                                         })}
