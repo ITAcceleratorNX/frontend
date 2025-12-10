@@ -2444,7 +2444,6 @@ const HomePage = memo(() => {
         `}</style>
       </section>
 
-      {/* Отступ с цветом хэдера перед футером */}
       <div className="w-full bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 h-8 sm:h-16"></div>
 
       <Footer />
