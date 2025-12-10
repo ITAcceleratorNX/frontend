@@ -1,4 +1,4 @@
-import React, { useState, memo, useMemo, useEffect, useCallback } from "react";
+import React, { useState, memo, useMemo, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "../../widgets";
 import vectorImg from "../../assets/vector.png";
@@ -9,9 +9,7 @@ import oblachImg from "../../assets/oblach.png";
 import ininvImg from "../../assets/Ininv.jpeg";
 import Footer from "../../widgets/Footer";
 import WarehouseMap from "../../components/WarehouseMap";
-import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
-import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
-import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
+import WarehouseSVGMap from "../../components/WarehouseSVGMap";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
 import { Dropdown } from '../../shared/components/Dropdown.jsx';
@@ -30,7 +28,7 @@ import {
 } from "../../components/ui";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, ZoomIn, ZoomOut } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
@@ -131,10 +129,9 @@ const HomePage = memo(() => {
   const [isCloudPriceCalculating, setIsCloudPriceCalculating] = useState(false);
   const [cloudPriceError, setCloudPriceError] = useState(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
-  // Состояние для зума карты
-  const [zoomLevel, setZoomLevel] = useState(1);
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const [isMobileView, setIsMobileView] = useState(false);
+  const mapRef = useRef(null);
   const [serviceOptions, setServiceOptions] = useState([]);
   const [isServicesLoading, setIsServicesLoading] = useState(false);
   const [servicesError, setServicesError] = useState(null);
@@ -1394,88 +1391,21 @@ const HomePage = memo(() => {
       );
     }
 
-    const canvasProps = {
-      storageBoxes,
-      onBoxSelect: setPreviewStorage,
-      selectedStorage: previewStorage,
-      userRole: "USER",
-      isViewOnly: true,
-    };
-
-    const isKomfortWarehouse = selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»";
-    if (isKomfortWarehouse) {
-      canvasProps.selectedMap = komfortSelectedMap;
-    }
-
-    let canvas = null;
-
-    if (selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс") {
-      canvas = <InteractiveWarehouseCanvas {...canvasProps} />;
-    } else if (selectedWarehouse.name === "Есентай, жилой комплекс") {
-      canvas = <MainWarehouseCanvas {...canvasProps} />;
-    } else if (isKomfortWarehouse) {
-      canvas = <ZhkKomfortCanvas {...canvasProps} />;
-    }
-
-    if (!canvas) {
-      return (
-        <div className="min-h-[220px] flex items-center justify-center text-center text-[#6B6B6B]">
-          Для выбранного склада пока нет схемы. Пожалуйста, свяжитесь с менеджером для подробной информации.
-        </div>
-      );
-    }
-
-    const komfortControls = isKomfortWarehouse ? (
-      <div
-        className={`flex ${isFullscreen ? "flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : "items-center justify-center gap-3"} flex-wrap`}
-      >
-        <span className="text-sm font-semibold text-[#273655]">Карта Жилой комплекс «Комфорт Сити»</span>
-        <div className="inline-flex rounded-xl border border-[#d7dbe6] bg-white p-1 shadow-sm">
-          {[1, 2].map((mapNumber) => {
-            const isActive = komfortSelectedMap === mapNumber;
-            return (
-              <button
-                key={mapNumber}
-                type="button"
-                onClick={() => setKomfortSelectedMap(mapNumber)}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-[#273655] text-white shadow"
-                    : "text-[#273655] hover:bg-[#273655]/10"
-                }`}
-                aria-pressed={isActive}
-              >
-                Карта {mapNumber}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    ) : null;
-
-    const wrapperClasses = isFullscreen
-      ? "flex-1 min-h-[50vh] rounded-2xl border border-[#d7dbe6] bg-white overflow-hidden flex items-center justify-center"
-      : "rounded-2xl border border-dashed border-[#273655]/20 bg-white/70 max-h-[320px] overflow-auto";
-
     const showInlineCanvas = isFullscreen || !isMobileView;
 
     return (
       <div className={`flex flex-col gap-4 ${isFullscreen ? "h-full" : ""}`}>
-        {showInlineCanvas && komfortControls}
         {showInlineCanvas ? (
-          <div
-            className={wrapperClasses}
-            style={
-              isFullscreen
-                ? {
-                    height: "100%",
-                  }
-                : undefined
-            }
-          >
-            <div className="w-full h-full flex items-center justify-center py-3 px-2">
-              {canvas}
-            </div>
+          <div className="w-full h-full">
+            <WarehouseSVGMap
+              ref={isFullscreen ? mapRef : null}
+              warehouse={selectedWarehouse}
+              storageBoxes={storageBoxes}
+              onBoxSelect={setPreviewStorage}
+              selectedStorage={previewStorage}
+              selectedMap={komfortSelectedMap}
+              onMapChange={(mapNumber) => setKomfortSelectedMap(mapNumber)}
+            />
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-[#273655]/20 bg-white px-4 py-3 text-sm text-[#6B6B6B]">
@@ -1760,48 +1690,66 @@ const HomePage = memo(() => {
           <Tabs value={activeStorageTab} onValueChange={setActiveStorageTab} className="w-full">
 
             <TabsContent value="INDIVIDUAL" className="mt-8">
-              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-[50%_1fr] gap-6">
                 {/* Левая панель - Карта склада */}
-                <div className="bg-[#00A991] rounded-3xl px-8 pt-8 pb-1 shadow-lg min-h-[400px] flex flex-col">
-                  {/* Селектор локации */}
-                  <div className="mb-2 w-fit [&_button]:bg-transparent [&_button]:text-white [&_button]:border-2 [&_button]:border-white [&_button]:rounded-full [&_button]:hover:bg-white/10 [&_svg]:text-white">
-                    <Dropdown
-                      items={dropdownItems}
-                      value={selectedWarehouse ? (selectedWarehouse.id ?? selectedWarehouse.value) : undefined}
-                      onChange={(_, item) => setSelectedWarehouse(item)}
-                      placeholder="Выберите склад"
-                      searchable={false}
-                      getKey={(w) => w.id}
-                      getLabel={(w) => w.name}
-                      getDescription={(w) => w.address}
-                      className="bg-transparent text-white border-2 border-white rounded-full hover:bg-white/10 w-auto min-w-[200px]"
-                      popoverProps={{ className: "p-0" }}
-                    />
-                  </div>
-                  
-                  {/* Кнопки зума */}
-                  <div className="flex gap-2 mb-2 justify-center">
-                    <button
-                      onClick={() => setZoomLevel(prev => Math.min(prev + 0.1, 2))}
-                      className="w-10 h-10 rounded-full bg-[#A8E6CF] text-gray-600 flex items-center justify-center hover:bg-[#90D4B8] transition-colors shadow-md font-bold text-xl"
-                      aria-label="Увеличить"
-                    >
-                      +
-                    </button>
-                    <button
-                      onClick={() => setZoomLevel(prev => Math.max(prev - 0.1, 0.3))}
-                      className="w-10 h-10 rounded-full bg-[#A8E6CF] text-gray-600 flex items-center justify-center hover:bg-[#90D4B8] transition-colors shadow-md font-bold text-xl"
-                      aria-label="Уменьшить"
-                    >
-                      −
-                    </button>
-                  </div>
-                  
-                  {/* Карта склада */}
-                  <div className="flex-1 flex items-center justify-center overflow-hidden">
-                    <div className="w-full h-full flex items-center justify-center" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center' }}>
-                      {renderWarehouseScheme({ isFullscreen: true })}
+                <div className="rounded-2xl h-[70vh] min-h-[400px] flex flex-col" style={{ 
+                  background: 'linear-gradient(to bottom, #00A991 0%, #31876D 100%)',
+                  padding: '20px',
+                  borderRadius: '20px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
+                  position: 'relative',
+                  minHeight: 0,
+                  overflow: 'visible',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  {/* Селектор локации и кнопки зума - внутри градиентного контейнера */}
+                  <div className="mb-4 flex items-center gap-3" style={{ position: 'relative', zIndex: 1000, flexShrink: 0 }}>
+                    <div className="w-fit [&_button]:bg-transparent [&_button]:text-white [&_button]:border-2 [&_button]:border-white [&_button]:rounded-full [&_button]:hover:bg-white/10 [&_svg]:text-white">
+                      <Dropdown
+                        items={dropdownItems}
+                        value={selectedWarehouse ? (selectedWarehouse.id ?? selectedWarehouse.value) : undefined}
+                        onChange={(_, item) => setSelectedWarehouse(item)}
+                        placeholder="Выберите склад"
+                        searchable={false}
+                        getKey={(w) => w.id}
+                        getLabel={(w) => w.name}
+                        getDescription={(w) => w.address}
+                        className="bg-transparent text-white border-2 border-white rounded-full hover:bg-white/10 w-auto min-w-[200px]"
+                        popoverProps={{ className: "p-0" }}
+                      />
                     </div>
+                    
+                    {/* Кнопки управления зумом - справа от селектора */}
+                    <div className="flex gap-2 ml-auto">
+                      <button
+                        onClick={() => {
+                          if (mapRef.current) {
+                            mapRef.current.zoomIn();
+                          }
+                        }}
+                        className="w-10 h-10 rounded-full bg-[#A8E6CF] text-gray-600 flex items-center justify-center hover:bg-[#90D4B8] transition-colors shadow-md font-bold text-xl"
+                        aria-label="Увеличить"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (mapRef.current) {
+                            mapRef.current.zoomOut();
+                          }
+                        }}
+                        className="w-10 h-10 rounded-full bg-[#A8E6CF] text-gray-600 flex items-center justify-center hover:bg-[#90D4B8] transition-colors shadow-md font-bold text-xl"
+                        aria-label="Уменьшить"
+                      >
+                        −
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Компонент карты */}
+                  <div className="flex-1" style={{ minHeight: 0, position: 'relative' }}>
+                    {renderWarehouseScheme({ isFullscreen: true })}
                   </div>
                 </div>
 
