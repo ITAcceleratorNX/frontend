@@ -22,6 +22,9 @@ const WarehouseSVGMap = React.forwardRef(({
   const constrainPanRef = useRef(null);
 
   const warehouseName = warehouse?.name || '';
+  
+  // Отслеживаем текущий key SVG (должно быть после определения warehouseName и selectedMap)
+  const svgKeyRef = useRef(`${warehouseName}-${selectedMap}`);
 
   // Определяем размеры и данные в зависимости от склада
   const getWarehouseConfig = (overrideName = null, overrideSelectedMap = null) => {
@@ -563,56 +566,153 @@ const WarehouseSVGMap = React.forwardRef(({
     };
   }, [warehouse]);
 
-  // Обновление при изменении склада или карты - ПРИМЕНЯЕМ НАЧАЛЬНЫЙ ВИД
+  // Обновление при изменении склада или карты - ПЕРЕСОЗДАЕМ panZoom если SVG изменился
   useEffect(() => {
-    if (!panZoomRef.current || !svgRef.current || !warehouse) {
+    if (!svgRef.current || !warehouse) {
       return;
     }
+
+    // Проверяем, изменился ли key SVG (это означает, что React пересоздал элемент)
+    const currentKey = `${warehouseName}-${selectedMap}`;
+    const needsReinit = panZoomRef.current && svgKeyRef.current !== currentKey;
 
     if (import.meta.env.DEV) {
       console.log('🔄 Обновление вида карты:', {
         warehouse: warehouseName,
-        map: selectedMap
+        map: selectedMap,
+        currentKey,
+        previousKey: svgKeyRef.current,
+        needsReinit,
+        hasPanZoom: !!panZoomRef.current
       });
     }
 
-    // Применяем начальный вид для текущего склада/карты
-    requestAnimationFrame(() => {
-      if (panZoomRef.current && svgRef.current) {
+    // Если SVG изменился (из-за key), пересоздаем panZoom
+    if (needsReinit) {
+      if (import.meta.env.DEV) {
+        console.log('🔄 SVG key изменился - пересоздаем panZoom');
+      }
+      
+      // Обновляем отслеживаемый key
+      svgKeyRef.current = currentKey;
+      
+      // Уничтожаем старый экземпляр
+      try {
+        panZoomRef.current.destroy();
+      } catch (error) {
+        console.error('Error destroying panZoom:', error);
+      }
+      panZoomRef.current = null;
+
+      // Даем React время обновить DOM перед созданием нового экземпляра
+      setTimeout(() => {
+        if (!svgRef.current) return;
+        
         const container = svgRef.current.parentElement;
-        if (container) {
-          const containerWidth = container.clientWidth;
-          const containerHeight = container.clientHeight;
-          
-          // Обновляем zoom limits
-          const zoomLimits = getAdaptiveZoomLimits(containerWidth, containerHeight, warehouseName, selectedMap);
-          panZoomRef.current.updateBBox();
-          panZoomRef.current.setMinZoom(zoomLimits.minZoom);
-          panZoomRef.current.setMaxZoom(zoomLimits.maxZoom);
-          
-          // Применяем начальный вид
-          const initialView = getInitialView(warehouseName, selectedMap, containerWidth, containerHeight);
-          
-          if (import.meta.env.DEV) {
-            console.log('🎯 Применение начального вида:', {
-              zoom: initialView.zoom,
-              panX: initialView.panX,
-              panY: initialView.panY
+        if (!container) {
+          console.error('Map container not found');
+          return;
+        }
+
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        const zoomLimits = getAdaptiveZoomLimits(containerWidth, containerHeight, warehouseName, selectedMap);
+
+        try {
+          panZoomRef.current = svgPanZoom(svgRef.current, {
+            panEnabled: true,
+            controlIconsEnabled: false,
+            zoomEnabled: true,
+            dblClickZoomEnabled: true,
+            mouseWheelZoomEnabled: true,
+            preventMouseEventsDefault: true,
+            zoomScaleSensitivity: 0.2,
+            minZoom: zoomLimits.minZoom,
+            maxZoom: zoomLimits.maxZoom,
+            fit: false,
+            contain: false,
+            center: false,
+            refreshRate: 60,
+            beforePan: (oldPan, newPan) => {
+              if (!getPanBoundsRef.current) {
+                return { x: newPan.x, y: newPan.y };
+              }
+              const bounds = getPanBoundsRef.current();
+              return {
+                x: Math.max(bounds.minX, Math.min(bounds.maxX, newPan.x)),
+                y: Math.max(bounds.minY, Math.min(bounds.maxY, newPan.y))
+              };
+            },
+            onZoom: () => {
+              if (panZoomRef.current && constrainPanRef.current) {
+                const currentPan = panZoomRef.current.getPan();
+                const constrainedPan = constrainPanRef.current(currentPan.x, currentPan.y);
+                if (constrainedPan.x !== currentPan.x || constrainedPan.y !== currentPan.y) {
+                  panZoomRef.current.pan({ x: constrainedPan.x, y: constrainedPan.y });
+                }
+              }
+            }
+          });
+
+          // Применяем начальный вид сразу после создания
+          if (panZoomRef.current) {
+            const initialView = getInitialView(warehouseName, selectedMap, containerWidth, containerHeight);
+            panZoomRef.current.zoomAtPoint(initialView.zoom, {
+              x: containerWidth / 2,
+              y: containerHeight / 2
+            });
+            panZoomRef.current.pan({ 
+              x: initialView.panX, 
+              y: initialView.panY 
             });
           }
-          
-          panZoomRef.current.zoomAtPoint(initialView.zoom, {
-            x: containerWidth / 2,
-            y: containerHeight / 2
-          });
-          
-          panZoomRef.current.pan({ 
-            x: initialView.panX, 
-            y: initialView.panY 
-          });
+        } catch (error) {
+          console.error('Error creating panZoom:', error);
         }
-      }
-    });
+      }, 50);
+      
+      return; // Выходим, чтобы не применять вид дважды
+    }
+
+    // Применяем начальный вид
+    if (panZoomRef.current && svgRef.current) {
+      requestAnimationFrame(() => {
+        if (panZoomRef.current && svgRef.current) {
+          const container = svgRef.current.parentElement;
+          if (container) {
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            // Обновляем zoom limits
+            const zoomLimits = getAdaptiveZoomLimits(containerWidth, containerHeight, warehouseName, selectedMap);
+            panZoomRef.current.updateBBox();
+            panZoomRef.current.setMinZoom(zoomLimits.minZoom);
+            panZoomRef.current.setMaxZoom(zoomLimits.maxZoom);
+            
+            // Применяем начальный вид
+            const initialView = getInitialView(warehouseName, selectedMap, containerWidth, containerHeight);
+            
+            if (import.meta.env.DEV) {
+              console.log('🎯 Применение начального вида:', {
+                zoom: initialView.zoom,
+                panX: initialView.panX,
+                panY: initialView.panY
+              });
+            }
+            
+            panZoomRef.current.zoomAtPoint(initialView.zoom, {
+              x: containerWidth / 2,
+              y: containerHeight / 2
+            });
+            
+            panZoomRef.current.pan({ 
+              x: initialView.panX, 
+              y: initialView.panY 
+            });
+          }
+        }
+      });
+    }
   }, [warehouseName, selectedMap, warehouse, getAdaptiveZoomLimits, getInitialView]);
 
   useEffect(() => {
