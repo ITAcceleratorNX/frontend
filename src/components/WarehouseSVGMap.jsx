@@ -487,7 +487,7 @@ const WarehouseSVGMap = React.forwardRef(({
         zoomEnabled: true,
         dblClickZoomEnabled: true,
         mouseWheelZoomEnabled: true,
-        preventMouseEventsDefault: false,
+        preventMouseEventsDefault: true,
         zoomScaleSensitivity: 0.2,
         minZoom: zoomLimits.minZoom,
         maxZoom: zoomLimits.maxZoom,
