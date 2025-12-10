@@ -798,11 +798,7 @@ const WarehouseSVGMap = React.forwardRef(({
           left: '16px',
           zIndex: 10,
           display: 'inline-flex',
-          borderRadius: '12px',
-          border: '1px solid #d7dbe6',
-          background: 'white',
-          padding: '4px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          gap: '8px'
         }}>
           {[1, 2].map((mapNumber) => {
             const isActive = selectedMap === mapNumber;
@@ -812,20 +808,20 @@ const WarehouseSVGMap = React.forwardRef(({
                 onClick={() => handleMapChange(mapNumber)}
                 style={{
                   padding: '8px 16px',
-                  borderRadius: '8px',
-                  background: isActive ? '#273655' : 'transparent',
-                  color: isActive ? 'white' : '#273655',
+                  borderRadius: '20px',
+                  background: isActive ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
+                  color: 'white',
                   fontSize: '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   fontFamily: 'Montserrat, sans-serif',
                   transition: 'all 0.2s',
-                  border: 'none',
-                  boxShadow: isActive ? '0 1px 3px rgba(0, 0, 0, 0.2)' : 'none'
+                  border: '2px solid white',
+                  boxShadow: isActive ? '0 2px 8px rgba(0, 0, 0, 0.15)' : 'none'
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.target.style.background = 'rgba(39, 54, 85, 0.1)';
+                    e.target.style.background = 'rgba(255, 255, 255, 0.15)';
                   }
                 }}
                 onMouseLeave={(e) => {
