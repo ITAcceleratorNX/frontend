@@ -796,7 +796,7 @@ const WarehouseSVGMap = React.forwardRef(({
           position: 'absolute',
           top: '16px',
           left: '16px',
-          zIndex: 1000,
+          zIndex: 10,
           display: 'inline-flex',
           borderRadius: '12px',
           border: '1px solid #d7dbe6',

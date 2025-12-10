@@ -1704,7 +1704,7 @@ const HomePage = memo(() => {
                   flexDirection: 'column'
                 }}>
                   {/* Селектор локации и кнопки зума - внутри градиентного контейнера */}
-                  <div className="mb-4 flex items-center gap-3" style={{ position: 'relative', zIndex: 1000, flexShrink: 0 }}>
+                  <div className="mb-4 flex items-center gap-3" style={{ position: 'relative', zIndex: 10, flexShrink: 0 }}>
                     <div className="w-fit [&_button]:bg-transparent [&_button]:text-white [&_button]:border-2 [&_button]:border-white [&_button]:rounded-full [&_button]:hover:bg-white/10 [&_svg]:text-white">
                       <Dropdown
                         items={dropdownItems}
