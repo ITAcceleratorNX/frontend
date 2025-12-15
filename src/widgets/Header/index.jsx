@@ -154,26 +154,26 @@ export const Header = memo(() => {
                   className="h-10 w-auto object-contain"
                 />
               </div>
-              <nav className="hidden md:flex gap-2">
+              {/* <nav className="hidden md:flex gap-2">
                 <NavLink
                   to="/"
                   className={getNavLinkClass}
                 >
                   Главная
-                </NavLink>
-                <NavLink
+                </NavLink> */}
+                {/* <NavLink
                   to="/cloud-storage"
                   className={getNavLinkClass}
                 >
                   Облачное хранение
-                </NavLink>
-                <NavLink
+                </NavLink> */}
+                {/* <NavLink
                   to="/moving"
                   className={getNavLinkClass}
                 >
                   Мувинг
                 </NavLink>
-              </nav>
+              </nav> */}
             </div>
 
             <div className="hidden md:flex items-center gap-4">

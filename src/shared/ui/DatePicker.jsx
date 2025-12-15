@@ -180,82 +180,79 @@ const DatePicker = forwardRef(({
     }
   };
 
+  const hasInlineLabel = !label && placeholder;
+  const isGrayBackground = className.includes('[&>div]:bg-gray-100');
+  const hasNoBorder = className.includes('[&>div]:border-0');
+  
   return (
     <div className={cn('w-full', className)}>
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-      )}
-      <div className="relative flex items-center">
-        <input
-          ref={(node) => {
-            inputRef.current = node;
-            if (typeof ref === 'function') {
-              ref(node);
-            } else if (ref) {
-              ref.current = node;
-            }
-          }}
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur}
-          onKeyDown={handleKeyDown}
-          disabled={disabled}
-          placeholder={placeholder}
-          maxLength={10}
-          className={cn(
-            "w-full h-[40px] px-3 pr-10 bg-slate-50 rounded-md border border-gray-300",
-            "text-base text-[#222] placeholder:text-[#A6A6A6]",
-            "focus:outline-none focus:border-2 focus:border-[#1e2c4f]",
-            "hover:bg-gray-100 transition-colors",
-            error && "border-red-500 border-2",
-            disabled && "cursor-not-allowed opacity-50"
-          )}
-          {...props}
-        />
-        <Popover open={open} onOpenChange={setOpen} modal={false}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={disabled}
-              className={cn(
-                "absolute right-1 h-8 w-8 p-0 hover:bg-gray-200",
-                "text-gray-600 hover:text-gray-900",
-                disabled && "cursor-not-allowed opacity-50"
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!disabled) {
-                  setOpen(!open);
-                }
-              }}
-            >
-              <CalendarIcon className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            container={typeof document !== 'undefined' ? document.body : null}
-            className="w-auto p-0 !z-[9999] pointer-events-auto" 
-            align="end"
-            sideOffset={8}
-            collisionPadding={8}
-            onOpenAutoFocus={(e) => {
-              e.preventDefault();
-            }}
-            onInteractOutside={(e) => {
-              // Не закрываем popover при клике на Dialog overlay или другие элементы
-              const target = e.target;
-              if (target.closest('[data-radix-popper-content-wrapper]') || 
-                  target.closest('[role="dialog"]')) {
-                e.preventDefault();
+      <div className={cn(
+        "relative flex flex-col items-start justify-center rounded-3xl p-3",
+        !hasNoBorder && "border border-gray-300",
+        "focus-within:ring-2 focus-within:ring-[#00A991] focus-within:border-transparent",
+        !isGrayBackground && "hover:bg-gray-50 transition-colors",
+        isGrayBackground && "bg-gray-100",
+        error && "border-red-500 border-2",
+        disabled && "cursor-not-allowed opacity-50",
+        (label || hasInlineLabel) ? "min-h-[60px]" : "min-h-[48px]",
+        className.includes('[&_input]:bg-transparent') && "bg-transparent"
+      )}>
+        {(label || hasInlineLabel) && (
+          <label className="text-sm font-medium text-[#273655] mb-1">
+            {label || placeholder}
+          </label>
+        )}
+        <div className="relative flex items-center w-full">
+          <input
+            ref={(node) => {
+              inputRef.current = node;
+              if (typeof ref === 'function') {
+                ref(node);
+              } else if (ref) {
+                ref.current = node;
               }
             }}
-          >
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            placeholder={hasInlineLabel ? "" : placeholder}
+            maxLength={10}
+            className={cn(
+              "w-full bg-transparent border-0 outline-none",
+              "text-base text-[#222] placeholder:text-[#A6A6A6]",
+              "pr-8",
+              disabled && "cursor-not-allowed"
+            )}
+            {...props}
+          />
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={disabled}
+                className={cn(
+                  "absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-200",
+                  "text-gray-600 hover:text-gray-900",
+                  disabled && "cursor-not-allowed opacity-50"
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!disabled) {
+                    setOpen(!open);
+                  }
+                }}
+              >
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+
             <Calendar
               mode="single"
               selected={dateValue}
@@ -294,8 +291,9 @@ const DatePicker = forwardRef(({
                 return false;
               }}
             />
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       {error && (
         <p className="text-xs text-red-500 mt-1 ml-1">
