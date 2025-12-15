@@ -71,6 +71,9 @@ const DatePicker = forwardRef(({
         onChange(dateString);
         // Закрываем календарь после выбора
         setOpen(false);
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+        });
       } else {
         onChange('');
       }
@@ -84,10 +87,10 @@ const DatePicker = forwardRef(({
   const formatInputValue = (text) => {
     // Удаляем все нецифровые символы
     const digits = text.replace(/\D/g, '');
-    
+
     // Ограничиваем до 8 цифр (ддммгггг)
     const limitedDigits = digits.slice(0, 8);
-    
+
     // Форматируем с точками
     let formatted = '';
     for (let i = 0; i < limitedDigits.length; i++) {
@@ -96,7 +99,7 @@ const DatePicker = forwardRef(({
       }
       formatted += limitedDigits[i];
     }
-    
+
     return formatted;
   };
 
@@ -109,11 +112,11 @@ const DatePicker = forwardRef(({
     // Если введена полная дата (10 символов: ДД.ММ.ГГГГ), пытаемся преобразовать
     if (formatted.length === 10) {
       const [day, month, year] = formatted.split('.').map(Number);
-      
+
       // Валидация даты
       if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
         const date = new Date(year, month - 1, day);
-        
+
         // Проверяем, что дата валидна (например, не 31 февраля)
         if (date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year) {
           // Проверяем минимальную дату, если указана
@@ -121,9 +124,9 @@ const DatePicker = forwardRef(({
           today.setHours(0, 0, 0, 0);
           const checkDate = new Date(date);
           checkDate.setHours(0, 0, 0, 0);
-          
+
           let isValid = true;
-          
+
           // Если указана минимальная дата, проверяем её
           if (minDate) {
             const min = new Date(minDate);
@@ -132,12 +135,12 @@ const DatePicker = forwardRef(({
               isValid = false;
             }
           }
-          
+
           // Если не разрешены будущие даты, проверяем это
           if (!allowFutureDates && checkDate > today) {
             isValid = false;
           }
-          
+
           if (isValid) {
             const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             if (onChange) {
@@ -161,7 +164,7 @@ const DatePicker = forwardRef(({
         setInputValue('');
       }
     }
-    
+
     if (onBlur) {
       onBlur();
     }
@@ -173,7 +176,7 @@ const DatePicker = forwardRef(({
     if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key)) {
       return;
     }
-    
+
     // Разрешаем только цифры
     if (!/^\d$/.test(e.key)) {
       e.preventDefault();
@@ -183,7 +186,7 @@ const DatePicker = forwardRef(({
   const hasInlineLabel = !label && placeholder;
   const isGrayBackground = className.includes('[&>div]:bg-gray-100');
   const hasNoBorder = className.includes('[&>div]:border-0');
-  
+
   return (
     <div className={cn('w-full', className)}>
       <div className={cn(
@@ -228,7 +231,7 @@ const DatePicker = forwardRef(({
             )}
             {...props}
           />
-          <Popover open={open} onOpenChange={setOpen}>
+          <Popover open={open} onOpenChange={setOpen} modal={false}>
             <PopoverTrigger asChild>
               <Button
                 type="button"
@@ -242,16 +245,33 @@ const DatePicker = forwardRef(({
                 )}
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation();
                   if (!disabled) {
-                    setOpen(!open);
+                    setOpen((v) => !v);
                   }
                 }}
               >
                 <CalendarIcon className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent
+              className="w-auto p-0 z-[9999] pointer-events-auto"
+              align="end"
+              sideOffset={8}
+              collisionPadding={8}
+              onOpenAutoFocus={(e) => {
+                e.preventDefault();
+              }}
+              onInteractOutside={(e) => {
+                const target = e.target;
+                if (
+                  target.closest('[data-radix-popper-content-wrapper]') ||
+                  target.closest('button') ||
+                  target === inputRef.current
+                ) {
+                  e.preventDefault();
+                }
+              }}
+            >
 
             <Calendar
               mode="single"
