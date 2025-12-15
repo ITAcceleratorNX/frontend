@@ -180,7 +180,7 @@ const CallbackRequestModal = ({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-12 rounded-xl bg-[#F86812] text-base font-semibold text-white transition hover:bg-[#e55a0a]"
+              className="h-12 rounded-xl bg-[#00A991] text-base font-semibold text-white transition hover:bg-[#008a7a]"
             >
               {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
             </Button>
@@ -189,13 +189,13 @@ const CallbackRequestModal = ({
           <div className="flex flex-col gap-4 rounded-2xl bg-[#F5F6FA] p-4 text-sm text-[#273655]">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm">
-                <Phone className="h-5 w-5 text-[#F86812]" />
+                <Phone className="h-5 w-5 text-[#00A991]" />
               </div>
               <div className="space-y-1">
                 <p className="text-xs uppercase tracking-[0.12em] text-[#6B6B6B]">Или позвоните нам</p>
                 <a
                   href={TEL_LINK}
-                  className="text-lg font-semibold text-[#F86812] transition hover:text-[#e55a0a]"
+                  className="text-lg font-semibold text-[#00A991] transition hover:text-[#008a7a]"
                 >
                   {DISPLAY_PHONE}
                 </a>
