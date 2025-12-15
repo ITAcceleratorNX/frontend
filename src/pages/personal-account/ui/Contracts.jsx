@@ -653,7 +653,7 @@ const CancelSurveyModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-visible">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили отменить?</DialogTitle>
           <DialogDescription>
@@ -661,13 +661,14 @@ const CancelSurveyModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        {isLoadingDetails ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+        <div className="max-h-[60vh] overflow-y-auto pr-1">
+          {isLoadingDetails ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3 mb-4">
               {CANCEL_REASON_OPTIONS.map((option) => (
                 <label
                   key={option.value}
@@ -790,33 +791,34 @@ const CancelSurveyModal = ({
             )}
 
             {error && <p className="text-sm text-red-600">{error}</p>}
+            </>
+          )}
+        </div>
 
-            <DialogFooter className="gap-2 sm:gap-4">
-              <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-                Закрыть
-              </Button>
-              {pickupMethod === 'delivery' && selectedReason ? (
-                <Button
-                  onClick={handleDeliverySubmit}
-                  disabled={isSubmitting || !deliveryDate || createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending}
-                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                >
-                  {(createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending)
-                    ? 'Обработка…' 
-                    : `Оплатить доставку (${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸)`}
-                </Button>
-              ) : (
-                <Button
-                  onClick={onSubmit}
-                  disabled={isSubmitting || (needsPickupMethod && !pickupMethod)}
-                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                >
-                  {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
-                </Button>
-              )}
-            </DialogFooter>
-          </>
-        )}
+        <DialogFooter className="gap-2 sm:gap-4">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            Закрыть
+          </Button>
+          {pickupMethod === 'delivery' && selectedReason ? (
+            <Button
+              onClick={handleDeliverySubmit}
+              disabled={isSubmitting || !deliveryDate || createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            >
+              {(createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending)
+                ? 'Обработка…' 
+                : `Оплатить доставку (${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸)`}
+            </Button>
+          ) : (
+            <Button
+              onClick={onSubmit}
+              disabled={isSubmitting || (needsPickupMethod && !pickupMethod)}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            >
+              {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
