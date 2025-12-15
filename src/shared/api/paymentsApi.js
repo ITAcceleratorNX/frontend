@@ -37,6 +37,26 @@ export const paymentsApi = {
     }
   },
 
+  // Создание оплаты для дополнительной услуги (для активных заказов)
+  createAdditionalServicePayment: async (orderId, serviceType) => {
+    try {
+      if (isDevelopment) {
+        console.log(`PaymentsAPI: Создание оплаты для дополнительной услуги ${serviceType} заказа ${orderId}`);
+      }
+      const response = await api.post('/payments/additional-service', { 
+        order_id: orderId,
+        service_type: serviceType
+      });
+      if (isDevelopment) {
+        console.log('PaymentsAPI: Оплата дополнительной услуги успешно создана:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('PaymentsAPI: Ошибка при создании оплаты дополнительной услуги:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Создание ручной оплаты
   createManualPayment: async (orderPaymentId) => {
     try {
@@ -75,17 +95,19 @@ export const paymentsApi = {
   },
 
   // Создание заявки на мувинг
-  createMoving: async (orderId, movingDate) => {
+  createMoving: async (orderId, movingDate, options = {}) => {
     try {
       if (isDevelopment) {
         console.log(`PaymentsAPI: Создание заявки на мувинг для заказа ${orderId}`);
       }
+      const { status = "PENDING_FROM", address = null } = options;
       const response = await api.post('/moving', {
         order_id: orderId,
         moving_date: movingDate,
         vehicle_type: "LARGE",
-        status: "PENDING_FROM",
-        availability: "AVAILABLE"
+        status: status,
+        availability: "AVAILABLE",
+        ...(address && { address })
       });
       if (isDevelopment) {
         console.log('PaymentsAPI: Заявка на мувинг успешно создана:', response.data);

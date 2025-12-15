@@ -239,7 +239,7 @@ export const useCancelContract = () => {
     mutationFn: ({ orderId, documentId, cancelReason, cancelComment }) =>
       ordersApi.cancelContract({ orderId, documentId, cancelReason, cancelComment }),
     onSuccess: () => {
-      showGenericSuccess('Договор успешно отменен');
+      showGenericSuccess('Успешный запрос на отмену договора');
       queryClient.invalidateQueries({ queryKey: ['contracts', 'user'] });
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });

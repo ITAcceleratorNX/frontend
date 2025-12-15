@@ -181,6 +181,30 @@ export const usePaymentsStats = () => {
   return stats;
 }; 
 
+/**
+ * Хук для создания платежа для дополнительной услуги (для активных заказов)
+ */
+export const useCreateAdditionalServicePayment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, serviceType }) => paymentsApi.createAdditionalServicePayment(orderId, serviceType),
+    onSuccess: (data, variables) => {
+      console.log('Платеж для дополнительной услуги успешно создан:', data);
+      
+      // Инвалидируем кеш платежей и заказов пользователя
+      queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
+      queryClient.invalidateQueries({ queryKey: ['user-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['contracts', 'details'] });
+    },
+    onError: (error, variables) => {
+      console.error('Ошибка при создании платежа для дополнительной услуги:', error);
+      const errorMessage = error.response?.data?.message || 'Ошибка при создании платежа';
+      showGenericError(errorMessage);
+    }
+  });
+};
+
 // Хук для добавления услуги к заказу
 export const useCreateOrderService = () => {
   const queryClient = useQueryClient();
@@ -208,14 +232,15 @@ export const useCreateMoving = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, movingDate }) => paymentsApi.createMoving(orderId, movingDate),
+    mutationFn: ({ orderId, movingDate, status, address }) => 
+      paymentsApi.createMoving(orderId, movingDate, { status, address }),
     onSuccess: (data) => {
       console.log('Заявка на мувинг успешно создана:', data);
-      showGenericSuccess('Заявка на мувинг создана');
-      
+
       // Обновляем кеш
       queryClient.invalidateQueries({ queryKey: ['moving'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['contracts', 'details'] });
     },
     onError: (error) => {
       console.error('Ошибка создания заявки на мувинг:', error);

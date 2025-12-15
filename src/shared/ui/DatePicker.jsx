@@ -215,7 +215,7 @@ const DatePicker = forwardRef(({
           )}
           {...props}
         />
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal={false}>
           <PopoverTrigger asChild>
             <Button
               type="button"
@@ -238,12 +238,29 @@ const DatePicker = forwardRef(({
               <CalendarIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
+          <PopoverContent 
+            container={typeof document !== 'undefined' ? document.body : null}
+            className="w-auto p-0 !z-[9999] pointer-events-auto" 
+            align="end"
+            sideOffset={8}
+            collisionPadding={8}
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+            }}
+            onInteractOutside={(e) => {
+              // Не закрываем popover при клике на Dialog overlay или другие элементы
+              const target = e.target;
+              if (target.closest('[data-radix-popper-content-wrapper]') || 
+                  target.closest('[role="dialog"]')) {
+                e.preventDefault();
+              }
+            }}
+          >
             <Calendar
               mode="single"
               selected={dateValue}
               onSelect={handleSelect}
-              initialFocus
+              initialFocus={false}
               locale={ru}
               disabled={(date) => {
                 const today = new Date();
