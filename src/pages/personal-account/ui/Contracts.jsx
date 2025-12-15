@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useContracts, useCancelContract, useDownloadContract, useContractDetails, useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
+import { useCreateMoving, useCreateAdditionalServicePayment } from '../../../shared/lib/hooks/use-payments';
 import { 
   Check, 
   Download, 
@@ -9,24 +10,19 @@ import {
   AlertTriangle, 
   Calendar, 
   MapPin, 
-  ChevronDown, 
-  ChevronUp, 
-  X, 
+  X,
   RefreshCcw, 
   Clock, 
   Ban, 
   FileCheck 
 } from 'lucide-react';
-import image46 from '../../../assets/image_46.png';
-import documentImg from '../../../assets/Document.png';
-import zavoz1 from '../../../assets/zavoz1.png';
-import zavoz2 from '../../../assets/zavoz2.png';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import {useNavigate} from "react-router-dom";
+import DatePicker from '../../../shared/ui/DatePicker';
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -218,7 +214,6 @@ const getPaymentStatusInfo = (status) => {
 
 function MonthSelector() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState('АВГУСТ');
   const ref = useRef(null);
 
   useEffect(() => {
@@ -241,10 +236,6 @@ function MonthSelector() {
 }
 
 const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error, onDownloadItemFile, isDownloadingItem, onDownloadContract }) => {
-  // Получаем первый контракт для загрузки
-  const firstContract = contract?.contracts && contract.contracts.length > 0 
-    ? contract.contracts.sort((a, b) => a.contract_id - b.contract_id)[0]
-    : null;
   const { isMobile } = useDeviceType();
   if (!contract) return null;
   
@@ -609,10 +600,60 @@ const CancelSurveyModal = ({
   onSubmit,
   isSubmitting,
   error,
+  orderId,
+  orderDetails,
+  isLoadingDetails,
 }) => {
+  const [pickupMethod, setPickupMethod] = useState(null);
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+
+  const createMovingMutation = useCreateMoving();
+  const createAdditionalServicePaymentMutation = useCreateAdditionalServicePayment();
+
+  // Проверяем, нужно ли показывать выбор способа получения вещей
+  const needsPickupMethod = orderDetails && !orderDetails.hasGazelleTo && !orderDetails.hasPendingToMovingOrder;
+
+  // Сбрасываем состояние при закрытии
+  useEffect(() => {
+    if (!isOpen) {
+      setPickupMethod(null);
+      setDeliveryDate('');
+      setDeliveryAddress('');
+    }
+  }, [isOpen]);
+
+  const handleDeliverySubmit = async () => {
+    if (!deliveryDate) {
+      return;
+    }
+
+    try {
+      await createMovingMutation.mutateAsync({
+        orderId,
+        movingDate: deliveryDate,
+        status: 'PENDING_TO',
+        address: deliveryAddress || null
+      });
+
+      const paymentResult = await createAdditionalServicePaymentMutation.mutateAsync({
+        orderId,
+        serviceType: 'GAZELLE_TO'
+      });
+      
+      // После успешной оплаты автоматически отправляем запрос на отмену
+      if (paymentResult?.payment_page_url) {
+        onSubmit();
+        window.location.href = paymentResult.payment_page_url;
+      }
+    } catch (error) {
+      console.error('Ошибка при создании доставки:', error);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили отменить?</DialogTitle>
           <DialogDescription>
@@ -620,55 +661,162 @@ const CancelSurveyModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
-          {CANCEL_REASON_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
-                selectedReason === option.value
-                  ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                  : 'border-gray-200 hover:border-[#c7d2fe]'
-              }`}
-            >
-              <input
-                type="radio"
-                name="cancel-reason"
-                className="mt-1 h-4 w-4"
-                checked={selectedReason === option.value}
-                onChange={() => onSelectReason(option.value)}
-              />
-              <span className="text-sm text-gray-800">{option.label}</span>
-            </label>
-          ))}
-        </div>
-
-        {selectedReason === 'other' && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
-            <textarea
-              className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
-              rows={4}
-              placeholder="Например: хочу поделиться предложениями по улучшению..."
-              value={comment}
-              onChange={(e) => onCommentChange(e.target.value)}
-            />
+        {isLoadingDetails ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
           </div>
+        ) : (
+          <>
+            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+              {CANCEL_REASON_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                    selectedReason === option.value
+                      ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                      : 'border-gray-200 hover:border-[#c7d2fe]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="cancel-reason"
+                    className="mt-1 h-4 w-4"
+                    checked={selectedReason === option.value}
+                    onChange={() => onSelectReason(option.value)}
+                  />
+                  <span className="text-sm text-gray-800">{option.label}</span>
+                </label>
+              ))}
+            </div>
+
+            {selectedReason === 'other' && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
+                <textarea
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
+                  rows={4}
+                  placeholder="Например: хочу поделиться предложениями по улучшению..."
+                  value={comment}
+                  onChange={(e) => onCommentChange(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Блок выбора способа получения вещей */}
+            {selectedReason && needsPickupMethod && (
+              <div className="mt-6 space-y-4 border-t pt-4">
+                <p className="text-sm font-medium text-gray-700">Как вы хотите получить вещи?</p>
+                
+                <div className="space-y-3">
+                  <label
+                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                      pickupMethod === 'self'
+                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                        : 'border-gray-200 hover:border-[#c7d2fe]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="pickup-method"
+                      className="mt-1 h-4 w-4"
+                      checked={pickupMethod === 'self'}
+                      onChange={() => setPickupMethod('self')}
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-gray-800 block">Забрать вещи самому</span>
+                      {orderDetails?.warehouseAddress && (
+                        <span className="text-xs text-gray-600 mt-1 block">
+                          <MapPin className="w-3 h-3 inline mr-1" />
+                          {orderDetails.warehouseAddress}
+                        </span>
+                      )}
+                    </div>
+                  </label>
+
+                  <label
+                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                      pickupMethod === 'delivery'
+                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                        : 'border-gray-200 hover:border-[#c7d2fe]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="pickup-method"
+                      className="mt-1 h-4 w-4"
+                      checked={pickupMethod === 'delivery'}
+                      onChange={() => setPickupMethod('delivery')}
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-gray-800 block">Заказать доставку</span>
+                      {orderDetails?.gazelleToPrice && (
+                        <span className="text-xs text-gray-600 mt-1 block">
+                          Стоимость: {orderDetails.gazelleToPrice.toLocaleString('ru-RU')} ₸
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                </div>
+
+                {/* Форма для доставки */}
+                {pickupMethod === 'delivery' && (
+                  <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-xl">
+                    <div>
+                      <DatePicker
+                        label="Дата доставки"
+                        value={deliveryDate}
+                        onChange={setDeliveryDate}
+                        placeholder="Выберите дату доставки"
+                        minDate={new Date().toISOString().split('T')[0]}
+                        allowFutureDates={true}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-2">
+                        Адрес доставки (необязательно)
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
+                        placeholder="Введите адрес доставки"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
+            <DialogFooter className="gap-2 sm:gap-4">
+              <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                Закрыть
+              </Button>
+              {pickupMethod === 'delivery' && selectedReason ? (
+                <Button
+                  onClick={handleDeliverySubmit}
+                  disabled={isSubmitting || !deliveryDate || createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending}
+                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                >
+                  {(createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending)
+                    ? 'Обработка…' 
+                    : `Оплатить доставку (${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸)`}
+                </Button>
+              ) : (
+                <Button
+                  onClick={onSubmit}
+                  disabled={isSubmitting || (needsPickupMethod && !pickupMethod)}
+                  className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                >
+                  {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
+                </Button>
+              )}
+            </DialogFooter>
+          </>
         )}
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <DialogFooter className="gap-2 sm:gap-4">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Закрыть
-          </Button>
-          <Button
-            onClick={onSubmit}
-            disabled={isSubmitting}
-            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
-          >
-            {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -683,7 +831,7 @@ const Contracts = () => {
   const [selectedCancelReason, setSelectedCancelReason] = useState('');
   const [cancelReasonComment, setCancelReasonComment] = useState('');
   const [cancelFormError, setCancelFormError] = useState('');
-  const { data: contracts, isLoading, error } = useContracts();
+  const { data: contracts, isLoading } = useContracts();
   const cancelContractMutation = useCancelContract();
   const downloadContractMutation = useDownloadContract();
   const downloadItemFileMutation = useDownloadItemFile();
@@ -698,8 +846,8 @@ const Contracts = () => {
     isLoading: isLoadingDetails, 
     error: detailsError 
   } = useContractDetails(
-    selectedContract?.order_id,
-    { enabled: !!selectedContract && isDetailModalOpen }
+    selectedContract?.order_id || pendingCancelData?.orderId,
+    { enabled: (!!selectedContract && isDetailModalOpen) || (!!pendingCancelData?.orderId && isCancelSurveyOpen) }
   );
 
   const handleCancelContract = ({ orderId, documentId, cancelReason, cancelComment }, callbacks = {}) => {
@@ -936,7 +1084,6 @@ const Contracts = () => {
                 return a.contract_id - b.contract_id;
               });
               const firstContract = sortedContracts.length > 0 ? sortedContracts[0] : null;
-              const hasMultipleContracts = (row.contracts || []).length > 1;
 
               return (
                 <div
@@ -1038,6 +1185,9 @@ const Contracts = () => {
         onSubmit={handleSubmitCancelSurvey}
         isSubmitting={cancelContractMutation.isPending}
         error={cancelFormError}
+        orderId={pendingCancelData?.orderId}
+        orderDetails={contractDetails}
+        isLoadingDetails={isLoadingDetails}
       />
       <Dialog open={isDebtModalOpen} onOpenChange={setIsDebtModalOpen}>
         <DialogContent className="sm:max-w-[460px]">
