@@ -64,7 +64,6 @@
     "react-toastify": "^11.0.5",
     "react-zoom-pan-pinch": "^3.7.0",
     "socket.io-client": "^4.8.1",
-    "svg-pan-zoom": "^3.6.2",
     "tailwind-merge": "^3.3.1",
     "yup": "^1.6.1",
     "zod": "^3.25.76",
