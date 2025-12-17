@@ -20,6 +20,7 @@ const WarehouseSVGMap = React.forwardRef(({
   const animationFrameRef = useRef(null);
   const getPanBoundsRef = useRef(null);
   const constrainPanRef = useRef(null);
+  const touchStartRef = useRef(null);
 
   const warehouseName = warehouse?.name || '';
   
@@ -307,7 +308,10 @@ const WarehouseSVGMap = React.forwardRef(({
 
   // Обработчик клика по боксу
   const handleBoxClick = useCallback((boxName, event) => {
-    event.stopPropagation();
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
     const boxData = getBoxData(boxName);
     if (boxData && onBoxSelect) {
       onBoxSelect(boxData);
@@ -1019,9 +1023,33 @@ const WarehouseSVGMap = React.forwardRef(({
                     style={{ 
                       cursor: 'pointer',
                       filter: isBoxSelected(box.name) ? 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.6))' : 'none',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      touchAction: 'manipulation'
                     }}
                     onClick={(e) => handleBoxClick(box.name, e)}
+                    onTouchStart={(e) => {
+                      touchStartRef.current = {
+                        x: e.touches[0].clientX,
+                        y: e.touches[0].clientY,
+                        time: Date.now()
+                      };
+                    }}
+                    onTouchEnd={(e) => {
+                      if (touchStartRef.current) {
+                        const touchEnd = e.changedTouches[0];
+                        const deltaX = Math.abs(touchEnd.clientX - touchStartRef.current.x);
+                        const deltaY = Math.abs(touchEnd.clientY - touchStartRef.current.y);
+                        const deltaTime = Date.now() - touchStartRef.current.time;
+                        
+                        // Если движение было небольшое и быстрое - это клик
+                        if (deltaX < 10 && deltaY < 10 && deltaTime < 300) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleBoxClick(box.name, e);
+                        }
+                        touchStartRef.current = null;
+                      }
+                    }}
                     onMouseEnter={() => setHoveredId(box.name)}
                     onMouseLeave={() => setHoveredId(null)}
                   />
@@ -1039,9 +1067,33 @@ const WarehouseSVGMap = React.forwardRef(({
                     style={{ 
                       cursor: 'pointer',
                       filter: isBoxSelected(box.name) ? 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.6))' : 'none',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      touchAction: 'manipulation'
                     }}
                     onClick={(e) => handleBoxClick(box.name, e)}
+                    onTouchStart={(e) => {
+                      touchStartRef.current = {
+                        x: e.touches[0].clientX,
+                        y: e.touches[0].clientY,
+                        time: Date.now()
+                      };
+                    }}
+                    onTouchEnd={(e) => {
+                      if (touchStartRef.current) {
+                        const touchEnd = e.changedTouches[0];
+                        const deltaX = Math.abs(touchEnd.clientX - touchStartRef.current.x);
+                        const deltaY = Math.abs(touchEnd.clientY - touchStartRef.current.y);
+                        const deltaTime = Date.now() - touchStartRef.current.time;
+                        
+                        // Если движение было небольшое и быстрое - это клик
+                        if (deltaX < 10 && deltaY < 10 && deltaTime < 300) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleBoxClick(box.name, e);
+                        }
+                        touchStartRef.current = null;
+                      }
+                    }}
                     onMouseEnter={() => setHoveredId(box.name)}
                     onMouseLeave={() => setHoveredId(null)}
                   />

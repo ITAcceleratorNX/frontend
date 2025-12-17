@@ -1731,6 +1731,11 @@ const HomePage = memo(() => {
             animation: scroll 50s linear infinite;
             will-change: transform;
           }
+          @media (max-width: 640px) {
+            .animate-scroll {
+              animation: scroll 30s linear infinite;
+            }
+          }
         `}</style>
       </section>
 
@@ -1782,12 +1787,12 @@ const HomePage = memo(() => {
                   boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
                   position: 'relative',
                   minHeight: 0,
-                  overflow: 'visible',
+                  overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column'
                 }}>
                   {/* Селектор локации и кнопки зума - внутри градиентного контейнера */}
-                  <div className="mb-4 flex items-center gap-3" style={{ position: 'relative', zIndex: 10, flexShrink: 0 }}>
+                  <div className="mb-4 flex items-center gap-3 flex-wrap justify-center" style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
                     <div className="w-fit [&_button]:bg-transparent [&_button]:text-white [&_button]:border-2 [&_button]:border-white [&_button]:rounded-full [&_button]:hover:bg-white/10 [&_svg]:text-white">
                       <Dropdown
                         items={dropdownItems}
@@ -1803,8 +1808,8 @@ const HomePage = memo(() => {
                       />
                     </div>
                     
-                    {/* Кнопки управления зумом - справа от селектора */}
-                    <div className="flex gap-2 ml-auto">
+                    {/* Кнопки управления зумом - по центру */}
+                    <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => {
                           if (mapRef.current) {
@@ -1831,7 +1836,7 @@ const HomePage = memo(() => {
                   </div>
                   
                   {/* Компонент карты */}
-                  <div className="flex-1" style={{ minHeight: 0, position: 'relative' }}>
+                  <div className="flex-1" style={{ minHeight: 0, position: 'relative', zIndex: 0 }}>
                     {renderWarehouseScheme({ isFullscreen: true })}
                   </div>
                 </div>
@@ -2645,6 +2650,11 @@ const HomePage = memo(() => {
           .animate-scroll-footer {
             animation: scroll-footer 50s linear infinite;
             will-change: transform;
+          }
+          @media (max-width: 640px) {
+            .animate-scroll-footer {
+              animation: scroll-footer 30s linear infinite;
+            }
           }
         `}</style>
       </section>
