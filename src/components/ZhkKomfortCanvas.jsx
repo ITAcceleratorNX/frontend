@@ -46,11 +46,11 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
 
     // Загрузка фонового изображения в зависимости от выбранной карты
     useEffect(() => {
-        const img = new window.Image();
-        const backgroundSource = selectedMap === 1 ? firstBackgroundImg : secondBackgroundImg;
-        img.src = backgroundSource;
-        const { width, height } = selectedMap === 1 ? { width: 1123, height: 423 } : { width: 1176, height: 537 };
-        setImageDimensions({width, height});
+      const img = new window.Image();
+      const backgroundSource = selectedMap === 1 ? firstBackgroundImg : secondBackgroundImg;
+      img.src = backgroundSource;
+      const { width, height } = { width: 960, height: 705 };
+      setImageDimensions({width, height});
         img.onload = () => {
             setBackgroundImg(img);
             // Автоматически определяем размеры изображения

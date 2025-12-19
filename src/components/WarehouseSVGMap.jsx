@@ -51,10 +51,10 @@ const WarehouseSVGMap = React.forwardRef(({
     } else if (name.includes('комфорт') || name.includes('komfort')) {
       const isFirstMap = mapNum === 1;
       return {
-        width: isFirstMap ? 1123 : 1176,
-        height: isFirstMap ? 423 : 537,
+        width: 960,
+        height: 705,
         layoutData: isFirstMap ? komfortLayoutData1 : komfortLayoutData2,
-        viewBox: isFirstMap ? '0 0 1123 423' : '0 0 1176 537'
+        viewBox: '0 0 960 705'
       };
     }
     
