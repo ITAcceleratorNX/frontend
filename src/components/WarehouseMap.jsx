@@ -253,13 +253,13 @@ const WarehouseMap = ({ warehouses = [] }) => {
         <div
             id="warehouse-map"
             ref={mapContainer}
-            className="absolute inset-0 rounded-3xl shadow-lg overflow-hidden"
+            className="absolute inset-0 overflow-hidden"
             style={{width: '100%', height: '100%'}}
         />
 
         {/* Map loading indicator */}
         {warehouses.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#f3f3f3] rounded-3xl">
+            <div className="absolute inset-0 flex items-center justify-center bg-[#f3f3f3]">
               <div className="flex flex-col items-center justify-center w-full h-full p-8">
                 <svg width="80" height="80" fill="none" viewBox="0 0 100 100" className="mb-4 opacity-40">
                   <rect width="100" height="100" rx="24" fill="#E5E7EB"/>

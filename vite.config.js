@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 import { resolve } from 'path'
-import { writeFileSync } from 'fs'
+import { writeFileSync, mkdirSync } from 'fs'
 
 // Определение порта с учетом переменной окружения
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
@@ -19,6 +19,8 @@ export default defineConfig({
     {
       name: 'generate-redirects',
       closeBundle() {
+        // Создаем директорию dist если она не существует
+        mkdirSync('dist', { recursive: true });
         // Создаем _redirects файл в dist директории после сборки
         writeFileSync('dist/_redirects', '/* /index.html 200\n');
         console.log('✓ _redirects file has been created');

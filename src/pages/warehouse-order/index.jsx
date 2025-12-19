@@ -8,7 +8,6 @@ import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
 import { ordersApi } from "../../shared/api/ordersApi";
 import { useAuth } from "../../shared/context/AuthContext";
-import ChatButton from "../../shared/components/ChatButton";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
 import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
 import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
@@ -23,12 +22,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from "../../components/ui";
 import {
   Trash2,
   Plus,
   Package,
   Truck,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DatePicker from "../../shared/ui/DatePicker";
@@ -74,6 +79,10 @@ const WarehouseOrderPage = memo(() => {
   const [isCloud, setIsCloud] = useState(false);
   // Состояние для выбора карты склада Жилой комплекс «Комфорт Сити»
   const [selectedMap, setSelectedMap] = useState(1);
+  // Состояние для активного таба
+  const [activeTab, setActiveTab] = useState("INDIVIDUAL");
+  // Состояние для зума карты
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   // Функция для смены карты с сбросом выбранного бокса
   const handleMapChange = (mapNumber) => {
@@ -747,156 +756,439 @@ const WarehouseOrderPage = memo(() => {
     );
   }
 
+  // Определяем тип хранения на основе активного таба
+  const storageType = activeTab === "CLOUD" ? "CLOUD" : "INDIVIDUAL";
+  
+  // Фильтруем склады по типу
+  const filteredWarehouses = warehouses.filter(w => w.type === storageType);
+  
+  // Автоматически выбираем первый склад при смене таба
+  useEffect(() => {
+    if (filteredWarehouses.length > 0 && (!selectedWarehouse || selectedWarehouse.type !== storageType)) {
+      const firstWarehouse = filteredWarehouses[0];
+      setSelectedWarehouse(firstWarehouse);
+      if (firstWarehouse.type === "CLOUD" && firstWarehouse.storage?.[0]) {
+        setSelectedStorage(firstWarehouse.storage[0]);
+      } else {
+        setSelectedStorage(null);
+      }
+    }
+  }, [activeTab, filteredWarehouses]);
+
   return (
     <ProfileValidationGuard>
-      <div className="min-h-screen bg-white flex flex-col font-[Montserrat]">
+      <div className="min-h-screen bg-gray-50 flex flex-col font-[Montserrat]">
         <Header />
-        <div className="flex-1 container mx-auto px-4 py-4 sm:px-6 sm:py-6 max-w-6xl">
+        <div className="flex-1 container mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12 max-w-7xl">
           {/* Заголовок */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-[48px] font-bold text-[#273655] mb-4">
-              {isUserRole ? "ЗАКАЗ БОКСА" : "ПРОСМОТР СКЛАДОВ И БОКСОВ"}
-            </h1>
-            <p className="text-[18px] text-[#6B6B6B]">
-              {isUserRole
-                ? "Выберите склад и бокс для аренды, добавьте ваши вещи"
-                : "Просмотр состояния складов и боксов"}
-            </p>
-          </div>
-          {/* Список складов */}
-          <div className="mb-8">
-            <h2 className="text-[24px] font-bold text-[#273655] mb-4">1. Выберите склад или облачное хранение</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {warehouses.map((warehouse) => (
-                  <div
-                      key={warehouse.id}
-                      onClick={() => {
-                        setSelectedWarehouse(warehouse);
-                        if (warehouse.type === "CLOUD") {
-                          let cloudStorage = warehouses
-                              .filter(w => w?.type === "CLOUD")[0]?.storage[0]
-                          setSelectedStorage(cloudStorage);
-                        } else {
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">
+            Храните личные вещи прямо у дома
+          </h1>
+          
+          {/* Табы навигации */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList className="grid grid-cols-2 w-full max-w-md bg-gray-100 rounded-2xl p-1 h-auto">
+              <TabsTrigger
+                value="INDIVIDUAL"
+                className="rounded-xl py-3 px-6 text-base font-semibold data-[state=active]:bg-[#00A991] data-[state=active]:text-white data-[state=inactive]:text-gray-600 transition-all"
+              >
+                Индивидуальное хранение
+              </TabsTrigger>
+              <TabsTrigger
+                value="CLOUD"
+                className="rounded-xl py-3 px-6 text-base font-semibold data-[state=active]:bg-[#00A991] data-[state=active]:text-white data-[state=inactive]:text-gray-600 transition-all"
+              >
+                Облачное хранение
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="INDIVIDUAL" className="mt-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
+                {/* Левая панель - Карта склада */}
+                <div className="bg-[#00A991] rounded-3xl p-6 shadow-lg">
+                  {/* Селектор локации */}
+                  <div className="mb-4">
+                    <Select
+                      value={selectedWarehouse?.id?.toString() || ""}
+                      onValueChange={(value) => {
+                        const warehouse = warehouses.find(w => w.id.toString() === value);
+                        if (warehouse) {
+                          setSelectedWarehouse(warehouse);
                           setSelectedStorage(null);
-                          setIsSelectedMoving(false);
-                          setIsSelectedPackage(false);
                         }
                       }}
-                      className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                          selectedWarehouse?.id === warehouse.id
-                              ? "border-[#273655] bg-blue-50"
-                              : "border-gray-200 hover:border-[#273655]"
-                      }`}
-                  >
-                    <h3 className="text-lg font-bold text-[#273655]">{warehouse.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{warehouse?.address}</p>
-                    <p className="text-[#6B6B6B] text-sm">
-                      {warehouse.work_start &&
-                      warehouse.work_end ? (
-                          warehouse.work_start === "00:00" && warehouse.work_end === "00:00" ? (
-                                "Время работы: Круглосуточно"
-                            ) : (
-                                `Время работы: ${warehouse.work_start} - ${warehouse.work_end}`
-                            )
+                    >
+                      <SelectTrigger className="w-full bg-white text-[#273655] border-0 rounded-xl h-12 text-base font-medium">
+                        <SelectValue placeholder="Выберите склад" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredWarehouses.map((warehouse) => (
+                          <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                            {warehouse.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Кнопки зума */}
+                  <div className="flex gap-2 mb-4 justify-center">
+                    <button
+                      onClick={() => setZoomLevel(prev => Math.min(prev + 0.1, 2))}
+                      className="w-10 h-10 rounded-full bg-white text-[#00A991] flex items-center justify-center hover:bg-gray-100 transition-colors shadow-md"
+                      aria-label="Увеличить"
+                    >
+                      <ZoomIn size={20} />
+                    </button>
+                    <button
+                      onClick={() => setZoomLevel(prev => Math.max(prev - 0.1, 0.5))}
+                      className="w-10 h-10 rounded-full bg-white text-[#00A991] flex items-center justify-center hover:bg-gray-100 transition-colors shadow-md"
+                      aria-label="Уменьшить"
+                    >
+                      <ZoomOut size={20} />
+                    </button>
+                  </div>
+                  
+                  {/* Карта склада */}
+                  <div className="bg-white rounded-2xl p-4 overflow-auto" style={{ maxHeight: '600px' }}>
+                    <div className="rsm-map-content" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left', width: `${100 / zoomLevel}%` }}>
+                      {selectedWarehouse && selectedWarehouse.storage && (
+                        <>
+                          {selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? (
+                            <InteractiveWarehouseCanvas
+                              storageBoxes={selectedWarehouse.storage}
+                              onBoxSelect={setSelectedStorage}
+                              selectedStorage={selectedStorage}
+                              userRole={user?.role}
+                              isViewOnly={isAdminOrManager}
+                            />
+                          ) : selectedWarehouse.name === "Есентай, жилой комплекс" ? (
+                            <MainWarehouseCanvas
+                              storageBoxes={selectedWarehouse.storage}
+                              onBoxSelect={setSelectedStorage}
+                              selectedStorage={selectedStorage}
+                              userRole={user?.role}
+                              isViewOnly={isAdminOrManager}
+                            />
+                          ) : selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»" ? (
+                            <>
+                              <div className="mb-4 flex justify-center">
+                                <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
+                                  <button
+                                    onClick={() => handleMapChange(1)}
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                      selectedMap === 1
+                                        ? 'bg-[#273655] text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    Карта 1
+                                  </button>
+                                  <button
+                                    onClick={() => handleMapChange(2)}
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                      selectedMap === 2
+                                        ? 'bg-[#273655] text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    Карта 2
+                                  </button>
+                                </div>
+                              </div>
+                              <ZhkKomfortCanvas
+                                storageBoxes={selectedWarehouse.storage}
+                                onBoxSelect={setSelectedStorage}
+                                selectedStorage={selectedStorage}
+                                userRole={user?.role}
+                                isViewOnly={isAdminOrManager}
+                                selectedMap={selectedMap}
+                              />
+                            </>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Правая панель - Форма конфигурации */}
+                <div className="bg-white rounded-3xl p-6 shadow-lg">
+                  <h2 className="text-2xl font-bold text-[#273655] mb-6">
+                    Настройте хранение
+                  </h2>
+                  
+                  {/* Дата начала бронирования */}
+                  <div className="mb-6">
+                    <DatePicker
+                      label="Дата начала бронирования"
+                      value={bookingStartDate}
+                      onChange={(value) => setBookingStartDate(value)}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      allowFutureDates={true}
+                      placeholder="ДД.ММ.ГГГГ"
+                    />
+                  </div>
+                  
+                  {/* Срок аренды */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-[#273655] mb-2">
+                      Срок аренды (месяцы):
+                    </label>
+                    <Select
+                      value={months.toString()}
+                      onValueChange={(value) => setMonths(Number(value))}
+                    >
+                      <SelectTrigger className="w-full h-12 text-base border-gray-300 rounded-xl">
+                        <SelectValue placeholder="Выберите срок аренды" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 месяц</SelectItem>
+                        <SelectItem value="2">2 месяца</SelectItem>
+                        <SelectItem value="3">3 месяца</SelectItem>
+                        <SelectItem value="6">6 месяцев</SelectItem>
+                        <SelectItem value="12">12 месяцев</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Перевозка вещей */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-5 h-5 text-[#273655]" />
+                      <span className="text-base font-medium text-[#273655]">Перевозка вещей</span>
+                    </div>
+                    <Switch
+                      checked={isSelectedMoving}
+                      onCheckedChange={(checked) => {
+                        setIsSelectedMoving(checked);
+                        if (!checked) {
+                          if (isUserRole) {
+                            setIsSelectedPackage(false);
+                            setServices([]);
+                          }
+                          setMovingOrders([]);
+                          setMovingOrderErrors([]);
+                        }
+                      }}
+                      className="bg-gray-200 data-[state=checked]:bg-[#00A991]"
+                    />
+                  </div>
+                  
+                  {/* Услуги упаковки */}
+                  {(isSelectedMoving || isAdminOrManager) && (
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-[#273655]" />
+                        <span className="text-base font-medium text-[#273655]">Услуги упаковки</span>
+                      </div>
+                      <Switch
+                        checked={isSelectedPackage}
+                        onCheckedChange={(checked) => {
+                          setIsSelectedPackage(checked);
+                          if (!checked) {
+                            setServices([]);
+                          }
+                        }}
+                        className="bg-gray-200 data-[state=checked]:bg-[#00A991]"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Итог */}
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-bold text-[#273655] mb-2">Итог</h3>
+                    {selectedStorage ? (
+                      <div className="space-y-2">
+                        {isCalculatingPrice ? (
+                          <div className="text-sm text-gray-600 flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#273655]"></div>
+                            Расчет...
+                          </div>
                         ) : (
-                            "Время работы уточняется"
+                          <>
+                            <div className="text-sm text-gray-600">
+                              Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸</span>
+                            </div>
+                            <div className="text-lg font-bold text-[#273655]">
+                              Общая стоимость: {calculateTotalPrice().toLocaleString()} ₸
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              за {months} {months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}
+                            </div>
+                          </>
                         )}
-                    </p>
-                    <p className="text-[#6B6B6B] text-sm">
-                      Статус:{" "}
-                      <span className="text-green-600">{warehouse.status === "AVAILABLE" ? "ДОСТУПНО" : "ЗАНЯТО"}</span>
-                    </p>
-                    {warehouse.type === 'CLOUD' && (
-                        <Badge className="mt-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                          🌥️ Облачное хранение
-                        </Badge>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">
+                        Выберите бокс на схеме, чтобы увидеть предварительную цену.
+                      </p>
                     )}
                   </div>
-              ))}
-            </div>
-
-            {selectedWarehouse?.type === 'CLOUD' && (
-                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
-                    При выборе облачного хранения доставка и упаковка предоставляются <strong>бесплатно</strong>.
-                  </p>
-                </div>
-            )}
-          </div>
-          {/* Список боксов выбранного склада */}
-          {selectedWarehouse && selectedWarehouse?.type !== 'CLOUD' && selectedWarehouse.storage && (
-            <div className="mb-8">
-              <h2 className="text-[24px] font-bold text-[#273655] mb-4">
-                {isUserRole ? "2. Выберите бокс в складе" : "2. Боксы в складе"}{" "}
-                {selectedWarehouse.name}
-              </h2>
-              {/* Адаптивная обертка для схемы склада */}
-              <div className="rsm-map-content overflow-x-auto touch-pan-x touch-pan-y w-full max-w-full mx-auto">
-                {/* Контейнер для центрирования с фиксированной шириной */}
-                <div 
-                  className="min-w-max mx-auto relative"
-                  style={{
-                    minWidth: selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? '615px' :
-                              selectedWarehouse.name === "Есентай, жилой комплекс" ? '1120px' : 'auto'
-                  }}
-                >
-                  {selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? (
-                    <InteractiveWarehouseCanvas
-                      storageBoxes={selectedWarehouse.storage}
-                      onBoxSelect={setSelectedStorage}
-                      selectedStorage={selectedStorage}
-                      userRole={user?.role}
-                      isViewOnly={isAdminOrManager}
-                    />
-                  ) : selectedWarehouse.name === "Есентай, жилой комплекс" ? (
-                    <MainWarehouseCanvas
-                      storageBoxes={selectedWarehouse.storage}
-                      onBoxSelect={setSelectedStorage}
-                      selectedStorage={selectedStorage}
-                      userRole={user?.role}
-                      isViewOnly={isAdminOrManager}
-                    />
-                  ) : selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»" ? (
-                      <>
-                        {/* Селектор карты для Жилой комплекс «Комфорт Сити» */}
-                        <div className="mb-4 flex justify-center">
-                          <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
-                            <button
-                              onClick={() => handleMapChange(1)}
-                              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                selectedMap === 1
-                                  ? 'bg-[#273655] text-white'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                            >
-                              Карта 1
-                            </button>
-                            <button
-                              onClick={() => handleMapChange(2)}
-                              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                selectedMap === 2
-                                  ? 'bg-[#273655] text-white'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                            >
-                              Карта 2
-                            </button>
-                          </div>
-                        </div>
-                        <ZhkKomfortCanvas
-                          storageBoxes={selectedWarehouse.storage}
-                          onBoxSelect={setSelectedStorage}
-                          selectedStorage={selectedStorage}
-                          userRole={user?.role}
-                          isViewOnly={isAdminOrManager}
-                          selectedMap={selectedMap}
-                        />
-                      </>
-                  ): null}
+                  
+                  {/* Кнопки действий */}
+                  <div className="mt-6 space-y-3">
+                    <button
+                      onClick={handleCreateOrder}
+                      disabled={isSubmitting || !selectedStorage}
+                      className="w-full bg-gradient-to-r from-[#00A991] to-[#00A991] text-white font-semibold py-4 px-6 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
+                    </button>
+                    <button
+                      onClick={() => setIsCallbackModalOpen(true)}
+                      className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                      Заказать обратный звонок
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            </TabsContent>
+            
+            <TabsContent value="CLOUD" className="mt-8">
+              {/* Контент для облачного хранения - аналогичная структура */}
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
+                {/* Левая панель */}
+                <div className="bg-[#00A991] rounded-3xl p-6 shadow-lg">
+                  <div className="mb-4">
+                    <Select
+                      value={selectedWarehouse?.id?.toString() || ""}
+                      onValueChange={(value) => {
+                        const warehouse = warehouses.find(w => w.id.toString() === value);
+                        if (warehouse) {
+                          setSelectedWarehouse(warehouse);
+                          if (warehouse.storage?.[0]) {
+                            setSelectedStorage(warehouse.storage[0]);
+                          }
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full bg-white text-[#273655] border-0 rounded-xl h-12 text-base font-medium">
+                        <SelectValue placeholder="Выберите склад" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredWarehouses.map((warehouse) => (
+                          <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                            {warehouse.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 text-center text-gray-600">
+                    <p>Облачное хранение не требует выбора конкретного бокса</p>
+                  </div>
+                </div>
+                
+                {/* Правая панель - аналогичная форма */}
+                <div className="bg-white rounded-3xl p-6 shadow-lg">
+                  <h2 className="text-2xl font-bold text-[#273655] mb-6">
+                    Настройте хранение
+                  </h2>
+                  
+                  {/* Дата начала бронирования */}
+                  <div className="mb-6">
+                    <DatePicker
+                      label="Дата начала бронирования"
+                      value={bookingStartDate}
+                      onChange={(value) => setBookingStartDate(value)}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      allowFutureDates={true}
+                      placeholder="ДД.ММ.ГГГГ"
+                    />
+                  </div>
+                  
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-[#273655] mb-2">
+                      Срок аренды (месяцы):
+                    </label>
+                    <Select
+                      value={months.toString()}
+                      onValueChange={(value) => setMonths(Number(value))}
+                    >
+                      <SelectTrigger className="w-full h-12 text-base border-gray-300 rounded-xl">
+                        <SelectValue placeholder="Выберите срок аренды" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 месяц</SelectItem>
+                        <SelectItem value="2">2 месяца</SelectItem>
+                        <SelectItem value="3">3 месяца</SelectItem>
+                        <SelectItem value="6">6 месяцев</SelectItem>
+                        <SelectItem value="12">12 месяцев</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-5 h-5 text-[#273655]" />
+                      <span className="text-base font-medium text-[#273655]">Перевозка вещей</span>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800">Бесплатно</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-[#273655]" />
+                      <span className="text-base font-medium text-[#273655]">Услуги упаковки</span>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800">Бесплатно</Badge>
+                  </div>
+                  
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-bold text-[#273655] mb-2">Итог</h3>
+                    {selectedStorage ? (
+                      <div className="space-y-2">
+                        {isCalculatingPrice ? (
+                          <div className="text-sm text-gray-600 flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#273655]"></div>
+                            Расчет...
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-sm text-gray-600">
+                              Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸</span>
+                            </div>
+                            <div className="text-lg font-bold text-[#273655]">
+                              Общая стоимость: {calculateTotalPrice().toLocaleString()} ₸
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              за {months} {months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">
+                        Выберите объем для расчета стоимости.
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="mt-6 space-y-3">
+                    <button
+                      onClick={handleCreateOrder}
+                      disabled={isSubmitting || !selectedStorage}
+                      className="w-full bg-gradient-to-r from-[#00A991] to-[#00A991] text-white font-semibold py-4 px-6 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
+                    </button>
+                    <button
+                      onClick={() => setIsCallbackModalOpen(true)}
+                      className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                      Заказать обратный звонок
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          {/* Дополнительные формы (товары, услуги) - показываем в отдельной секции при необходимости */}
+          {selectedStorage && (isUserRole || isAdminOrManager) && (
+            <div className="mt-8 space-y-8">
           {/* Форма добавления товаров */}
           {(selectedStorage || selectedWarehouse?.type === 'CLOUD') && (isUserRole || isAdminOrManager) && (
             <div className="mb-8">
@@ -1643,8 +1935,9 @@ const WarehouseOrderPage = memo(() => {
                 </div>
               </div>
           )}
+            </div>
+          )}
         </div>
-        <ChatButton />
         <Footer />
       </div>
       

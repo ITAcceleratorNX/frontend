@@ -71,6 +71,9 @@ const DatePicker = forwardRef(({
         onChange(dateString);
         // Закрываем календарь после выбора
         setOpen(false);
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+        });
       } else {
         onChange('');
       }
@@ -84,10 +87,10 @@ const DatePicker = forwardRef(({
   const formatInputValue = (text) => {
     // Удаляем все нецифровые символы
     const digits = text.replace(/\D/g, '');
-    
+
     // Ограничиваем до 8 цифр (ддммгггг)
     const limitedDigits = digits.slice(0, 8);
-    
+
     // Форматируем с точками
     let formatted = '';
     for (let i = 0; i < limitedDigits.length; i++) {
@@ -96,7 +99,7 @@ const DatePicker = forwardRef(({
       }
       formatted += limitedDigits[i];
     }
-    
+
     return formatted;
   };
 
@@ -109,11 +112,11 @@ const DatePicker = forwardRef(({
     // Если введена полная дата (10 символов: ДД.ММ.ГГГГ), пытаемся преобразовать
     if (formatted.length === 10) {
       const [day, month, year] = formatted.split('.').map(Number);
-      
+
       // Валидация даты
       if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
         const date = new Date(year, month - 1, day);
-        
+
         // Проверяем, что дата валидна (например, не 31 февраля)
         if (date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year) {
           // Проверяем минимальную дату, если указана
@@ -121,9 +124,9 @@ const DatePicker = forwardRef(({
           today.setHours(0, 0, 0, 0);
           const checkDate = new Date(date);
           checkDate.setHours(0, 0, 0, 0);
-          
+
           let isValid = true;
-          
+
           // Если указана минимальная дата, проверяем её
           if (minDate) {
             const min = new Date(minDate);
@@ -132,12 +135,12 @@ const DatePicker = forwardRef(({
               isValid = false;
             }
           }
-          
+
           // Если не разрешены будущие даты, проверяем это
           if (!allowFutureDates && checkDate > today) {
             isValid = false;
           }
-          
+
           if (isValid) {
             const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             if (onChange) {
@@ -161,7 +164,7 @@ const DatePicker = forwardRef(({
         setInputValue('');
       }
     }
-    
+
     if (onBlur) {
       onBlur();
     }
@@ -173,89 +176,103 @@ const DatePicker = forwardRef(({
     if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key)) {
       return;
     }
-    
+
     // Разрешаем только цифры
     if (!/^\d$/.test(e.key)) {
       e.preventDefault();
     }
   };
 
+  const hasInlineLabel = !label && placeholder;
+  const isGrayBackground = className.includes('[&>div]:bg-gray-100');
+  const hasNoBorder = className.includes('[&>div]:border-0');
+
   return (
     <div className={cn('w-full', className)}>
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-      )}
-      <div className="relative flex items-center">
-        <input
-          ref={(node) => {
-            inputRef.current = node;
-            if (typeof ref === 'function') {
-              ref(node);
-            } else if (ref) {
-              ref.current = node;
-            }
-          }}
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur}
-          onKeyDown={handleKeyDown}
-          disabled={disabled}
-          placeholder={placeholder}
-          maxLength={10}
-          className={cn(
-            "w-full h-[40px] px-3 pr-10 bg-slate-50 rounded-md border border-gray-300",
-            "text-base text-[#222] placeholder:text-[#A6A6A6]",
-            "focus:outline-none focus:border-2 focus:border-[#1e2c4f]",
-            "hover:bg-gray-100 transition-colors",
-            error && "border-red-500 border-2",
-            disabled && "cursor-not-allowed opacity-50"
-          )}
-          {...props}
-        />
-        <Popover open={open} onOpenChange={setOpen} modal={false}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={disabled}
-              className={cn(
-                "absolute right-1 h-8 w-8 p-0 hover:bg-gray-200",
-                "text-gray-600 hover:text-gray-900",
-                disabled && "cursor-not-allowed opacity-50"
-              )}
-              onClick={(e) => {
+      <div className={cn(
+        "relative flex flex-col items-start justify-center rounded-3xl p-3",
+        !hasNoBorder && "border border-gray-300",
+        "focus-within:ring-2 focus-within:ring-[#00A991] focus-within:border-transparent",
+        !isGrayBackground && "hover:bg-gray-50 transition-colors",
+        isGrayBackground && "bg-gray-100",
+        error && "border-red-500 border-2",
+        disabled && "cursor-not-allowed opacity-50",
+        (label || hasInlineLabel) ? "min-h-[60px]" : "min-h-[48px]",
+        className.includes('[&_input]:bg-transparent') && "bg-transparent"
+      )}>
+        {(label || hasInlineLabel) && (
+          <label className="text-sm font-medium text-[#273655] mb-1">
+            {label || placeholder}
+          </label>
+        )}
+        <div className="relative flex items-center w-full">
+          <input
+            ref={(node) => {
+              inputRef.current = node;
+              if (typeof ref === 'function') {
+                ref(node);
+              } else if (ref) {
+                ref.current = node;
+              }
+            }}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            placeholder={hasInlineLabel ? "" : placeholder}
+            maxLength={10}
+            className={cn(
+              "w-full bg-transparent border-0 outline-none",
+              "text-base text-[#222] placeholder:text-[#A6A6A6]",
+              "pr-8",
+              disabled && "cursor-not-allowed"
+            )}
+            {...props}
+          />
+          <Popover open={open} onOpenChange={setOpen} modal={false}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={disabled}
+                className={cn(
+                  "absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-200",
+                  "text-gray-600 hover:text-gray-900",
+                  disabled && "cursor-not-allowed opacity-50"
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!disabled) {
+                    setOpen((v) => !v);
+                  }
+                }}
+              >
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 z-[9999] pointer-events-auto"
+              align="end"
+              sideOffset={8}
+              collisionPadding={8}
+              onOpenAutoFocus={(e) => {
                 e.preventDefault();
-                e.stopPropagation();
-                if (!disabled) {
-                  setOpen(!open);
+              }}
+              onInteractOutside={(e) => {
+                const target = e.target;
+                if (
+                  target.closest('[data-radix-popper-content-wrapper]') ||
+                  target.closest('button') ||
+                  target === inputRef.current
+                ) {
+                  e.preventDefault();
                 }
               }}
             >
-              <CalendarIcon className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            container={typeof document !== 'undefined' ? document.body : null}
-            className="w-auto p-0 !z-[9999] pointer-events-auto" 
-            align="end"
-            sideOffset={8}
-            collisionPadding={8}
-            onOpenAutoFocus={(e) => {
-              e.preventDefault();
-            }}
-            onInteractOutside={(e) => {
-              // Не закрываем popover при клике на Dialog overlay или другие элементы
-              const target = e.target;
-              if (target.closest('[data-radix-popper-content-wrapper]') || 
-                  target.closest('[role="dialog"]')) {
-                e.preventDefault();
-              }
-            }}
-          >
+
             <Calendar
               mode="single"
               selected={dateValue}
@@ -294,8 +311,9 @@ const DatePicker = forwardRef(({
                 return false;
               }}
             />
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       {error && (
         <p className="text-xs text-red-500 mt-1 ml-1">
