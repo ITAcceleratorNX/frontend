@@ -164,7 +164,7 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
 
   return (
     <div className="flex flex-col items-center">
-      <Stage width={1120} height={751}>
+      <Stage width={1101} height={686}>
         <Layer>
           {/* Фоновое изображение */}
           {backgroundImg && (
@@ -172,8 +172,8 @@ const MainWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, 
               image={backgroundImg}
               x={0}
               y={0}
-              width={1280}
-              height={751}
+              width={1101}
+              height={686}
               listening={false}
             />
           )}

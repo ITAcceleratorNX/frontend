@@ -43,10 +43,10 @@ const WarehouseSVGMap = React.forwardRef(({
       };
     } else if (name.includes('есентай') || name.includes('esentai')) {
       return {
-        width: 1280,
-        height: 751,
+        width: 1101,
+        height: 686,
         layoutData: mainWarehouseLayoutData,
-        viewBox: '0 0 1280 751'
+        viewBox: '0 0 1101 686'
       };
     } else if (name.includes('комфорт') || name.includes('komfort')) {
       const isFirstMap = mapNum === 1;
@@ -166,7 +166,7 @@ const WarehouseSVGMap = React.forwardRef(({
       optimalPanY = (containerHeight - scaledHeight) * 0.1; // 10% отступ сверху
 
     } else if (name.includes('есентай') || name.includes('esentai')) {
-      // Esentai: 1280x751 (широкая, низкая карта)
+      // Esentai: 1101x686 (широкая, низкая карта)
       const zoomByWidth = (containerWidth * 0.95) / currentConfig.width;
       const zoomByHeight = (containerHeight * 0.95) / currentConfig.height;
       optimalZoom = Math.min(zoomByWidth, zoomByHeight, 1.0);
