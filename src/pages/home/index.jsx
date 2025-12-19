@@ -131,6 +131,7 @@ const HomePage = memo(() => {
   const [cloudPriceError, setCloudPriceError] = useState(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
+  const [megaSelectedMap, setMegaSelectedMap] = useState(1);
   const [isMobileView, setIsMobileView] = useState(false);
   const mapRef = useRef(null);
   const [serviceOptions, setServiceOptions] = useState([]);
@@ -1276,7 +1277,7 @@ const HomePage = memo(() => {
     if (selectedWarehouse?.name === "Жилой комплекс «Комфорт Сити»") {
       setPreviewStorage(null);
     }
-  }, [komfortSelectedMap, selectedWarehouse]);
+  }, [komfortSelectedMap, megaSelectedMap, selectedWarehouse]);
 
   useEffect(() => {
     if (!isMapModalOpen) {
@@ -1477,17 +1478,27 @@ const HomePage = memo(() => {
     const showInlineCanvas = isFullscreen || !isMobileView;
 
     return (
-      <div className={`flex flex-col gap-4 ${isFullscreen ? "h-full" : ""}`}>
+      <div className={`flex flex-col gap-4 ${isFullscreen ? "h-full w-full" : ""}`} style={isFullscreen ? { width: '100%', height: '100%', minHeight: 0, minWidth: 0 } : {}}>
         {showInlineCanvas ? (
-          <div className="w-full h-full">
+          <div className="w-full h-full" style={{ width: '100%', height: '100%', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
             <WarehouseSVGMap
               ref={isFullscreen ? mapRef : null}
               warehouse={selectedWarehouse}
               storageBoxes={storageBoxes}
               onBoxSelect={setPreviewStorage}
               selectedStorage={previewStorage}
-              selectedMap={komfortSelectedMap}
-              onMapChange={(mapNumber) => setKomfortSelectedMap(mapNumber)}
+              selectedMap={
+                selectedWarehouse?.name?.toLowerCase().includes('mega') 
+                  ? megaSelectedMap 
+                  : komfortSelectedMap
+              }
+              onMapChange={(mapNumber) => {
+                if (selectedWarehouse?.name?.toLowerCase().includes('mega')) {
+                  setMegaSelectedMap(mapNumber);
+                } else {
+                  setKomfortSelectedMap(mapNumber);
+                }
+              }}
             />
           </div>
         ) : (
@@ -1836,8 +1847,10 @@ const HomePage = memo(() => {
                   </div>
                   
                   {/* Компонент карты */}
-                  <div className="flex-1" style={{ minHeight: 0, position: 'relative', zIndex: 0 }}>
-                    {renderWarehouseScheme({ isFullscreen: true })}
+                  <div className="flex-1 w-full h-full" style={{ minHeight: 0, minWidth: 0, position: 'relative', zIndex: 0 }}>
+                    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+                      {renderWarehouseScheme({ isFullscreen: true })}
+                    </div>
                   </div>
                 </div>
 

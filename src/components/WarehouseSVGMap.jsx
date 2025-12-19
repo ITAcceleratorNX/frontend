@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import svgPanZoom from 'svg-pan-zoom';
-import warehouseLayoutData from '../assets/warehouseLayout.json';
+import megaTowersLayoutData1 from '../assets/mega-towers-1-storage.json';
+import megaTowersLayoutData2 from '../assets/mega-towers-2-storage.json';
 import mainWarehouseLayoutData from '../assets/Main_Individual_storage.json';
 import komfortLayoutData1 from '../assets/ZHK_Komfort_storage.json';
 import komfortLayoutData2 from '../assets/second_ZHK_Komfort_storage.json';
@@ -33,10 +34,11 @@ const WarehouseSVGMap = React.forwardRef(({
     const mapNum = overrideSelectedMap ?? selectedMap;
     
     if (name.includes('mega')) {
+      const isFirstMap = mapNum === 1;
       return {
         width: 1192,
         height: 617,
-        layoutData: warehouseLayoutData,
+        layoutData: isFirstMap ? megaTowersLayoutData1 : megaTowersLayoutData2,
         viewBox: '0 0 1192 617'
       };
     } else if (name.includes('есентай') || name.includes('esentai')) {
@@ -60,7 +62,7 @@ const WarehouseSVGMap = React.forwardRef(({
     return {
       width: 1192,
       height: 617,
-      layoutData: warehouseLayoutData,
+      layoutData: megaTowersLayoutData1,
       viewBox: '0 0 1192 617'
     };
   };
@@ -570,6 +572,91 @@ const WarehouseSVGMap = React.forwardRef(({
     };
   }, [warehouse]);
 
+  // Вспомогательная функция для инициализации panZoom
+  const initPanZoom = useCallback((name, mapNum, container) => {
+    if (!svgRef.current) return false;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    if (containerWidth === 0 || containerHeight === 0) {
+      return false;
+    }
+    
+    const zoomLimits = getAdaptiveZoomLimits(containerWidth, containerHeight, name, mapNum);
+
+    try {
+      // Уничтожаем старый экземпляр, если есть
+      if (panZoomRef.current) {
+        try {
+          panZoomRef.current.destroy();
+        } catch (error) {
+          // Игнорируем ошибки при уничтожении
+        }
+        panZoomRef.current = null;
+      }
+
+      panZoomRef.current = svgPanZoom(svgRef.current, {
+        panEnabled: true,
+        controlIconsEnabled: false,
+        zoomEnabled: true,
+        dblClickZoomEnabled: true,
+        mouseWheelZoomEnabled: true,
+        preventMouseEventsDefault: true,
+        zoomScaleSensitivity: 0.2,
+        minZoom: zoomLimits.minZoom,
+        maxZoom: zoomLimits.maxZoom,
+        fit: false,
+        contain: false,
+        center: false,
+        refreshRate: 60,
+        beforePan: (oldPan, newPan) => {
+          if (!getPanBoundsRef.current) {
+            return { x: newPan.x, y: newPan.y };
+          }
+          const bounds = getPanBoundsRef.current();
+          return {
+            x: Math.max(bounds.minX, Math.min(bounds.maxX, newPan.x)),
+            y: Math.max(bounds.minY, Math.min(bounds.maxY, newPan.y))
+          };
+        },
+        onZoom: () => {
+          if (panZoomRef.current && constrainPanRef.current) {
+            const currentPan = panZoomRef.current.getPan();
+            const constrainedPan = constrainPanRef.current(currentPan.x, currentPan.y);
+            if (constrainedPan.x !== currentPan.x || constrainedPan.y !== currentPan.y) {
+              panZoomRef.current.pan({ x: constrainedPan.x, y: constrainedPan.y });
+            }
+          }
+        }
+      });
+
+      // Применяем начальный вид сразу после создания
+      if (panZoomRef.current) {
+        const initialView = getInitialView(name, mapNum, containerWidth, containerHeight);
+        panZoomRef.current.zoomAtPoint(initialView.zoom, {
+          x: containerWidth / 2,
+          y: containerHeight / 2
+        });
+        panZoomRef.current.pan({ 
+          x: initialView.panX, 
+          y: initialView.panY 
+        });
+        
+        if (import.meta.env.DEV) {
+          console.log('✅ panZoom успешно инициализирован для:', { name, mapNum });
+        }
+        return true;
+      }
+    } catch (error) {
+      console.error('Error creating panZoom:', error);
+      panZoomRef.current = null;
+      return false;
+    }
+    
+    return false;
+  }, [getAdaptiveZoomLimits, getInitialView]);
+
   // Обновление при изменении склада или карты - ПЕРЕСОЗДАЕМ panZoom если SVG изменился
   useEffect(() => {
     if (!svgRef.current || !warehouse) {
@@ -600,85 +687,53 @@ const WarehouseSVGMap = React.forwardRef(({
       // Обновляем отслеживаемый key
       svgKeyRef.current = currentKey;
       
-      // Уничтожаем старый экземпляр
-      try {
-        panZoomRef.current.destroy();
-      } catch (error) {
-        console.error('Error destroying panZoom:', error);
-      }
-      panZoomRef.current = null;
+      // Используем двойной requestAnimationFrame для надежного ожидания обновления DOM
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!svgRef.current) {
+            if (import.meta.env.DEV) {
+              console.warn('SVG ref is null after DOM update');
+            }
+            return;
+          }
+          
+          const container = svgRef.current.parentElement;
+          if (!container) {
+            console.error('Map container not found');
+            return;
+          }
 
-      // Даем React время обновить DOM перед созданием нового экземпляра
-      setTimeout(() => {
-        if (!svgRef.current) return;
-        
-        const container = svgRef.current.parentElement;
-        if (!container) {
-          console.error('Map container not found');
-          return;
-        }
-
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight;
-        const zoomLimits = getAdaptiveZoomLimits(containerWidth, containerHeight, warehouseName, selectedMap);
-
-        try {
-          panZoomRef.current = svgPanZoom(svgRef.current, {
-            panEnabled: true,
-            controlIconsEnabled: false,
-            zoomEnabled: true,
-            dblClickZoomEnabled: true,
-            mouseWheelZoomEnabled: true,
-            preventMouseEventsDefault: true,
-            zoomScaleSensitivity: 0.2,
-            minZoom: zoomLimits.minZoom,
-            maxZoom: zoomLimits.maxZoom,
-            fit: false,
-            contain: false,
-            center: false,
-            refreshRate: 60,
-            beforePan: (oldPan, newPan) => {
-              if (!getPanBoundsRef.current) {
-                return { x: newPan.x, y: newPan.y };
-              }
-              const bounds = getPanBoundsRef.current();
-              return {
-                x: Math.max(bounds.minX, Math.min(bounds.maxX, newPan.x)),
-                y: Math.max(bounds.minY, Math.min(bounds.maxY, newPan.y))
-              };
-            },
-            onZoom: () => {
-              if (panZoomRef.current && constrainPanRef.current) {
-                const currentPan = panZoomRef.current.getPan();
-                const constrainedPan = constrainPanRef.current(currentPan.x, currentPan.y);
-                if (constrainedPan.x !== currentPan.x || constrainedPan.y !== currentPan.y) {
-                  panZoomRef.current.pan({ x: constrainedPan.x, y: constrainedPan.y });
+          // Если контейнер еще не имеет размеров, ждем еще немного
+          if (container.clientWidth === 0 || container.clientHeight === 0) {
+            setTimeout(() => {
+              if (svgRef.current) {
+                const retryContainer = svgRef.current.parentElement;
+                if (retryContainer && retryContainer.clientWidth > 0 && retryContainer.clientHeight > 0) {
+                  initPanZoom(warehouseName, selectedMap, retryContainer);
                 }
               }
-            }
-          });
-
-          // Применяем начальный вид сразу после создания
-          if (panZoomRef.current) {
-            const initialView = getInitialView(warehouseName, selectedMap, containerWidth, containerHeight);
-            panZoomRef.current.zoomAtPoint(initialView.zoom, {
-              x: containerWidth / 2,
-              y: containerHeight / 2
-            });
-            panZoomRef.current.pan({ 
-              x: initialView.panX, 
-              y: initialView.panY 
-            });
+            }, 100);
+            return;
           }
-        } catch (error) {
-          console.error('Error creating panZoom:', error);
-        }
-      }, 50);
+
+          initPanZoom(warehouseName, selectedMap, container);
+        });
+      });
       
       return; // Выходим, чтобы не применять вид дважды
     }
 
-    // Применяем начальный вид
+    // Если panZoom не существует, но должен быть - инициализируем
+    if (!panZoomRef.current && svgRef.current) {
+      const container = svgRef.current.parentElement;
+      if (container && container.clientWidth > 0 && container.clientHeight > 0) {
+        svgKeyRef.current = currentKey;
+        initPanZoom(warehouseName, selectedMap, container);
+        return;
+      }
+    }
+
+    // Применяем начальный вид для существующего panZoom
     if (panZoomRef.current && svgRef.current) {
       requestAnimationFrame(() => {
         if (panZoomRef.current && svgRef.current) {
@@ -689,9 +744,17 @@ const WarehouseSVGMap = React.forwardRef(({
             
             // Обновляем zoom limits
             const zoomLimits = getAdaptiveZoomLimits(containerWidth, containerHeight, warehouseName, selectedMap);
-            panZoomRef.current.updateBBox();
-            panZoomRef.current.setMinZoom(zoomLimits.minZoom);
-            panZoomRef.current.setMaxZoom(zoomLimits.maxZoom);
+            try {
+              panZoomRef.current.updateBBox();
+              panZoomRef.current.setMinZoom(zoomLimits.minZoom);
+              panZoomRef.current.setMaxZoom(zoomLimits.maxZoom);
+            } catch (error) {
+              console.error('Error updating panZoom limits:', error);
+              // Если обновление не удалось, переинициализируем
+              svgKeyRef.current = currentKey;
+              initPanZoom(warehouseName, selectedMap, container);
+              return;
+            }
             
             // Применяем начальный вид
             const initialView = getInitialView(warehouseName, selectedMap, containerWidth, containerHeight);
@@ -704,20 +767,27 @@ const WarehouseSVGMap = React.forwardRef(({
               });
             }
             
-            panZoomRef.current.zoomAtPoint(initialView.zoom, {
-              x: containerWidth / 2,
-              y: containerHeight / 2
-            });
-            
-            panZoomRef.current.pan({ 
-              x: initialView.panX, 
-              y: initialView.panY 
-            });
+            try {
+              panZoomRef.current.zoomAtPoint(initialView.zoom, {
+                x: containerWidth / 2,
+                y: containerHeight / 2
+              });
+              
+              panZoomRef.current.pan({ 
+                x: initialView.panX, 
+                y: initialView.panY 
+              });
+            } catch (error) {
+              console.error('Error applying initial view:', error);
+              // Если применение не удалось, переинициализируем
+              svgKeyRef.current = currentKey;
+              initPanZoom(warehouseName, selectedMap, container);
+            }
           }
         }
       });
     }
-  }, [warehouseName, selectedMap, warehouse, getAdaptiveZoomLimits, getInitialView]);
+  }, [warehouseName, selectedMap, warehouse, getAdaptiveZoomLimits, getInitialView, initPanZoom]);
 
   useEffect(() => {
     if (initialSelectedMap !== selectedMap) {
@@ -811,7 +881,7 @@ const WarehouseSVGMap = React.forwardRef(({
     };
   };
 
-  // Обработчик изменения карты для Комфорт
+  // Обработчик изменения карты для Комфорт и Mega Towers
   const handleMapChange = (mapNumber) => {
     setSelectedMap(mapNumber);
     if (onMapChange) {
@@ -820,6 +890,7 @@ const WarehouseSVGMap = React.forwardRef(({
   };
 
   const isKomfortWarehouse = warehouseName?.includes('Комфорт') || warehouseName?.includes('Komfort');
+  const isMegaWarehouse = warehouseName?.toLowerCase().includes('mega towers') || warehouseName?.toLowerCase().includes('mega tower') || warehouseName?.toLowerCase().includes('mega');
 
   // Если нет склада или это CLOUD склад, не рендерим карту
   if (!warehouse || warehouse.type === 'CLOUD') {
@@ -894,8 +965,8 @@ const WarehouseSVGMap = React.forwardRef(({
       perspective: '1200px',
       perspectiveOrigin: '50% 50%'
     }}>
-      {/* Селектор карт для Комфорт - вверху слева */}
-      {isKomfortWarehouse && (
+      {/* Селектор карт для Комфорт и Mega Towers - вверху слева */}
+      {(isKomfortWarehouse || isMegaWarehouse) && (
         <div style={{
           position: 'absolute',
           top: '16px',

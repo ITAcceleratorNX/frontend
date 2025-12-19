@@ -30,6 +30,7 @@ const WarehouseCanvasViewer = memo(({
   isFullscreen = false
 }) => {
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
+  const [megaSelectedMap, setMegaSelectedMap] = useState(1);
   const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
@@ -76,6 +77,10 @@ const WarehouseCanvasViewer = memo(({
       canvasProps.selectedMap = komfortSelectedMap;
     }
 
+    if (isMegaWarehouse) {
+      canvasProps.selectedMap = megaSelectedMap;
+    }
+
     // Определяем компонент карты на основе имени склада
     if (isMegaWarehouse) {
       return <InteractiveWarehouseCanvas {...canvasProps} />;
@@ -86,7 +91,7 @@ const WarehouseCanvasViewer = memo(({
     }
 
     return null;
-  }, [warehouse, onBoxSelect, selectedStorage, userRole, isViewOnly, komfortSelectedMap, isKomfortWarehouse, isMegaWarehouse, isEsentaiWarehouse]);
+  }, [warehouse, onBoxSelect, selectedStorage, userRole, isViewOnly, komfortSelectedMap, megaSelectedMap, isKomfortWarehouse, isMegaWarehouse, isEsentaiWarehouse]);
 
   // Определяем состояние для отображения
   const getEmptyState = () => {
@@ -206,6 +211,35 @@ const WarehouseCanvasViewer = memo(({
     </div>
   ) : null;
 
+  // Элементы управления для склада Mega Towers
+  const megaControls = isMegaWarehouse && showControls ? (
+    <div
+      className={`flex ${isFullscreen ? "flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : "items-center justify-center gap-3"} flex-wrap`}
+    >
+      <span className="text-sm font-semibold text-[#273655]">Карта Mega Towers</span>
+      <div className="inline-flex rounded-xl border border-[#d7dbe6] bg-white p-1 shadow-sm">
+        {[1, 2].map((mapNumber) => {
+          const isActive = megaSelectedMap === mapNumber;
+          return (
+            <button
+              key={mapNumber}
+              type="button"
+              onClick={() => setMegaSelectedMap(mapNumber)}
+              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                isActive
+                  ? "bg-[#273655] text-white shadow"
+                  : "text-[#273655] hover:bg-[#273655]/10"
+              }`}
+              aria-pressed={isActive}
+            >
+              Карта {mapNumber}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  ) : null;
+
   // Компактный режим (уменьшенный вид с кнопкой "Смотреть карту")
   if (isCompact) {
     const wrapperClasses = isFullscreen
@@ -216,7 +250,7 @@ const WarehouseCanvasViewer = memo(({
 
     return (
       <div className={`flex flex-col gap-4 ${isFullscreen ? "h-full" : ""}`}>
-        {showInlineCanvas && komfortControls}
+        {showInlineCanvas && (komfortControls || megaControls)}
         {showInlineCanvas ? (
           <div
             className={wrapperClasses}
@@ -256,7 +290,7 @@ const WarehouseCanvasViewer = memo(({
     
     return (
       <div className={`flex flex-col gap-4 h-full ${className}`}>
-        {komfortControls}
+        {komfortControls || megaControls}
         <div
           className={wrapperClasses}
           style={
@@ -280,7 +314,7 @@ const WarehouseCanvasViewer = memo(({
   // Обычный режим (без компактного вида)
   return (
     <div className={`flex flex-col gap-6 ${className}`}>
-      {komfortControls}
+      {komfortControls || megaControls}
       <div className="rounded-xl border border-gray-200 bg-white overflow-auto shadow-sm hover:shadow-md transition-all duration-300">
         <div className="min-w-max mx-auto py-8 px-6">
           <div className="flex justify-center items-center w-full">

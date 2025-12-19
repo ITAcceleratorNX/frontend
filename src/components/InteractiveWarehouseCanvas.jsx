@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState, memo } from "react";
 import { Stage, Layer, Rect, Text, Image } from "react-konva";
 import backgroundImage from "../assets/INDIVIDUAL.png";
 import lockIcon from "../assets/lock.png";
-import warehouseLayoutData from "../assets/warehouseLayout.json";
+import firstMapData from "../assets/mega-towers-1-storage.json";
+import secondMapData from "../assets/mega-towers-2-storage.json";
 
-const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, userRole, isViewOnly = false }) => {
+const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, userRole, isViewOnly = false, selectedMap = 1 }) => {
   const [backgroundImg, setBackgroundImg] = useState(null);
   const [lockImg, setLockImg] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
@@ -29,12 +30,14 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
   // Отладочная информация для схемы складов
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('InteractiveWarehouseCanvas: Все боксы в схеме:', 
-        warehouseLayoutData.map(box => box.name)
+      const currentMapData = selectedMap === 1 ? firstMapData : secondMapData;
+      console.log(`InteractiveWarehouseCanvas: Все боксы в схеме карты ${selectedMap}:`, 
+        currentMapData.map(box => box.name)
       );
       console.log('InteractiveWarehouseCanvas: Выбранный бокс:', selectedStorage);
+      console.log('InteractiveWarehouseCanvas: Выбранная карта:', selectedMap);
     }
-  }, [selectedStorage]);
+  }, [selectedStorage, selectedMap]);
 
   // Загрузка фонового изображения
   useEffect(() => {
@@ -141,6 +144,9 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
     setHoveredId(null);
   };
 
+  // Выбираем данные карты в зависимости от selectedMap
+  const currentMapData = selectedMap === 1 ? firstMapData : secondMapData;
+
   return (
     <div className="flex flex-col items-center">
       <Stage width={1192} height={617}>
@@ -157,7 +163,7 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
             />
           )}
           
-          {warehouseLayoutData.map((box) => {
+          {currentMapData.map((box) => {
             const status = getBoxStatus(box.name);
             const isHovered = hoveredId === box.name;
             const isSelected = isBoxSelected(box.name);

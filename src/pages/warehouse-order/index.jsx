@@ -78,15 +78,23 @@ const WarehouseOrderPage = memo(() => {
   const [gazelleService, setGazelleService] = useState(null);
   const [isCloud, setIsCloud] = useState(false);
   // Состояние для выбора карты склада Жилой комплекс «Комфорт Сити»
-  const [selectedMap, setSelectedMap] = useState(1);
+  const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
+  // Состояние для выбора карты склада Mega Towers
+  const [megaSelectedMap, setMegaSelectedMap] = useState(1);
   // Состояние для активного таба
   const [activeTab, setActiveTab] = useState("INDIVIDUAL");
   // Состояние для зума карты
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  // Функция для смены карты с сбросом выбранного бокса
-  const handleMapChange = (mapNumber) => {
-    setSelectedMap(mapNumber);
+  // Функция для смены карты Komfort с сбросом выбранного бокса
+  const handleKomfortMapChange = (mapNumber) => {
+    setKomfortSelectedMap(mapNumber);
+    setSelectedStorage(null); // Сбрасываем выбранный бокс при смене карты
+  };
+
+  // Функция для смены карты Mega Towers с сбросом выбранного бокса
+  const handleMegaMapChange = (mapNumber) => {
+    setMegaSelectedMap(mapNumber);
     setSelectedStorage(null); // Сбрасываем выбранный бокс при смене карты
   };
 
@@ -855,13 +863,40 @@ const WarehouseOrderPage = memo(() => {
                       {selectedWarehouse && selectedWarehouse.storage && (
                         <>
                           {selectedWarehouse.name === "Mega Tower Almaty, жилой комплекс" ? (
-                            <InteractiveWarehouseCanvas
-                              storageBoxes={selectedWarehouse.storage}
-                              onBoxSelect={setSelectedStorage}
-                              selectedStorage={selectedStorage}
-                              userRole={user?.role}
-                              isViewOnly={isAdminOrManager}
-                            />
+                            <>
+                              <div className="mb-4 flex justify-center">
+                                <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
+                                  <button
+                                    onClick={() => handleMegaMapChange(1)}
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                      megaSelectedMap === 1
+                                        ? 'bg-[#273655] text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    Карта 1
+                                  </button>
+                                  <button
+                                    onClick={() => handleMegaMapChange(2)}
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                      megaSelectedMap === 2
+                                        ? 'bg-[#273655] text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    Карта 2
+                                  </button>
+                                </div>
+                              </div>
+                              <InteractiveWarehouseCanvas
+                                storageBoxes={selectedWarehouse.storage}
+                                onBoxSelect={setSelectedStorage}
+                                selectedStorage={selectedStorage}
+                                userRole={user?.role}
+                                isViewOnly={isAdminOrManager}
+                                selectedMap={megaSelectedMap}
+                              />
+                            </>
                           ) : selectedWarehouse.name === "Есентай, жилой комплекс" ? (
                             <MainWarehouseCanvas
                               storageBoxes={selectedWarehouse.storage}
@@ -875,9 +910,9 @@ const WarehouseOrderPage = memo(() => {
                               <div className="mb-4 flex justify-center">
                                 <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
                                   <button
-                                    onClick={() => handleMapChange(1)}
+                                    onClick={() => handleKomfortMapChange(1)}
                                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                      selectedMap === 1
+                                      komfortSelectedMap === 1
                                         ? 'bg-[#273655] text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
@@ -885,9 +920,9 @@ const WarehouseOrderPage = memo(() => {
                                     Карта 1
                                   </button>
                                   <button
-                                    onClick={() => handleMapChange(2)}
+                                    onClick={() => handleKomfortMapChange(2)}
                                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                      selectedMap === 2
+                                      komfortSelectedMap === 2
                                         ? 'bg-[#273655] text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
@@ -902,7 +937,7 @@ const WarehouseOrderPage = memo(() => {
                                 selectedStorage={selectedStorage}
                                 userRole={user?.role}
                                 isViewOnly={isAdminOrManager}
-                                selectedMap={selectedMap}
+                                selectedMap={komfortSelectedMap}
                               />
                             </>
                           ) : null}
