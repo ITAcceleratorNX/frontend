@@ -34,10 +34,10 @@ const WarehouseSVGMap = React.forwardRef(({
     
     if (name.includes('mega')) {
       return {
-        width: 615,
-        height: 1195,
+        width: 1192,
+        height: 617,
         layoutData: warehouseLayoutData,
-        viewBox: '0 0 615 1195'
+        viewBox: '0 0 1192 617'
       };
     } else if (name.includes('есентай') || name.includes('esentai')) {
       return {
@@ -58,10 +58,10 @@ const WarehouseSVGMap = React.forwardRef(({
     
     // Default
     return {
-      width: 615,
-      height: 1195,
+      width: 1192,
+      height: 617,
       layoutData: warehouseLayoutData,
-      viewBox: '0 0 615 1195'
+      viewBox: '0 0 1192 617'
     };
   };
 
