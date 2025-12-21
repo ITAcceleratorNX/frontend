@@ -21,7 +21,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
@@ -1543,18 +1543,18 @@ const HomePage = memo(() => {
             <div className="space-y-4">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
-                  Склады для
+                Лишние вещи
                 </span>
                 <br />
                 <span className="text-[#363636]">
-                  хранения{' '}
+                под{' '}
                 </span>
                 <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
-                  вещей
+                надежный замок
                 </span>
               </h1>
               <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-                Текст-заполнитель используется для демонстрации структуры страницы. Он помогает увидеть, как будет выглядеть контент без привязки к смыслу.
+              Боксы от 1 до 100 м² с безопасным хранением и доступом 24/7
               </p>
             </div>
 
@@ -1578,23 +1578,29 @@ const HomePage = memo(() => {
                       </div>
                       <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                          Облачное хранение
+                        Хранение вещей без вашего приезда на склад
                         </h3>
                         <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                          Сдайте вещи без аренды бокса — мы разместим их на индивидуальной полке в охраняемом складе. Удобно, если вещей немного.
+                        Мы забираем ваши вещи, аккуратно упаковываем их в фирменные боксы, размещаем в боксе и возвращаем по запросу. Все операции: размещение, возврат и управление вещами, выполняются онлайн.
                         </p>
                         <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Платите только за объём</span>
+                            <span>Договор с компенсацией о потери/порче вещей</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Быстрая приёмка вещей</span>
+                            <span>Управление вещами через личный кабинет
+                            </span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Упрощённый доступ</span>
+                            <span>Доступ к камерам</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Фиксируем состояние вещей до и после хранения
+                            </span>
                           </li>
                         </ul>
                         <button
@@ -1619,19 +1625,31 @@ const HomePage = memo(() => {
                       </div>
                       <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                          Индивидуальное хранение
+                        Надежное и удобное хранение ваших вещей в личном боксе.
                         </h3>
                         <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                          Ваш личный закрытый бокс. Только вы имеете доступ — как мини-склад под ключ.
+                        Персональный закрытый бокс, где вы самостоятельно размещаете и храните свои вещи с полным доступом и безопасностью. Все операции: вы можете самостоятельно привозить и забирать вещи либо, при необходимости, поручить эти процессы нашей команде.
                         </p>
                         <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Полная приватность</span>
+                            <span>Доступ 24/7 без согласований</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Круглосуточный доступ</span>
+                            <span>Доступ к боксу только у вас</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Стеллажи</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Круглосуточная охрана</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Безопасное хранение</span>
                           </li>
                         </ul>
                         <button
@@ -1683,7 +1701,15 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Высота 3.2м</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1702,7 +1728,15 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Высота 3.2м</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1721,7 +1755,15 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Высота 3.2м</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1758,9 +1800,9 @@ const HomePage = memo(() => {
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {/* Заголовок */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">
-            Храните личные вещи 
+          Удобное хранение 
           </h1>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">прямо у дома</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">вещей в городе</h1>
           
           {/* Отдельные кнопки табов */}
           <div className="flex gap-4 mb-8">
