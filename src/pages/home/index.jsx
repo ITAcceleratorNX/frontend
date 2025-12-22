@@ -2199,12 +2199,14 @@ const HomePage = memo(() => {
                   </div>
 
                   {/* Карусель остальных тарифов */}
-                  <div className="relative overflow-hidden flex-1 w-full md:w-auto">
+                  <div className="relative overflow-hidden w-full md:flex-1 md:w-auto">
                     <div
                       className="flex transition-transform duration-300 ease-in-out"
                       style={{
-                        transform: `translateX(-${currentTariffIndex * (100 / tariffsPerView)}%)`,
-                        gap: '1rem'
+                        transform: tariffsPerView === 1 
+                          ? `translateX(-${currentTariffIndex * 100}%)`
+                          : `translateX(calc(-${currentTariffIndex * (100 / tariffsPerView)}% - ${currentTariffIndex * 16 / tariffsPerView}px))`,
+                        gap: tariffsPerView === 1 ? '0' : '1rem'
                       }}
                     >
                       {regularTariffs.map((tariff) => (
@@ -2212,7 +2214,10 @@ const HomePage = memo(() => {
                           key={tariff.id}
                           className="flex-shrink-0 px-2"
                           style={{
-                            width: tariffsPerView === 1 ? '100%' : `calc(${100 / tariffsPerView}% - 0.75rem)`
+                            width: tariffsPerView === 1 
+                              ? '100%' 
+                              : `calc(${100 / tariffsPerView}% - ${tariffsPerView > 1 ? (tariffsPerView - 1) * 16 / tariffsPerView : 0}px)`,
+                            boxSizing: 'border-box'
                           }}
                         >
                           <div
@@ -2453,7 +2458,7 @@ const HomePage = memo(() => {
                     <p className="text-sm text-[#273655] mb-2 leading-relaxed">
                       Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
                     </p>
-                    <p className="text-sm font-semibold text-[#00A991]">
+                    <p className="text-sm font-semibold text-[#00A991]"> 
                       Перевозка и упаковка включены в стоимость.
                     </p>
                   </div>
