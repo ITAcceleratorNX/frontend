@@ -91,6 +91,7 @@ const HomePage = memo(() => {
   const [warehousesLoading, setWarehousesLoading] = useState(false);
   const [warehousesError, setWarehousesError] = useState(null);
   const [activeStorageTab, setActiveStorageTab] = useState("INDIVIDUAL");
+  const tabsSectionRef = useRef(null);
   const [individualMonths, setIndividualMonths] = useState("1");
   const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => {
     const today = new Date();
@@ -1151,12 +1152,13 @@ const HomePage = memo(() => {
   }, [handleCreateCloudOrder, isAuthenticated, openCallbackModal]);
 
   const handleHeroBookingClick = useCallback(() => {
-    if (!isAuthenticated) {
-      openCallbackModal('booking');
-      return;
-    }
-    navigate("/warehouse-order");
-  }, [isAuthenticated, navigate, openCallbackModal]);
+    setActiveStorageTab("INDIVIDUAL");
+    setTimeout(() => {
+      if (tabsSectionRef.current) {
+        tabsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }, []);
 
   const handleCallbackRequestClick = useCallback(() => {
     openCallbackModal('callback');
@@ -1700,7 +1702,14 @@ const HomePage = memo(() => {
                           </li>
                         </ul>
                         <button
-                          onClick={() => navigate('/cloud-storage')}
+                          onClick={() => {
+                            setActiveStorageTab("CLOUD");
+                            setTimeout(() => {
+                              if (tabsSectionRef.current) {
+                                tabsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }, 100);
+                          }}
                           className="w-full bg-white text-[#00A991] font-semibold py-3 md:py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-base md:text-lg mt-auto"
                         >
                           Подробнее
@@ -1892,7 +1901,7 @@ const HomePage = memo(() => {
       <div className="w-full bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 h-4 sm:h-8"></div>
 
       {/* Второй фрейм: преимущества */}
-      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-6 sm:py-8">
+      <section ref={tabsSectionRef} className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-6 sm:py-8">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {/* Заголовок */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">
