@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, CheckCircle, Clock, MessageSquare } from 'lucide-react';
+import { Bell, CheckCircle, MessageSquare } from 'lucide-react';
 
 const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   const handleClick = () => {
@@ -28,18 +28,18 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'payment':
-        return <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-white" />;
       case 'contract':
-        return <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />;
+        return <MessageSquare className="w-5 h-5 text-white" />;
       default:
-        return <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-[#1e2c4f]" />;
+        return <Bell className="w-5 h-5 text-white" />;
     }
   };
 
   const getNotificationStyle = (isRead) => {
     if (isRead) {
       return {
-        cardClass: 'bg-white border-gray-200 hover:border-gray-300',
+        cardClass: 'bg-white border border-[#DFDFDF]',
         indicatorClass: 'opacity-0',
         titleClass: 'text-gray-900',
         contentClass: 'text-gray-600',
@@ -48,11 +48,11 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
     }
     
     return {
-      cardClass: 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md',
-      indicatorClass: 'opacity-100 bg-blue-500',
+      cardClass: 'bg-white border border-[#DFDFDF]',
+      indicatorClass: 'opacity-0',
       titleClass: 'text-gray-900',
       contentClass: 'text-gray-700',
-      timeClass: 'text-blue-600'
+      timeClass: 'text-gray-500'
     };
   };
 
@@ -68,64 +68,48 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
   return (
     <div 
       className={`
-        relative group cursor-pointer border rounded-xl p-3 sm:p-4 
-        transition-all duration-300 ease-in-out
+        relative cursor-pointer border rounded-md p-3
         ${styles.cardClass}
-        hover:shadow-lg hover:scale-[1.02]
       `}
       onClick={handleClick}
       style={scaleStyle}
     >
-      {/* Индикатор непрочитанного уведомления */}
-      <div 
-        className={`
-          absolute top-4 left-4 w-2.5 h-2.5 rounded-full 
-          transition-opacity duration-300 ${styles.indicatorClass}
-        `}
-      />
-      
-      <div className="flex items-start space-x-4 pl-4">
+      <div className="flex items-start space-x-3">
         {/* Иконка уведомления */}
-        <div className="flex-shrink-0 mt-1">
-          <div className="w-10 h-10 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm">
+        <div className="flex-shrink-0">
+          <div className="w-10 h-10 bg-[#B0C6C5] rounded-full flex items-center justify-center">
             {getNotificationIcon(notification.notification_type)}
+          </div>
         </div>
-      </div>
       
         {/* Контент */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between">
-            <div className="flex-1 mr-4">
-              <h4 className={`font-semibold text-sm sm:text-base leading-tight mb-1 ${styles.titleClass}`}>
-              {notification.title}
-            </h4>
-              <p className={`text-sm sm:text-base leading-relaxed ${styles.contentClass}`}>
-              {notification.message}
-            </p>
-          </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <h4 className={`font-semibold text-sm leading-tight mb-1 break-words ${styles.titleClass}`}>
+                {notification.title}
+              </h4>
+              <p className={`text-sm leading-relaxed break-words break-all ${styles.contentClass}`}>
+                {notification.message}
+              </p>
+            </div>
             
             {/* Время и статус */}
             <div className="flex-shrink-0 flex flex-col items-end space-y-1">
-              <div className="flex items-center space-x-1">
-                <Clock className="w-3 h-3 text-gray-400" />
-                <span className={`text-xs font-medium ${styles.timeClass}`}>
-              {formatTime(notification.created_at)}
-            </span>
-              </div>
+              <span className={`text-xs whitespace-nowrap ${styles.timeClass}`}>
+                {formatTime(notification.created_at)}
+              </span>
               
               {notification.is_read && (
                 <div className="flex items-center space-x-1">
-                  <CheckCircle className="w-3 h-3 text-green-500" />
-                  <span className="text-xs text-green-600 font-medium">Прочитано</span>
+                  <div className="w-2 h-2 bg-[#00A991] rounded-full"></div>
+                  <span className="text-xs text-[#00A991] whitespace-nowrap">Прочитано</span>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Hover эффект */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#1e2c4f]/0 to-[#1e2c4f]/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
     </div>
   );
 };

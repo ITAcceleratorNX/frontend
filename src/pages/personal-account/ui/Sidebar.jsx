@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import icon1 from '../../../assets/1.svg';
@@ -19,14 +19,17 @@ import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
 import { useChatStore } from '../../../entities/chat/model';
-import { useEffect } from 'react';
+import { Pencil, LogOut, Bell } from 'lucide-react';
+import lichkaLogo from '../../../assets/Lichka2.png';
+import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
+import UserNotifications from './notifications/UserNotifications';
+import { Switch } from '../../../components/ui/switch';
 
 // Разделы для обычных пользователей
 const userNavItems = [
-  { label: 'Личные данные', icon: icon1, key: 'personal' },
+  { label: 'Мои заказы', icon: icon4, key: 'orders' },
   { label: 'Договоры', icon: icon2, key: 'contracts' },
   // { label: 'Чат', icon: icon3, key: 'chat' },
-  { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { label: 'Платежи', icon: icon4, key: 'payments' },
   { label: 'Доставка', icon: icon12, key: 'delivery' },
   { divider: true },
@@ -35,7 +38,6 @@ const userNavItems = [
 
 // Разделы для менеджеров
 const managerNavItems = [
-  { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
@@ -50,7 +52,6 @@ const managerNavItems = [
 
 // Разделы для администраторов
 const adminNavItems = [
-  { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
@@ -64,7 +65,6 @@ const adminNavItems = [
 
 // Разделы для грузчиков
 const courierNavItems = [
-  { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Запросы', icon: icon8, key: 'courierrequests' },
   { label: 'Уведомления', icon: icon10, key: 'couriernotifications' },
   { divider: true },
@@ -80,9 +80,35 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const awaitableDeliveriesCount = useAwaitableDeliveriesCount();
   const pendingExtensionCount = usePendingExtensionOrdersCount();
   const { unreadMessages } = useChatStore();
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const notificationsRef = useRef(null);
+  const { notifications = [], markAsRead } = useNotifications();
+  
+  // Фильтрация уведомлений
+  const filteredNotifications = showUnreadOnly 
+    ? notifications.filter(n => !n.is_read)
+    : notifications;
   
   // Подсчитываем общее количество непрочитанных сообщений в чате
   const totalUnreadChatCount = Object.values(unreadMessages).reduce((sum, count) => sum + count, 0);
+  
+  // Закрытие панели уведомлений при клике вне её
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    if (isNotificationsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotificationsOpen]);
 
   // Принудительно загружаем данные при входе в личный кабинет
   useEffect(() => {
@@ -229,49 +255,166 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
     }
   };
 
+  const totalUnread = unreadCount + awaitableDeliveriesCount + pendingExtensionCount;
+
   return (
-    <aside className="w-[230px] min-h-screen bg-white flex flex-col py-12 px-4 flex-shrink-0">
-      <nav className="flex flex-col gap-1 mb-2">
+    <aside className="w-[280px] min-h-screen bg-white flex flex-col py-6 px-6 flex-shrink-0 border-r border-[#f5f5f5]">
+      {/* Logo */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-6">
+          <img 
+            src={lichkaLogo} 
+            alt="Extra Space" 
+            className="h-8 w-auto"
+          />
+          <span className="text-xl font-bold text-[#004743]">EXTRA SPACE</span>
+        </div>
+        
+        {/* Book Boxes Button */}
+        <button
+          onClick={() => navigate('/')}
+          className="bg-[#00A991] text-white py-2.5 px-4 rounded-full font-medium hover:bg-[#009882] transition-colors mb-6 font-sf-pro-text text-sm"
+        >
+          Забронировать боксы
+        </button>
+
+        {/* Profile Section */}
+        <div className="mb-6">
+          <h3 className="text-xs font-medium text-[#737373] mb-3">Профиль:</h3>
+          <div className="flex items-start gap-3">
+            {/* Avatar with gradient */}
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#004743] to-[#00A991] flex items-center justify-center text-white font-semibold text-xl flex-shrink-0">
+              {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+            </div>
+            
+            {/* Name and Edit Link */}
+            <div className="flex-1 min-w-0">
+              <div className="mb-1">
+                {user?.name ? (
+                  <div className="text-sm font-semibold text-gray-900 leading-tight">
+                    {user.name.split(' ').map((part, idx) => (
+                      <div key={idx}>{part}</div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm font-semibold text-gray-900">Пользователь</div>
+                )}
+              </div>
+              <button
+                onClick={() => setActiveNav('personal')}
+                className="flex items-center gap-1 text-xs text-[#00A991] hover:text-[#009882] transition-colors focus:outline-none focus:ring-0 hover:shadow-none active:shadow-none"
+                style={{ backgroundColor: 'transparent', boxShadow: 'none' }}
+              >
+                <Pencil className="w-3 h-3" />
+                Изменить профиль
+              </button>
+            </div>
+            
+            {/* Notification Icon */}
+            <div className="relative flex-shrink-0" ref={notificationsRef}>
+              <button
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className="flex items-center gap-1 text-[#00A991] focus:outline-none focus:ring-0 hover:shadow-none active:shadow-none hover:bg-transparent hover:scale-100 active:scale-100 hover:transform-none active:transform-none"
+                style={{ backgroundColor: 'transparent', boxShadow: 'none' }}
+              >
+                <Bell className="w-5 h-5" />
+                {totalUnread > 0 && (
+                  <span className="text-xs font-medium">+{totalUnread}</span>
+                )}
+              </button>
+              
+              {/* Notifications Panel */}
+              {isNotificationsOpen && (
+                <div className="fixed top-20 left-[280px] w-[420px] bg-white border border-[#00A991] rounded-lg shadow-lg z-50 max-h-[600px] overflow-y-auto">
+                  <div className="p-4 border-b border-[#DFDFDF]">
+                    <div className="flex items-center justify-between gap-4">
+                      <h3 className="text-base font-semibold text-[#363636] whitespace-nowrap">Уведомления</h3>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <label htmlFor="unread-only" className="text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+                          Показать только непрочитанные
+                        </label>
+                        <Switch
+                          id="unread-only"
+                          checked={showUnreadOnly}
+                          onCheckedChange={setShowUnreadOnly}
+                          className="scale-75 hover:scale-75 active:scale-75"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    {filteredNotifications.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500 text-sm">
+                        Нет уведомлений
+                      </div>
+                    ) : (
+                      <UserNotifications 
+                        notifications={filteredNotifications} 
+                        onMarkAsRead={markAsRead}
+                        scale={1}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex flex-col gap-1 flex-1">
         {navItems.map((item, idx) => {
           if (item.divider) {
-            return <hr key={idx} className="my-3 border-t border-[#F0F0F0]" />;
+            return <hr key={idx} className="my-3 border-t border-[#f5f5f5]" />;
           }
           return (
             <button
               key={item.key}
               onClick={() => handleNavClick(item.key)}
               className={clsx(
-                'flex items-center gap-3 px-4 py-2 rounded-sm text-[16px] font-normal leading-normal transition-all relative whitespace-nowrap',
+                'flex items-center gap-3 px-4 py-2.5 text-[16px] font-normal leading-normal relative whitespace-nowrap',
                 activeNav === item.key
-                  ? 'bg-[#273655] text-white shadow-md'
-                  : 'text-[#222] hover:bg-[#F5F5F5]',
+                  ? 'bg-[#00A991]/20 rounded-full text-[#00A991]'
+                  : 'text-gray-700 hover:bg-[#f5f5f5] rounded-md',
                 'group'
               )}
               style={{marginBottom: idx === navItems.length - 1 ? 0 : 4}}
             >
-              {activeNav === item.key && item.key !== 'logout' && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-1 rounded-r-sm bg-[#273655]" style={{marginLeft: '-16px'}}></span>
-              )}
               <div className="relative">
-                <img src={item.icon} alt="icon" className={clsx('w-5 h-5 flex-shrink-0', activeNav === item.key ? 'filter invert' : 'filter brightness-0')} />
-                {/* Красная точка для непрочитанных уведомлений */}
+                <img 
+                  src={item.icon} 
+                  alt="icon" 
+                  className={clsx(
+                    'w-5 h-5 flex-shrink-0', 
+                    activeNav === item.key ? '' : 'filter brightness-0 opacity-60'
+                  )}
+                  style={activeNav === item.key ? { 
+                    filter: 'brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1200%) hue-rotate(140deg) brightness(0.9) contrast(1.1)',
+                    opacity: 1
+                  } : {}}
+                />
+                {/* Badge для непрочитанных уведомлений */}
                 {item.key === 'notifications' && unreadCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
-                {/* Красная точка для непрочитанных сообщений в чате */}
+                {/* Badge для непрочитанных сообщений в чате */}
                 {item.key === 'chat' && totalUnreadChatCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
-                {/* Красная точка для доставок со статусом AWAITABLE */}
+                {/* Badge для доставок со статусом AWAITABLE */}
                 {item.key === 'delivery' && awaitableDeliveriesCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
-                {/* Красная точка для платежей с pending статусом */}
+                {/* Badge для платежей с pending статусом */}
                 {item.key === 'payments' && pendingExtensionCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
               </div>
               <span className="text-[16px] font-normal leading-normal">{item.label}</span>
+              {item.key === 'logout' && (
+                <LogOut className="w-4 h-4 ml-auto opacity-60" />
+              )}
             </button>
           );
         })}

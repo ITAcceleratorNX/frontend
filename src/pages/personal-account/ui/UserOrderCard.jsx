@@ -214,11 +214,34 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     ? `bg-white border-2 ${isPendingExtension ? 'border-red-500' : 'border-[#273655]'} rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative`
     : `bg-white border ${isPendingExtension ? 'border-2 border-red-500' : 'border-gray-200'} rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow`;
 
+  // Определяем цвет баннера в зависимости от статуса
+  const getBannerColor = () => {
+    if (order.status === 'PROCESSING') {
+      return 'bg-[#004743]'; // Teal для "В обработке у менеджера"
+    }
+    if (order.payment_status === 'UNPAID') {
+      return 'bg-[#999999]'; // Grey для "Не оплачено"
+    }
+    return 'bg-[#004743]'; // По умолчанию teal
+  };
+
   return (
     <div className={cardClasses}>
+      {/* Баннер статуса сверху */}
+      <div className={`${getBannerColor()} text-white px-4 py-2 rounded-t-lg`}>
+        <div className="flex items-center gap-2">
+          {order.status === 'PROCESSING' && (
+            <span className="text-sm font-medium">В обработке у менеджера</span>
+          )}
+          {order.payment_status === 'UNPAID' && order.status !== 'PROCESSING' && (
+            <span className="text-sm font-medium">Не оплачено</span>
+          )}
+        </div>
+      </div>
+
       {/* Индикатор дополнительных услуг */}
       {hasAdditionalServices && (
-        <div className="absolute top-0 right-0 bg-gradient-to-r from-[#273655] to-[#1e2c4f] text-white px-3 py-1 rounded-bl-lg">
+        <div className="absolute top-0 right-0 bg-gradient-to-r from-[#004743] to-[#003936] text-white px-3 py-1 rounded-bl-lg">
           <div className="flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -508,10 +531,10 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       </div>
 
       {/* Футер карточки с кнопками */}
-      <div className={`p-4 sm:px-6 sm:py-4 border-t border-gray-100 ${hasAdditionalServices ? 'bg-gradient-to-r from-blue-50 to-purple-50' : 'bg-gray-50'}`}>
+      <div className={`p-4 sm:px-6 sm:py-4 border-t border-gray-100 ${hasAdditionalServices ? 'bg-[#e6edec]' : 'bg-[#f5f5f5]'}`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div className="text-lg font-bold text-gray-900">
-            {formatPrice(Number(order.total_price) + 15000 + Number(totalPriceOfServices))} ₸
+            ИТОГ {formatPrice(Number(order.total_price) + 15000 + Number(totalPriceOfServices))} ₸
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
@@ -520,7 +543,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
               <>
                 <button
                     onClick={() => setIsEditModalOpen(true)}
-                    className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-4 py-2 bg-[#004743] text-white text-sm font-medium rounded-md hover:bg-[#00403c] transition-colors flex items-center justify-center gap-2"
                 >
                   <Pencil className="w-4 h-4" />
                   Редактировать
@@ -536,18 +559,42 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                 </button>
               </>
             ) : canPay ? (
-              <button
-                onClick={() => onPayOrder(order)}
-                className="w-full sm:w-auto px-4 py-2 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2a4a] transition-colors"
-              >
-                Оплатить
-              </button>
+              <>
+                <button
+                  onClick={() => onPayOrder(order)}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-[#999999] text-white text-sm font-medium rounded-md hover:bg-[#8a8a8a] transition-colors"
+                >
+                  Оплатить
+                </button>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="w-full sm:w-auto px-4 py-2 text-[#999999] text-sm font-medium hover:text-[#737373] transition-colors underline"
+                >
+                  Отменить заказ
+                </button>
+              </>
+            ) : order.status === 'PROCESSING' ? (
+              <>
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="w-full sm:w-auto px-4 py-2 bg-[#004743] text-white text-sm font-medium rounded-md hover:bg-[#00403c] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Редактировать
+                </button>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-[#004743] text-white text-sm font-medium rounded-md hover:bg-[#00403c] transition-colors"
+                >
+                  Расторгнуть
+                </button>
+              </>
             ) : order.payment_status === 'PAID' ? (
               <span className="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
                 Оплачено
               </span>
             ) : (
-              <span className="px-4 py-2 bg-gray-100 text-gray-500 text-sm font-medium rounded-lg">
+              <span className="px-4 py-2 bg-[#f5f5f5] text-[#999999] text-sm font-medium rounded-lg">
                 Недоступно для оплаты
               </span>
             )}

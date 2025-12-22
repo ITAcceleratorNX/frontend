@@ -63,7 +63,7 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
             <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200 pb-3 mb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#1e2c4f] rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#B0C6C5] rounded-full flex items-center justify-center">
                     <Calendar className="w-4 h-4 text-white" />
                   </div>
                   <div>

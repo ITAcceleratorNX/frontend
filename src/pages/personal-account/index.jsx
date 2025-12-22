@@ -1,6 +1,5 @@
 import React, { useState, useEffect, memo, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Header } from '../../widgets';
 import Sidebar from './ui/Sidebar';
 import PersonalData from './ui/PersonalData';
 import Contracts from './ui/Contracts';
@@ -14,6 +13,7 @@ import CourierRequestOrder from './ui/CourierRequestOrder';
 import OrderManagement from './ui/OrderManagement';
 import UserPayments from './ui/UserPayments';
 import UserDelivery from './ui/UserDelivery';
+import UserOrdersPage from './ui/UserOrdersPage';
 import ItemSearch from './ui/ItemSearch';
 import Statistics from './ui/Statistics';
 import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
@@ -32,10 +32,18 @@ import { useAuth } from '../../shared/context/AuthContext';
 // Мемоизированный компонент страницы личного кабинета
 const PersonalAccountPage = memo(() => {
   const location = useLocation();
-  const [activeNav, setActiveNav] = useState('personal');
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const { isMobile } = useDeviceType();
+  
+  // Устанавливаем начальное состояние в зависимости от роли пользователя
+  const [activeNav, setActiveNav] = useState(() => {
+    // Для обычных пользователей по умолчанию показываем заказы
+    if (user?.role === 'USER') {
+      return 'orders';
+    }
+    return 'personal';
+  });
 
 
   // Сбрасываем раздел чата для ролей USER и MANAGER
@@ -114,7 +122,6 @@ const PersonalAccountPage = memo(() => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
         <div className="flex-1 flex items-center justify-center">
           <p className="text-xl text-gray-600">Загрузка...</p>
         </div>
@@ -125,17 +132,17 @@ const PersonalAccountPage = memo(() => {
     // Если не загрузка и пользователь аутентифицирован, показываем контент
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <div className="flex flex-1">
         {!isMobile && (
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         )}
-        <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 max-w-[1200px] mx-auto bg-white">
+        <main className={`flex-1 ${activeNav === 'orders' ? 'px-0 py-0' : 'px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6'} max-w-full mx-auto bg-gray-50`}>
           {isMobile && (
             <MobileSidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           )}
 
 
+          {activeNav === 'orders' && <UserOrdersPage />}
           {activeNav === 'personal' && <PersonalData />}
           {activeNav === 'contracts' && <Contracts />}
           {activeNav === 'chat' && <ChatSection />}

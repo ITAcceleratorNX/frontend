@@ -49,6 +49,42 @@ export default {
   				'800': '#3730a3',
   				'900': '#312e81',
   				'950': '#1e1b4b'
+  			},
+  			green: {
+  				light: {
+  					DEFAULT: '#e6edec',
+  					hover: '#d9e3e3',
+  					active: '#b0c6c5'
+  				},
+  				normal: {
+  					DEFAULT: '#004743',
+  					hover: '#00403c',
+  					active: '#003936'
+  				},
+  				dark: {
+  					DEFAULT: '#003532',
+  					hover: '#002b28',
+  					active: '#00201e'
+  				},
+  				darker: '#001917'
+  			},
+  			grey: {
+  				light: {
+  					DEFAULT: '#f5f5f5',
+  					hover: '#f0f0f0',
+  					active: '#dfdfdf'
+  				},
+  				normal: {
+  					DEFAULT: '#999999',
+  					hover: '#8a8a8a',
+  					active: '#7a7a7a'
+  				},
+  				dark: {
+  					DEFAULT: '#737373',
+  					hover: '#5c5c5c',
+  					active: '#454545'
+  				},
+  				darker: '#363636'
   			}
   		},
   		borderColor: {
