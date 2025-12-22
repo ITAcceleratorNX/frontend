@@ -106,6 +106,7 @@ const HomePage = memo(() => {
   const [includePacking, setIncludePacking] = useState(false);
   const [cloudMonths, setCloudMonths] = useState("1");
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
+  const [cloudVolumeDirect, setCloudVolumeDirect] = useState(1); // Прямой ввод объема для тарифов
   const [movingAddressFrom, setMovingAddressFrom] = useState("");
   const [movingPickupDate, setMovingPickupDate] = useState(() => {
     const today = new Date();
@@ -154,6 +155,10 @@ const HomePage = memo(() => {
   const [selectedTariff, setSelectedTariff] = useState(null);
   // Состояние для цены доставки (только забор вещей)
   const [gazelleFromPrice, setGazelleFromPrice] = useState(null);
+  // Состояние для цен тарифов облачного хранения из API
+  const [tariffPrices, setTariffPrices] = useState({});
+  // Состояние для цен кастомного тарифа (CLOUD_PRICE_LOW и CLOUD_PRICE_HIGH)
+  const [cloudCustomPrices, setCloudCustomPrices] = useState({ low: null, high: null });
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -450,10 +455,16 @@ const HomePage = memo(() => {
   );
 
   const cloudVolume = useMemo(() => {
+    // Если выбран тариф (не "Свои габариты"), используем объем из тарифа
+    if (selectedTariff && !selectedTariff.isCustom) {
+      const tariffVolume = selectedTariff.baseVolume ?? selectedTariff.maxVolume ?? cloudVolumeDirect;
+      return Number.isFinite(tariffVolume) && tariffVolume > 0 ? tariffVolume : 0;
+    }
+    // Если выбрано "Свои габариты", рассчитываем из габаритов
     const { width, height, length } = cloudDimensions;
     const volume = Number(width) * Number(height) * Number(length);
     return Number.isFinite(volume) && volume > 0 ? volume : 0;
-  }, [cloudDimensions]);
+  }, [cloudDimensions, cloudVolumeDirect, selectedTariff]);
 
   const cloudStorage = cloudWarehouse?.storage?.[0] || null;
 
@@ -462,8 +473,10 @@ const HomePage = memo(() => {
     if (!cloudMonthsNumber || cloudMonthsNumber <= 0) return false;
     if (!cloudVolume || cloudVolume <= 0) return false;
     if (!cloudPickupAddress.trim()) return false;
+    // Требуется либо выбран тариф, либо выбрано "Свои габариты"
+    if (!selectedTariff) return false;
     return true;
-  }, [cloudStorage, cloudMonthsNumber, cloudPickupAddress, cloudVolume]);
+  }, [cloudStorage, cloudMonthsNumber, cloudPickupAddress, cloudVolume, selectedTariff]);
 
   const movingServicePrice = useMemo(() => {
     // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
@@ -515,85 +528,110 @@ const HomePage = memo(() => {
     }
   }, [activeStorageTab, cloudMonthsNumber, monthsNumber]);
 
-  // Данные тарифов
-  const tariffs = useMemo(() => [
-    {
-      id: 'sumka',
-      name: 'Хранения сумки / коробки вещей',
-      image: sumkaImg,
-      pricePerM3: 6000, // 6000₸ за м³
-      maxVolume: null // без ограничения
-    },
-    {
-      id: 'shina',
-      name: 'Шины',
-      image: shinaImg,
-      pricePerM3: 5000, // 5000₸ за м³
-      maxVolume: null
-    },
-    {
-      id: 'motorcycle',
-      name: 'Хранение мотоцикла',
-      image: motorcycleImg,
-      pricePerM3: 25000, // 25000₸ за м³ (фиксированная цена)
-      maxVolume: null
-    },
-    {
-      id: 'bicycle',
-      name: 'Хранение велосипед',
-      image: bicycleImg,
-      pricePerM3: 6000, // 6000₸ за м³
-      maxVolume: null
-    },
-    {
-      id: 'sunuk',
-      name: 'Сундук до 1 м³',
-      image: sunukImg,
-      basePrice: 15000, // Базовая цена за первые 1 м³
-      pricePerM3: 15000, // Цена за м³ свыше 1 м³
-      baseVolume: 1
-    },
-    {
-      id: 'furniture',
-      name: 'Шкаф до 2 м³',
-      image: furnitureImg,
-      basePrice: 27000, // Базовая цена за первые 2 м³
-      pricePerM3: 13500, // Цена за м³ свыше 2 м³
-      baseVolume: 2
-    },
-    {
-      id: 'sklad',
-      name: 'Кладовка до 3 м³',
-      image: skladImg,
-      basePrice: 38000, // Базовая цена за первые 3 м³
-      pricePerM3: 12667, // Цена за м³ свыше 3 м³ (округлено)
-      baseVolume: 3
-    },
-    {
-      id: 'garazh',
-      name: 'Гараж до 9м³',
-      image: garazhImg,
-      basePrice: 90000, // Базовая цена за первые 9 м³
-      pricePerM3: 10000, // Цена за м³ свыше 9 м³
-      baseVolume: 9
-    }
-  ], []);
+  // Карточка "Свои габариты" - статичная
+  // Цена для кастомного тарифа загружается из API (CLOUD_PRICE_LOW/CLOUD_PRICE_HIGH)
+  const customTariff = useMemo(() => ({
+    id: 'custom',
+    name: 'Свои габариты',
+    image: null,
+    isCustom: true
+  }), []);
 
-  // Обработка изменения размера экрана для карусели тарифов
+  // Остальные тарифы - подвижные в карусели
+  // pricePerM3 получается из API, метаданные (basePrice, baseVolume, maxVolume) захардкожены
+  const regularTariffs = useMemo(() => {
+    const tariffs = [
+      {
+        id: 'sumka',
+        name: 'Хранения сумки / коробки вещей',
+        image: sumkaImg,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_SUMKA'] || 6000,
+        maxVolume: 0.23,
+        baseVolume: 0.23,
+        basePrice: null,
+      },
+      {
+        id: 'shina',
+        name: 'Шины',
+        image: shinaImg,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_SHINA'] || 5000,
+        maxVolume: 0.5,
+        baseVolume: 0.5,
+        basePrice: null,
+      },
+      {
+        id: 'motorcycle',
+        name: 'Хранение мотоцикла',
+        image: motorcycleImg,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_MOTORCYCLE'] || 25000,
+        maxVolume: 1.8,
+        baseVolume: 1.8,
+        basePrice: null,
+      },
+      {
+        id: 'bicycle',
+        name: 'Хранение велосипед',
+        image: bicycleImg,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_BICYCLE'] || 6000,
+        maxVolume: 0.9,
+        baseVolume: 0.9,
+        basePrice: null,
+      },
+      {
+        id: 'sunuk',
+        name: 'Сундук до 1 м³',
+        image: sunukImg,
+        basePrice: 15000,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_SUNUK'] || 15000,
+        maxVolume: 1,
+        baseVolume: 1
+      },
+      {
+        id: 'furniture',
+        name: 'Шкаф до 2 м³',
+        image: furnitureImg,
+        basePrice: 27000,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_FURNITURE'] || 13500,
+        baseVolume: 2,
+        maxVolume: 2,
+      },
+      {
+        id: 'sklad',
+        name: 'Кладовка до 3 м³',
+        image: skladImg,
+        basePrice: 38000,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_SKLAD'] || 12667,
+        maxVolume: 3,
+        baseVolume: 3,
+      },
+      {
+        id: 'garazh',
+        name: 'Гараж до 9м³',
+        image: garazhImg,
+        basePrice: 90000,
+        pricePerM3: tariffPrices['CLOUD_TARIFF_GARAZH'] || 10000,
+        maxVolume: 9,
+        baseVolume: 9
+      }
+    ];
+    return tariffs;
+  }, [tariffPrices]);
+
+  // Обработка изменения размера экрана для карусели тарифов (только для обычных тарифов)
   useEffect(() => {
     const handleResize = () => {
-      const newTariffsPerView = window.innerWidth < 768 ? 1 : 4;
+      const newTariffsPerView = window.innerWidth < 768 ? 1 : 3; // 3 вместо 4, так как custom статичный
       setTariffsPerView(newTariffsPerView);
-      const newMaxIndex = Math.max(0, tariffs.length - newTariffsPerView);
+      const newMaxIndex = Math.max(0, regularTariffs.length - newTariffsPerView);
       setCurrentTariffIndex((prev) => Math.min(prev, newMaxIndex));
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [tariffs.length]);
+  }, [regularTariffs.length]);
 
-  const maxTariffIndex = Math.max(0, tariffs.length - tariffsPerView);
+  const maxTariffIndex = Math.max(0, regularTariffs.length - tariffsPerView);
 
   const handleTariffPrev = () => {
     setCurrentTariffIndex((prev) => Math.max(0, prev - 1));
@@ -963,7 +1001,7 @@ const HomePage = memo(() => {
     }
 
     if (!selectedTariff) {
-      setSubmitError("Выберите тариф для бронирования.");
+      setSubmitError("Выберите тариф или режим 'Свои габариты' для бронирования.");
       return;
     }
 
@@ -978,9 +1016,14 @@ const HomePage = memo(() => {
 
       const trimmedAddress = cloudPickupAddress.trim();
 
+      // Определяем название для заказа
+      const orderItemName = selectedTariff.isCustom 
+        ? "Свои габариты" 
+        : selectedTariff.name;
+
       const orderItems = [
         {
-          name: selectedTariff.name,
+          name: orderItemName,
           volume: Number(cloudVolume.toFixed(2)),
           cargo_mark: "NO",
         },
@@ -1119,12 +1162,6 @@ const HomePage = memo(() => {
     openCallbackModal('callback');
   }, [openCallbackModal]);
 
-  const handleCloudDimensionChange = (dimension, rawValue) => {
-    const value = Math.max(0.1, Number(rawValue) || 0);
-    setCloudDimensions((prev) => ({ ...prev, [dimension]: value }));
-    setSubmitError(null);
-  };
-
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
       setCloudPickupAddress("");
@@ -1144,49 +1181,56 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (!selectedTariff) {
-      setCloudPricePreview(null);
-      setCloudPriceError(null);
-      return;
-    }
-
     if (!cloudVolume || cloudVolume <= 0) {
       setCloudPricePreview(null);
       setCloudPriceError("Укажите габариты вещей для расчёта объёма.");
       return;
     }
 
-    setIsCloudPriceCalculating(true);
-    setCloudPriceError(null);
+    // Если выбран тариф (не "Свои габариты"), требуется selectedTariff
+    if (selectedTariff && !selectedTariff.isCustom) {
+      // Расчет по тарифу - статичная цена (не умножается на объем)
+      setIsCloudPriceCalculating(true);
+      setCloudPriceError(null);
 
-    // Расчет цены на основе выбранного тарифа и объема
-    let monthlyPrice;
+      // Для тарифов с basePrice используем basePrice, для остальных - pricePerM3 из API
+      // Оба значения уже содержат финальную статичную цену тарифа
+      const monthlyPrice = selectedTariff.basePrice || selectedTariff.pricePerM3 || 0;
+      const totalPrice = Math.round(monthlyPrice * cloudMonthsNumber);
 
-    // Для сундука, шкафа, кладовки и гаража: пропорциональная цена до базового объема, затем доплата за превышение
-    if (selectedTariff.baseVolume && selectedTariff.basePrice) {
-      if (cloudVolume <= selectedTariff.baseVolume) {
-        // Если объем в пределах базового - пропорциональная цена
-        monthlyPrice = Math.round((selectedTariff.basePrice / selectedTariff.baseVolume) * cloudVolume);
-      } else {
-        // Если превышает - базовая цена + доплата за превышение
-        const excessVolume = cloudVolume - selectedTariff.baseVolume;
-        monthlyPrice = selectedTariff.basePrice + Math.round(selectedTariff.pricePerM3 * excessVolume);
-      }
+      setCloudPricePreview({
+        total: totalPrice,
+        monthly: monthlyPrice,
+        isFallback: false,
+      });
+
+      setIsCloudPriceCalculating(false);
+    } else if (selectedTariff?.isCustom) {
+      // Расчет для "Свои габариты" - используем CLOUD_PRICE_LOW или CLOUD_PRICE_HIGH в зависимости от объема
+      setIsCloudPriceCalculating(true);
+      setCloudPriceError(null);
+
+      // Если объем <= 18 м³, используем CLOUD_PRICE_LOW, иначе CLOUD_PRICE_HIGH
+      const pricePerM3 = cloudVolume <= 18 
+        ? (cloudCustomPrices.low || 9500) // Fallback на дефолтное значение
+        : (cloudCustomPrices.high || 9000); // Fallback на дефолтное значение
+      
+      const monthlyPrice = Math.round(pricePerM3 * cloudVolume);
+      const totalPrice = Math.round(monthlyPrice * cloudMonthsNumber);
+
+      setCloudPricePreview({
+        total: totalPrice,
+        monthly: monthlyPrice,
+        isFallback: false,
+      });
+
+      setIsCloudPriceCalculating(false);
     } else {
-      // Для остальных тарифов - просто цена за м³ * объем
-      monthlyPrice = Math.round(selectedTariff.pricePerM3 * cloudVolume);
+      // Если тариф не выбран, не показываем цену
+      setCloudPricePreview(null);
+      setCloudPriceError(null);
     }
-
-    const totalPrice = Math.round(monthlyPrice * cloudMonthsNumber);
-
-    setCloudPricePreview({
-      total: totalPrice,
-      monthly: monthlyPrice,
-      isFallback: false,
-    });
-
-    setIsCloudPriceCalculating(false);
-  }, [activeStorageTab, cloudMonthsNumber, selectedTariff, cloudVolume]);
+  }, [activeStorageTab, cloudMonthsNumber, selectedTariff, cloudVolume, cloudCustomPrices]);
 
   // Загрузка складов с API
   useEffect(() => {
@@ -1269,6 +1313,58 @@ const HomePage = memo(() => {
 
     loadServicePrices();
   }, [selectedWarehouse]);
+
+  // Загрузка цен тарифов облачного хранения из API
+  // Метаданные (basePrice, baseVolume, maxVolume) остаются захардкоженными на фронтенде
+  useEffect(() => {
+    const loadTariffPrices = async () => {
+      try {
+        const pricesData = await paymentsApi.getPrices();
+        const tariffTypes = [
+          'CLOUD_TARIFF_SUMKA',
+          'CLOUD_TARIFF_SHINA',
+          'CLOUD_TARIFF_MOTORCYCLE',
+          'CLOUD_TARIFF_BICYCLE',
+          'CLOUD_TARIFF_SUNUK',
+          'CLOUD_TARIFF_FURNITURE',
+          'CLOUD_TARIFF_SKLAD',
+          'CLOUD_TARIFF_GARAZH'
+        ];
+        
+        const pricesMap = {};
+        let cloudPriceLow = null;
+        let cloudPriceHigh = null;
+        
+        pricesData.forEach(price => {
+          if (tariffTypes.includes(price.type)) {
+            pricesMap[price.type] = parseFloat(price.price);
+          }
+          // Загружаем цены для кастомного тарифа
+          if (price.type === 'CLOUD_PRICE_LOW') {
+            cloudPriceLow = parseFloat(price.price);
+          }
+          if (price.type === 'CLOUD_PRICE_HIGH') {
+            cloudPriceHigh = parseFloat(price.price);
+          }
+        });
+        
+        setTariffPrices(pricesMap);
+        setCloudCustomPrices({ low: cloudPriceLow, high: cloudPriceHigh });
+        
+        if (import.meta.env.DEV) {
+          console.log('Цены тарифов облачного хранения загружены:', pricesMap);
+          console.log('Цены кастомного тарифа загружены:', { low: cloudPriceLow, high: cloudPriceHigh });
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке цен тарифов облачного хранения:', error);
+        // Используем дефолтные значения при ошибке
+        setTariffPrices({});
+        setCloudCustomPrices({ low: null, high: null });
+      }
+    };
+
+    loadTariffPrices();
+  }, []);
 
   // Удаляем загрузку GAZELLE_TO, так как теперь используется только GAZELLE_FROM по умолчанию
   // GAZELLE_TO можно выбрать вручную в дополнительных услугах
@@ -2075,44 +2171,77 @@ const HomePage = memo(() => {
                   </div>
                 </div>
 
-                {/* Карусель тарифов */}
-                <div className="relative overflow-hidden">
-                  <div
-                    className="flex transition-transform duration-300 ease-in-out"
-                    style={{
-                      transform: `translateX(-${currentTariffIndex * (100 / tariffsPerView)}%)`,
-                      gap: '1rem'
-                    }}
-                  >
-                    {tariffs.map((tariff) => (
-                      <div
-                        key={tariff.id}
-                        className="flex-shrink-0 px-2"
-                        style={{
-                          width: tariffsPerView === 1 ? '100%' : 'calc(25% - 0.75rem)'
-                        }}
-                      >
-                        <div
-                          onClick={() => setSelectedTariff(tariff)}
-                          className={`rounded-3xl p-4 md:p-6 flex flex-col items-center cursor-pointer transition-colors h-full ${
-                            selectedTariff?.id === tariff.id 
-                              ? 'bg-[#31876D] ring-4 ring-[#31876D]/30' 
-                              : 'bg-[#04A68E] hover:bg-[#038a77]'
-                          }`}
-                        >
-                          <div className="w-full h-32 md:h-40 mb-4 flex items-center justify-center">
-                            <img
-                              src={tariff.image}
-                              alt={tariff.name}
-                              className="max-w-full max-h-full object-contain"
-                            />
-                          </div>
-                          <p className="text-white text-center text-sm md:text-base font-medium leading-tight">
-                            {tariff.name}
-                          </p>
+                {/* Тарифы: статичная карточка "Свои габариты" + карусель остальных */}
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Статичная карточка "Свои габариты" */}
+                  <div className="flex-shrink-0 px-2 w-full" style={{ width: tariffsPerView === 1 ? '100%' : 'calc(25% - 0.75rem)' }}>
+                    <div
+                      onClick={() => {
+                        setSelectedTariff(customTariff);
+                        // Если выбрано "Свои габариты", сбрасываем габариты на значения по умолчанию
+                        setCloudDimensions({ width: 1, height: 1, length: 1 });
+                      }}
+                      className={`rounded-3xl p-4 md:p-6 flex flex-col items-center cursor-pointer transition-colors h-full ${
+                        selectedTariff?.id === customTariff.id 
+                          ? 'bg-[#31876D] ring-4 ring-[#31876D]/30' 
+                          : 'bg-[#04A68E] hover:bg-[#038a77]'
+                      }`}
+                    >
+                      <div className="w-full h-32 md:h-40 mb-4 flex items-center justify-center">
+                        <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
+                          <Box className="w-12 h-12 text-white" />
                         </div>
                       </div>
-                    ))}
+                      <p className="text-white text-center text-sm md:text-base font-medium leading-tight">
+                        {customTariff.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Карусель остальных тарифов */}
+                  <div className="relative overflow-hidden flex-1 w-full md:w-auto">
+                    <div
+                      className="flex transition-transform duration-300 ease-in-out"
+                      style={{
+                        transform: `translateX(-${currentTariffIndex * (100 / tariffsPerView)}%)`,
+                        gap: '1rem'
+                      }}
+                    >
+                      {regularTariffs.map((tariff) => (
+                        <div
+                          key={tariff.id}
+                          className="flex-shrink-0 px-2"
+                          style={{
+                            width: tariffsPerView === 1 ? '100%' : `calc(${100 / tariffsPerView}% - 0.75rem)`
+                          }}
+                        >
+                          <div
+                            onClick={() => {
+                              setSelectedTariff(tariff);
+                              // Если выбран тариф, устанавливаем объем из тарифа (baseVolume или maxVolume)
+                              const tariffVolume = tariff.baseVolume ?? tariff.maxVolume ?? 1;
+                              setCloudVolumeDirect(tariffVolume);
+                            }}
+                            className={`rounded-3xl p-4 md:p-6 flex flex-col items-center cursor-pointer transition-colors h-full ${
+                              selectedTariff?.id === tariff.id 
+                                ? 'bg-[#31876D] ring-4 ring-[#31876D]/30' 
+                                : 'bg-[#04A68E] hover:bg-[#038a77]'
+                            }`}
+                          >
+                            <div className="w-full h-32 md:h-40 mb-4 flex items-center justify-center">
+                              <img
+                                src={tariff.image}
+                                alt={tariff.name}
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            </div>
+                            <p className="text-white text-center text-sm md:text-base font-medium leading-tight">
+                              {tariff.name}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2121,32 +2250,67 @@ const HomePage = memo(() => {
                 {/* Левая колонка - Габариты и расчет */}
                 <div className="flex flex-col h-full justify-between">
                   <h2 className="text-2xl font-bold text-[#273655] mb-6">
-                    Укажите габариты вещей
+                    {selectedTariff?.isCustom 
+                      ? 'Укажите габариты вещей' 
+                      : selectedTariff 
+                        ? 'Информация о тарифе' 
+                        : 'Выберите тариф или укажите габариты'}
                   </h2>
                   
-                  {/* Поля для габаритов */}
+                  {/* Поля для ввода */}
                   <div className="space-y-4 mb-4">
-                    {/* Ширина и Высота в одной строке */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {[
-                        { key: 'width', label: 'Ширина', value: cloudDimensions.width },
-                        { key: 'height', label: 'Высота', value: cloudDimensions.height }
-                      ].map((dim) => (
+                    {selectedTariff?.isCustom ? (
+                      /* Режим "Свои габариты" - показываем поля для габаритов */
+                      <>
+                        {/* Ширина и Высота в одной строке */}
+                        <div className="grid grid-cols-2 gap-4">
+                          {[
+                            { key: 'width', label: 'Ширина', value: cloudDimensions.width },
+                            { key: 'height', label: 'Высота', value: cloudDimensions.height }
+                          ].map((dim) => (
+                            <Select
+                              key={dim.key}
+                              value={String(dim.value)}
+                              onValueChange={(value) => {
+                                setCloudDimensions(prev => ({
+                                  ...prev,
+                                  [dim.key]: parseFloat(value)
+                                }));
+                                setSubmitError(null);
+                              }}
+                            >
+                              <SelectTrigger className="w-full h-auto min-h-[60px] text-base border-0 rounded-2xl bg-white flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4">
+                                <span className="text-sm text-[#273655] mb-1">{dim.label}:</span>
+                                <SelectValue className="text-base">
+                                  {String(dim.value)} м
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 10 }, (_, i) => i + 1).map((val) => (
+                                  <SelectItem key={val} value={String(val)}>
+                                    {val} м
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ))}
+                        </div>
+
+                        {/* Длина отдельно ниже */}
                         <Select
-                          key={dim.key}
-                          value={String(dim.value)}
+                          value={String(cloudDimensions.length)}
                           onValueChange={(value) => {
                             setCloudDimensions(prev => ({
                               ...prev,
-                              [dim.key]: parseFloat(value)
+                              length: parseFloat(value)
                             }));
                             setSubmitError(null);
                           }}
                         >
                           <SelectTrigger className="w-full h-auto min-h-[60px] text-base border-0 rounded-2xl bg-white flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4">
-                            <span className="text-sm text-[#273655] mb-1">{dim.label}:</span>
+                            <span className="text-sm text-[#273655] mb-1">Длина:</span>
                             <SelectValue className="text-base">
-                              {String(dim.value)} м
+                              {String(cloudDimensions.length)} м
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
@@ -2157,34 +2321,30 @@ const HomePage = memo(() => {
                             ))}
                           </SelectContent>
                         </Select>
-                      ))}
-                    </div>
-
-                    {/* Длина отдельно ниже */}
-                    <Select
-                      value={String(cloudDimensions.length)}
-                      onValueChange={(value) => {
-                        setCloudDimensions(prev => ({
-                          ...prev,
-                          length: parseFloat(value)
-                        }));
-                        setSubmitError(null);
-                      }}
-                    >
-                      <SelectTrigger className="w-full h-auto min-h-[60px] text-base border-0 rounded-2xl bg-white flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4">
-                        <span className="text-sm text-[#273655] mb-1">Длина:</span>
-                        <SelectValue className="text-base">
-                          {String(cloudDimensions.length)} м
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map((val) => (
-                          <SelectItem key={val} value={String(val)}>
-                            {val} м
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      </>
+                    ) : selectedTariff ? (
+                      /* Режим тарифа - показываем информацию о фиксированном объеме */
+                      <div className="bg-[#E0F2FE] rounded-2xl p-6 border-2 border-[#00A991]/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-[#273655]">Тариф:</span>
+                          <span className="text-base font-semibold text-[#31876D]">{selectedTariff.name}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-[#273655]">Фиксированный объем:</span>
+                          <span className="text-lg font-bold text-[#31876D]">
+                            {selectedTariff.baseVolume ?? selectedTariff.maxVolume ?? cloudVolumeDirect} м³
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#6B6B6B] mt-3 italic">
+                          Объем для данного тарифа фиксирован и не может быть изменен
+                        </p>
+                      </div>
+                    ) : (
+                      /* Тариф не выбран - показываем подсказку */
+                      <p className="text-sm text-[#6B6B6B]">
+                        Выберите тариф или режим "Свои габариты" для начала расчета
+                      </p>
+                    )}
                   </div>
 
                   {/* Блок ИТОГ */}
@@ -2199,14 +2359,29 @@ const HomePage = memo(() => {
                       <span className="text-2xl font-bold text-[#31876D]">{cloudVolume.toFixed(2)} м³</span>
                     </div>
                     <div className="text-base text-[#273655]">
-                      <div className="flex justify-between mb-3">
-                        <span>Габариты:</span>
-                        <span className="font-medium">{cloudDimensions.width} × {cloudDimensions.height} × {cloudDimensions.length} м</span>
-                      </div>
-                      <div className="flex justify-between mb-3">
-                        <span>Объём:</span>
-                        <span className="font-medium">{cloudVolume.toFixed(2)} м³</span>
-                      </div>
+                      {selectedTariff?.isCustom ? (
+                        <>
+                          <div className="flex justify-between mb-3">
+                            <span>Габариты:</span>
+                            <span className="font-medium">{cloudDimensions.width} × {cloudDimensions.height} × {cloudDimensions.length} м</span>
+                          </div>
+                          <div className="flex justify-between mb-3">
+                            <span>Объём:</span>
+                            <span className="font-medium">{cloudVolume.toFixed(2)} м³</span>
+                          </div>
+                        </>
+                      ) : selectedTariff ? (
+                        <>
+                          <div className="flex justify-between mb-3">
+                            <span>Тариф:</span>
+                            <span className="font-medium">{selectedTariff.name}</span>
+                          </div>
+                          <div className="flex justify-between mb-3">
+                            <span>Объём:</span>
+                            <span className="font-medium">{(selectedTariff.baseVolume ?? selectedTariff.maxVolume ?? cloudVolume).toFixed(2)} м³</span>
+                          </div>
+                        </>
+                      ) : null}
                       <div className="flex justify-between mt-6 mb-3">
                         <span className="text-[#00A991]">За месяц</span>
                         <span className="font-medium text-[#00A991]">{cloudPricePreview?.monthly?.toLocaleString() ?? "—"} ₸</span>
