@@ -546,8 +546,8 @@ const HomePage = memo(() => {
         name: 'Хранения сумки / коробки вещей',
         image: sumkaImg,
         pricePerM3: tariffPrices['CLOUD_TARIFF_SUMKA'] || 6000,
-        maxVolume: 0.23,
-        baseVolume: 0.23,
+        maxVolume: 0.25,
+        baseVolume: 0.25,
         basePrice: null,
       },
       {
@@ -2354,38 +2354,21 @@ const HomePage = memo(() => {
 
                   {/* Блок ИТОГ */}
                   <div className="bg-white rounded-3xl px-8 pt-6 pb-8 mb-6 border-2 border-dashed border-gray-300 min-h-[250px]">
-                    {/* Рассчитанный объем */}
-                    <p className="text-base text-[#273655] mb-6">
-                      Рассчитанный объём: {cloudVolume.toFixed(2)} м³
-                    </p>
-
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-2xl font-bold text-[#31876D]">ИТОГ</h3>
                       <span className="text-2xl font-bold text-[#31876D]">{cloudVolume.toFixed(2)} м³</span>
                     </div>
                     <div className="text-base text-[#273655]">
                       {selectedTariff?.isCustom ? (
-                        <>
-                          <div className="flex justify-between mb-3">
-                            <span>Габариты:</span>
-                            <span className="font-medium">{cloudDimensions.width} × {cloudDimensions.height} × {cloudDimensions.length} м</span>
-                          </div>
-                          <div className="flex justify-between mb-3">
-                            <span>Объём:</span>
-                            <span className="font-medium">{cloudVolume.toFixed(2)} м³</span>
-                          </div>
-                        </>
+                        <div className="flex justify-between mb-3">
+                          <span>Габариты:</span>
+                          <span className="font-medium">{cloudDimensions.width} × {cloudDimensions.height} × {cloudDimensions.length} м</span>
+                        </div>
                       ) : selectedTariff ? (
-                        <>
-                          <div className="flex justify-between mb-3">
-                            <span>Тариф:</span>
-                            <span className="font-medium">{selectedTariff.name}</span>
-                          </div>
-                          <div className="flex justify-between mb-3">
-                            <span>Объём:</span>
-                            <span className="font-medium">{(selectedTariff.baseVolume ?? selectedTariff.maxVolume ?? cloudVolume).toFixed(2)} м³</span>
-                          </div>
-                        </>
+                        <div className="flex justify-between mb-3">
+                          <span>Тариф:</span>
+                          <span className="font-medium">{selectedTariff.name}</span>
+                        </div>
                       ) : null}
                       <div className="flex justify-between mt-6 mb-3">
                         <span className="text-[#00A991]">За месяц</span>
