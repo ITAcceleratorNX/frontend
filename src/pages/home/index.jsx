@@ -235,6 +235,16 @@ const HomePage = memo(() => {
           "M3_01_UP_6M",
           "M3_01_6_12M",
           "M3_01_OVER_12M",
+          "UTILITY_KNIFE",
+          "FURNITURE_SPECIALIST",
+          "CLOUD_TARIFF_SUMKA",
+          "CLOUD_TARIFF_SHINA",
+          "CLOUD_TARIFF_MOTORCYCLE",
+          "CLOUD_TARIFF_BICYCLE",
+          "CLOUD_TARIFF_SUNUK",
+          "CLOUD_TARIFF_FURNITURE",
+          "CLOUD_TARIFF_SKLAD",
+          "CLOUD_TARIFF_GARAZH",
         ];
         return !excludedTypes.includes(price.type);
       });
@@ -2505,7 +2515,7 @@ const HomePage = memo(() => {
       </section>
       
       {/* Дополнительные формы (детальные настройки перевозки и услуг) - показываем в отдельной секции */}
-      {previewStorage && includeMoving && (
+      {activeStorageTab === 'INDIVIDUAL' && previewStorage && includeMoving && (
         <section className="w-full flex flex-col items-center justify-center mt-8 mb-8 px-4 sm:px-6">
           <div className="w-full max-w-[1144px]">
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
@@ -2543,7 +2553,7 @@ const HomePage = memo(() => {
         </section>
       )}
       
-      {previewStorage && includePacking && (
+      {activeStorageTab === 'INDIVIDUAL' && previewStorage && includePacking && (
         <section className="w-full flex flex-col items-center justify-center mt-8 mb-8 px-4 sm:px-6">
           <div className="w-full max-w-[1144px]">
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
