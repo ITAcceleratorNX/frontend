@@ -9,6 +9,7 @@ import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { List, Zap, CheckCircle, Star, FileText } from 'lucide-react';
 
 const UserOrdersPage = () => {
   const { user } = useAuth();
@@ -154,56 +155,41 @@ const UserOrdersPage = () => {
             
             {/* Filter Tabs */}
             <Tabs value={activeFilter} onValueChange={setActiveFilter}>
-              <TabsList className="bg-white px-2 py-4 rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+              <TabsList className="bg-white px-2 py-4 rounded-[32px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] h-auto">
                 <TabsTrigger
                   value="all"
-                  className={`${
-                    activeFilter === 'all' 
-                      ? 'bg-[#00A991]/20 rounded-full text-[#00A991]' 
-                      : 'text-gray-600 rounded-md'
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
-                  Все
+                  <List className="w-4 h-4" />
+                  <span>Все</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="active"
-                  className={`${
-                    activeFilter === 'active' 
-                      ? 'bg-[#00A991]/20 rounded-full text-[#00A991]' 
-                      : 'text-gray-600 rounded-md'
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
-                  Активные
+                  <Zap className="w-4 h-4" />
+                  <span>Активные</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="approved"
-                  className={`${
-                    activeFilter === 'approved' 
-                      ? 'bg-[#00A991]/20 rounded-full text-[#00A991]' 
-                      : 'text-gray-600 rounded-md'
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
-                  Подтверждено
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Подтверждено</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="processing"
-                  className={`${
-                    activeFilter === 'processing' 
-                      ? 'bg-[#00A991]/20 rounded-full text-[#00A991]' 
-                      : 'text-gray-600 rounded-md'
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
-                  В обработке у менеджера
+                  <Star className="w-4 h-4" />
+                  <span>В обработке у менеджера</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="archive"
-                  className={`${
-                    activeFilter === 'archive' 
-                      ? 'bg-[#00A991]/20 rounded-full text-[#00A991]' 
-                      : 'text-gray-600 rounded-md'
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
-                  В архиве
+                  <FileText className="w-4 h-4" />
+                  <span>В архиве</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>

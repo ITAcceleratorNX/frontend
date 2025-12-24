@@ -25,7 +25,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { useExtendOrder } from '../../../shared/lib/hooks/use-orders';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Pencil } from 'lucide-react';
+import { Pencil, Zap, CheckCircle, Star, FileText, Download, Plus, Truck, Package } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
@@ -208,451 +208,208 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   // Проверяем наличие дополнительных услуг (включая новый массив services)
   const hasAdditionalServices = order.is_selected_moving || order.is_selected_package || (order.services && order.services.length > 0);
 
-  // Определяем стили карточки в зависимости от наличия дополнительных услуг и pending статуса
+  // Определяем стили карточки в зависимости от статуса
   const isPendingExtension = order.extension_status === 'PENDING';
-  const cardClasses = hasAdditionalServices
-    ? `bg-white border-2 ${isPendingExtension ? 'border-red-500' : 'border-[#273655]'} rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative`
-    : `bg-white border ${isPendingExtension ? 'border-2 border-red-500' : 'border-gray-200'} rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow`;
-
-  // Определяем цвет баннера в зависимости от статуса
-  const getBannerColor = () => {
-    if (order.status === 'PROCESSING') {
-      return 'bg-[#004743]'; // Teal для "В обработке у менеджера"
+  
+  // Определяем фон карточки: зеленый градиент для активных/оплаченных, серый для неоплаченных/в обработке
+  const getCardBackground = () => {
+    if (order.status === 'ACTIVE' && order.payment_status === 'PAID') {
+      return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для активных/оплаченных
     }
-    if (order.payment_status === 'UNPAID') {
-      return 'bg-[#999999]'; // Grey для "Не оплачено"
+    if (order.status === 'PROCESSING' || order.payment_status === 'UNPAID') {
+      return 'bg-[#999999]'; // Серый для неоплаченных/в обработке
     }
-    return 'bg-[#004743]'; // По умолчанию teal
+    return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // По умолчанию зеленый
   };
 
+  const cardBackground = getCardBackground();
+
   return (
-    <div className={cardClasses}>
-      {/* Баннер статуса сверху */}
-      <div className={`${getBannerColor()} text-white px-4 py-2 rounded-t-lg`}>
-        <div className="flex items-center gap-2">
-          {order.status === 'PROCESSING' && (
-            <span className="text-sm font-medium">В обработке у менеджера</span>
-          )}
-          {order.payment_status === 'UNPAID' && order.status !== 'PROCESSING' && (
-            <span className="text-sm font-medium">Не оплачено</span>
-          )}
-        </div>
+    <div className={`${cardBackground} rounded-3xl p-6 text-white relative overflow-hidden shadow-lg`}>
+      {/* Статусные бейджи вверху - белые кнопки */}
+      <div className="flex items-center gap-2 mb-6">
+        {order.status === 'ACTIVE' && (
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
+            <Zap className="w-4 h-4 text-gray-500" />
+            Активный
+          </span>
+        )}
+        {order.status === 'PROCESSING' && (
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
+            <Star className="w-4 h-4 text-gray-500" />
+            В обработке у менеджера
+          </span>
+        )}
+        {order.payment_status === 'PAID' && order.status !== 'PROCESSING' && (
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
+            <CheckCircle className="w-4 h-4 text-gray-500" />
+            Оплачен
+          </span>
+        )}
+        {order.payment_status === 'UNPAID' && (
+          <span className="inline-flex items-center px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
+            Не оплачено
+          </span>
+        )}
       </div>
 
-      {/* Индикатор дополнительных услуг */}
-      {hasAdditionalServices && (
-        <div className="absolute top-0 right-0 bg-gradient-to-r from-[#004743] to-[#003936] text-white px-3 py-1 rounded-bl-lg">
-          <div className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-xs font-medium">Услуги+</span>
-          </div>
+      {/* Заголовок заказа и белый квадрат с идентификатором бокса */}
+      <div className="flex items-start justify-between mb-10 relative">
+        <div className="flex-1">
+          <h3 className="text-2xl font-bold mb-2">Заказ №{order.id}</h3>
+          <p className="text-white/90 text-xs mb-1">Создан: {formatDate(order.created_at)}</p>
+          <p className="text-white/90 text-sm mb-1">Тип: {getStorageTypeText(order.storage?.storage_type || 'INDIVIDUAL')}</p>
+          <p className="text-white/90 text-sm">Объем: {order.total_volume} м³</p>
         </div>
-      )}
-
-      {/* Индикатор pending статуса */}
-      {isPendingExtension && (
-        <div className="absolute top-0 left-0 bg-red-500 text-white px-3 py-1 rounded-br-lg">
-          <div className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-xs font-medium">Ожидает</span>
-          </div>
-        </div>
-      )}
-
-      {/* Заголовок карточки */}
-      <div className="p-4 sm:p-6 border-b border-gray-100">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Заказ №{order.id}
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Создан: {formatDate(order.created_at)}
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            {/* Статус заказа */}
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getOrderStatusClass(order.status)}`}>
-              {getOrderStatusText(order.status)}
-            </span>
-            
-            {/* Статус оплаты */}
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-              order.payment_status === 'PAID' 
-                ? 'bg-green-100 text-green-700 border-green-200' 
-                : 'bg-red-100 text-red-700 border-red-200'
-            }`}>
-              {getPaymentStatusText(order.payment_status)}
-            </span>
-            
-            {/* Статус продления */}
-            {isPendingExtension && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-red-100 text-red-700 border-red-200">
-                Ожидает продления
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Отображение дополнительных услуг */}
-        {hasAdditionalServices && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {order.is_selected_moving && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="text-xs font-medium text-blue-700">Услуга перевозки</span>
-              </div>
-            )}
-            {order.is_selected_package && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-full">
-                <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <span className="text-xs font-medium text-purple-700">Услуга упаковки</span>
-              </div>
-            )}
+        {/* Белый квадрат с идентификатором бокса в правом верхнем углу */}
+        {order.storage && order.storage.name && (
+          <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
+            <span className="text-4xl font-bold text-gray-900">{order.storage.name}</span>
           </div>
         )}
       </div>
 
-      {/* Основная информация */}
-      <div className="p-4 sm:p-6 space-y-4">
-        {/* Информация о хранилище */}
-        {order?.storage && order?.storage?.storage_type !== 'CLOUD' && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">Хранилище</h4>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p><span className="font-medium">Бокс:</span> {order.storage.name}</p>
-              <p><span className="font-medium">Тип:</span> {getStorageTypeText(order.storage.storage_type)}</p>
-              <p><span className="font-medium">Объем:</span> {order.storage.total_volume} м³</p>
-              {order.storage.description && (
-                <p><span className="font-medium">Описание:</span> {order.storage.description}</p>
-              )}
-            </div>
-          </div>
-        )}
-        {order?.storage && order?.storage?.storage_type === 'CLOUD' && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900 mb-2">Хранилище</h4>
-              <div className="space-y-1 text-sm text-gray-600">
-                <p><span className="font-medium">Тип:</span> {getStorageTypeText(order.storage.storage_type)}</p>
-                {order.storage.description && (
-                    <p><span className="font-medium">Описание:</span> {order.storage.description}</p>
-                )}
-              </div>
-            </div>
-        )}
-
-        {/* Информация о заказе */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-gray-500">Общий объем</p>
-            <p className="font-medium text-gray-900">{order.total_volume} м³</p>
-          </div>
-          <div>
-            <p className="text-gray-500">Сумма к оплате</p>
-            <p className="font-medium text-gray-900">{formatPrice(order.total_price)} ₸</p>
-          </div>
-          <div>
-            <p className="text-gray-500">Дата начала</p>
-            <p className="font-medium text-gray-900">{formatDate(order.start_date)}</p>
-          </div>
-          <div>
-            <p className="text-gray-500">Депозит</p>
-            <p className="font-medium text-gray-900">{'15 000'} ₸</p>
-          </div>
-          <div>
-            <p className="text-gray-500">Дата окончания</p>
-            <p className="font-medium text-gray-900">{formatDate(order.end_date)}</p>
-          </div>
+      {/* Информация о датах и оплате в двух колонках */}
+      <div className="mb-10 grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <p className="text-white/90 text-xs">Дата начала:</p>
+          <p className="text-white text-sm">{formatDate(order.start_date)}</p>
+          <p className="text-white/90 text-xs">Дата окончания:</p>
+          <p className="text-white text-sm">{formatDate(order.end_date)}</p>
         </div>
+        <div className="space-y-2">
+          <p className="text-white/90 text-xs">Сумма к оплате:</p>
+          <p className="text-white text-sm">{formatPrice(order.total_price)} 〒</p>
+          <p className="text-white/90 text-xs">Депозит:</p>
+          <p className="text-white text-sm">15 000 〒</p>
+        </div>
+      </div>
 
-        {/* Статус договора */}
+      {/* Договор */}
+      <div className="mb-10 flex justify-center">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Договор:</span>
-          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-            order.contract_status === 'SIGNED' 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-orange-100 text-orange-700'
-          }`}>
+          <span className="text-white/90 text-sm">Договор:</span>
+          <span className="inline-flex items-center px-2.5 py-1 bg-white rounded-full text-xs font-medium text-gray-700">
             {getContractStatusText(order.contract_status)}
           </span>
         </div>
-
-        {/* Список предметов */}
-        {order.items && order.items.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">Предметы в хранилище</h4>
-            <div className="space-y-2">
-              {order.items.map((item, index) => (
-                <div key={item.id || index} className="bg-gray-50 rounded p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-900">{item.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {item.volume} м³ • {getCargoMarkText(item.cargo_mark)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Moving Orders - отображение с адресами */}
-        {order.moving_orders && order.moving_orders.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Даты перемещения
-            </h4>
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-              <div className="space-y-3">
-                {order.moving_orders.map((movingOrder, index) => (
-                  <div key={movingOrder.id || index} className="bg-white rounded-lg p-3 border border-green-100">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-green-700">Перемещение #{index + 1}</span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getMovingStatusBadgeClass(movingOrder.status)}`}>
-  {getMovingStatusText(movingOrder.status)}
-</span>
-                      </div>
-                      
-                      <div className="text-sm">
-                        <div className="flex items-center gap-2 mb-2">
-                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-7 0h8m-8 0V5a1 1 0 00-1 1v11a1 1 0 001 1h2m6-12V5a1 1 0 011 1v11a1 1 0 01-1 1h-2m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                          </svg>
-                          <span className="font-medium">Дата:</span>
-                          <span className="text-gray-700">{formatDate(movingOrder.moving_date)}</span>
-                        </div>
-                        
-                        {/* Отображение адреса если есть */}
-                        {movingOrder.address && (
-                          <div className="flex items-start gap-2">
-                            <svg className="w-4 h-4 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <div className="flex-1">
-                              <span className="font-medium">Адрес:</span>
-                              <div className="text-gray-700 bg-green-50 rounded px-2 py-1 mt-1 border border-green-200">
-                                {movingOrder.address}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Дополнительные услуги из массива services */}
-        {order.services && order.services.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-[#273655]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              Заказанные услуги
-            </h4>
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
-              <div className="grid gap-3">
-                {order.services.map((service, index) => (
-                  <div key={service.id || index} className="flex items-center justify-between bg-white rounded-lg p-3 border border-amber-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#273655] rounded-full flex items-center justify-center">
-                        <span className="text-lg">{getServiceIcon(service.type)}</span>
-                      </div>
-                                             <div>
-                         <div className="flex items-center gap-2">
-                           <h5 className="font-semibold text-gray-900">
-                             {service.description || getServiceTypeName(service.type)}
-                           </h5>
-                           {service.OrderService && service.OrderService.count > 1 && (
-                             <span className="px-2 py-1 bg-[#273655] text-white text-xs font-bold rounded-full">
-                               ×{service.OrderService.count}
-                             </span>
-                           )}
-                         </div>
-                         {service.price && (
-                           <p className="text-sm font-medium text-[#273655]">
-                             {formatPrice(service.price)} ₸ {service.OrderService && service.OrderService.count > 1 ? `за единицу` : ''}
-                           </p>
-                         )}
-                       </div>
-                    </div>
-                    
-                    {/* Общая стоимость услуги */}
-                    {service.price && service.OrderService && (
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">Итого:</p>
-                        <p className="font-bold text-[#273655]">
-                          {formatPrice(parseFloat(service.OrderService.total_price))} ₸
-                          {service.type === 'GAZELLE' ? <p className="text-xs text-gray-500">Примерная стоимость</p> : ''}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              {/* Сводка по услугам */}
-              <div className="mt-4 pt-3 border-t border-amber-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    Услуг выбрано: <span className="font-medium">{order.services.length}</span>
-                  </span>
-                  {order.services.some(s => s.price) && (
-                    <span className="text-sm text-gray-600">
-                      Общая стоимость услуг: <span className="font-bold text-[#273655]">
-                        {formatPrice(totalPriceOfServices)} ₸
-                      </span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Футер карточки с кнопками */}
-      <div className={`p-4 sm:px-6 sm:py-4 border-t border-gray-100 ${hasAdditionalServices ? 'bg-[#e6edec]' : 'bg-[#f5f5f5]'}`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-          <div className="text-lg font-bold text-gray-900">
-            ИТОГ {formatPrice(Number(order.total_price) + 15000 + Number(totalPriceOfServices))} ₸
+      {/* Предметы */}
+      {order.items && order.items.length > 0 && (
+        <div className="mb-10">
+          <p className="text-white/90 text-sm mb-2">Предметы:</p>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-white/90" />
+              <span className="text-white/90 text-sm">
+                {order.items[0]?.name || 'Вещь'} {order.items[0]?.volume || order.total_volume} м³ {order.items[0]?.cargo_mark ? getCargoMarkText(order.items[0].cargo_mark) : 'Обычный'}
+              </span>
+            </div>
+            <button className="text-white/90 text-sm font-medium hover:text-white transition-colors underline">
+              Скачать
+            </button>
+          </div>
+        </div>
+      )}
+
+
+      {/* Заказанные услуги */}
+      {order.services && order.services.length > 0 && (
+        <>
+          <div className="mb-6">
+            <p className="text-white/90 text-sm mb-3">Заказанные услуги:</p>
+            <div className="bg-white rounded-2xl p-4">
+              <div className="space-y-3">
+                {order.services.map((service, index) => (
+                  <div key={service.id || index}>
+                    <div className="flex items-start gap-2">
+                      {service.type === 'GAZELLE' || service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO' ? (
+                        <Truck className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                      ) : service.type === 'BOX_SIZE' ? (
+                        <Package className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <span className="text-lg">{getServiceIcon(service.type)}</span>
+                      )}
+                      <div className="flex-1">
+                        <p className="text-[#737373] font-medium text-sm">
+                          {service.description || getServiceTypeName(service.type)}
+                        </p>
+                        {service.OrderService && service.OrderService.count > 1 ? (
+                          <p className="text-gray-600 text-xs mt-1">
+                            {formatPrice(service.price || 0)} 〒 * x{service.OrderService.count} = {formatPrice(parseFloat(service.OrderService.total_price))} 〒
+                          </p>
+                        ) : service.price ? (
+                          <p className="text-gray-600 text-xs mt-1">{formatPrice(service.price)} 〒</p>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 ">
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-gray-500 text-xs">Услуг выбрано: {order.services.length}</span>
+                  <span className="text-gray-900 font-bold text-sm">Общая стоимость: {formatPrice(totalPriceOfServices)} 〒</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mb-8 flex justify-end">
+            <button 
+              onClick={() => setIsEditModalOpen(true)}
+              className="text-white text-sm font-medium hover:text-white/80 transition-colors underline"
+            >
+              Редактировать
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Итого и кнопки действий */}
+      <div className="mt-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-white text-sm mb-1">ИТОГ</p>
+            <p className="text-white text-3xl font-bold">{formatPrice(Number(order.total_price) + 15000 + Number(totalPriceOfServices))} 〒</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3">
-            {order.status === 'INACTIVE' ? (
-              // Кнопки для неактивных заказов
-              <>
-                <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="w-full sm:w-auto px-4 py-2 bg-[#004743] text-white text-sm font-medium rounded-md hover:bg-[#00403c] transition-colors flex items-center justify-center gap-2"
-                >
-                  <Pencil className="w-4 h-4" />
-                  Редактировать
-                </button>
-                <button
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Удалить
-                </button>
-              </>
-            ) : canPay ? (
+          <div className="flex flex-col items-end gap-2">
+            {(order.status === 'PROCESSING' && order.payment_status === 'UNPAID') || canPay ? (
               <>
                 <button
                   onClick={() => onPayOrder(order)}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-[#999999] text-white text-sm font-medium rounded-md hover:bg-[#8a8a8a] transition-colors"
+                  className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-xl hover:bg-white/90 transition-colors"
                 >
                   Оплатить
                 </button>
                 <button
                   onClick={() => setIsDeleteModalOpen(true)}
-                  className="w-full sm:w-auto px-4 py-2 text-[#999999] text-sm font-medium hover:text-[#737373] transition-colors underline"
+                  className="text-white/80 text-xs font-medium hover:text-white transition-colors underline"
                 >
                   Отменить заказ
                 </button>
               </>
-            ) : order.status === 'PROCESSING' ? (
-              <>
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="w-full sm:w-auto px-4 py-2 bg-[#004743] text-white text-sm font-medium rounded-md hover:bg-[#00403c] transition-colors flex items-center justify-center gap-2"
-                >
-                  <Pencil className="w-4 h-4" />
-                  Редактировать
-                </button>
-                <button
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-[#004743] text-white text-sm font-medium rounded-md hover:bg-[#00403c] transition-colors"
-                >
-                  Расторгнуть
-                </button>
-              </>
-            ) : order.payment_status === 'PAID' ? (
-              <span className="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
-                Оплачено
-              </span>
-            ) : (
-              <span className="px-4 py-2 bg-[#f5f5f5] text-[#999999] text-sm font-medium rounded-lg">
-                Недоступно для оплаты
-              </span>
-            )}
+            ) : order.status === 'PROCESSING' && order.payment_status === 'PAID' ? (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="px-6 py-2.5 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-xl hover:bg-white/30 transition-colors"
+              >
+                Расторгнуть
+              </button>
+            ) : order.status === 'ACTIVE' && order.payment_status === 'PAID' ? (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="px-6 py-2.5 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-xl hover:bg-white/30 transition-colors"
+              >
+                Расторгнуть
+              </button>
+            ) : null}
           </div>
         </div>
-        {order.status === 'APPROVED' && (
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <svg className="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Оплата будет доступна после подписания договора.
-              </p>
-            </div>
-        )}
-        {order.status === 'INACTIVE' && (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <svg className="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Заказ ожидает подтверждения. После подтверждения договор будет отправлен вам по SMS, и редактирование станет недоступным.
-            </p>
-          </div>
-        )}
-
         {/* Таймер обратного отсчета до автоотмены */}
         <OrderCancelTimer order={order} />
-
-        {/* Дополнительная информация о выбранных услугах */}
-        {hasAdditionalServices && (
-          <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-[#273655]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-              </svg>
-              <span className="text-sm font-medium text-[#273655]">Дополнительные услуги включены</span>
-            </div>
-            <div className="text-xs text-gray-600 space-y-1">
-              {order.is_selected_moving && (
-                <p>• Профессиональная перевозка вещей</p>
-              )}
-              {order.is_selected_package && (
-                <p>• Профессиональная упаковка для безопасного хранения</p>
-              )}
-              {order.services && order.services.length > 0 && (
-                <>
-                                   {order.services.map((service, index) => (
-                   <p key={service.id || index}>
-                     • {getServiceIcon(service.type)} {service.description || getServiceTypeName(service.type)}
-                     {service.OrderService && service.OrderService.count > 1 && ` ×${service.OrderService.count}`}
-                   </p>
-                 ))}
-                </>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Кнопки продления заказа - показываются только если extension_status === CANCELED */}
         {order.extension_status === "PENDING" && (
