@@ -131,6 +131,9 @@ const HomePage = memo(() => {
   const [cloudPricePreview, setCloudPricePreview] = useState(null);
   const [isCloudPriceCalculating, setIsCloudPriceCalculating] = useState(false);
   const [cloudPriceError, setCloudPriceError] = useState(null);
+  // Состояние для информации о бронировании занятого бокса
+  const [bookingInfo, setBookingInfo] = useState(null);
+  const [isLoadingBookingInfo, setIsLoadingBookingInfo] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const [megaSelectedMap, setMegaSelectedMap] = useState(1);
@@ -1556,6 +1559,38 @@ const HomePage = memo(() => {
     };
   }, [activeStorageTab, monthsNumber, previewStorage, selectedWarehouse]);
 
+  // Получение информации о бронировании из поля occupancy
+  useEffect(() => {
+    if (!previewStorage) {
+      setBookingInfo(null);
+      setIsLoadingBookingInfo(false);
+      return;
+    }
+
+    // Проверяем, является ли бокс занятым
+    const isOccupied = previewStorage.status === 'OCCUPIED' || previewStorage.status === 'PENDING';
+    
+    if (isOccupied && previewStorage.occupancy && Array.isArray(previewStorage.occupancy) && previewStorage.occupancy.length > 0) {
+      // Находим активное бронирование
+      const activeBooking = previewStorage.occupancy.find(
+        (booking) => booking.status === 'ACTIVE'
+      ) || previewStorage.occupancy[0]; // Если нет ACTIVE, берем первое
+      
+      if (activeBooking && activeBooking.start_date && activeBooking.end_date) {
+        setBookingInfo({
+          start_date: activeBooking.start_date,
+          end_date: activeBooking.end_date
+        });
+      } else {
+        setBookingInfo(null);
+      }
+      setIsLoadingBookingInfo(false);
+    } else {
+      setBookingInfo(null);
+      setIsLoadingBookingInfo(false);
+    }
+  }, [previewStorage]);
+
   const renderWarehouseScheme = ({ isFullscreen = false } = {}) => {
     if (!selectedWarehouse) {
       return (
@@ -2105,6 +2140,40 @@ const HomePage = memo(() => {
                     <h3 className="text-lg font-bold text-[#273655] mb-2">Итог</h3>
                     {previewStorage ? (
                       <div className="space-y-2">
+                        {/* Информация о бронировании для занятых боксов */}
+                        {previewStorage && (previewStorage.status === 'OCCUPIED' || previewStorage.status === 'PENDING') && (
+                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#273655]">
+                                ИТОГ
+                              </div>
+                              <div className="text-4xl font-black text-[#273655] tracking-tight">
+                                {previewStorage.name}
+                              </div>
+                            </div>
+                            {isLoadingBookingInfo ? (
+                              <div className="text-sm text-[#6B6B6B] flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#273655]"></div>
+                                Загрузка информации о бронировании...
+                              </div>
+                            ) : bookingInfo ? (
+                              <p className="text-sm text-[#6B6B6B]">
+                                Бокс стоит о бронировании с{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(bookingInfo.start_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                                , по{" "}
+                                <span className="font-medium text-[#273655]">
+                                  {new Date(bookingInfo.end_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </span>
+                              </p>
+                            ) : (
+                              <p className="text-sm text-[#6B6B6B]">
+                                Бокс занят
+                              </p>
+                            )}
+                          </div>
+                        )}
                         {isPriceCalculating ? (
                           <div className="text-sm text-gray-600 flex items-center gap-2">
                             <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#273655]"></div>

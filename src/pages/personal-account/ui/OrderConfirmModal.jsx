@@ -140,17 +140,11 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
     }, 0);
   };
 
-  // Депозит услуг
-  const getDepositPrice = () => {
-    return 15000; // Фиксированная сумма депозита
-  };
-
-  // Общая сумма: аренда + услуги + депозит
+  // Общая сумма: аренда + услуги
   const getTotalPrice = () => {
     const basePrice = parseFloat(order.total_price) || 0;
     const servicesPrice = getServicesTotal();
-    const depositPrice = getDepositPrice();
-    return basePrice + servicesPrice + depositPrice;
+    return basePrice + servicesPrice;
   };
 
   if (!isOpen || !order) return null;
@@ -288,18 +282,14 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
               </div>
 
               {order.services && order.services.length > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Стоимость услуг:</span>
-                  <span className="text-lg font-bold text-amber-600">{formatPrice(getServicesTotal())} ₸</span>
-                </div>
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Стоимость услуг:</span>
+                    <span className="text-lg font-bold text-amber-600">{formatPrice(getServicesTotal())} ₸</span>
+                  </div>
+                  <Separator />
+                </>
               )}
-
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Депозит услуг:</span>
-                <span className="text-lg font-bold text-purple-600">{formatPrice(getDepositPrice())} ₸</span>
-              </div>
-              
-              <Separator />
               
               <div className="flex justify-between items-center p-3 bg-[#1e2c4f] rounded-md text-white">
                 <span className="text-sm font-medium">Общая сумма:</span>

@@ -287,8 +287,6 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         <div className="space-y-2">
           <p className="text-white/90 text-xs">Сумма к оплате:</p>
           <p className="text-white text-sm">{formatPrice(order.total_price)} 〒</p>
-          <p className="text-white/90 text-xs">Депозит:</p>
-          <p className="text-white text-sm">15 000 〒</p>
         </div>
       </div>
 

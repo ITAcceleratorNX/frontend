@@ -143,24 +143,11 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
     }, 0);
   };
 
-  // Получение цены депозита услуг
-  const getDepositPrice = () => {
-    if (!prices || !Array.isArray(prices)) return 0;
-    
-    const depositService = prices.find(price => price.type === 'DEPOSIT');
-    if (depositService && depositService.price) {
-      return parseFloat(depositService.price);
-    }
-    
-    return 15000; // Fallback значение
-  };
-
-  // Общая сумма: аренда + услуги + депозит
+  // Общая сумма: аренда + услуги
   const getTotalPrice = () => {
     const basePrice = parseFloat(order.total_price) || 0;
     const servicesPrice = getServicesTotal();
-    const depositPrice = getDepositPrice();
-    return basePrice + servicesPrice + depositPrice;
+    return basePrice + servicesPrice;
   };
 
   if (!isOpen) return null;
@@ -300,18 +287,14 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
               </div>
 
               {order.services && order.services.length > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Стоимость услуг:</span>
-                  <span className="text-sm font-bold text-amber-600">{formatPrice(getServicesTotal())} ₸</span>
-                </div>
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600">Стоимость услуг:</span>
+                    <span className="text-sm font-bold text-amber-600">{formatPrice(getServicesTotal())} ₸</span>
+                  </div>
+                  <Separator />
+                </>
               )}
-
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-600">Депозит услуг:</span>
-                <span className="text-sm font-bold text-purple-600">{formatPrice(getDepositPrice())} ₸</span>
-              </div>
-
-              <Separator />
 
               <div className="flex justify-between items-center p-2 bg-[#1e2c4f] rounded-md text-white">
                 <span className="text-xs font-medium">Общая сумма:</span>
@@ -337,15 +320,8 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
           <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
             <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
               <p className="text-xs text-blue-700 leading-tight">
-                После нажатия на кнопку вы будете перенаправлены на защищенную страницу для завершения оплаты. В стоимость включен депозит за дополнительные услуги.
+                После нажатия на кнопку вы будете перенаправлены на защищенную страницу для завершения оплаты.
               </p>
-          </div>
-
-          <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
-            <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-blue-700 leading-tight">
-              Депозит включен в первый платеж и будет возвращен, если хранение не будет прекращено досрочно.
-            </p>
           </div>
         </div>
 

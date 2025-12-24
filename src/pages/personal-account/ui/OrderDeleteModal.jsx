@@ -23,12 +23,11 @@ const OrderDeleteModal = ({ isOpen, order, onClose }) => {
     }
   };
 
-  // Общая сумма: аренда + услуги + депозит
+  // Общая сумма: аренда + услуги
   const getTotalPrice = () => {
     const basePrice = parseFloat(order.total_price) || 0;
     const servicesPrice = getServicesTotal();
-    const depositPrice = getDepositPrice();
-    return basePrice + servicesPrice + depositPrice;
+    return basePrice + servicesPrice;
   };
 
   // Расчет общей стоимости услуг
@@ -41,11 +40,6 @@ const OrderDeleteModal = ({ isOpen, order, onClose }) => {
       }
       return total;
     }, 0);
-  };
-
-  // Депозит услуг
-  const getDepositPrice = () => {
-    return 15000; // Фиксированная сумма депозита
   };
 
   if (!isOpen || !order) return null;

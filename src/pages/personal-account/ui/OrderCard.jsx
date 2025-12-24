@@ -281,14 +281,10 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                   <span className="text-gray-600">Аренда:</span>
                   <span className="font-medium text-[#1e2c4f]">{formatPrice(order.total_price)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Депозит:</span>
-                  <span className="font-medium">15 000 ₸</span>
-                </div>
                 <div className="pt-2 border-t border-green-200 flex justify-between items-center">
                   <span className="font-semibold text-gray-900">Итого:</span>
                   <span className="font-bold text-[#1e2c4f] text-base">
-                    {formatPrice((parseFloat(order.total_price) || 0) + 15000)}
+                    {formatPrice(order.total_price)}
                   </span>
                 </div>
               </div>

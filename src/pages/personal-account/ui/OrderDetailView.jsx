@@ -150,12 +150,10 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
         <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
           <InfoRow label="Стоимость аренды" value={formatPrice(order.total_price)} />
           <Separator className="bg-gray-300" />
-          <InfoRow label="Депозит" value="15 000 ₸" />
-          <Separator className="bg-gray-300" />
           <div className="flex justify-between items-center py-3 pt-4 border-t-2 border-gray-300 mt-2">
             <span className="text-base font-semibold text-gray-900">Итого</span>
             <span className="text-xl font-bold text-[#1e2c4f]">
-              {formatPrice((parseFloat(order.total_price) || 0) + 15000)}
+              {formatPrice(order.total_price)}
             </span>
           </div>
         </div>
