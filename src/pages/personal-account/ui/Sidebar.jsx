@@ -19,7 +19,7 @@ import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
 import { useChatStore } from '../../../entities/chat/model';
-import { Pencil, LogOut, Bell } from 'lucide-react';
+import { Pencil, LogOut, Bell, Package, CreditCard, Truck } from 'lucide-react';
 import lichkaLogo from '../../../assets/Lichka2.png';
 import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './notifications/UserNotifications';
@@ -27,11 +27,10 @@ import { Switch } from '../../../components/ui/switch';
 
 // Разделы для обычных пользователей
 const userNavItems = [
-  { label: 'Мои заказы', icon: icon4, key: 'orders' },
-  { label: 'Договоры', icon: icon2, key: 'contracts' },
+  { label: 'Мои заказы', icon: Package, key: 'orders' },
   // { label: 'Чат', icon: icon3, key: 'chat' },
-  { label: 'Платежи', icon: icon4, key: 'payments' },
-  { label: 'Доставка', icon: icon12, key: 'delivery' },
+  { label: 'Платежи', icon: CreditCard, key: 'payments' },
+  { label: 'Доставка', icon: Truck, key: 'delivery' },
   { divider: true },
   { label: 'Выйти', icon: icon6, key: 'logout' },
 ];
@@ -382,18 +381,25 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
               style={{marginBottom: idx === navItems.length - 1 ? 0 : 4}}
             >
               <div className="relative">
-                <img 
-                  src={item.icon} 
-                  alt="icon" 
-                  className={clsx(
-                    'w-5 h-5 flex-shrink-0', 
-                    activeNav === item.key ? '' : 'filter brightness-0 opacity-60'
-                  )}
-                  style={activeNav === item.key ? { 
-                    filter: 'brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1200%) hue-rotate(140deg) brightness(0.9) contrast(1.1)',
-                    opacity: 1
-                  } : {}}
-                />
+                {typeof item.icon === 'string' ? (
+                  <img 
+                    src={item.icon} 
+                    alt="icon" 
+                    className={clsx(
+                      'w-5 h-5 flex-shrink-0', 
+                      activeNav === item.key ? '' : 'filter brightness-0 opacity-60'
+                    )}
+                    style={activeNav === item.key ? { 
+                      filter: 'brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1200%) hue-rotate(140deg) brightness(0.9) contrast(1.1)',
+                      opacity: 1
+                    } : {}}
+                  />
+                ) : item.icon ? (
+                  <item.icon className={clsx(
+                    'w-5 h-5 flex-shrink-0',
+                    activeNav === item.key ? 'text-[#00A991]' : 'text-gray-600'
+                  )} />
+                ) : null}
                 {/* Badge для непрочитанных уведомлений */}
                 {item.key === 'notifications' && unreadCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
@@ -412,9 +418,6 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 )}
               </div>
               <span className="text-[16px] font-normal leading-normal">{item.label}</span>
-              {item.key === 'logout' && (
-                <LogOut className="w-4 h-4 ml-auto opacity-60" />
-              )}
             </button>
           );
         })}

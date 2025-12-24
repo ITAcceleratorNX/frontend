@@ -203,6 +203,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     }
   };
 
+
   const canPay = order.status === 'PROCESSING' && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED';
 
   // Проверяем наличие дополнительных услуг (включая новый массив services)
@@ -229,8 +230,8 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       {/* Статусные бейджи вверху - белые кнопки */}
       <div className="flex items-center gap-2 mb-6">
         {order.status === 'ACTIVE' && (
-          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
-            <Zap className="w-4 h-4 text-gray-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
+            <Zap className="w-3.5 h-3.5 text-gray-500" />
             Активный
           </span>
         )}
@@ -240,9 +241,15 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             В обработке у менеджера
           </span>
         )}
-        {order.payment_status === 'PAID' && order.status !== 'PROCESSING' && (
-          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
-            <CheckCircle className="w-4 h-4 text-gray-500" />
+        {order.payment_status === 'PAID' && order.status !== 'PROCESSING' && order.status !== 'ACTIVE' && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
+            <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
+            Оплачен
+          </span>
+        )}
+        {order.payment_status === 'PAID' && order.status === 'ACTIVE' && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
+            <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
             Оплачен
           </span>
         )}
@@ -292,6 +299,11 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           <span className="inline-flex items-center px-2.5 py-1 bg-white rounded-full text-xs font-medium text-gray-700">
             {getContractStatusText(order.contract_status)}
           </span>
+          {order.contract_status === 'SIGNED' && (
+            <button className="text-white/90 text-sm font-medium hover:text-white transition-colors underline">
+              Скачать
+            </button>
+          )}
         </div>
       </div>
 
@@ -376,32 +388,41 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           </div>
           
           <div className="flex flex-col items-end gap-2">
-            {(order.status === 'PROCESSING' && order.payment_status === 'UNPAID') || canPay ? (
-              <>
-                <button
-                  onClick={() => onPayOrder(order)}
-                  className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-xl hover:bg-white/90 transition-colors"
-                >
-                  Оплатить
-                </button>
-                <button
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="text-white/80 text-xs font-medium hover:text-white transition-colors underline"
-                >
-                  Отменить заказ
-                </button>
-              </>
-            ) : order.status === 'PROCESSING' && order.payment_status === 'PAID' ? (
+            {/* Кнопка Оплатить - показывается после подтверждения менеджером (APPROVED или PROCESSING) и если не оплачено */}
+            {((order.status === 'APPROVED' || order.status === 'PROCESSING') && order.payment_status === 'UNPAID') ? (
+              <button
+                onClick={() => onPayOrder(order)}
+                className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-3xl hover:bg-white/90 transition-colors"
+              >
+                Оплатить
+              </button>
+            ) : null}
+            
+            {/* Кнопка Отменить заказ - показывается всегда, кроме активных оплаченных заказов */}
+            {!(order.status === 'ACTIVE' && order.payment_status === 'PAID') ? (
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="px-6 py-2.5 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-xl hover:bg-white/30 transition-colors"
+                className="text-white/80 text-xs font-medium hover:text-white transition-colors underline"
+              >
+                Отменить заказ
+              </button>
+            ) : null}
+            
+            {/* Кнопка Расторгнуть - для активных оплаченных заказов */}
+            {order.status === 'ACTIVE' && order.payment_status === 'PAID' ? (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="px-6 py-2.5 bg-[#B0E4DD] text-[#004743] text-sm font-medium rounded-3xl hover:bg-[#9DD4CC] transition-colors"
               >
                 Расторгнуть
               </button>
-            ) : order.status === 'ACTIVE' && order.payment_status === 'PAID' ? (
+            ) : null}
+            
+            {/* Кнопка Расторгнуть - для PROCESSING оплаченных заказов */}
+            {order.status === 'PROCESSING' && order.payment_status === 'PAID' ? (
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="px-6 py-2.5 bg-white/20 backdrop-blur-sm text-white text-sm font-medium rounded-xl hover:bg-white/30 transition-colors"
+                className="px-6 py-2.5 bg-[#B0E4DD] text-[#004743] text-sm font-medium rounded-3xl hover:bg-[#9DD4CC] transition-colors"
               >
                 Расторгнуть
               </button>

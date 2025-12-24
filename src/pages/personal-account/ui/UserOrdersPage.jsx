@@ -217,25 +217,24 @@ const UserOrdersPage = () => {
         </div>
 
         {/* Right Side - Statistics */}
-        <div className="w-64 flex-shrink-0">
-          <div className="bg-white border border-[#f5f5f5] rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Сводка</h3>
-            <div className="space-y-3">
-              <div>
-                <div className="text-sm text-gray-600">Всего заказов:</div>
-                <div className="text-xl font-bold text-gray-900">{stats.total}</div>
+        <div className="w-64 flex-shrink-0 self-start mt-36">
+          <div className="bg-transparent border border-[#DFDFDF] rounded-2xl p-6">
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-sm text-gray-600 mb-1">Всего заказов:</div>
+                <div className="text-4xl font-bold text-[#004743]">{stats.total}</div>
               </div>
-              <div>
-                <div className="text-sm text-gray-600">Подтверждено:</div>
-                <div className="text-xl font-bold text-gray-900">{stats.approved}</div>
+              <div className="text-center">
+                <div className="text-sm text-gray-600 mb-1">Подтверждено:</div>
+                <div className="text-4xl font-bold text-[#004743]">{stats.approved}</div>
               </div>
-              <div>
-                <div className="text-sm text-gray-600">Неоплачено:</div>
-                <div className="text-xl font-bold text-gray-900">{stats.unpaid}</div>
+              <div className="text-center">
+                <div className="text-sm text-gray-600 mb-1">Неоплачено:</div>
+                <div className="text-4xl font-bold text-[#004743]">{stats.unpaid}</div>
               </div>
-              <div>
-                <div className="text-sm text-gray-600">Оплачено:</div>
-                <div className="text-xl font-bold text-gray-900">{stats.paid}</div>
+              <div className="text-center">
+                <div className="text-sm text-gray-600 mb-1">Оплачено:</div>
+                <div className="text-4xl font-bold text-[#004743]">{stats.paid}</div>
               </div>
             </div>
           </div>
