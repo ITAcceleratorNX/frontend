@@ -218,30 +218,7 @@ export const Header = memo(() => {
 
           {isMobileMenuOpen && (
               <div className="md:hidden absolute top-16 left-0 right-0 bg-gradient-to-r from-[#E0F2FE] to-white shadow-md z-40 py-4 px-6 space-y-4">
-                <nav className="flex flex-col gap-2 mb-4">
-                  <NavLink
-                    to="/"
-                    className={getNavLinkClass}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Главная
-                  </NavLink>
-                  <NavLink
-                    to="/cloud-storage"
-                    className={getNavLinkClass}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Облачное хранение
-                  </NavLink>
-                  <NavLink
-                    to="/moving"
-                    className={getNavLinkClass}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Мувинг
-                  </NavLink>
-                </nav>
-                <div className="flex items-center gap-4 justify-center pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-4 justify-center pt-4">
                   <button
                     onClick={handleWhatsAppClick}
                     className="w-8 h-8 rounded-full border-2 border-[#1A1F2C] flex items-center justify-center"

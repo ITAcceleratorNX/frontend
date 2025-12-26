@@ -64,7 +64,7 @@ const Footer = () => {
                     Публичная оферта
                   </Link>
                   <Link 
-                    to="/privacy-policy2" 
+                    to="/privacy-policy" 
                     className="text-white text-sm hover:opacity-80 transition-opacity"
                   >
                     Политика конфиденциальности
