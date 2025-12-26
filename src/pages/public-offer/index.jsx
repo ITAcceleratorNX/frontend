@@ -126,19 +126,12 @@ const PublicOfferPage = () => {
       <div className="bg-gradient-to-r from-[#E0F2FE] to-white py-16 px-4">
         <div className="container mx-auto max-w-6xl text-center">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#273655] mb-2 font-['Montserrat'] leading-tight">
-            ПУБЛИЧНАЯ ОФЕРТА
-          </h1>
+             Публичная оферта покупки  </h1>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#273655] mb-2 font-['Montserrat'] leading-tight">
-            на оказание услуг хранения имущества сервиса Extra Space
+          склада в ExtraSpace
           </h2>
           <p className="text-sm md:text-base text-[#273655] font-['Montserrat'] mb-2">
-            г. Алматы
-          </p>
-          <p className="text-sm md:text-base text-[#273655] font-['Montserrat'] mb-2">
-            ТОО «Valar Group»
-          </p>
-          <p className="text-sm md:text-base text-[#273655] font-['Montserrat']">
-            (редакция от «22» декабря 2025 г.)
+          Используя наш сервис, вы принимаете условия Публичной оферты.
           </p>
         </div>
       </div>
