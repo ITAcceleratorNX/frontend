@@ -217,6 +217,7 @@ const PersonalData = memo(() => {
                   {...register('name', { required: 'Имя обязательно для заполнения' })}
                   error={errors.name?.message}
                   className="bg-white rounded-lg"
+                  labelClassName="font-sf-pro-text text-[#000000]"
                 />
                 <Input
                   label="Телефон"
@@ -231,6 +232,7 @@ const PersonalData = memo(() => {
                   })}
                   error={errors.phone?.message}
                   className="bg-white rounded-lg"
+                  labelClassName="font-sf-pro-text text-[#000000]"
                 />
                 <Input
                   label="Адрес"
@@ -239,6 +241,7 @@ const PersonalData = memo(() => {
                   {...register('address', { required: 'Адрес обязателен для заполнения' })}
                   error={errors.address?.message}
                   className="bg-white rounded-lg"
+                  labelClassName="font-sf-pro-text text-[#000000]"
                 />
               </div>
 
@@ -257,11 +260,12 @@ const PersonalData = memo(() => {
                   })}
                   error={errors.email?.message}
                   className="bg-white rounded-lg"
+                  labelClassName="font-sf-pro-text text-[#000000]"
                 />
                 <Input
                   id="iin"
                   label={
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 font-sf-pro-text text-[#000000]">
                       ИИН
                       <IinTooltip />
                     </span>
@@ -279,7 +283,7 @@ const PersonalData = memo(() => {
                   className="bg-white rounded-lg"
                 />
                 <div className="w-full space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium font-sf-pro-text text-[#000000]">
                     Дата рождения
                   </label>
                   <Controller
@@ -360,7 +364,7 @@ const PersonalData = memo(() => {
                 <Button
                   variant="secondary"
                   onClick={toggleEdit}
-                  className="bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
+                  className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] hover:from-[#2AC3BB] hover:to-[#115D5A] border-none rounded-md"
                 >
                   Изменить
                 </Button>
@@ -368,9 +372,9 @@ const PersonalData = memo(() => {
                   <Button
                     variant="outline"
                     onClick={() => setIsChangePasswordModalOpen(true)}
-                    className="border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-all duration-200 font-medium"
+                    className="border-gray-300 !text-[#00A991] bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
                   >
-                    <Lock className="w-4 h-4 mr-2" />
+                    <Lock className="w-4 h-4 mr-2 text-[#00A991]" />
                     Изменить пароль
                   </Button>
                 )}

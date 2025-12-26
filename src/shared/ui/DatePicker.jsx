@@ -225,7 +225,7 @@ const DatePicker = forwardRef(({
             maxLength={10}
             className={cn(
               "w-full bg-transparent border-0 outline-none",
-              "text-base text-[#222] placeholder:text-[#A6A6A6]",
+              "text-base font-sf-pro-text text-[#737373] placeholder:text-[#A6A6A6]",
               "pr-8",
               disabled && "cursor-not-allowed"
             )}

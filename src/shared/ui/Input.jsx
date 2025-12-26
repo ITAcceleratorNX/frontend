@@ -2,12 +2,12 @@ import React, { forwardRef } from 'react';
 import { clsx } from 'clsx';
 
 export const Input = forwardRef(
-  ({ className, label, error, ...props }, ref) => {
+  ({ className, label, error, labelClassName, ...props }, ref) => {
     return (
       <div className="space-y-2">
         {label && (
           <label
-            className="block text-sm font-medium text-gray-700"
+            className={clsx("block text-sm font-medium text-gray-700", labelClassName)}
             htmlFor={props.id}
           >
             {label} {props.required && <span className="text-red-500">*</span>}
@@ -15,7 +15,7 @@ export const Input = forwardRef(
         )}
         <input
           className={clsx(
-            "w-full rounded-md border border-gray-300 px-4 py-2.5 text-sm shadow-sm transition-colors duration-200 placeholder-gray-400",
+            "w-full rounded-md border border-gray-300 px-4 py-2.5 text-sm shadow-sm transition-colors duration-200 placeholder-gray-400 font-sf-pro-text text-[#737373]",
             error ? "border-red-500" : "focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500",
             className
           )}
