@@ -13,6 +13,7 @@ import OnlinePaymentPage from '../pages/online-payment';
 import OfferPage from '../pages/offer';
 import PrivacyPolicyPage from '../pages/privacy-policy';
 import PrivacyPolicy2Page from '../pages/privacy-policy2';
+import PublicOfferPage from '../pages/public-offer';
 import CloudStoragePage from '../pages/CloudStorage';
 import MovingPage from '../pages/moving';
 
@@ -114,6 +115,7 @@ const Routing = memo(() => {
     { path: "/offer", element: <OfferPage /> },
     { path: "/privacy-policy", element: <PrivacyPolicyPage /> },
     { path: "/privacy-policy2", element: <PrivacyPolicy2Page /> },
+    { path: "/public-offer", element: <PublicOfferPage /> },
     { path: "/warehouse-order", element: <WarehouseOrderPage /> },
     { path: "/cloud-storage", element: <CloudStoragePage /> },
     { path: "/moving", element: <MovingPage /> },

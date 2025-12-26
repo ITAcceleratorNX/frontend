@@ -58,7 +58,7 @@ const Footer = () => {
                     Информация об оплате
                   </button>
                   <Link 
-                    to="/offer" 
+                    to="/public-offer" 
                     className="text-white text-sm hover:opacity-80 transition-opacity"
                   >
                     Публичная оферта

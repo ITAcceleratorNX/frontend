@@ -30,7 +30,6 @@ const PrivacyPolicyPage = () => {
   }, []);
 
   const sections = [
-    { id: 'section0', title: 'Основные определения' },
     { id: 'section1', title: 'Общие положения' },
     { id: 'section2', title: 'Сведения об Операторе' },
     { id: 'section3', title: 'Персональные данные и порядок их использования' },
@@ -63,13 +62,13 @@ const PrivacyPolicyPage = () => {
       <div className="bg-gradient-to-r from-[#E0F2FE] to-white py-16 px-4">
         <div className="container mx-auto max-w-6xl text-center">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#273655] mb-2 font-['Montserrat'] leading-tight">
-            Публичная оферта покупки
-          </h1>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#273655] mb-6 font-['Montserrat'] leading-tight">
-            склада в ExtraSpace
-          </h2>
+          Политика конфиденциальности          </h1>
+          
           <p className="text-sm md:text-base text-[#273655] font-['Montserrat']">
-            Используя наш сервис, вы принимаете условия Публичной оферты.
+          Мы серьезно относимся к защите ваших персональных данных и соблюдаем
+          </p>
+          <p className="text-sm md:text-base text-[#273655] font-['Montserrat']">
+          все требования законодательства Республики Казахстан
           </p>
         </div>
       </div>
@@ -102,103 +101,7 @@ const PrivacyPolicyPage = () => {
 
             {/* Main Content */}
             <div className="flex-1 font-['Montserrat'] text-[#273655]">
-              {/* Section 0 - Основные определения */}
-              <section id="section0" className="mb-12 scroll-mt-24">
-                <h2 className="text-3xl font-bold mb-8">Основные определения</h2>
-                
-                <div className="space-y-8">
-                  {/* Покупатель */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0">
-                      <User className="w-6 h-6 text-teal-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-[#273655] mb-2">Покупатель</h3>
-                      <p className="text-[#273655] leading-relaxed">
-                        Физическое лицо, намеревающееся заказать или приобрести товар для личных, семейных, домашних и иных нужд, не связанных с осуществлением предпринимательской деятельности, размещающее заказ на extraspace.kz или указанное в качестве получателя товара.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Зарегистрированный покупатель */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0">
-                      <UserCheck className="w-6 h-6 text-teal-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-[#273655] mb-2">Зарегистрированный покупатель</h3>
-                      <p className="text-[#273655] leading-relaxed">
-                        Покупатель, предоставивший Продавцу персональные данные (имя, электронная почта, телефон) для многократного размещения заказов.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Продавец */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0">
-                      <ShoppingBag className="w-6 h-6 text-teal-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-[#273655] mb-2">Продавец</h3>
-                      <p className="text-[#273655] leading-relaxed">
-                        Организация или индивидуальный предприниматель, реализующие товары. В рамках настоящих Правил Продавцом является ТОО «Valar Group» Казахстан, город Алматы, Бостандыкский район, улица Аль-Фараби 19/1.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Интернет-магазин и Сайт */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="flex gap-4">
-                      <div className="flex-shrink-0">
-                        <ShoppingCart className="w-6 h-6 text-teal-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-[#273655] mb-2">Интернет-магазин</h3>
-                        <p className="text-[#273655] leading-relaxed">
-                          Сайт, на котором Покупатель может ознакомиться с товарами, их описанием, ценами, выбрать способ оплаты и доставки товара.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="flex-shrink-0">
-                        <Code className="w-6 h-6 text-teal-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-[#273655] mb-2">Сайт</h3>
-                        <p className="text-[#273655] leading-relaxed">
-                          Сайт, на котором Покупатель может ознакомиться с товарами, их описанием, ценами, выбрать способ оплаты и доставки товара.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Товар */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0">
-                      <Package className="w-6 h-6 text-teal-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-[#273655] mb-2">Товар</h3>
-                      <p className="text-[#273655] leading-relaxed">
-                        Предмет купли-продажи, не изъятый из гражданского оборота, представленный к продаже в Интернет-магазине, в частности товары, отмеченные как «в наличии».
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Заказ на резерв товара в магазине */}
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0">
-                      <FileText className="w-6 h-6 text-teal-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-[#273655] mb-2">Заказ на резерв товара в магазине</h3>
-                      <p className="text-[#273655] leading-relaxed">
-                        Заявка на резервирование товара в выбранном магазине, направленная через Интернет, которая считается размещённой после получения Покупателем SMS-уведомления о наличии товара.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </section>
+              
 
               {/* Section 1 */}
               <section id="section1" className="mb-12 scroll-mt-24">
