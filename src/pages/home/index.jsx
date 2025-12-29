@@ -21,7 +21,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
@@ -1688,14 +1688,12 @@ const HomePage = memo(() => {
             <div className="space-y-4">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
-                Лишние вещи
+                Храните там
                 </span>
                 <br />
-                <span className="text-[#363636]">
-                под{' '}
-                </span>
+                
                 <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
-                надежный замок
+                где удобно
                 </span>
               </h1>
               <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
@@ -1723,28 +1721,31 @@ const HomePage = memo(() => {
                       </div>
                       <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                        Хранение вещей без вашего приезда на склад
+                        Облачное хранение
                         </h3>
                         <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                        Мы забираем ваши вещи, аккуратно упаковываем их в фирменные боксы, размещаем в боксе и возвращаем по запросу. Все операции: размещение, возврат и управление вещами, выполняются онлайн.
+                        Хранение вещей без вашего приезда на склад <br />
+Мы забираем ваши вещи, аккуратно упаковываем их в фирменные коробки, размещаем на складе и возвращаем по запросу. 
+Все операции: размещение, возврат и управление вещами, выполняются онлайн.
+
                         </p>
                         <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Договор с компенсацией о потери/порче вещей</span>
+                            <span>экономия времени — все процессы организованы без вашего участия;</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Управление вещами через личный кабинет
-                            </span>
+                            <span>не нужно покупать коробки и упаковочные материалы;</span>
+                            
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Доступ к камерам</span>
+                            <span>аккуратная логистика и бережная работа с вещами;</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Фиксируем состояние вещей до и после хранения
+                            <span>сервис подходит как для личных вещей, так и для бизнеса;
                             </span>
                           </li>
                         </ul>
@@ -1777,31 +1778,33 @@ const HomePage = memo(() => {
                       </div>
                       <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
                         <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                        Надежное и удобное хранение ваших вещей в личном боксе.
+                        Индивидуальное хранение
                         </h3>
                         <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                        Персональный закрытый бокс, где вы самостоятельно размещаете и храните свои вещи с полным доступом и безопасностью. Все операции: вы можете самостоятельно привозить и забирать вещи либо, при необходимости, поручить эти процессы нашей команде.
+                        Надёжное и удобное хранение в личном складе <br />
+Персональный закрытый склад для самостоятельного хранения ваших вещей. Вы полностью контролируете доступ, размещение и использование пространства. При необходимости вы можете как самостоятельно привозить и забирать вещи, так и доверить эти процессы нашей команде.
+
                         </p>
                         <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Доступ 24/7 без согласований</span>
+                            <span>круглосуточный доступ к боксу без согласований;</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Доступ к боксу только у вас</span>
+                            <span>индивидуальный доступ — только для вас;</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Стеллажи</span>
+                            <span>возможность установки и использования стеллажей;</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Круглосуточная охрана</span>
+                            <span>постоянная физическая охрана объекта;</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>Безопасное хранение</span>
+                            <span>условия, обеспечивающие безопасное хранение имущества;</span>
                           </li>
                         </ul>
                         <button
@@ -1845,7 +1848,7 @@ const HomePage = memo(() => {
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
+              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1857,7 +1860,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 3.2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1872,7 +1875,7 @@ const HomePage = memo(() => {
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
+              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1884,7 +1887,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 3.2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1899,7 +1902,7 @@ const HomePage = memo(() => {
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
+              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1911,7 +1914,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 3.2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2053,6 +2056,22 @@ const HomePage = memo(() => {
                   <h2 className="text-2xl font-bold text-[#273655] mb-6">
                     Настройте хранение
                   </h2>
+                  
+                  {/* Предупреждение для Яруса 2 Mega Tower Almaty */}
+                  {selectedWarehouse?.name?.toLowerCase().includes('mega') && megaSelectedMap === 2 && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <AlertTriangle className="h-5 w-5 text-red-500" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-[#273655] leading-relaxed">
+                            <span className="font-semibold">Внимание:</span> В Ярусе 2 вес не должен превышать 200 кг на квадратный метр
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Дата начала бронирования */}
                   <div className="mb-6">
@@ -2887,13 +2906,13 @@ const HomePage = memo(() => {
       />
 
       {/* Анимированная бегущая строка с преимуществами перед футером */}
-      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-6 overflow-hidden relative">
-        <div className="flex animate-scroll-footer">
+      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white pb-6 overflow-hidden relative">
+        <div className="flex animate-scroll">
           {/* Первый набор элементов */}
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
+              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2901,7 +2920,15 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2912,7 +2939,7 @@ const HomePage = memo(() => {
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
+              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2920,7 +2947,15 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2931,7 +2966,7 @@ const HomePage = memo(() => {
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
+              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2939,7 +2974,15 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2948,7 +2991,7 @@ const HomePage = memo(() => {
           </div>
         </div>
         <style>{`
-          @keyframes scroll-footer {
+          @keyframes scroll {
             0% {
               transform: translateX(0);
             }
@@ -2956,13 +2999,13 @@ const HomePage = memo(() => {
               transform: translateX(calc(-33.333% - 0px));
             }
           }
-          .animate-scroll-footer {
-            animation: scroll-footer 50s linear infinite;
+          .animate-scroll {
+            animation: scroll 50s linear infinite;
             will-change: transform;
           }
           @media (max-width: 640px) {
-            .animate-scroll-footer {
-              animation: scroll-footer 30s linear infinite;
+            .animate-scroll {
+              animation: scroll 30s linear infinite;
             }
           }
         `}</style>

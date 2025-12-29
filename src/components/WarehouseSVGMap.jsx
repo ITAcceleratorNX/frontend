@@ -1006,7 +1006,7 @@ const WarehouseSVGMap = React.forwardRef(({
                 }}
                 aria-pressed={isActive}
               >
-                Карта {mapNumber}
+                {isMegaWarehouse ? `Ярус ${mapNumber}` : `Карта ${mapNumber}`}
               </button>
             );
           })}
