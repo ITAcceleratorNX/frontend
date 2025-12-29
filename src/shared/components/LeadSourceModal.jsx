@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Globe, MessageCircle, Send, Instagram, Megaphone, Music } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
+
+// Импортируем иконки из Figma
+import SiteIcon from '@/assets/lead-source-icons/site.svg';
+import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.svg';
+import TelegramIcon from '@/assets/lead-source-icons/telegram.svg';
+import InstagramIcon from '@/assets/lead-source-icons/instagram.svg';
+import TiktokIcon from '@/assets/lead-source-icons/tiktok.svg';
+import AdsIcon from '@/assets/lead-source-icons/ads.svg';
 
 const LEAD_SOURCES = [
-  { value: 'site', label: 'Сайт', icon: Globe, color: '#3B82F6' },
-  { value: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, color: '#22C55E' },
-  { value: 'telegram', label: 'Telegram', icon: Send, color: '#0EA5E9' },
-  { value: 'instagram', label: 'Instagram', icon: Instagram, color: '#F97316' },
-  { value: 'tiktok', label: 'TikTok', icon: Music, color: '#000000' },
-  { value: 'ads', label: 'Реклама', icon: Megaphone, color: '#6366F1' },
+  { value: 'site', label: 'Сайт', icon: SiteIcon },
+  { value: 'whatsapp', label: 'WhatsApp', icon: WhatsappIcon },
+  { value: 'telegram', label: 'Telegram', icon: TelegramIcon },
+  { value: 'instagram', label: 'Instagram', icon: InstagramIcon },
+  { value: 'tiktok', label: 'TikTok', icon: TiktokIcon },
+  { value: 'ads', label: 'Реклама', icon: AdsIcon },
 ];
 
 const STORAGE_KEY = 'extraspace_lead_source';
@@ -35,65 +42,200 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
   };
 
   // Если пользователь закрыл модальное окно без выбора, помечаем как показанное
-  const handleClose = (open) => {
-    if (!open && !selectedSource) {
+  const handleClose = () => {
+    if (!selectedSource) {
       // Пользователь закрыл без выбора - помечаем как показанное, чтобы не показывать снова
       localStorage.setItem(STORAGE_SHOWN_KEY, 'true');
     }
-    onOpenChange(open);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-slate-900">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="
+        max-w-[680px] 
+        w-[calc(100vw-24px)] 
+        sm:w-[calc(100vw-48px)] 
+        md:w-[calc(100vw-64px)]
+        rounded-[25px] 
+        p-5 
+        sm:p-6 
+        md:p-8 
+        lg:p-[60px_40px]
+        gap-4 
+        sm:gap-5 
+        md:gap-6
+        lg:gap-8
+        border-0
+        shadow-xl
+        [&>button:last-child]:hidden
+      ">
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="absolute right-4 top-4 sm:right-6 sm:top-6 md:right-[26px] md:top-[26px] z-10 rounded-sm opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2"
+          aria-label="Закрыть"
+        >
+          <X className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-[#363636]" />
+        </button>
+
+        {/* Header */}
+        <div className="flex flex-col gap-2 sm:gap-3 w-full">
+          <h2 className="
+            font-sf-pro-text 
+            font-semibold 
+            text-[22px] 
+            sm:text-[24px] 
+            md:text-[28px] 
+            lg:text-[32px] 
+            leading-[1.19] 
+            text-[#363636]
+            tracking-[-0.05em]
+          ">
             Откуда вы узнали о нас?
-          </DialogTitle>
-          <DialogDescription className="text-sm text-slate-600">
+          </h2>
+          <p className="
+            font-sf-pro-text 
+            font-normal 
+            text-sm 
+            sm:text-base 
+            md:text-lg 
+            lg:text-xl 
+            leading-[1.15] 
+            text-[#363636]
+          ">
             Помогите нам улучшить сервис, выбрав источник, откуда вы узнали о ExtraSpace
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          {LEAD_SOURCES.map((source) => {
-            const Icon = source.icon;
-            const isSelected = selectedSource?.value === source.value;
-            
-            return (
-              <button
-                key={source.value}
-                onClick={() => handleSelect(source)}
-                className={`
-                  flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all
-                  ${isSelected 
-                    ? 'border-[#273655] bg-[#273655]/5 shadow-md' 
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                  }
-                `}
-              >
-                <div 
-                  className="p-3 rounded-full"
-                  style={{ backgroundColor: `${source.color}20` }}
-                >
-                  <Icon 
-                    className="h-6 w-6" 
-                    style={{ color: source.color }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-slate-700">
-                  {source.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        
-        <div className="mt-4 pt-4 border-t border-slate-200">
-          <p className="text-xs text-slate-500 text-center">
-            Вы можете пропустить этот вопрос, но ваша информация поможет нам стать лучше
           </p>
         </div>
+
+        {/* Options Grid */}
+        <div className="flex flex-col gap-4 sm:gap-5 w-full">
+          {/* First row: Сайт, WhatsApp, Telegram */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 w-full">
+            {LEAD_SOURCES.slice(0, 3).map((source) => {
+              const Icon = source.icon;
+              const isSelected = selectedSource?.value === source.value;
+              
+              return (
+                <button
+                  key={source.value}
+                  onClick={() => handleSelect(source)}
+                  className={`
+                    flex flex-col items-center justify-center 
+                    gap-1.5 sm:gap-2
+                    p-3 sm:p-4 md:p-5 lg:p-8
+                    rounded-[25px]
+                    transition-all duration-200
+                    bg-gradient-to-b from-[#26B3AB] to-[#00A991]
+                    hover:opacity-90
+                    active:opacity-80
+                    ${isSelected ? 'ring-2 ring-[#363636] ring-offset-2' : ''}
+                    w-full
+                    min-h-[100px] sm:min-h-[120px] md:min-h-[140px] lg:min-h-[160px]
+                  `}
+                >
+                  <div className="
+                    w-10 h-10 
+                    sm:w-14 sm:h-14 
+                    md:w-16 md:h-16 
+                    lg:w-20 lg:h-20
+                    flex items-center justify-center
+                  ">
+                    <img 
+                      src={Icon} 
+                      alt={source.label}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <span className="
+                    font-sf-pro-text 
+                    font-medium 
+                    text-xs 
+                    sm:text-sm 
+                    md:text-base 
+                    lg:text-lg 
+                    leading-[1.4] 
+                    text-[#F5F5F5]
+                    text-center
+                  ">
+                    {source.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Second row: Instagram, TikTok, Реклама */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 w-full">
+            {LEAD_SOURCES.slice(3, 6).map((source) => {
+              const Icon = source.icon;
+              const isSelected = selectedSource?.value === source.value;
+              
+              return (
+                <button
+                  key={source.value}
+                  onClick={() => handleSelect(source)}
+                  className={`
+                    flex flex-col items-center justify-center 
+                    gap-1.5 sm:gap-2
+                    p-3 sm:p-4 md:p-5 lg:p-8
+                    rounded-[25px]
+                    transition-all duration-200
+                    bg-gradient-to-b from-[#26B3AB] to-[#00A991]
+                    hover:opacity-90
+                    active:opacity-80
+                    ${isSelected ? 'ring-2 ring-[#363636] ring-offset-2' : ''}
+                    w-full
+                    min-h-[100px] sm:min-h-[120px] md:min-h-[140px] lg:min-h-[160px]
+                  `}
+                >
+                  <div className="
+                    w-10 h-10 
+                    sm:w-14 sm:h-14 
+                    md:w-16 md:h-16 
+                    lg:w-20 lg:h-20
+                    flex items-center justify-center
+                  ">
+                    <img 
+                      src={Icon} 
+                      alt={source.label}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <span className="
+                    font-sf-pro-text 
+                    font-medium 
+                    text-xs 
+                    sm:text-sm 
+                    md:text-base 
+                    lg:text-lg 
+                    leading-[1.4] 
+                    text-[#F5F5F5]
+                    text-center
+                  ">
+                    {source.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer text */}
+        <p className="
+          font-sf-pro-text 
+          font-normal 
+          text-xs 
+          sm:text-sm 
+          md:text-base 
+          lg:text-lg 
+          leading-[1.4] 
+          text-[#5C5C5C]
+          text-center
+          w-full
+        ">
+          Вы можете пропустить этот вопрос, но ваша информация поможет нам стать лучше
+        </p>
       </DialogContent>
     </Dialog>
   );
@@ -132,4 +274,3 @@ export const shouldShowLeadSourceModal = () => {
 export const getStoredLeadSource = () => {
   return localStorage.getItem(STORAGE_KEY);
 };
-
