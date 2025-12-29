@@ -239,9 +239,6 @@ const HomePage = memo(() => {
           "M3_01_6_12M",
           "M3_01_OVER_12M",
           "UTILITY_KNIFE",
-          "GAZELLE_TO",
-          "GAZELLE_FROM",
-          "GAZELLE",
           "FURNITURE_SPECIALIST",
           "CLOUD_TARIFF_SUMKA",
           "CLOUD_TARIFF_SHINA",
@@ -1077,6 +1074,8 @@ const HomePage = memo(() => {
         is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
         moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudPickupDate),
       };
+
+      console.error("availableOptions: ", availableOptions);
 
       // Добавляем услугу "Газель - забор" для перевозки (только GAZELLE_FROM)
       if (hasGazelleForCloud) {
@@ -2650,6 +2649,9 @@ const HomePage = memo(() => {
                           const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
                           
                           const availableOptions = serviceOptions.filter((option) => {
+                            if (option?.type === 'GAZELLE') return;
+                            if (option?.type === 'GAZELLE_FROM') return;
+                            if (option?.type === 'GAZELLE_TO') return;
                             const isAlreadySelected = services.some((s, i) =>
                               i !== index && String(s.service_id) === String(option.id)
                             );
