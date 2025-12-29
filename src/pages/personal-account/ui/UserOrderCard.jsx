@@ -30,6 +30,14 @@ import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderErro
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
 import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
+import sumkaImg from '../../../assets/sumka.png';
+import motorcycleImg from '../../../assets/motorcycle.png';
+import bicycleImg from '../../../assets/bicycle.png';
+import furnitureImg from '../../../assets/furniture.png';
+import shinaImg from '../../../assets/shina.png';
+import sunukImg from '../../../assets/sunuk.png';
+import garazhImg from '../../../assets/garazh.png';
+import skladImg from '../../../assets/sklad.png';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -132,11 +140,60 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   };
 
   const totalPriceOfServices = order.services.reduce((total, service) => {
+    // Исключаем услуги доставки (GAZELLE_FROM и GAZELLE_TO) из расчета, так как они бесплатные
+    if (service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO') {
+      return total;
+    }
     if (service.OrderService) {
       return total + (parseFloat(service.OrderService.total_price));
     }
     return total;
   }, 0)
+
+  // Функция для получения изображения тарифа по названию
+  const getTariffImage = (tariffName) => {
+    if (!tariffName) return null;
+    const name = tariffName.toLowerCase();
+    // Для "Свои габариты" не показываем иконку
+    if (name.includes('свои габариты') || name.includes('кастом')) return null;
+    if (name.includes('сумки') || name.includes('коробки')) return sumkaImg;
+    if (name.includes('шины')) return shinaImg;
+    if (name.includes('мотоцикл')) return motorcycleImg;
+    if (name.includes('велосипед')) return bicycleImg;
+    if (name.includes('сундук')) return sunukImg;
+    if (name.includes('шкаф')) return furnitureImg;
+    if (name.includes('кладовка')) return skladImg;
+    if (name.includes('гараж')) return garazhImg;
+    return null;
+  };
+
+  // Расчет количества месяцев
+  const calculateMonths = () => {
+    if (!order.start_date || !order.end_date) return 0;
+    try {
+      const start = new Date(order.start_date);
+      const end = new Date(order.end_date);
+      const yearsDiff = end.getFullYear() - start.getFullYear();
+      const monthsDiff = end.getMonth() - start.getMonth();
+      const daysDiff = end.getDate() - start.getDate();
+      let totalMonths = yearsDiff * 12 + monthsDiff;
+      if (daysDiff > 15) {
+        totalMonths += 1;
+      }
+      return Math.max(1, totalMonths);
+    } catch (error) {
+      return 0;
+    }
+  };
+
+  const months = calculateMonths();
+  const monthlyPrice = months > 0 ? Number(order.total_price) / months : 0;
+  const totalPrice = Number(order.total_price) + Number(totalPriceOfServices);
+  
+  // Проверяем, есть ли услуга доставки (GAZELLE_FROM)
+  const hasDeliveryService = order.services && order.services.some(service => 
+    service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO'
+  );
 
   // Функция для получения иконки услуги по типу
   const getServiceIcon = (type) => {
@@ -182,7 +239,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       case 'GAZELLE':
         return 'Газель';
       case 'GAZELLE_FROM':
-        return 'Газель - забор вещей';
+        return 'Доставка';
       case 'GAZELLE_TO':
         return 'Газель - возврат вещей';
       case 'STRETCH_FILM':
@@ -268,12 +325,38 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           <p className="text-white/90 text-sm mb-1">Тип: {getStorageTypeText(order.storage?.storage_type || 'INDIVIDUAL')}</p>
           <p className="text-white/90 text-sm">Объем: {order.total_volume} м³</p>
         </div>
-        {/* Белый квадрат с идентификатором бокса в правом верхнем углу */}
-        {order.storage && order.storage.name && (
+        {/* Белый квадрат с идентификатором бокса или иконка тарифа для облачного хранения */}
+        {order.storage?.storage_type === 'CLOUD' && order.items && order.items.length > 0 ? (
+          (() => {
+            const tariffImg = getTariffImage(order.items[0]?.name);
+            const tariffName = order.items[0]?.name || '';
+            const isCustomTariff = tariffName.toLowerCase().includes('свои габариты') || tariffName.toLowerCase().includes('кастом');
+            
+            if (tariffImg) {
+              return (
+                <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-4">
+                  <img 
+                    src={tariffImg} 
+                    alt={tariffName} 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              );
+            } else if (isCustomTariff) {
+              // Для "Свои габариты" показываем текст вместо иконки
+              return (
+                <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-3">
+                  <span className="text-xs font-bold text-gray-900 text-center leading-tight">Свои габариты</span>
+                </div>
+              );
+            }
+            return null;
+          })()
+        ) : order.storage && order.storage.name ? (
           <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
             <span className="text-4xl font-bold text-gray-900">{order.storage.name}</span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Информация о датах и оплате в двух колонках */}
@@ -344,9 +427,13 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                       )}
                       <div className="flex-1">
                         <p className="text-[#737373] font-medium text-sm">
-                          {service.description || getServiceTypeName(service.type)}
+                          {service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO' 
+                            ? getServiceTypeName(service.type)
+                            : (service.description || getServiceTypeName(service.type))}
                         </p>
-                        {service.OrderService && service.OrderService.count > 1 ? (
+                        {(service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO') ? (
+                          <p className="text-red-600 text-xs mt-1 font-semibold">Бесплатно</p>
+                        ) : service.OrderService && service.OrderService.count > 1 ? (
                           <p className="text-gray-600 text-xs mt-1">
                             {formatPrice(service.price || 0)} 〒 * x{service.OrderService.count} = {formatPrice(parseFloat(service.OrderService.total_price))} 〒
                           </p>
@@ -382,7 +469,10 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-white text-sm mb-1">ИТОГ</p>
-            <p className="text-white text-3xl font-bold">{formatPrice(Number(order.total_price) + 15000 + Number(totalPriceOfServices))} 〒</p>
+            <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
+            {months > 0 && (
+              <p className="text-white/80 text-sm mt-1">В месяц: {formatPrice(monthlyPrice)} 〒</p>
+            )}
           </div>
           
           <div className="flex flex-col items-end gap-2">
