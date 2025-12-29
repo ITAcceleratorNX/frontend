@@ -3,10 +3,11 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { toast } from 'react-toastify';
-import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowRight, Shield, UserPlus, RefreshCw } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, Mail, Lock, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
 import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
+import loginLogo from '../../../assets/login-logo-66f0b4.png';
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export const RegisterForm = () => {
       unique_code: '',
       password: '',
       confirm_password: '',
+      terms: false,
     },
   });
   
@@ -189,272 +191,266 @@ export const RegisterForm = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-blue-50 p-4">
-      <div className="w-full max-w-[500px] mx-auto">
-        {/* Блок с логотипом компании */}
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[#273655]">ExtraSpace</h2>
-          <div className="h-1 w-20 bg-[#273655] mx-auto mt-2 rounded-full"></div>
-        </div>
-        
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-[520px] mx-auto">
         {/* Карточка формы регистрации */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Заголовок формы */}
-          <div className="bg-[#273655] text-white p-6">
-            <div className="flex items-center justify-center space-x-3 mb-2">
-              <UserPlus size={26} />
-              <h1 className="text-2xl font-semibold">Создание аккаунта</h1>
-            </div>
-            <p className="text-blue-100 text-center">Введите код из email и заполните остальные поля</p>
-          </div>
-          
-          {/* Форма регистрации */}
-          <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-5">
-            {/* Email поле */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
-                <Mail className="h-4 w-4 text-[#273655]" />
-                Email
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
-                    errors.email ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
-                  placeholder="example@email.com"
-                  disabled={isLoading}
-                  {...register('email', {
-                    required: 'Email обязателен',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Неверный формат email',
-                    },
-                  })}
+        <div className="bg-white rounded-[25px] border border-[#DFDFDF] shadow-[0px_4px_8.8px_rgba(0,0,0,0.25)] overflow-hidden">
+          <div className="flex flex-col items-center gap-[20px] sm:gap-[24px] lg:gap-[28px] p-4 sm:p-5 lg:p-6">
+            {/* Верхняя часть с логотипом и заголовком */}
+            <div className="flex flex-col items-center gap-[16px] w-full">
+              {/* Логотип */}
+              <div className="w-[44px] h-[50px] sm:w-[48px] sm:h-[54px] flex-shrink-0">
+                <img 
+                  src={loginLogo} 
+                  alt="Logo" 
+                  className="w-full h-full object-contain"
                 />
               </div>
-              {errors.email && (
-                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                  {errors.email.message}
+              
+              {/* Заголовок и подзаголовок */}
+              <div className="flex flex-col items-center gap-[6px] w-full">
+                <h1 className="text-[20px] sm:text-[22px] lg:text-[24px] font-medium leading-[1.19] tracking-[-0.05em] text-center text-[#363636] max-w-fit mx-auto">
+                  Создание аккаунта
+                </h1>
+                <p className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-center text-[#5C5C5C] w-full max-w-[3600px]">
+                  Введите код из email и заполните остальные поля
                 </p>
-              )}
+              </div>
             </div>
             
-            {/* Уникальный код */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
-                <Shield className="h-4 w-4 text-[#273655]" />
-                Проверочный код
-              </label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                <input
-                  type="text"
-                  maxLength="6"
-                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 text-center text-lg tracking-widest ${
-                    errors.unique_code ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
-                  placeholder="123456"
-                  disabled={isLoading}
-                  onInput={(e) => {
-                    // Разрешаем только цифры
-                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                  }}
-                  {...register('unique_code', {
-                    required: 'Проверочный код обязателен',
-                    pattern: {
-                      value: /^\d{6}$/,
-                      message: 'Код должен содержать ровно 6 цифр'
-                    }
-                  })}
-                />
+            {/* Форма регистрации */}
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[22px] w-full">
+              {/* Поля ввода */}
+              <div className="flex flex-col gap-[20px] w-full">
+                {/* Email поле */}
+                <div className="flex flex-col gap-[6px] w-full">
+                  <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
+                    <Mail className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                    Email
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                        errors.email ? 'border-red-400 bg-red-50' : 'bg-white'
+                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                      placeholder="example@gmail.com"
+                      disabled={isLoading}
+                      {...register('email', {
+                        required: 'Email обязателен',
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: 'Неверный формат email',
+                        },
+                      })}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-xs sm:text-sm text-red-500 mt-1">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+            
+                {/* Проверочный код */}
+                <div className="flex flex-col gap-[6px] w-full">
+                  <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
+                    <Mail className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                    Проверочный код
+                  </label>
+                  <div className="flex gap-[8px] w-full">
+                    <input
+                      type="text"
+                      maxLength="6"
+                      className={`flex-1 min-w-0 h-[48px] sm:h-[52px] lg:h-[56px] px-3 sm:px-4 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] text-center tracking-widest ${
+                        errors.unique_code ? 'border-red-400 bg-red-50' : 'bg-white'
+                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                      placeholder="123456"
+                      disabled={isLoading}
+                      onInput={(e) => {
+                        // Разрешаем только цифры
+                        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                      }}
+                      {...register('unique_code', {
+                        required: 'Проверочный код обязателен',
+                        pattern: {
+                          value: /^\d{6}$/,
+                          message: 'Код должен содержать ровно 6 цифр'
+                        }
+                      })}
+                    />
+                    
+                    {/* Кнопка отправки/переотправки кода */}
+                    <button
+                      type="button"
+                      onClick={sendCodeAgain}
+                      disabled={timer > 0 || isResendingCode || isLoading}
+                      className="h-[48px] sm:h-[52px] lg:h-[56px] px-3 sm:px-4 bg-gradient-to-br from-[#26B3AB] to-[#104D4A] text-[#F5F5F5] rounded-[25px] text-[12px] sm:text-[13px] font-medium leading-[1.19] hover:opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 flex-shrink-0"
+                    >
+                      {isResendingCode ? (
+                        <RefreshCw className="w-[14px] h-[14px] animate-spin flex-shrink-0" />
+                      ) : (
+                        <RefreshCw className="w-[14px] h-[14px] flex-shrink-0" />
+                      )}
+                      <span className="hidden sm:inline">{timer > 0 ? `${timer}с` : codeSent ? 'Повторно' : 'Отправить'}</span>
+                      <span className="sm:hidden">{timer > 0 ? `${timer}с` : 'Код'}</span>
+                    </button>
+                  </div>
+                  {errors.unique_code && (
+                    <p className="text-xs sm:text-sm text-red-500 mt-1">
+                      {errors.unique_code.message}
+                    </p>
+                  )}
+                </div>
+            
+                {/* Password поле */}
+                <div className="flex flex-col gap-[6px] w-full">
+                  <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
+                    <Lock className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                    Пароль
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                        errors.password ? 'border-red-400 bg-red-50' : 'bg-white'
+                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                      placeholder="Минимум 6 символов"
+                      disabled={isLoading}
+                      {...register('password', {
+                        required: 'Пароль обязателен',
+                        minLength: {
+                          value: 6,
+                          message: 'Пароль должен содержать не менее 6 символов',
+                        },
+                      })}
+                    />
+                    <div className="absolute right-4 sm:right-5 top-0 bottom-0 flex items-center pointer-events-none">
+                      <button 
+                        type="button"
+                        className="flex items-center justify-center text-[#BEBEBE] hover:text-[#5C5C5C] transition-colors disabled:opacity-50 cursor-pointer pointer-events-auto"
+                        onClick={togglePasswordVisibility}
+                        disabled={isLoading}
+                      >
+                        {showPassword ? <EyeOffIcon className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" /> : <EyeIcon className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />}
+                      </button>
+                    </div>
+                  </div>
+                  {errors.password && (
+                    <p className="text-xs sm:text-sm text-red-500 mt-1">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+            
+                {/* Confirm Password поле */}
+                <div className="flex flex-col gap-[6px] w-full">
+                  <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
+                    <Lock className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                    Подтверждение пароля
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                        errors.confirm_password ? 'border-red-400 bg-red-50' : 'bg-white'
+                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                      placeholder="Повторите пароль"
+                      disabled={isLoading}
+                      {...register('confirm_password', {
+                        required: 'Подтверждение пароля обязательно',
+                        validate: value => value === password || 'Пароли не совпадают',
+                      })}
+                    />
+                    <div className="absolute right-4 sm:right-5 top-0 bottom-0 flex items-center pointer-events-none">
+                      <button 
+                        type="button"
+                        className="flex items-center justify-center text-[#BEBEBE] hover:text-[#5C5C5C] transition-colors disabled:opacity-50 cursor-pointer pointer-events-auto"
+                        onClick={toggleConfirmPasswordVisibility}
+                        disabled={isLoading}
+                      >
+                        {showConfirmPassword ? <EyeOffIcon className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" /> : <EyeIcon className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />}
+                      </button>
+                    </div>
+                  </div>
+                  {errors.confirm_password && (
+                    <p className="text-xs sm:text-sm text-red-500 mt-1">
+                      {errors.confirm_password.message}
+                    </p>
+                  )}
                 </div>
                 
-                {/* Кнопка отправки/переотправки кода */}
-                <button
-                  type="button"
-                  onClick={sendCodeAgain}
-                  disabled={timer > 0 || isResendingCode || isLoading}
-                  className="px-4 py-3 bg-[#273655] text-white rounded-lg font-medium hover:bg-[#324569] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
-                >
-                  {isResendingCode ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4" />
+                {/* Согласие с условиями */}
+                <div className="flex flex-col gap-[6px] w-full">
+                  <div className="flex items-center gap-[10px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19]">
+                    <input 
+                      type="checkbox" 
+                      id="terms" 
+                      className={`w-[16px] h-[16px] rounded-[3px] border ${
+                        errors.terms ? 'border-red-400' : 'border-[#5C5C5C]'
+                      } bg-white text-[#26B3AB] focus:ring-2 focus:ring-[#26B3AB]/20 cursor-pointer flex-shrink-0`}
+                      {...register('terms', {
+                        required: 'Необходимо согласиться с условиями обслуживания и политикой конфиденциальности',
+                      })}
+                    />
+                    <label htmlFor="terms" className="text-[#363636] cursor-pointer">
+                      Я согласен с <a href="/public-offer" target="_blank" rel="noopener noreferrer" className="text-[#363636] hover:underline">Условиями обслуживания</a> и <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#363636] hover:underline">Политикой конфиденциальности</a>
+                    </label>
+                  </div>
+                  {errors.terms && (
+                    <p className="text-xs sm:text-sm text-red-500">
+                      {errors.terms.message}
+                    </p>
                   )}
-                  {timer > 0 ? `${timer}с` : codeSent ? 'Отправить повторно' : 'Отправить код'}
-                </button>
+                </div>
               </div>
-              {errors.unique_code && (
-                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                  {errors.unique_code.message}
-                </p>
-              )}
-            </div>
             
-            {/* Password поле */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
-                <Lock className="h-4 w-4 text-[#273655]" />
-                Пароль
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
-                    errors.password ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
-                  placeholder="Минимум 6 символов"
-                  disabled={isLoading}
-                  {...register('password', {
-                    required: 'Пароль обязателен',
-                    minLength: {
-                      value: 6,
-                      message: 'Пароль должен содержать не менее 6 символов',
-                    },
-                  })}
-                />
-                <button 
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  onClick={togglePasswordVisibility}
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                  {errors.password.message}
-                </p>
+              {/* Сообщение об ошибке */}
+              {serverError && (
+                <div className="rounded-lg bg-red-50 p-3 border border-red-200 text-sm text-red-600 flex items-start gap-2">
+                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>{serverError}</span>
+                </div>
               )}
               
-              {/* Индикатор силы пароля */}
-              {password && (
-                <div className="mt-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${
-                          password.length < 6 ? 'bg-red-500 w-1/4' : 
-                          password.length < 8 ? 'bg-orange-500 w-2/4' : 
-                          password.length < 10 ? 'bg-yellow-500 w-3/4' : 
-                          'bg-green-500 w-full'
-                        }`}
-                      ></div>
+              {/* Кнопка регистрации и ссылка на вход */}
+              <div className="flex flex-col items-center gap-[14px] w-full">
+                {/* Кнопка регистрации */}
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 sm:px-5 py-3 sm:py-3.5 bg-gradient-to-br from-[#26B3AB] to-[#104D4A] rounded-[25px] text-[14px] sm:text-[15px] lg:text-[16px] font-medium leading-[1.4] text-[#F5F5F5] hover:opacity-90 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Создание аккаунта...</span>
                     </div>
-                    <span className="text-xs text-slate-500">
-                      {password.length < 6 ? 'Слабый' : 
-                       password.length < 8 ? 'Средний' : 
-                       password.length < 10 ? 'Хороший' : 
-                       'Отличный'}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Confirm Password поле */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2 text-slate-700">
-                <Lock className="h-4 w-4 text-[#273655]" />
-                Подтверждение пароля
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 outline-none focus:ring-2 focus:ring-[#273655]/20 ${
-                    errors.confirm_password ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  } ${isLoading ? 'bg-slate-50 text-slate-400' : 'bg-white'}`}
-                  placeholder="Повторите пароль"
-                  disabled={isLoading}
-                  {...register('confirm_password', {
-                    required: 'Подтверждение пароля обязательно',
-                    validate: value => value === password || 'Пароли не совпадают',
-                  })}
-                />
-                <button 
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  onClick={toggleConfirmPasswordVisibility}
-                  disabled={isLoading}
-                >
-                  {showConfirmPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                  ) : (
+                    <span>Создать аккаунт</span>
+                  )}
                 </button>
-              </div>
-              {errors.confirm_password && (
-                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                  {errors.confirm_password.message}
+                
+                {/* Ссылка на страницу входа */}
+                <p className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-center text-[#363636]">
+                  Уже есть аккаунт?{" "}
+                  <button 
+                    type="button" 
+                    className="text-[#363636] hover:underline disabled:opacity-50 disabled:cursor-not-allowed" 
+                    onClick={() => navigate('/login')} 
+                    disabled={isLoading}
+                  >
+                    Войти
+                  </button>
                 </p>
-              )}
-            </div>
-            
-            {/* Согласие с условиями */}
-            <div className="flex items-start gap-2 mt-4">
-              <input 
-                type="checkbox" 
-                id="terms" 
-                className="h-4 w-4 mt-1 rounded border-slate-300 text-[#273655] focus:ring-[#273655]" 
-              />
-              <label htmlFor="terms" className="text-sm text-slate-600">
-                Я согласен с <a href="#" className="text-[#273655] hover:underline">Условиями обслуживания</a> и 
-                <a href="#" className="text-[#273655] hover:underline"> Политикой конфиденциальности</a>
-              </label>
-            </div>
-            
-            {/* Сообщение об ошибке */}
-            {serverError && (
-              <div className="rounded-lg bg-red-50 p-3 border border-red-200 text-sm text-red-600">
-                {serverError}
               </div>
-            )}
-            
-            {/* Кнопка регистрации */}
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-[#273655] text-white rounded-lg font-medium shadow-lg shadow-[#273655]/20 hover:bg-[#324569] transition-all duration-200 disabled:opacity-70"
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Создание аккаунта...</span>
-                </div>
-              ) : (
-                <>
-                  <span>Создать аккаунт</span>
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-            
-            {/* Ссылка на страницу входа */}
-            <div className="text-center mt-6">
-              <p className="text-slate-600">
-                Уже есть аккаунт?{" "}
-                <button 
-                  type="button" 
-                  className="text-[#273655] font-medium hover:underline" 
-                  onClick={() => navigate('/login')} 
-                  disabled={isLoading}
-                >
-                  Войти
-                </button>
-              </p>
-            </div>
-          </form>
-        </div>
-        
-        {/* Футер */}
-        <div className="text-center mt-6 text-sm text-slate-500">
-          &copy; 2025 ExtraSpace. Все права защищены.
+            </form>
+          </div>
         </div>
       </div>
     </div>
