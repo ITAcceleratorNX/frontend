@@ -2059,7 +2059,7 @@ const HomePage = memo(() => {
                   
                   {/* Предупреждение для Яруса 2 Mega Tower Almaty */}
                   {selectedWarehouse?.name?.toLowerCase().includes('mega') && megaSelectedMap === 2 && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-3xl">
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 mt-0.5">
                           <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -2073,21 +2073,6 @@ const HomePage = memo(() => {
                     </div>
                   )}
                   
-                  {/* Дата начала бронирования */}
-                  <div className="mb-6">
-                    <DatePicker
-                      label="Дата начала бронирования"
-                      value={individualBookingStartDate}
-                      onChange={(value) => {
-                        setIndividualBookingStartDate(value);
-                        setSubmitError(null);
-                      }}
-                      minDate={new Date().toISOString().split('T')[0]}
-                      allowFutureDates={true}
-                      placeholder="ДД.ММ.ГГГГ"
-                    />
-                  </div>
-                  
                   {/* Срок аренды */}
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-[#273655] mb-2">
@@ -2100,7 +2085,7 @@ const HomePage = memo(() => {
                         setSubmitError(null);
                       }}
                     >
-                      <SelectTrigger className="w-full h-12 text-base border-gray-300 rounded-xl">
+                      <SelectTrigger className="w-full h-12 text-base bg-gray-100 border-gray-200 rounded-3xl text-[#273655]">
                         <SelectValue placeholder="Выберите срок аренды" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2114,10 +2099,10 @@ const HomePage = memo(() => {
                   </div>
                   
                   {/* Перевозка вещей */}
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-3xl">
                     <div className="flex items-center gap-2">
-                      <Truck className="w-5 h-5 text-[#273655]" />
-                      <span className="text-base font-medium text-[#273655]">Перевозка вещей</span>
+                      <span className="text-base font-medium text-[#8A8A8A]">Перевозка вещей</span>
+                      <Truck className="w-5 h-5 text-[#8A8A8A]" />
                     </div>
                     <Switch
                       checked={includeMoving}
@@ -2130,16 +2115,51 @@ const HomePage = memo(() => {
                           setMovingAddressFrom("");
                         }
                       }}
-                      className="bg-gray-200 data-[state=checked]:bg-[#00A991]"
+                      className="bg-gray-300 data-[state=checked]:bg-[#00A991]"
                     />
                   </div>
+
+                  {/* Детали перевозки */}
+                  {includeMoving && previewStorage && (
+                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-6 shadow-lg space-y-4">
+                      <h3 className="text-xl font-bold text-white">Детали перевозки</h3>
+                      <div className="space-y-3">
+                        <div className="flex flex-col gap-1">
+                          
+                          <DatePicker
+                            value={movingPickupDate}
+                            onChange={(value) => {
+                              setMovingPickupDate(value);
+                              setSubmitError(null);
+                            }}
+                            minDate={new Date().toISOString().split('T')[0]}
+                            allowFutureDates={true}
+                            placeholder="Дата забора вещей"
+                            className="[&>div]:bg-gradient-to-r [&>div]:from-[#26B3AB] [&>div]:to-[#104D4A] [&>div]:!border-white [&>div]:rounded-3xl [&_input]:text-white [&_input]:placeholder:text-white/70 [&_label]:text-white/90 [&_button]:text-white [&_button]:hover:text-white [&_button]:hover:bg-transparent [&_button]:hover:!-translate-y-1/2 [&_button]:hover:!top-1/2 [&_button]:transition-none [&_button]:cursor-pointer [&>div]:focus-within:ring-0 [&>div]:focus-within:border-white"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-s text-white/90">Адрес забора вещей</label>
+                          <input
+                            type="text"
+                            value={movingAddressFrom}
+                            onChange={(e) => {
+                              setMovingAddressFrom(e.target.value);
+                              setSubmitError(null);
+                            }}
+                            placeholder="Например: г. Алматы, Абая 25"
+                            className="h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Услуги упаковки */}
-                  {(includeMoving || isAdminOrManager) && (
-                    <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-3xl">
                       <div className="flex items-center gap-2">
-                        <Package className="w-5 h-5 text-[#273655]" />
-                        <span className="text-base font-medium text-[#273655]">Услуги упаковки</span>
+                      <span className="text-base font-medium text-[#8A8A8A]">Услуги упаковки</span>
+                      <Package className="w-5 h-5 text-[#8A8A8A]" />
                       </div>
                       <Switch
                         checked={includePacking}
@@ -2151,19 +2171,162 @@ const HomePage = memo(() => {
                           }
                           setSubmitError(null);
                         }}
-                        className="bg-gray-200 data-[state=checked]:bg-[#00A991]"
-                      />
+                      className="bg-gray-300 data-[state=checked]:bg-[#00A991]"
+                    />
+                  </div>
+
+                  {/* Детали услуг упаковки */}
+                  {includePacking && previewStorage && (
+                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-6 shadow-lg space-y-4">
+                      <h3 className="text-xl font-bold text-white">Детали услуг упаковки</h3>
+                      <div className="space-y-3">
+                        {isServicesLoading ? (
+                          <div className="flex items-center justify-center py-2">
+                            <span className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                          </div>
+                        ) : (
+                          <>
+                            {servicesError && (
+                              <p className="text-xs text-red-200">
+                                {servicesError}
+                              </p>
+                            )}
+
+                            {services.length > 0 && (
+                              <div className="space-y-2">
+                                {services.map((service, index) => {
+                                  const selectedOption = serviceOptions.find((option) => String(option.id) === service.service_id);
+                                  const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
+                                  
+                                  const availableOptions = serviceOptions.filter((option) => {
+                                    if (option?.type === 'GAZELLE') return;
+                                    if (option?.type === 'GAZELLE_FROM') return;
+                                    if (option?.type === 'GAZELLE_TO') return;
+                                    const isAlreadySelected = services.some((s, i) =>
+                                      i !== index && String(s.service_id) === String(option.id)
+                                    );
+                                    return !isAlreadySelected;
+                                  });
+
+                                  const isGazelleToService = selectedOption && selectedOption.type === "GAZELLE_TO";
+                                  
+                                  return (
+                                    <div key={index} className="space-y-2">
+                                      <div className="flex flex-wrap items-center gap-2 rounded-3xl border border-white bg-white/10 px-3 py-2">
+                                        <Select
+                                          value={service.service_id}
+                                          onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                        >
+                                          <SelectTrigger className="h-10 min-w-[180px] rounded-3xl border-0 bg-white/10 text-sm text-white">
+                                            <SelectValue placeholder="Услуга" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {availableOptions.length > 0 ? (
+                                              availableOptions.map((option) => {
+                                                const serviceName = getServiceTypeName(option.type);
+                                                if (!serviceName) return null;
+                                                return (
+                                                  <SelectItem key={option.id} value={String(option.id)}>
+                                                    {serviceName}
+                                                  </SelectItem>
+                                                );
+                                              }).filter(Boolean)
+                                            ) : (
+                                              <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
+                                                Нет доступных услуг
+                                              </div>
+                                            )}
+                                          </SelectContent>
+                                        </Select>
+
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs text-white/90">
+                                            Кол-во
+                                          </span>
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            value={service.count}
+                                            onChange={(e) => updateServiceRow(index, "count", e.target.value)}
+                                            className="w-8 h-6 rounded-sm border border-white bg-transparent px-1 text-xs text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                          />
+                                        </div>
+
+                                        {service.service_id && (
+                                          <span className="ml-auto text-xs text-white/90">
+                                            {unitPrice.toLocaleString()} ₸/шт.
+                                          </span>
+                                        )}
+
+                                        <button
+                                          type="button"
+                                          onClick={() => removeServiceRow(index)}
+                                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors"
+                                          aria-label="Удалить услугу"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                      
+                                      {isGazelleToService && (
+                                        <div className="pl-3 pr-11">
+                                          <label className="block text-xs text-white/90 mb-1">
+                                            Адрес доставки вещей
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={movingAddressTo}
+                                            onChange={(e) => {
+                                              setMovingAddressTo(e.target.value);
+                                              setMovingOrders(prev => prev.map(order => 
+                                                order.status === "PENDING_TO" 
+                                                  ? { ...order, address: e.target.value }
+                                                  : order
+                                              ));
+                                            }}
+                                            placeholder="Например: г. Алматы, Абая 25"
+                                            className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {services.length === 0 && !servicesError && (
+                              <p className="text-xs text-white/90">
+                                Добавьте услуги, чтобы мы подготовили упаковку под ваши вещи.
+                              </p>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                ensureServiceOptions();
+                                addServiceRow();
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-3xl border border-dashed border-white px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Добавить услугу
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                   
                   {/* Итог */}
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <h3 className="text-lg font-bold text-[#273655] mb-2">Итог</h3>
+                  <div className="mt-8">
+                    <div className="border-2 border-dashed border-gray-300 rounded-3xl bg-white p-4 sm:p-6">
+                      <h3 className="text-lg font-bold text-[#585858] mb-2">Итог</h3>
                     {previewStorage ? (
                       <div className="space-y-2">
                         {/* Информация о бронировании для занятых боксов */}
                         {previewStorage && (previewStorage.status === 'OCCUPIED' || previewStorage.status === 'PENDING') && (
-                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl">
                             <div className="flex items-center justify-between mb-2">
                               <div className="text-sm font-semibold uppercase tracking-[0.12em] text-[#273655]">
                                 ИТОГ
@@ -2215,10 +2378,11 @@ const HomePage = memo(() => {
                         )}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-500">
                         Выберите бокс на схеме, чтобы увидеть предварительную цену.
                       </p>
                     )}
+                    </div>
                   </div>
                   
                   {/* Кнопки действий */}
@@ -2226,13 +2390,13 @@ const HomePage = memo(() => {
                     <button
                       onClick={handleIndividualBookingClick}
                       disabled={!isIndividualFormReady || isSubmittingOrder}
-                      className="w-full bg-gradient-to-r from-[#00A991] to-[#00A991] text-white font-semibold py-4 px-6 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
                     </button>
                     <button
                       onClick={handleCallbackRequestClick}
-                      className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-xl hover:bg-gray-200 transition-colors"
+                      className="w-full bg-white border border-gray-300 text-[#273655] font-semibold py-4 px-6 rounded-3xl hover:bg-gray-50 transition-colors"
                     >
                       Заказать обратный звонок
                     </button>
@@ -2604,190 +2768,7 @@ const HomePage = memo(() => {
         </div>
       </section>
       
-      {/* Дополнительные формы (детальные настройки перевозки и услуг) - показываем в отдельной секции */}
-      {activeStorageTab === 'INDIVIDUAL' && previewStorage && includeMoving && (
-        <section className="w-full flex flex-col items-center justify-center mt-8 mb-8 px-4 sm:px-6">
-          <div className="w-full max-w-[1144px]">
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
-              <h3 className="text-xl font-bold text-[#273655]">Детали перевозки</h3>
-              <div className="space-y-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата забора вещей</label>
-                  <DatePicker
-                    value={movingPickupDate}
-                    onChange={(value) => {
-                      setMovingPickupDate(value);
-                      setSubmitError(null);
-                    }}
-                    minDate={new Date().toISOString().split('T')[0]}
-                    allowFutureDates={true}
-                    placeholder="ДД.ММ.ГГГГ"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора</label>
-                  <input
-                    type="text"
-                    value={movingAddressFrom}
-                    onChange={(e) => {
-                      setMovingAddressFrom(e.target.value);
-                      setSubmitError(null);
-                    }}
-                    placeholder="Например: г. Алматы, Абая 25"
-                    className="h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
       
-      {activeStorageTab === 'INDIVIDUAL' && previewStorage && includePacking && (
-        <section className="w-full flex flex-col items-center justify-center mt-8 mb-8 px-4 sm:px-6">
-          <div className="w-full max-w-[1144px]">
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
-              <h3 className="text-xl font-bold text-[#273655]">Детали услуг упаковки</h3>
-              <div className="space-y-3">
-                {isServicesLoading ? (
-                  <div className="flex items-center justify-center py-2">
-                    <span className="w-5 h-5 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
-                  </div>
-                ) : (
-                  <>
-                    {servicesError && (
-                      <p className="text-xs text-[#C73636]">
-                        {servicesError}
-                      </p>
-                    )}
-
-                    {services.length > 0 && (
-                      <div className="space-y-2">
-                        {services.map((service, index) => {
-                          const selectedOption = serviceOptions.find((option) => String(option.id) === service.service_id);
-                          const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
-                          
-                          const availableOptions = serviceOptions.filter((option) => {
-                            if (option?.type === 'GAZELLE') return;
-                            if (option?.type === 'GAZELLE_FROM') return;
-                            if (option?.type === 'GAZELLE_TO') return;
-                            const isAlreadySelected = services.some((s, i) =>
-                              i !== index && String(s.service_id) === String(option.id)
-                            );
-                            return !isAlreadySelected;
-                          });
-
-                          const isGazelleToService = selectedOption && selectedOption.type === "GAZELLE_TO";
-                          
-                          return (
-                            <div key={index} className="space-y-2">
-                              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2">
-                                <Select
-                                  value={service.service_id}
-                                  onValueChange={(value) => updateServiceRow(index, "service_id", value)}
-                                >
-                                  <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
-                                    <SelectValue placeholder="Услуга" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {availableOptions.length > 0 ? (
-                                      availableOptions.map((option) => {
-                                        const serviceName = getServiceTypeName(option.type);
-                                        if (!serviceName) return null;
-                                        return (
-                                          <SelectItem key={option.id} value={String(option.id)}>
-                                            {serviceName}
-                                          </SelectItem>
-                                        );
-                                      }).filter(Boolean)
-                                    ) : (
-                                      <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
-                                        Нет доступных услуг
-                                      </div>
-                                    )}
-                                  </SelectContent>
-                                </Select>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
-                                    Кол-во
-                                  </span>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={service.count}
-                                    onChange={(e) => updateServiceRow(index, "count", e.target.value)}
-                                    className="w-16 h-10 rounded-lg border border-[#d7dbe6] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
-                                  />
-                                </div>
-
-                                {service.service_id && (
-                                  <span className="ml-auto text-xs text-[#6B6B6B]">
-                                    {unitPrice.toLocaleString()} ₸/шт.
-                                  </span>
-                                )}
-
-                                <button
-                                  type="button"
-                                  onClick={() => removeServiceRow(index)}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
-                                  aria-label="Удалить услугу"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                              
-                              {isGazelleToService && (
-                                <div className="pl-3 pr-11">
-                                  <label className="block text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mb-1">
-                                    Адрес доставки вещей
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={movingAddressTo}
-                                    onChange={(e) => {
-                                      setMovingAddressTo(e.target.value);
-                                      setMovingOrders(prev => prev.map(order => 
-                                        order.status === "PENDING_TO" 
-                                          ? { ...order, address: e.target.value }
-                                          : order
-                                      ));
-                                    }}
-                                    placeholder="Например: г. Алматы, Абая 25"
-                                    className="w-full h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {services.length === 0 && !servicesError && (
-                      <p className="text-xs text-[#6B6B6B]">
-                        Добавьте услуги, чтобы мы подготовили упаковку под ваши вещи.
-                      </p>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        ensureServiceOptions();
-                        addServiceRow();
-                      }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#273655]/40 px-3 py-2 text-xs sm:text-sm font-semibold text-[#273655] hover:bg-[#273655]/5 transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Добавить услугу
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
       
 
       {isMapModalOpen && (
