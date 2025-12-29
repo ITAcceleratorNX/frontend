@@ -49,9 +49,9 @@ const getMonthLabel = (months) => {
 const getServiceTypeName = (type) => {
   switch (type) {
     case "LOADER":
-      return "Грузчик";
+      return "Услуги мувера";
     case "PACKER":
-      return "Упаковщик";
+      return "Услуги упаковщика";
     case "FURNITURE_SPECIALIST":
       return "Мебельщик";
     case "GAZELLE":
@@ -61,17 +61,17 @@ const getServiceTypeName = (type) => {
     case "GAZELLE_TO":
       return "Газель - возврат вещей";
     case "STRETCH_FILM":
-      return "Стрейч-плёнка";
+      return "Стрейч плёнка";
     case "BOX_SIZE":
-      return "Коробка";
+      return "Коробки";
     case "MARKER":
       return "Маркер";
     case "UTILITY_KNIFE":
       return "Канцелярский нож";
     case "BUBBLE_WRAP_1":
-      return "Воздушно-пузырчатая плёнка 10м";
+      return "Пузырчатая плёнка (10м)";
     case "BUBBLE_WRAP_2":
-      return "Воздушно-пузырчатая плёнка 120м";
+      return "Воздушно-пузырчатая плёнка (100м)";
     case "RACK_RENTAL":
       return "Аренда стеллажей";
     default:
@@ -239,6 +239,9 @@ const HomePage = memo(() => {
           "M3_01_6_12M",
           "M3_01_OVER_12M",
           "UTILITY_KNIFE",
+          "GAZELLE_TO",
+          "GAZELLE_FROM",
+          "GAZELLE",
           "FURNITURE_SPECIALIST",
           "CLOUD_TARIFF_SUMKA",
           "CLOUD_TARIFF_SHINA",
@@ -2647,9 +2650,7 @@ const HomePage = memo(() => {
                           const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
                           
                           const availableOptions = serviceOptions.filter((option) => {
-                            if (option.type === "GAZELLE_FROM") return false;
-                            if (option.type === "GAZELLE") return false;
-                            const isAlreadySelected = services.some((s, i) => 
+                            const isAlreadySelected = services.some((s, i) =>
                               i !== index && String(s.service_id) === String(option.id)
                             );
                             return !isAlreadySelected;
@@ -2670,7 +2671,7 @@ const HomePage = memo(() => {
                                   <SelectContent>
                                     {availableOptions.length > 0 ? (
                                       availableOptions.map((option) => {
-                                        const serviceName = option.description || getServiceTypeName(option.type);
+                                        const serviceName = getServiceTypeName(option.type);
                                         if (!serviceName) return null;
                                         return (
                                           <SelectItem key={option.id} value={String(option.id)}>
