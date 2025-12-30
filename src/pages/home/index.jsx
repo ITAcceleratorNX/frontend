@@ -1860,7 +1860,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1887,7 +1887,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -1914,7 +1914,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2059,7 +2059,23 @@ const HomePage = memo(() => {
                   
                   {/* Предупреждение для Яруса 2 Mega Tower Almaty */}
                   {selectedWarehouse?.name?.toLowerCase().includes('mega') && megaSelectedMap === 2 && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-3xl">
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <AlertTriangle className="h-5 w-5 text-red-500" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-[#273655] leading-relaxed">
+                            <span className="font-semibold">Внимание:</span> В Ярусе 2 вес не должен превышать 200 кг на квадратный метр
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Предупреждение для Яруса 2 ЖК Комфорт Сити */}
+                  {selectedWarehouse?.name === "Жилой комплекс «Комфорт Сити»" && komfortSelectedMap === 2 && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 mt-0.5">
                           <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -2905,7 +2921,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2932,7 +2948,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2959,7 +2975,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота 2м</span>
+              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />

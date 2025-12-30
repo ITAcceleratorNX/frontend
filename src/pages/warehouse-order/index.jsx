@@ -917,7 +917,7 @@ const WarehouseOrderPage = memo(() => {
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                                   >
-                                    Карта 1
+                                    Ярус 1
                                   </button>
                                   <button
                                     onClick={() => handleKomfortMapChange(2)}
@@ -927,7 +927,7 @@ const WarehouseOrderPage = memo(() => {
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                                   >
-                                    Карта 2
+                                    Ярус 2
                                   </button>
                                 </div>
                               </div>

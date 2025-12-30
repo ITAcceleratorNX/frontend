@@ -203,7 +203,7 @@ const WarehouseCanvasViewer = memo(({
               }`}
               aria-pressed={isActive}
             >
-              Карта {mapNumber}
+              Ярус {mapNumber}
             </button>
           );
         })}
