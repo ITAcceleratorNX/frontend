@@ -138,6 +138,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 const pricesData = await paymentsApi.getPrices()
                 // Фильтруем исключенные типы
                 const excludedTypes = [
+                    "CLOUD_PRICE_LOW",
+                    "CLOUD_PRICE_HIGH",
                     "DEPOSIT",
                     "M2_UP_6M",
                     "M2_6_12M",
@@ -145,10 +147,25 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     "M3_UP_6M",
                     "M3_6_12M",
                     "M3_OVER_12M",
-                    "CLOUD_PRICE_LOW",
-                    "CLOUD_PRICE_HIGH",
+                    "M2_01_UP_6M",
+                    "M2_01_6_12M",
+                    "M2_01_OVER_12M",
+                    "M3_01_UP_6M",
+                    "M3_01_6_12M",
+                    "M3_01_OVER_12M",
+                    "UTILITY_KNIFE",
+                    "FURNITURE_SPECIALIST",
+                    "CLOUD_TARIFF_SUMKA",
+                    "CLOUD_TARIFF_SHINA",
+                    "CLOUD_TARIFF_MOTORCYCLE",
+                    "CLOUD_TARIFF_BICYCLE",
+                    "CLOUD_TARIFF_SUNUK",
+                    "CLOUD_TARIFF_FURNITURE",
+                    "CLOUD_TARIFF_SKLAD",
+                    "CLOUD_TARIFF_GARAZH",
+                    "INDIVIDUAL",
                 ];
-                const filteredPrices = pricesData.filter((price) => price.id > 4 && !excludedTypes.includes(price.type))
+                const filteredPrices = pricesData.filter((price) => !excludedTypes.includes(price.type))
                 setPrices(filteredPrices)
                 setServiceOptions(filteredPrices)
                 // Ищем GAZELLE_FROM (для забора вещей)
@@ -506,33 +523,33 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     return (
         <Dialog open={isOpen} onOpenChange={onCancel}>
             <DialogContent
-                className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto p-0 sm:w-full"
-                style={{ boxShadow: "4px 4px 8px 0 #B0B0B0" }}
+                className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto p-0 sm:w-full bg-white rounded-3xl"
+                style={{ boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             >
-                <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-gray-200">
-                    <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <Package className="w-4 h-4 sm:w-5 sm:h-5 text-[#F86812]" />
+                <DialogHeader className="px-6 sm:px-8 pt-6 sm:pt-8 pb-6 border-b border-[#d7dbe6]">
+                    <DialogTitle className="text-xl sm:text-2xl font-bold text-[#273655] flex items-center gap-3">
+                        <Package className="w-5 h-5 sm:w-6 sm:h-6 text-[#00A991]" />
                         <span className="truncate">Редактирование заказа №{order.id}</span>
                     </DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm text-gray-500">
+                    <DialogDescription className="text-sm sm:text-base text-[#6B6B6B] mt-2">
                         Измените параметры хранения, предметы и дополнительные услуги
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="px-4 sm:px-6 py-4 space-y-6">
+                <div className="px-6 sm:px-8 py-6 space-y-6">
                     {/* Даты */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         <div className="space-y-2">
-                            <Label className="text-sm sm:text-base">Дата начала</Label>
-                            <div className="flex items-center h-10 px-3 border border-gray-300 rounded-lg bg-gray-50 text-sm sm:text-base text-gray-700">
-                                <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            <Label className="text-sm sm:text-base font-medium text-[#273655]">Дата начала</Label>
+                            <div className="flex items-center h-12 px-4 border border-[#d7dbe6] rounded-3xl bg-gray-50 text-sm sm:text-base text-[#273655]">
+                                <CalendarIcon className="mr-2 h-4 w-4 text-[#6B6B6B]" />
                                 {format(formData.start_date, "dd.MM.yyyy", { locale: ru })}
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-sm sm:text-base">Дата окончания хранения</Label>
-                            <div className="flex items-center h-10 px-3 border border-gray-300 rounded-lg bg-gray-50 text-sm sm:text-base text-gray-700">
-                                <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                            <Label className="text-sm sm:text-base font-medium text-[#273655]">Дата окончания хранения</Label>
+                            <div className="flex items-center h-12 px-4 border border-[#d7dbe6] rounded-3xl bg-gray-50 text-sm sm:text-base text-[#273655]">
+                                <CalendarIcon className="mr-2 h-4 w-4 text-[#6B6B6B]" />
                                 {format(formData.end_date, "dd.MM.yyyy", { locale: ru })}
                             </div>
                         </div>
@@ -540,86 +557,88 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
                     {/* Предметы */}
                     {totalVolume > parseFloat(storage_available_volume) && (
-                        <p className="text-red-600 font-medium mt-2">
-                            ⚠️ Объем превышает доступное место в боксе!
-                        </p>
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
+                            <p className="text-red-600 font-medium text-sm">
+                                ⚠️ Объем превышает доступное место в боксе!
+                            </p>
+                        </div>
                     )}
                     <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <Label className="text-base sm:text-lg font-medium text-gray-800">Ваши вещи</Label>
+                            <Label className="text-lg sm:text-xl font-bold text-[#273655]">Ваши вещи</Label>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={addOrderItem}
-                                className="flex items-center gap-1 text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto bg-transparent"
+                                className="flex items-center gap-2 text-sm h-10 w-full sm:w-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
                             >
-                                <Plus className="w-3 h-3 sm:w-4 sm:h-4" /> Добавить
+                                <Plus className="w-4 h-4" /> Добавить
                             </Button>
                         </div>
                         {formData.order_items.map((item, index) => (
-                            <div key={index} className="space-y-3 p-3 sm:p-4 border border-gray-200 rounded-lg bg-white">
+                            <div key={index} className="space-y-4 p-4 sm:p-6 border border-[#d7dbe6] rounded-2xl bg-white shadow-sm">
                                 {/* Название - всегда на полную ширину */}
                                 <div>
-                                    <Label className="text-sm">Название</Label>
+                                    <Label className="text-sm font-medium text-[#273655] mb-2 block">Название</Label>
                                     <Input
                                         value={item.name}
                                         onChange={(e) => updateOrderItem(index, "name", e.target.value)}
                                         placeholder="Например: шкаф"
-                                        className="h-10 text-sm"
+                                        className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
                                     />
                                 </div>
 
                                 {/* Размеры в сетке */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                                     <div>
-                                        <Label className="text-xs sm:text-sm">Длина (м)</Label>
+                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Длина (м)</Label>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             value={item.length}
                                             onChange={(e) => updateOrderItem(index, "length", e.target.value)}
                                             placeholder="1.2"
-                                            className="h-10 text-sm"
+                                            className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
                                         />
                                     </div>
                                     <div>
-                                        <Label className="text-xs sm:text-sm">Ширина (м)</Label>
+                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Ширина (м)</Label>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             value={item.width}
                                             onChange={(e) => updateOrderItem(index, "width", e.target.value)}
                                             placeholder="0.8"
-                                            className="h-10 text-sm"
+                                            className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
                                         />
                                     </div>
                                     <div>
-                                        <Label className="text-xs sm:text-sm">Высота (м)</Label>
+                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Высота (м)</Label>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             value={item.height}
                                             onChange={(e) => updateOrderItem(index, "height", e.target.value)}
                                             placeholder="2.0"
-                                            className="h-10 text-sm"
+                                            className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
                                         />
                                     </div>
                                     <div>
-                                        <Label className="text-xs sm:text-sm">Объём (м³)</Label>
-                                        <Input type="text" value={item.volume} disabled className="h-10 bg-gray-100 text-sm" />
+                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Объём (м³)</Label>
+                                        <Input type="text" value={item.volume} disabled className="h-12 bg-gray-100 text-sm rounded-3xl border-[#d7dbe6] text-[#6B6B6B]" />
                                     </div>
                                 </div>
 
                                 {/* Тип груза и кнопка удаления */}
-                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-end">
+                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
                                     <div className="flex-1">
-                                        <Label className="text-sm">Тип груза</Label>
+                                        <Label className="text-sm font-medium text-[#273655] mb-2 block">Тип груза</Label>
                                         <Select
                                             value={item.cargo_mark}
                                             onValueChange={(value) => updateOrderItem(index, "cargo_mark", value)}
                                         >
-                                            <SelectTrigger className="h-10">
+                                            <SelectTrigger className="h-12 rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20">
                                                 <SelectValue placeholder="Выберите тип" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -635,7 +654,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => removeOrderItem(index)}
-                                            className="text-red-500 hover:text-red-700 h-10 w-10 sm:h-auto sm:w-auto"
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-12 w-12 rounded-3xl sm:h-auto sm:w-auto"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
@@ -647,7 +666,16 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
                     {/* Перевозка */}
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-3xl">
+                            <div className="flex items-center gap-3">
+                                <Truck className="w-5 h-5 text-[#6B6B6B]" />
+                                <Label
+                                    htmlFor="moving"
+                                    className="text-base sm:text-lg font-medium text-[#273655] cursor-pointer"
+                                >
+                                    Нужна перевозка?
+                                </Label>
+                            </div>
                             <input
                                 type="checkbox"
                                 id="moving"
@@ -659,25 +687,19 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                         moving_orders: e.target.checked ? prev.moving_orders : [],
                                     }))
                                 }
-                                className="rounded border-gray-300 text-[#F86812] focus:ring-[#F86812]"
+                                className="w-5 h-5 rounded border-gray-300 text-[#00A991] focus:ring-[#00A991] cursor-pointer"
                             />
-                            <Label
-                                htmlFor="moving"
-                                className="text-base sm:text-lg font-medium text-gray-800 flex items-center gap-1"
-                            >
-                                <Truck className="w-4 h-4 sm:w-5 sm:h-5" /> Нужна перевозка?
-                            </Label>
                         </div>
                         {formData.is_selected_moving && (
                             <>
                                 {formData.moving_orders.map((mo, index) => (
-                                    <div key={index} className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-gray-50">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                                    <div key={index} className="border border-[#d7dbe6] rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] shadow-lg">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                                             <div>
-                                                <Label className="text-sm">Дата перевозки</Label>
+                                                <Label className="text-sm font-medium text-white/90 mb-2 block">Дата перевозки</Label>
                                                 <Popover>
                                                     <PopoverTrigger asChild>
-                                                        <Button variant="outline" className="w-full justify-start h-10 text-sm bg-transparent">
+                                                        <Button variant="outline" className="w-full justify-start h-12 text-sm bg-white/10 border-white text-white hover:bg-white/20 rounded-3xl">
                                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                                             {format(mo.moving_date, "dd.MM.yyyy", { locale: ru })}
                                                         </Button>
@@ -694,9 +716,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                 </Popover>
                                             </div>
                                             <div>
-                                                <Label className="text-sm">Тип перевозки</Label>
+                                                <Label className="text-sm font-medium text-white/90 mb-2 block">Тип перевозки</Label>
                                                 <Select value={mo.status} onValueChange={(value) => updateMovingOrder(index, "status", value)}>
-                                                    <SelectTrigger className="h-10">
+                                                    <SelectTrigger className="h-12 rounded-3xl bg-white/10 border-white text-white">
                                                         <SelectValue placeholder="Выберите тип" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -706,12 +728,12 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                 </Select>
                                             </div>
                                             <div className="sm:col-span-2 lg:col-span-1">
-                                                <Label className="text-sm">Адрес</Label>
+                                                <Label className="text-sm font-medium text-white/90 mb-2 block">Адрес</Label>
                                                 <Input
                                                     value={mo.address}
                                                     onChange={(e) => updateMovingOrder(index, "address", e.target.value)}
                                                     placeholder="Улица, дом, квартира"
-                                                    className="h-10 text-sm"
+                                                    className="h-12 text-sm rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70 focus:ring-2 focus:ring-white/50"
                                                 />
                                             </div>
                                         </div>
@@ -720,9 +742,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => removeMovingOrder(index)}
-                                            className="text-red-500 text-xs sm:text-sm"
+                                            className="text-white hover:text-white hover:bg-white/20 text-sm rounded-3xl"
                                         >
-                                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Удалить перевозку
+                                            <Trash2 className="w-4 h-4 mr-2" /> Удалить перевозку
                                         </Button>
                                     </div>
                                 ))}
@@ -731,9 +753,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                     variant="outline"
                                     size="sm"
                                     onClick={addMovingOrder}
-                                    className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto bg-transparent"
+                                    className="flex items-center gap-2 text-sm w-full sm:w-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
                                 >
-                                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" /> Добавить дату перевозки
+                                    <Plus className="w-4 h-4" /> Добавить дату перевозки
                                 </Button>
                             </>
                         )}
@@ -741,7 +763,16 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
                     {/* Упаковка */}
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-3xl">
+                            <div className="flex items-center gap-3">
+                                <Package className="w-5 h-5 text-[#6B6B6B]" />
+                                <Label
+                                    htmlFor="package"
+                                    className="text-base sm:text-lg font-medium text-[#273655] cursor-pointer"
+                                >
+                                    Нужна упаковка?
+                                </Label>
+                            </div>
                             <input
                                 type="checkbox"
                                 id="package"
@@ -753,132 +784,133 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                         services: e.target.checked ? prev.services : [],
                                     }))
                                 }
-                                className="rounded border-gray-300 text-[#F86812] focus:ring-[#F86812]"
+                                className="w-5 h-5 rounded border-gray-300 text-[#00A991] focus:ring-[#00A991] cursor-pointer"
                             />
-                            <Label
-                                htmlFor="package"
-                                className="text-base sm:text-lg font-medium text-gray-800 flex items-center gap-1"
-                            >
-                                <Package className="w-4 h-4 sm:w-5 sm:h-5" /> Нужна упаковка?
-                            </Label>
                         </div>
                         {formData.is_selected_package && (
                             <>
                                 {isPricesLoading ? (
-                                    <p className="text-xs sm:text-sm text-gray-500">Загрузка услуг...</p>
+                                    <div className="p-4 bg-gray-50 rounded-2xl">
+                                        <p className="text-sm text-[#6B6B6B]">Загрузка услуг...</p>
+                                    </div>
                                 ) : prices.length === 0 ? (
-                                    <p className="text-xs sm:text-sm text-gray-500">Нет доступных услуг для упаковки.</p>
+                                    <div className="p-4 bg-gray-50 rounded-2xl">
+                                        <p className="text-sm text-[#6B6B6B]">Нет доступных услуг для упаковки.</p>
+                                    </div>
                                 ) : (
-                                    <>
-                                        {formData.services.map((service, index) => {
-                                            const serviceData = prices.find((p) => String(p.id) === service.service_id)
-                                            const isGazelleFrom = serviceData?.type === "GAZELLE_FROM"
-                                            const isGazelleTo = serviceData?.type === "GAZELLE_TO"
-                                            const isGazelle = isGazelleFrom || isGazelleTo || serviceData?.type === "GAZELLE"
-                                            return (
-                                                <div key={index} className="space-y-2">
-                                                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-end">
-                                                        <div className="flex-1">
-                                                            <Label className="text-sm">Услуга</Label>
-                                                            <Select
-                                                                value={service.service_id}
-                                                                onValueChange={(val) => !isGazelle && updateService(index, "service_id", val)}
-                                                                disabled={isGazelle}
-                                                            >
-                                                                <SelectTrigger className="h-10 text-sm" disabled={isGazelle}>
-                                                                    <SelectValue placeholder={getServiceTypeName(service.type)} />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {prices
-                                                                        .filter(price => {
-                                                                            // Скрываем старый GAZELLE
-                                                                            if (price.type === "GAZELLE") return false;
-                                                                            return true;
-                                                                        })
-                                                                        .map((price) => (
-                                                                            <SelectItem
-                                                                                key={price.id}
-                                                                                value={String(price.id)}
-                                                                            >
-                                                                                {getServiceTypeName(price.type) || price.description || "Услуга"} (₸{price.price})
-                                                                            </SelectItem>
-                                                                        ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="w-full sm:w-24">
-                                                            <Label className="text-sm">Кол-во</Label>
-                                                            <Input
-                                                                type="number"
-                                                                min="1"
-                                                                value={service.count}
-                                                                onChange={(e) =>
-                                                                    !isGazelle && updateService(index, "count", Number.parseInt(e.target.value) || 1)
-                                                                }
-                                                                disabled={isGazelle}
-                                                                className="h-10 text-sm"
-                                                            />
-                                                        </div>
-                                                        {/* Итоговая цена для GAZELLE_FROM (только для ADMIN или MANAGER) */}
-                                                        {(isGazelleFrom && (user.role === "ADMIN" || user.role === "MANAGER")) && (
-                                                            <div className="w-full sm:w-32">
-                                                                <Label className="text-sm">Итог (₸)</Label>
+                                    <div className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-2xl p-4 sm:p-6 shadow-lg space-y-4">
+                                        <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Детали услуг упаковки</h3>
+                                        <div className="space-y-3">
+                                            {formData.services.map((service, index) => {
+                                                const serviceData = prices.find((p) => String(p.id) === service.service_id)
+                                                const isGazelleFrom = serviceData?.type === "GAZELLE_FROM"
+                                                const isGazelleTo = serviceData?.type === "GAZELLE_TO"
+                                                const isGazelle = isGazelleFrom || isGazelleTo || serviceData?.type === "GAZELLE"
+                                                return (
+                                                    <div key={index} className="space-y-3">
+                                                        <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-white bg-white/10 px-4 py-3">
+                                                            <div className="flex-1 min-w-[200px]">
+                                                                <Label className="text-xs text-white/90 mb-1 block">Услуга</Label>
+                                                                <Select
+                                                                    value={service.service_id}
+                                                                    onValueChange={(val) => !isGazelle && updateService(index, "service_id", val)}
+                                                                    disabled={isGazelle}
+                                                                >
+                                                                    <SelectTrigger className="h-10 text-sm rounded-3xl bg-white/10 border-white text-white" disabled={isGazelle}>
+                                                                        <SelectValue placeholder={getServiceTypeName(service.type)} />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {prices
+                                                                            .filter(price => {
+                                                                                // Скрываем старый GAZELLE
+                                                                                if (price.type === "GAZELLE") return false;
+                                                                                return true;
+                                                                            })
+                                                                            .map((price) => (
+                                                                                <SelectItem
+                                                                                    key={price.id}
+                                                                                    value={String(price.id)}
+                                                                                >
+                                                                                    {getServiceTypeName(price.type) || price.description || "Услуга"} (₸{price.price})
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                            <div className="w-24">
+                                                                <Label className="text-xs text-white/90 mb-1 block">Кол-во</Label>
                                                                 <Input
                                                                     type="number"
-                                                                    value={totalPrice}
-                                                                    onChange={(e) => setTotalPrice(e.target.value ? Number(e.target.value) : "")}
-                                                                    className="h-10 text-sm bg-gray-100"
+                                                                    min="1"
+                                                                    value={service.count}
+                                                                    onChange={(e) =>
+                                                                        !isGazelle && updateService(index, "count", Number.parseInt(e.target.value) || 1)
+                                                                    }
+                                                                    disabled={isGazelle}
+                                                                    className="h-10 text-sm rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70"
+                                                                />
+                                                            </div>
+                                                            {/* Итоговая цена для GAZELLE_FROM (только для ADMIN или MANAGER) */}
+                                                            {(isGazelleFrom && (user.role === "ADMIN" || user.role === "MANAGER")) && (
+                                                                <div className="w-32">
+                                                                    <Label className="text-xs text-white/90 mb-1 block">Итог (₸)</Label>
+                                                                    <Input
+                                                                        type="number"
+                                                                        value={totalPrice}
+                                                                        onChange={(e) => setTotalPrice(e.target.value ? Number(e.target.value) : "")}
+                                                                        className="h-10 text-sm rounded-3xl bg-white/10 border-white text-white"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => !isGazelle && removeService(index)}
+                                                                className={`${isGazelle ? "invisible" : "text-white hover:bg-white/20"} h-10 w-10 rounded-3xl`}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                        
+                                                        {/* Поле адреса для GAZELLE_TO */}
+                                                        {isGazelleTo && (
+                                                            <div className="pl-4">
+                                                                <Label className="block text-xs sm:text-sm text-white/90 mb-2">
+                                                                    Адрес доставки вещей
+                                                                </Label>
+                                                                <Input
+                                                                    type="text"
+                                                                    value={movingAddressTo}
+                                                                    onChange={(e) => {
+                                                                        setMovingAddressTo(e.target.value);
+                                                                        // Обновляем адрес в moving_order
+                                                                        const updatedMovingOrders = formData.moving_orders.map(mo =>
+                                                                            mo.status === 'PENDING_TO' 
+                                                                                ? { ...mo, address: e.target.value }
+                                                                                : mo
+                                                                        );
+                                                                        setFormData(prev => ({ ...prev, moving_orders: updatedMovingOrders }));
+                                                                    }}
+                                                                    placeholder="Например: г. Алматы, Абая 25"
+                                                                    className="h-12 text-sm rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70 focus:ring-2 focus:ring-white/50"
                                                                 />
                                                             </div>
                                                         )}
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => !isGazelle && removeService(index)}
-                                                            className={`${isGazelle ? "invisible" : "text-red-500"} h-10 w-10 sm:h-auto sm:w-auto`}
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
                                                     </div>
-                                                    
-                                                    {/* Поле адреса для GAZELLE_TO */}
-                                                    {isGazelleTo && (
-                                                        <div className="pl-0 sm:pl-0">
-                                                            <Label className="block text-xs sm:text-sm text-gray-700 mb-1">
-                                                                Адрес доставки вещей
-                                                            </Label>
-                                                            <Input
-                                                                type="text"
-                                                                value={movingAddressTo}
-                                                                onChange={(e) => {
-                                                                    setMovingAddressTo(e.target.value);
-                                                                    // Обновляем адрес в moving_order
-                                                                    const updatedMovingOrders = formData.moving_orders.map(mo =>
-                                                                        mo.status === 'PENDING_TO' 
-                                                                            ? { ...mo, address: e.target.value }
-                                                                            : mo
-                                                                    );
-                                                                    setFormData(prev => ({ ...prev, moving_orders: updatedMovingOrders }));
-                                                                }}
-                                                                placeholder="Например: г. Алматы, Абая 25"
-                                                                className="h-10 text-sm"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        })}
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={addService}
-                                            className="flex items-center gap-1 text-xs sm:text-sm w-full sm:w-auto bg-transparent"
-                                        >
-                                            <Plus className="w-3 h-3 sm:w-4 sm:h-4" /> Добавить услугу
-                                        </Button>
-                                    </>
+                                                )
+                                            })}
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={addService}
+                                                className="flex items-center gap-2 text-sm w-full sm:w-auto bg-white/10 border-dashed border-white text-white hover:bg-white/20 rounded-3xl"
+                                            >
+                                                <Plus className="w-4 h-4" /> Добавить услугу
+                                            </Button>
+                                        </div>
+                                    </div>
                                 )}
                             </>
                         )}
@@ -893,7 +925,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                             value={months.toString()}
                             onValueChange={(value) => setMonths(Number(value))}
                         >
-                            <SelectTrigger className="w-full h-[56px] text-lg">
+                            <SelectTrigger className="w-full h-12 text-base rounded-3xl border-[#d7dbe6] bg-gray-50 focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20">
                                 <SelectValue placeholder="Выберите срок аренды" />
                             </SelectTrigger>
                             <SelectContent>
@@ -908,17 +940,17 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 </div>
 
                 {error && (
-                    <div className="px-4 sm:px-6 text-xs sm:text-sm text-red-500 bg-red-50 border-t border-red-200 py-3">
+                    <div className="px-6 sm:px-8 text-sm text-red-600 bg-red-50 border-t border-red-200 py-4 rounded-b-3xl">
                         {error}
                     </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row gap-3 px-4 sm:px-6 py-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row gap-3 px-6 sm:px-8 py-6 border-t border-[#d7dbe6]">
                     <Button
                         variant="outline"
                         onClick={onCancel}
                         disabled={isSubmitting}
-                        className="flex-1 h-10 sm:h-12 text-sm sm:text-lg order-2 sm:order-1 bg-transparent"
+                        className="flex-1 h-12 text-base order-2 sm:order-1 bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
                     >
                         Отмена
                     </Button>
@@ -928,12 +960,11 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                             isSubmitting ||
                             totalVolume > parseFloat(storage_available_volume)
                         }
-                        className="flex-1 h-10 sm:h-12 text-sm sm:text-lg bg-[#F86812] hover:bg-[#d87d1c] text-white order-1 sm:order-2"
-                        style={{ boxShadow: "4px 4px 8px 0 #B0B0B0" }}
+                        className="flex-1 h-12 text-base bg-gradient-to-r from-[#26B3AB] to-[#104D4A] hover:opacity-90 text-white order-1 sm:order-2 rounded-3xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (
                             <>
-                                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-t-2 border-white mr-2"></div>
+                                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white mr-2"></div>
                                 Обработка...
                             </>
                         ) : (

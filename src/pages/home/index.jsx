@@ -2217,6 +2217,7 @@ const HomePage = memo(() => {
                                     if (option?.type === 'GAZELLE') return;
                                     if (option?.type === 'GAZELLE_FROM') return;
                                     if (option?.type === 'GAZELLE_TO') return;
+                                    if (option?.type === 'INDIVIDUAL') return;
                                     const isAlreadySelected = services.some((s, i) =>
                                       i !== index && String(s.service_id) === String(option.id)
                                     );

@@ -140,8 +140,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   };
 
   const totalPriceOfServices = order.services.reduce((total, service) => {
-    // Исключаем услуги доставки (GAZELLE_FROM и GAZELLE_TO) из расчета, так как они бесплатные
-    if (service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO') {
+    if (order.storage?.storage_type === 'CLOUD' && service.type !== 'GAZELLE_TO') {
       return total;
     }
     if (service.OrderService) {
@@ -431,7 +430,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                             ? getServiceTypeName(service.type)
                             : (service.description || getServiceTypeName(service.type))}
                         </p>
-                        {(service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO') ? (
+                        {(order.storage?.storage_type === 'CLOUD' && service.type !== 'GAZELLE_TO') ? (
                           <p className="text-red-600 text-xs mt-1 font-semibold">Бесплатно</p>
                         ) : service.OrderService && service.OrderService.count > 1 ? (
                           <p className="text-gray-600 text-xs mt-1">
@@ -453,16 +452,16 @@ const UserOrderCard = ({ order, onPayOrder }) => {
               </div>
             </div>
           </div>
-          <div className="mb-8 flex justify-end">
-            <button 
-              onClick={() => setIsEditModalOpen(true)}
-              className="text-white text-sm font-medium hover:text-white/80 transition-colors underline"
-            >
-              Редактировать
-            </button>
-          </div>
         </>
       )}
+      <div className="mb-8 flex justify-end">
+        <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="text-white text-sm font-medium hover:text-white/80 transition-colors underline"
+        >
+          Редактировать
+        </button>
+      </div>
 
       {/* Итого и кнопки действий */}
       <div className="mt-6">
