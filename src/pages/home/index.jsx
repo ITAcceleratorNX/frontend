@@ -223,7 +223,6 @@ const HomePage = memo(() => {
       setServicesError(null);
       const pricesData = await paymentsApi.getPrices();
       const filteredPrices = pricesData.filter((price) => {
-        if (price.id <= 4) return false;
         const excludedTypes = [
           "DEPOSIT",
           "M2_UP_6M",
