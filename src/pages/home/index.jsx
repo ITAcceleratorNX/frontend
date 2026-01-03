@@ -1034,6 +1034,23 @@ const HomePage = memo(() => {
         ? "Свои габариты" 
         : selectedTariff.name;
 
+      // Маппинг id тарифа на тип тарифа для бэкенда
+      const tariffTypeMap = {
+        'sumka': 'CLOUD_TARIFF_SUMKA',
+        'shina': 'CLOUD_TARIFF_SHINA',
+        'motorcycle': 'CLOUD_TARIFF_MOTORCYCLE',
+        'bicycle': 'CLOUD_TARIFF_BICYCLE',
+        'sunuk': 'CLOUD_TARIFF_SUNUK',
+        'furniture': 'CLOUD_TARIFF_FURNITURE',
+        'sklad': 'CLOUD_TARIFF_SKLAD',
+        'garazh': 'CLOUD_TARIFF_GARAZH'
+      };
+
+      // Определяем тип тарифа для отправки на бэкенд
+      const tariff_type = selectedTariff.isCustom 
+        ? null 
+        : tariffTypeMap[selectedTariff.id] || null;
+
       const orderItems = [
         {
           name: orderItemName,
@@ -1072,6 +1089,7 @@ const HomePage = memo(() => {
         is_selected_moving: true,
         is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
         moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudPickupDate),
+        tariff_type: tariff_type, // Добавляем тип тарифа
       };
 
       console.error("availableOptions: ", availableOptions);
