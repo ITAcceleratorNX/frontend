@@ -227,7 +227,11 @@ export const ordersApi = {
       if (isDevelopment) {
         console.log('OrdersAPI: Файл предмета успешно получен');
       }
-      return response.data;
+      return {
+        blob: response.data,
+        contentType: response.headers['content-type'] || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        contentDisposition: response.headers['content-disposition'] || null,
+      };
     } catch (error) {
       console.error('OrdersAPI: Ошибка при скачивании файла предмета:', error);
       throw error;

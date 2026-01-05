@@ -329,11 +329,23 @@ export const useDownloadContract = () => {
 export const useDownloadItemFile = () => {
   return useMutation({
     mutationFn: async (itemId) => {
-      const blob = await ordersApi.downloadItemFile(itemId);
-      const url = window.URL.createObjectURL(blob);
+      const { blob, contentType, contentDisposition } = await ordersApi.downloadItemFile(itemId);
       
-      // Получаем имя файла из Content-Disposition или используем стандартное имя
-      const fileName = `order_item_${itemId}.docx`;
+      // Извлекаем имя файла из Content-Disposition заголовка, если он есть
+      let fileName = `order_item_${itemId}.docx`;
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = fileNameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      // Создаем blob с правильным MIME-типом
+      const typedBlob = new Blob([blob], { 
+        type: contentType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+      
+      const url = window.URL.createObjectURL(typedBlob);
       
       // Создаем ссылку для скачивания и автоматически кликаем по ней
       const link = document.createElement('a');

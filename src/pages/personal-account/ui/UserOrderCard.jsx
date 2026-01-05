@@ -25,11 +25,12 @@ import {
 import { Button } from '../../../components/ui/button';
 import { useExtendOrder } from '../../../shared/lib/hooks/use-orders';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Pencil, Zap, CheckCircle, Star, FileText, Download, Plus, Truck, Package } from 'lucide-react';
+import { Pencil, Zap, CheckCircle, Star, FileText, Download, Plus, Truck, Package, ChevronDown, ChevronUp } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
 import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
+import { ordersApi } from '../../../shared/api/ordersApi';
 import sumkaImg from '../../../assets/sumka.png';
 import motorcycleImg from '../../../assets/motorcycle.png';
 import bicycleImg from '../../../assets/bicycle.png';
@@ -56,6 +57,8 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isItemsExpanded, setIsItemsExpanded] = useState(false);
+  const [downloadingItemId, setDownloadingItemId] = useState(null);
 
   // Хук для работы с API продления заказа
   const extendOrderMutation = useExtendOrder();
@@ -94,6 +97,48 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       console.error('Ошибка при отмене продления заказа:', error);
     }
   };
+
+  // Обработчик скачивания файла предмета
+  const handleDownloadItem = async (itemId) => {
+    if (!itemId) return;
+    
+    try {
+      setDownloadingItemId(itemId);
+      const { blob, contentType, contentDisposition } = await ordersApi.downloadItemFile(itemId);
+      
+      // Извлекаем имя файла из Content-Disposition заголовка, если он есть
+      let fileName = `order_item_${itemId}.docx`;
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = fileNameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      // Создаем blob с правильным MIME-типом
+      const typedBlob = new Blob([blob], { 
+        type: contentType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+      
+      // Создаем временную ссылку для скачивания
+      const url = window.URL.createObjectURL(typedBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Очищаем
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Ошибка при скачивании файла предмета:', error);
+      alert('Не удалось скачать файл предмета');
+    } finally {
+      setDownloadingItemId(null);
+    }
+  };
+
 // --- Moving statuses helpers (JS) ---
   const MOVING_STATUS_TEXT = {
     PENDING_FROM:  'Ожидает забора',
@@ -392,17 +437,56 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         <div className="mb-10">
           <p className="text-white/90 text-sm mb-2">Предметы:</p>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-white/90" />
-              <span className="text-white/90 text-sm">
-                {order.items[0]?.name || 'Вещь'} {order.items[0]?.volume || order.total_volume} м³ {order.items[0]?.cargo_mark ? getCargoMarkText(order.items[0].cargo_mark) : 'Обычный'}
-              </span>
-            </div>
-            <button className="text-white/90 text-sm font-medium hover:text-white transition-colors underline">
-              Скачать
-            </button>
+          <div className="space-y-2">
+            {(isItemsExpanded ? order.items : order.items.slice(0, 3)).map((item, index) => (
+              <div key={item.id || index} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-1">
+                  <Plus className="w-5 h-5 text-white/90 flex-shrink-0" />
+                  <span className="text-white/90 text-sm">
+                    {item.name || 'Вещь'} {item.volume || order.total_volume} м³ {item.cargo_mark ? getCargoMarkText(item.cargo_mark) : 'Обычный'}
+                  </span>
+                </div>
+                {item.id && (
+                  <button
+                    onClick={() => handleDownloadItem(item.id)}
+                    disabled={downloadingItemId === item.id}
+                    className="text-white/90 text-sm font-medium hover:text-white transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    {downloadingItemId === item.id ? (
+                      <>
+                        <span className="animate-spin">⏳</span>
+                        Загрузка...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Скачать
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
+          
+          {order.items.length > 3 && (
+            <button
+              onClick={() => setIsItemsExpanded(!isItemsExpanded)}
+              className="mt-3 flex items-center gap-1 text-white/90 text-sm font-medium hover:text-white transition-colors underline"
+            >
+              {isItemsExpanded ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  Свернуть
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  Показать еще ({order.items.length - 3})
+                </>
+              )}
+            </button>
+          )}
         </div>
       )}
 
