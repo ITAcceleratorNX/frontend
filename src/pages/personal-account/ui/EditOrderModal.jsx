@@ -17,6 +17,7 @@ import { paymentsApi } from "@/shared/api/paymentsApi"
 import dayjs from "dayjs";
 import {useAuth} from "@/shared/index.js";
 import { getServiceTypeName } from "@/shared/lib/utils/serviceNames";
+import { RentalPeriodSelect } from "@/shared/ui/RentalPeriodSelect";
 
 export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [error, setError] = useState("")
@@ -918,24 +919,13 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
 
                     <div>
-                        <label className="block text-sm font-medium text-[#273655] mb-2">
-                            Срок аренды (месяцы)
-                        </label>
-                        <Select
+                        <RentalPeriodSelect
                             value={months.toString()}
-                            onValueChange={(value) => setMonths(Number(value))}
-                        >
-                            <SelectTrigger className="w-full h-12 text-base rounded-3xl border-[#d7dbe6] bg-gray-50 focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20">
-                                <SelectValue placeholder="Выберите срок аренды" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="1">1 месяц</SelectItem>
-                                <SelectItem value="2">2 месяца</SelectItem>
-                                <SelectItem value="3">3 месяца</SelectItem>
-                                <SelectItem value="6">6 месяцев</SelectItem>
-                                <SelectItem value="12">12 месяцев</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            onChange={(value) => setMonths(Number(value))}
+                            label="Срок аренды (месяцы)"
+                            variant="modal"
+                            placeholder="Выберите срок аренды"
+                        />
                     </div>
                 </div>
 

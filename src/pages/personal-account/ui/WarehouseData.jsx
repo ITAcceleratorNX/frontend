@@ -24,6 +24,7 @@ import ClientSelector from '../../../shared/components/ClientSelector';
 import PendingOrderModal from './PendingOrderModal';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import DatePicker from '../../../shared/ui/DatePicker';
+import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -1821,24 +1822,13 @@ const WarehouseData = () => {
                       </div>
 
                       <div className="space-y-2 sm:space-y-2.5">
-                        <span className="text-sm font-semibold text-[#273655]">
-                          Срок аренды (месяцы)
-                        </span>
-                        <Select
+                        <RentalPeriodSelect
                           value={cloudMonths}
-                          onValueChange={setCloudMonths}
-                        >
-                          <SelectTrigger className="h-12 rounded-2xl border-[#273655]/20 text-[#273655]">
-                            <SelectValue placeholder="Выберите срок" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 месяц</SelectItem>
-                            <SelectItem value="2">2 месяца</SelectItem>
-                            <SelectItem value="3">3 месяца</SelectItem>
-                            <SelectItem value="6">6 месяцев</SelectItem>
-                            <SelectItem value="12">12 месяцев</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          onChange={setCloudMonths}
+                          label="Срок аренды (месяцы)"
+                          variant="warehouse-data"
+                          placeholder="Выберите срок"
+                        />
                       </div>
 
                       <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/20 p-3 text-sm text-[#273655] space-y-2">
@@ -2222,24 +2212,13 @@ const WarehouseData = () => {
                       </div>
 
                       <div className="space-y-2 sm:space-y-2.5">
-                        <span className="text-sm font-semibold text-[#273655]">
-                          Срок аренды (месяцы)
-                        </span>
-                        <Select
+                        <RentalPeriodSelect
                           value={individualMonths}
-                          onValueChange={setIndividualMonths}
-                        >
-                          <SelectTrigger className="h-12 rounded-2xl border-[#273655]/20 text-[#273655]">
-                            <SelectValue placeholder="Выберите срок" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 месяц</SelectItem>
-                            <SelectItem value="2">2 месяца</SelectItem>
-                            <SelectItem value="3">3 месяца</SelectItem>
-                            <SelectItem value="6">6 месяцев</SelectItem>
-                            <SelectItem value="12">12 месяцев</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          onChange={setIndividualMonths}
+                          label="Срок аренды (месяцы)"
+                          variant="warehouse-data"
+                          placeholder="Выберите срок"
+                        />
                       </div>
 
                       <div className="rounded-2xl border border-gray-200 p-4 space-y-3">

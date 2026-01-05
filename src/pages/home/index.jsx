@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 import DatePicker from "../../shared/ui/DatePicker";
+import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import sumkaImg from '../../assets/sumka.png';
 import motorcycleImg from '../../assets/motorcycle.png';
 import bicycleImg from '../../assets/bicycle.png';
@@ -37,14 +38,6 @@ import garazhImg from '../../assets/garazh.png';
 import skladImg from '../../assets/sklad.png';
 
 const PACKING_SERVICE_ESTIMATE = 4000;
-
-// Функция для правильного склонения слова "месяц"
-const getMonthLabel = (months) => {
-  const num = parseInt(months, 10);
-  if (num === 1) return "1 месяц";
-  if (num >= 2 && num <= 4) return `${num} месяца`;
-  return `${num} месяцев`;
-};
 
 const getServiceTypeName = (type) => {
   switch (type) {
@@ -2108,27 +2101,15 @@ const HomePage = memo(() => {
                   
                   {/* Срок аренды */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Срок аренды (месяцы):
-                    </label>
-                    <Select
+                    <RentalPeriodSelect
                       value={individualMonths}
-                      onValueChange={(value) => {
+                      onChange={(value) => {
                         setIndividualMonths(value);
                         setSubmitError(null);
                       }}
-                    >
-                      <SelectTrigger className="w-full h-12 text-base bg-gray-100 border-gray-200 rounded-3xl text-[#273655]">
-                        <SelectValue placeholder="Выберите срок аренды" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                          <SelectItem key={month} value={String(month)}>
-                            {getMonthLabel(month)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      label="Срок аренды (месяцы):"
+                      variant="individual-home"
+                    />
                   </div>
                   
                   {/* Перевозка вещей */}
@@ -2717,27 +2698,16 @@ const HomePage = memo(() => {
                   
                   {/* Срок аренды */}
                   <div className="mb-6">
-                    <Select
+                    <RentalPeriodSelect
                       value={cloudMonths}
-                      onValueChange={(value) => {
+                      onChange={(value) => {
                         setCloudMonths(value);
                         setSubmitError(null);
                       }}
-                    >
-                      <SelectTrigger className="w-full h-auto min-h-[60px] text-base border-gray-300 rounded-3xl bg-transparent flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4">
-                        <span className="text-sm text-[#273655] mb-1">Срок аренды:</span>
-                        <SelectValue className="text-base">
-                          {getMonthLabel(parseInt(cloudMonths))}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                          <SelectItem key={month} value={String(month)}>
-                            {getMonthLabel(month)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      label="Срок аренды:"
+                      variant="cloud-home"
+                      showLabelInside={true}
+                    />
                   </div>
                   
                   {/* Дополнительные услуги */}
