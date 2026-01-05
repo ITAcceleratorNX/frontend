@@ -31,14 +31,14 @@ import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
 import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
 import { ordersApi } from '../../../shared/api/ordersApi';
-import sumkaImg from '../../../assets/sumka.png';
-import motorcycleImg from '../../../assets/motorcycle.png';
-import bicycleImg from '../../../assets/bicycle.png';
-import furnitureImg from '../../../assets/furniture.png';
-import shinaImg from '../../../assets/shina.png';
-import sunukImg from '../../../assets/sunuk.png';
-import garazhImg from '../../../assets/garazh.png';
-import skladImg from '../../../assets/sklad.png';
+import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
+import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
+import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
+import furnitureImg from '../../../assets/cloud-tariffs/furniture.png';
+import shinaImg from '../../../assets/cloud-tariffs/shina.png';
+import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
+import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
+import skladImg from '../../../assets/cloud-tariffs/sklad.png';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -47,6 +47,10 @@ const getStorageTypeText = (type) => {
     return 'Облачное'
   }
   return type;
+};
+
+const getVolumeUnit = (storageType) => {
+  return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
 };
 
 const UserOrderCard = ({ order, onPayOrder }) => {
@@ -194,21 +198,22 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     return total;
   }, 0)
 
-  // Функция для получения изображения тарифа по названию
-  const getTariffImage = (tariffName) => {
-    if (!tariffName) return null;
-    const name = tariffName.toLowerCase();
-    // Для "Свои габариты" не показываем иконку
-    if (name.includes('свои габариты') || name.includes('кастом')) return null;
-    if (name.includes('сумки') || name.includes('коробки')) return sumkaImg;
-    if (name.includes('шины')) return shinaImg;
-    if (name.includes('мотоцикл')) return motorcycleImg;
-    if (name.includes('велосипед')) return bicycleImg;
-    if (name.includes('сундук')) return sunukImg;
-    if (name.includes('шкаф')) return furnitureImg;
-    if (name.includes('кладовка')) return skladImg;
-    if (name.includes('гараж')) return garazhImg;
-    return null;
+  // Функция для получения изображения и названия тарифа по tariff_type
+  const getTariffInfo = (tariffType) => {
+    if (!tariffType || tariffType === 'CUSTOM') return { image: null, name: 'Свои габариты' };
+    
+    const tariffMap = {
+      'CLOUD_TARIFF_SUMKA': { image: sumkaImg, name: 'Хранения сумки / коробки вещей' },
+      'CLOUD_TARIFF_SHINA': { image: shinaImg, name: 'Шины' },
+      'CLOUD_TARIFF_MOTORCYCLE': { image: motorcycleImg, name: 'Хранение мотоцикла' },
+      'CLOUD_TARIFF_BICYCLE': { image: bicycleImg, name: 'Хранение велосипед' },
+      'CLOUD_TARIFF_SUNUK': { image: sunukImg, name: 'Сундук до 1 м³' },
+      'CLOUD_TARIFF_FURNITURE': { image: furnitureImg, name: 'Шкаф до 2 м³' },
+      'CLOUD_TARIFF_SKLAD': { image: skladImg, name: 'Кладовка до 3 м³' },
+      'CLOUD_TARIFF_GARAZH': { image: garazhImg, name: 'Гараж до 9м³' }
+    };
+    
+    return tariffMap[tariffType] || { image: null, name: 'Свои габариты' };
   };
 
   // Расчет количества месяцев
@@ -367,26 +372,24 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           <h3 className="text-2xl font-bold mb-2">Заказ №{order.id}</h3>
           <p className="text-white/90 text-xs mb-1">Создан: {formatDate(order.created_at)}</p>
           <p className="text-white/90 text-sm mb-1">Тип: {getStorageTypeText(order.storage?.storage_type || 'INDIVIDUAL')}</p>
-          <p className="text-white/90 text-sm">Объем: {order.total_volume} м³</p>
+          <p className="text-white/90 text-sm">Объем: {order.total_volume} {getVolumeUnit(order.storage?.storage_type || 'INDIVIDUAL')}</p>
         </div>
         {/* Белый квадрат с идентификатором бокса или иконка тарифа для облачного хранения */}
-        {order.storage?.storage_type === 'CLOUD' && order.items && order.items.length > 0 ? (
+        {order.storage?.storage_type === 'CLOUD' ? (
           (() => {
-            const tariffImg = getTariffImage(order.items[0]?.name);
-            const tariffName = order.items[0]?.name || '';
-            const isCustomTariff = tariffName.toLowerCase().includes('свои габариты') || tariffName.toLowerCase().includes('кастом');
+            const tariffInfo = getTariffInfo(order.tariff_type);
             
-            if (tariffImg) {
+            if (tariffInfo.image) {
               return (
                 <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-4">
                   <img 
-                    src={tariffImg} 
-                    alt={tariffName} 
+                    src={tariffInfo.image} 
+                    alt={tariffInfo.name} 
                     className="max-w-full max-h-full object-contain"
                   />
                 </div>
               );
-            } else if (isCustomTariff) {
+            } else {
               // Для "Свои габариты" показываем текст вместо иконки
               return (
                 <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-3">
@@ -394,7 +397,6 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                 </div>
               );
             }
-            return null;
           })()
         ) : order.storage && order.storage.name ? (
           <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
@@ -443,7 +445,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                 <div className="flex items-center gap-2 flex-1">
                   <Plus className="w-5 h-5 text-white/90 flex-shrink-0" />
                   <span className="text-white/90 text-sm">
-                    {item.name || 'Вещь'} {item.volume || order.total_volume} м³ {item.cargo_mark ? getCargoMarkText(item.cargo_mark) : 'Обычный'}
+                    {item.name || 'Вещь'} {item.volume || order.total_volume} {getVolumeUnit(order.storage?.storage_type || 'INDIVIDUAL')} {item.cargo_mark ? getCargoMarkText(item.cargo_mark) : 'Обычный'}
                   </span>
                 </div>
                 {item.id && (

@@ -28,14 +28,14 @@ import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 import DatePicker from "../../shared/ui/DatePicker";
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
-import sumkaImg from '../../assets/sumka.png';
-import motorcycleImg from '../../assets/motorcycle.png';
-import bicycleImg from '../../assets/bicycle.png';
-import furnitureImg from '../../assets/furniture.png';
-import shinaImg from '../../assets/shina.png';
-import sunukImg from '../../assets/sunuk.png';
-import garazhImg from '../../assets/garazh.png';
-import skladImg from '../../assets/sklad.png';
+import sumkaImg from '../../assets/cloud-tariffs/sumka.png';
+import motorcycleImg from '../../assets/cloud-tariffs/motorcycle.png';
+import bicycleImg from '../../assets/cloud-tariffs/bicycle.png';
+import furnitureImg from '../../assets/cloud-tariffs/furniture.png';
+import shinaImg from '../../assets/cloud-tariffs/shina.png';
+import sunukImg from '../../assets/cloud-tariffs/sunuk.png';
+import garazhImg from '../../assets/cloud-tariffs/garazh.png';
+import skladImg from '../../assets/cloud-tariffs/sklad.png';
 
 const PACKING_SERVICE_ESTIMATE = 4000;
 

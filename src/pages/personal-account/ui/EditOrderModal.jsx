@@ -18,6 +18,14 @@ import dayjs from "dayjs";
 import {useAuth} from "@/shared/index.js";
 import { getServiceTypeName } from "@/shared/lib/utils/serviceNames";
 import { RentalPeriodSelect } from "@/shared/ui/RentalPeriodSelect";
+import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
+import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
+import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
+import furnitureImg from '../../../assets/cloud-tariffs/furniture.png';
+import shinaImg from '../../../assets/cloud-tariffs/shina.png';
+import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
+import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
+import skladImg from '../../../assets/cloud-tariffs/sklad.png';
 
 export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [error, setError] = useState("")
@@ -39,6 +47,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     const [gazelleService, setGazelleService] = useState(null) // { id, type, name }
     const [movingAddressTo, setMovingAddressTo] = useState('') // Адрес для возврата вещей (GAZELLE_TO)
     const [serviceOptions, setServiceOptions] = useState([]) // Все доступные услуги
+    const [selectedTariff, setSelectedTariff] = useState(null) // Выбранный тариф для облачного хранения
+    const [tariffPrices, setTariffPrices] = useState({}) // Цены тарифов
 
     const startDate = dayjs(order.start_date);
     const endDate = dayjs(order.end_date);
@@ -73,15 +83,54 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
         }
     }
 
+    // Обработчик изменения тарифа для облачного хранения
+    const handleTariffChange = (tariff) => {
+        setSelectedTariff(tariff);
+        // Если выбран тариф (не "Свои габариты"), обновляем объем и имя первого предмета
+        if (!tariff.isCustom && formData.order_items.length > 0) {
+            const volume = (tariff.baseVolume || tariff.maxVolume || 0).toFixed(2);
+            const updatedItems = formData.order_items.map((item, i) => {
+                if (i === 0) {
+                    return { ...item, volume, name: tariff.name };
+                }
+                return item;
+            });
+            setFormData((prev) => ({ ...prev, order_items: updatedItems }));
+        } else if (tariff.isCustom && formData.order_items.length > 0) {
+            // Если выбран "Свои габариты", обновляем имя первого предмета
+            const updatedItems = formData.order_items.map((item, i) => {
+                if (i === 0) {
+                    return { ...item, name: 'Свои габариты' };
+                }
+                return item;
+            });
+            setFormData((prev) => ({ ...prev, order_items: updatedItems }));
+        }
+    };
+
     const updateOrderItem = (index, field, value) => {
+        const storageType = order.storage?.storage_type || 'INDIVIDUAL';
+        const isCloud = storageType === 'CLOUD';
+        
+        // Если это облачное хранение и выбран тариф (не "Свои габариты"), блокируем изменение габаритов
+        if (isCloud && selectedTariff && !selectedTariff.isCustom && ["length", "width", "height"].includes(field)) {
+            return; // Не разрешаем изменение габаритов при выбранном тарифе
+        }
+        
         const updatedItems = formData.order_items.map((item, i) => {
             if (i === index) {
                 const updatedItem = { ...item, [field]: value }
                 if (["length", "width", "height"].includes(field)) {
                     const length = Number.parseFloat(updatedItem.length) || 0
                     const width = Number.parseFloat(updatedItem.width) || 0
-                    const height = Number.parseFloat(updatedItem.height) || 0
-                    updatedItem.volume = (length * width * height).toFixed(2)
+                    if (storageType === 'INDIVIDUAL') {
+                        // Для индивидуального хранения: площадь = длина * ширина
+                        updatedItem.volume = (length * width).toFixed(2)
+                    } else {
+                        // Для облачного хранения: объем = длина * ширина * высота
+                        const height = Number.parseFloat(updatedItem.height) || 0
+                        updatedItem.volume = (length * width * height).toFixed(2)
+                    }
                 }
                 return updatedItem
             }
@@ -89,6 +138,39 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
         })
         setFormData((prev) => ({ ...prev, order_items: updatedItems }))
     }
+
+    // Загрузка тарифов для облачного хранения
+    useEffect(() => {
+        const loadTariffPrices = async () => {
+            if (order?.storage?.storage_type !== 'CLOUD' || !isOpen) return;
+            try {
+                const pricesData = await paymentsApi.getPrices();
+                const tariffTypes = [
+                    'CLOUD_TARIFF_SUMKA',
+                    'CLOUD_TARIFF_SHINA',
+                    'CLOUD_TARIFF_MOTORCYCLE',
+                    'CLOUD_TARIFF_BICYCLE',
+                    'CLOUD_TARIFF_SUNUK',
+                    'CLOUD_TARIFF_FURNITURE',
+                    'CLOUD_TARIFF_SKLAD',
+                    'CLOUD_TARIFF_GARAZH'
+                ];
+                
+                const pricesMap = {};
+                pricesData.forEach(price => {
+                    if (tariffTypes.includes(price.type)) {
+                        pricesMap[price.type] = parseFloat(price.price);
+                    }
+                });
+                
+                setTariffPrices(pricesMap);
+            } catch (error) {
+                console.error("Ошибка при загрузке тарифов:", error);
+            }
+        };
+
+        loadTariffPrices();
+    }, [order?.storage?.storage_type, isOpen]);
 
     // Инициализация при открытии модалки
     useEffect(() => {
@@ -103,6 +185,27 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             const returnOrder = order.moving_orders?.find(mo => mo.status === 'PENDING_TO');
             const returnAddress = returnOrder?.address || '';
             setMovingAddressTo(returnAddress);
+            
+            // Инициализация тарифа для облачного хранения
+            if (order.storage?.storage_type === 'CLOUD') {
+                const tariffTypeMap = {
+                    'CLOUD_TARIFF_SUMKA': { id: 'sumka', name: 'Хранения сумки / коробки вещей', image: sumkaImg, baseVolume: 0.25, maxVolume: 0.25 },
+                    'CLOUD_TARIFF_SHINA': { id: 'shina', name: 'Шины', image: shinaImg, baseVolume: 0.5, maxVolume: 0.5 },
+                    'CLOUD_TARIFF_MOTORCYCLE': { id: 'motorcycle', name: 'Хранение мотоцикла', image: motorcycleImg, baseVolume: 1.8, maxVolume: 1.8 },
+                    'CLOUD_TARIFF_BICYCLE': { id: 'bicycle', name: 'Хранение велосипед', image: bicycleImg, baseVolume: 0.9, maxVolume: 0.9 },
+                    'CLOUD_TARIFF_SUNUK': { id: 'sunuk', name: 'Сундук до 1 м³', image: sunukImg, baseVolume: 1, maxVolume: 1 },
+                    'CLOUD_TARIFF_FURNITURE': { id: 'furniture', name: 'Шкаф до 2 м³', image: furnitureImg, baseVolume: 2, maxVolume: 2 },
+                    'CLOUD_TARIFF_SKLAD': { id: 'sklad', name: 'Кладовка до 3 м³', image: skladImg, baseVolume: 3, maxVolume: 3 },
+                    'CLOUD_TARIFF_GARAZH': { id: 'garazh', name: 'Гараж до 9м³', image: garazhImg, baseVolume: 9, maxVolume: 9 }
+                };
+                
+                if (order.tariff_type && order.tariff_type !== 'CUSTOM' && tariffTypeMap[order.tariff_type]) {
+                    setSelectedTariff({ ...tariffTypeMap[order.tariff_type], isCustom: false });
+                } else {
+                    // Если tariff_type === 'CUSTOM' или null/undefined, выбираем "Свои габариты"
+                    setSelectedTariff({ id: 'custom', name: 'Свои габариты', image: null, isCustom: true });
+                }
+            }
             
             setFormData({
                 start_date: new Date(order.start_date),
@@ -468,6 +571,27 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             // is_selected_moving должен быть true если есть любые moving_orders или GAZELLE_TO
             const isMovingSelected = formData.is_selected_moving || updatedMovingOrders.length > 0 || hasGazelleTo;
 
+            // Определяем tariff_type для облачного хранения
+            let tariff_type = null;
+            if (order.storage?.storage_type === 'CLOUD' && selectedTariff) {
+                if (!selectedTariff.isCustom) {
+                    const tariffTypeMap = {
+                        'sumka': 'CLOUD_TARIFF_SUMKA',
+                        'shina': 'CLOUD_TARIFF_SHINA',
+                        'motorcycle': 'CLOUD_TARIFF_MOTORCYCLE',
+                        'bicycle': 'CLOUD_TARIFF_BICYCLE',
+                        'sunuk': 'CLOUD_TARIFF_SUNUK',
+                        'furniture': 'CLOUD_TARIFF_FURNITURE',
+                        'sklad': 'CLOUD_TARIFF_SKLAD',
+                        'garazh': 'CLOUD_TARIFF_GARAZH'
+                    };
+                    tariff_type = tariffTypeMap[selectedTariff.id] || null;
+                } else {
+                    // Если isCustom = true, отправляем 'CUSTOM' вместо null
+                    tariff_type = 'CUSTOM';
+                }
+            }
+
             const payload = {
                 id: order.id,
                 months: months,
@@ -478,6 +602,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 })),
                 is_selected_moving: isMovingSelected,
                 is_selected_package: formData.is_selected_package && finalServices.length > 0,
+                ...(order.storage?.storage_type === 'CLOUD' && { tariff_type }),
             }
 
             if (payload.is_selected_package && finalServices.length > 0) {
@@ -556,6 +681,56 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                         </div>
                     </div>
 
+                    {/* Выбор тарифа для облачного хранения */}
+                    {order.storage?.storage_type === 'CLOUD' && (
+                        <div className="space-y-4">
+                            <Label className="text-lg sm:text-xl font-bold text-[#273655]">Тариф облачного хранения</Label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {(() => {
+                                    const regularTariffs = [
+                                        { id: 'sumka', name: 'Хранения сумки / коробки вещей', image: sumkaImg, baseVolume: 0.25, maxVolume: 0.25 },
+                                        { id: 'shina', name: 'Шины', image: shinaImg, baseVolume: 0.5, maxVolume: 0.5 },
+                                        { id: 'motorcycle', name: 'Хранение мотоцикла', image: motorcycleImg, baseVolume: 1.8, maxVolume: 1.8 },
+                                        { id: 'bicycle', name: 'Хранение велосипед', image: bicycleImg, baseVolume: 0.9, maxVolume: 0.9 },
+                                        { id: 'sunuk', name: 'Сундук до 1 м³', image: sunukImg, baseVolume: 1, maxVolume: 1 },
+                                        { id: 'furniture', name: 'Шкаф до 2 м³', image: furnitureImg, baseVolume: 2, maxVolume: 2 },
+                                        { id: 'sklad', name: 'Кладовка до 3 м³', image: skladImg, baseVolume: 3, maxVolume: 3 },
+                                        { id: 'garazh', name: 'Гараж до 9м³', image: garazhImg, baseVolume: 9, maxVolume: 9 }
+                                    ];
+                                    const customTariff = { id: 'custom', name: 'Свои габариты', image: null, isCustom: true };
+                                    const allTariffs = [...regularTariffs, customTariff];
+                                    
+                                    return allTariffs.map((tariff) => {
+                                        const isSelected = selectedTariff?.id === tariff.id;
+                                        return (
+                                            <button
+                                                key={tariff.id}
+                                                type="button"
+                                                onClick={() => handleTariffChange(tariff)}
+                                                className={`p-4 border-2 rounded-2xl transition-all ${
+                                                    isSelected 
+                                                        ? 'border-[#00A991] bg-[#00A991]/10' 
+                                                        : 'border-[#d7dbe6] hover:border-[#00A991]/50'
+                                                }`}
+                                            >
+                                                {tariff.image ? (
+                                                    <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
+                                                        <img src={tariff.image} alt={tariff.name} className="max-w-full max-h-full object-contain" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center bg-gray-100 rounded-lg">
+                                                        <span className="text-xs font-bold text-gray-600 text-center">Свои габариты</span>
+                                                    </div>
+                                                )}
+                                                <p className="text-xs font-medium text-[#273655] text-center">{tariff.name}</p>
+                                            </button>
+                                        );
+                                    });
+                                })()}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Предметы */}
                     {totalVolume > parseFloat(storage_available_volume) && (
                         <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
@@ -567,15 +742,18 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <Label className="text-lg sm:text-xl font-bold text-[#273655]">Ваши вещи</Label>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addOrderItem}
-                                className="flex items-center gap-2 text-sm h-10 w-full sm:w-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
-                            >
-                                <Plus className="w-4 h-4" /> Добавить
-                            </Button>
+                            {/* Кнопка "Добавить" показывается только для INDIVIDUAL или для CLOUD с тарифом "Свои габариты" */}
+                            {(order.storage?.storage_type !== 'CLOUD' || (selectedTariff && selectedTariff.isCustom)) && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addOrderItem}
+                                    className="flex items-center gap-2 text-sm h-10 w-full sm:w-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
+                                >
+                                    <Plus className="w-4 h-4" /> Добавить
+                                </Button>
+                            )}
                         </div>
                         {formData.order_items.map((item, index) => (
                             <div key={index} className="space-y-4 p-4 sm:p-6 border border-[#d7dbe6] rounded-2xl bg-white shadow-sm">
@@ -591,45 +769,61 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                 </div>
 
                                 {/* Размеры в сетке */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                                    <div>
-                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Длина (м)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            value={item.length}
-                                            onChange={(e) => updateOrderItem(index, "length", e.target.value)}
-                                            placeholder="1.2"
-                                            className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Ширина (м)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            value={item.width}
-                                            onChange={(e) => updateOrderItem(index, "width", e.target.value)}
-                                            placeholder="0.8"
-                                            className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Высота (м)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            value={item.height}
-                                            onChange={(e) => updateOrderItem(index, "height", e.target.value)}
-                                            placeholder="2.0"
-                                            className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Объём (м³)</Label>
-                                        <Input type="text" value={item.volume} disabled className="h-12 bg-gray-100 text-sm rounded-3xl border-[#d7dbe6] text-[#6B6B6B]" />
-                                    </div>
-                                </div>
+                                {(() => {
+                                    const storageType = order.storage?.storage_type || 'INDIVIDUAL';
+                                    const isIndividual = storageType === 'INDIVIDUAL';
+                                    const isCloud = storageType === 'CLOUD';
+                                    const isDimensionsDisabled = isCloud && selectedTariff && !selectedTariff.isCustom;
+                                    
+                                    return (
+                                        <div className={`grid ${isIndividual ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} gap-3 sm:gap-4`}>
+                                            <div>
+                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Длина (м)</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={item.length}
+                                                    onChange={(e) => updateOrderItem(index, "length", e.target.value)}
+                                                    placeholder="1.2"
+                                                    disabled={isDimensionsDisabled}
+                                                    className={`h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Ширина (м)</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={item.width}
+                                                    onChange={(e) => updateOrderItem(index, "width", e.target.value)}
+                                                    placeholder="0.8"
+                                                    disabled={isDimensionsDisabled}
+                                                    className={`h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                />
+                                            </div>
+                                            {isCloud && (
+                                                <div>
+                                                    <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Высота (м)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={item.height}
+                                                        onChange={(e) => updateOrderItem(index, "height", e.target.value)}
+                                                        placeholder="2.0"
+                                                        disabled={isDimensionsDisabled}
+                                                        className={`h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                    />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">
+                                                    {isIndividual ? 'Площадь (м²)' : 'Объём (м³)'}
+                                                </Label>
+                                                <Input type="text" value={item.volume} disabled className="h-12 bg-gray-100 text-sm rounded-3xl border-[#d7dbe6] text-[#6B6B6B]" />
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
 
                                 {/* Тип груза и кнопка удаления */}
                                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
