@@ -10,8 +10,17 @@ import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import ChangePasswordModal from './ChangePasswordModal';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, CheckCircle2 } from 'lucide-react';
 import IinTooltip from '../../../shared/ui/IinTooltip';
+import { usersApi } from '../../../shared/api/usersApi';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../../../components/ui/dialog';
 
 
 // Мемоизированный компонент личных данных с дополнительной оптимизацией
@@ -19,6 +28,10 @@ const PersonalData = memo(() => {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isPhoneVerificationModalOpen, setIsPhoneVerificationModalOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const { user, isAuthenticated, isLoading, refetchUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,13 +54,71 @@ const PersonalData = memo(() => {
   // Получаем текущие значения формы для валидации
   const formValues = watch();
 
+  // Функция форматирования номера телефона
+  const formatPhoneNumber = (value) => {
+    // Удаляем все символы кроме цифр
+    const numbers = value.replace(/\D/g, '');
+    
+    // Если начинается с 8, заменяем на 7
+    let cleaned = numbers;
+    if (cleaned.startsWith('8')) {
+      cleaned = '7' + cleaned.slice(1);
+    }
+    
+    // Если не начинается с 7, добавляем 7
+    if (cleaned && !cleaned.startsWith('7')) {
+      cleaned = '7' + cleaned;
+    }
+    
+    // Ограничиваем до 11 цифр (7 + 10 цифр)
+    cleaned = cleaned.slice(0, 11);
+    
+    // Форматируем в формат +7 (XXX) XXX-XX-XX
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted = '+7';
+      if (cleaned.length > 1) {
+        formatted += ' (' + cleaned.slice(1, 4);
+      }
+      if (cleaned.length > 4) {
+        formatted += ') ' + cleaned.slice(4, 7);
+      }
+      if (cleaned.length > 7) {
+        formatted += '-' + cleaned.slice(7, 9);
+      }
+      if (cleaned.length > 9) {
+        formatted += '-' + cleaned.slice(9, 11);
+      }
+      if (cleaned.length > 4 && cleaned.length <= 7) {
+        formatted += ')';
+      }
+    }
+    
+    return formatted;
+  };
+
+  // Функция для преобразования телефона в формат для отображения
+  const formatPhoneForDisplay = (phone) => {
+    if (!phone) return '';
+    // Удаляем все символы кроме цифр
+    const numbers = phone.replace(/\D/g, '');
+    // Если номер начинается с 8, заменяем на 7
+    let cleaned = numbers.startsWith('8') ? '7' + numbers.slice(1) : numbers;
+    // Если не начинается с 7, добавляем 7
+    if (cleaned && !cleaned.startsWith('7')) {
+      cleaned = '7' + cleaned;
+    }
+    // Форматируем
+    return formatPhoneNumber(cleaned);
+  };
+
   // Заполняем форму данными пользователя, когда они доступны, используя зависимость от объекта user
   useEffect(() => {
     if (user) {
       reset({
         name: user.name || '',
         email: user.email || '',
-        phone: user.phone || '',
+        phone: formatPhoneForDisplay(user.phone || ''),
         iin: user.iin || '',
         address: user.address || '',
         bday: user.bday || ''
@@ -84,10 +155,35 @@ const PersonalData = memo(() => {
 
 
 
+  // Функция для преобразования отформатированного телефона в формат для отправки на сервер
+  const normalizePhoneForSubmit = (phone) => {
+    if (!phone) return '';
+    // Удаляем все символы кроме цифр
+    const numbers = phone.replace(/\D/g, '');
+    // Если начинается с 8, заменяем на 7
+    let cleaned = numbers.startsWith('8') ? '7' + numbers.slice(1) : numbers;
+    // Если не начинается с 7, добавляем 7
+    if (cleaned && !cleaned.startsWith('7')) {
+      cleaned = '7' + cleaned;
+    }
+    // Возвращаем в формате +7XXXXXXXXXX
+    return cleaned.startsWith('7') ? '+7' + cleaned.slice(1) : cleaned;
+  };
+
   // Мемоизируем функцию обработки обновления данных пользователя
   const onSubmit = async (formData) => {
+    // Нормализуем телефон перед отправкой
+    const normalizedData = {
+      ...formData,
+      phone: normalizePhoneForSubmit(formData.phone)
+    };
+
     // Проверяем, изменились ли данные, чтобы избежать ненужных запросов
-    const hasChanges = Object.keys(formData).some(key => formData[key] !== defaultValues[key]);
+    const hasChanges = Object.keys(normalizedData).some(key => {
+      const currentValue = normalizedData[key];
+      const defaultValue = key === 'phone' ? normalizePhoneForSubmit(defaultValues[key]) : defaultValues[key];
+      return currentValue !== defaultValue;
+    });
 
     if (!hasChanges) {
       toast.info('Данные не изменились');
@@ -97,7 +193,7 @@ const PersonalData = memo(() => {
 
     try {
       setSaving(true);
-      const response = await api.put('/users/me', formData);
+      const response = await api.put('/users/me', normalizedData);
 
       if (response.status === 200) {
         // Инвалидируем кеш пользователя, чтобы запросить свежие данные
@@ -139,6 +235,90 @@ const PersonalData = memo(() => {
       reset(defaultValues);
     }
     clearErrors();
+  };
+
+  // Обработчик изменения телефона
+  const handlePhoneChange = (e) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setValue('phone', formatted, { shouldValidate: true });
+  };
+
+  // Отправка SMS кода для верификации телефона
+  const handleSendVerificationCode = async () => {
+    const phoneFormatted = formValues.phone || user?.phone;
+    if (!phoneFormatted) {
+      toast.error('Пожалуйста, укажите номер телефона');
+      return;
+    }
+
+    // Нормализуем телефон перед отправкой (убираем форматирование)
+    const phone = normalizePhoneForSubmit(phoneFormatted);
+
+    try {
+      setSendingCode(true);
+      await usersApi.sendPhoneVerificationCode(phone);
+      toast.success('Код подтверждения отправлен на ваш телефон');
+      setIsPhoneVerificationModalOpen(true);
+    } catch (error) {
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.error || 'Не удалось отправить код подтверждения';
+      
+      // Обработка ограничения частоты запросов
+      if (error.response?.status === 429 && errorData?.code === 'RATE_LIMIT_EXCEEDED') {
+        const remainingSeconds = errorData?.remainingSeconds || 60;
+        toast.error(
+          <div>
+            <div><strong>Слишком много запросов</strong></div>
+            <div style={{ marginTop: 5 }}>
+              Пожалуйста, подождите {remainingSeconds} секунд перед повторной отправкой кода
+            </div>
+          </div>,
+          {
+            autoClose: 5000,
+          }
+        );
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  // Верификация телефона по коду
+  const handleVerifyPhone = async () => {
+    const phone = formValues.phone || user?.phone;
+    if (!phone) {
+      toast.error('Пожалуйста, укажите номер телефона');
+      return;
+    }
+
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast.error('Введите 6-значный код подтверждения');
+      return;
+    }
+
+    try {
+      setVerifying(true);
+      const response = await usersApi.verifyPhone(verificationCode, phone);
+      
+      // Обновляем данные пользователя
+      queryClient.invalidateQueries({ queryKey: [USER_QUERY_KEY] });
+      queryClient.setQueryData([USER_QUERY_KEY], {
+        ...user,
+        phone_verified: true
+      });
+
+      toast.success('Телефон успешно верифицирован');
+      setIsPhoneVerificationModalOpen(false);
+      setVerificationCode('');
+      refetchUser();
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Неверный код подтверждения';
+      toast.error(errorMessage);
+    } finally {
+      setVerifying(false);
+    }
   };
 
   // Отображение состояния загрузки
@@ -219,21 +399,46 @@ const PersonalData = memo(() => {
                   className="bg-white rounded-lg"
                   labelClassName="font-sf-pro-text text-[#000000]"
                 />
-                <Input
-                  label="Телефон"
-                  placeholder="+7 (XXX) XXX-XX-XX"
-                  disabled={!isEditing}
-                  {...register('phone', {
-                    required: 'Телефон обязателен для заполнения',
-                    pattern: {
-                      value: /^\+?[0-9]{10,15}$/,
-                      message: 'Некорректный номер телефона'
-                    }
-                  })}
-                  error={errors.phone?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
-                />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      label="Телефон"
+                      placeholder="+7 (XXX) XXX-XX-XX"
+                      type="tel"
+                      disabled={!isEditing}
+                      {...register('phone', {
+                        required: 'Телефон обязателен для заполнения',
+                        pattern: {
+                          value: /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/,
+                          message: 'Номер телефона должен быть в формате +7 (XXX) XXX-XX-XX'
+                        },
+                        onChange: handlePhoneChange
+                      })}
+                      error={errors.phone?.message}
+                      className="bg-white rounded-lg flex-1"
+                      labelClassName="font-sf-pro-text text-[#000000]"
+                    />
+                    {!isEditing && user?.phone && (
+                      <div className="flex items-center gap-2 mt-6">
+                        {user?.phone_verified ? (
+                          <div className="flex items-center gap-1 text-green-600 text-sm">
+                            <CheckCircle2 className="w-5 h-5" />
+                            <span>Верифицирован</span>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleSendVerificationCode}
+                            disabled={sendingCode}
+                            className="text-sm px-3 py-1.5 rounded-md border border-[#00A991] bg-white text-[#00A991] hover:bg-[#00A991] hover:text-white transition-colors duration-200 font-medium disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:ring-offset-2"
+                          >
+                            {sendingCode ? 'Отправка...' : 'Верифицировать'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <Input
                   label="Адрес"
                   placeholder="г. Алматы, ул. Примерная, д. 123"
@@ -392,6 +597,54 @@ const PersonalData = memo(() => {
           userEmail={user?.email}
         />
       )}
+
+      {/* Модалка верификации телефона */}
+      <Dialog open={isPhoneVerificationModalOpen} onOpenChange={setIsPhoneVerificationModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Верификация телефона</DialogTitle>
+            <DialogDescription>
+              Введите 6-значный код подтверждения, отправленный на номер {formatPhoneForDisplay(formValues.phone || user?.phone)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              label="Код подтверждения"
+              placeholder="000000"
+              value={verificationCode}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                setVerificationCode(value);
+              }}
+              maxLength={6}
+              className="bg-white rounded-lg text-center text-2xl tracking-widest"
+              labelClassName="font-sf-pro-text text-[#000000]"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsPhoneVerificationModalOpen(false);
+                setVerificationCode('');
+              }}
+              disabled={verifying}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleVerifyPhone}
+              disabled={verifying || verificationCode.length !== 6}
+              className="bg-[#1e2c4f] text-white hover:bg-[#1d2742]"
+            >
+              {verifying ? 'Проверка...' : 'Подтвердить'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
 
   );

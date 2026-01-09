@@ -90,5 +90,31 @@ export const usersApi = {
       console.error('Ошибка при обновлении разрешения:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Отправка SMS кода для верификации телефона
+  sendPhoneVerificationCode: async (phone) => {
+    try {
+      console.log('Отправка запроса на отправку SMS кода:', phone);
+      const response = await api.post('/users/me/phone/send-verification-code', { phone });
+      console.log('SMS код отправлен:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при отправке SMS кода:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Верификация телефона по коду
+  verifyPhone: async (code, phone) => {
+    try {
+      console.log('Отправка запроса на верификацию телефона');
+      const response = await api.post('/users/me/phone/verify', { code, phone });
+      console.log('Телефон успешно верифицирован:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при верификации телефона:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

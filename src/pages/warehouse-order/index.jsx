@@ -697,6 +697,32 @@ const WarehouseOrderPage = memo(() => {
       const errorData = error.response?.data;
       const errorMessage = errorData?.message || errorData?.error || error.message || "Не удалось создать заказ. Попробуйте позже.";
       
+      // Проверяем, не верифицирован ли телефон
+      const isPhoneNotVerified = error.response?.status === 400 && (
+          errorMessage.includes('Phone number must be verified') ||
+          errorMessage.includes('phone number') ||
+          errorData?.code === 'PHONE_NOT_VERIFIED'
+      );
+      
+      if (isPhoneNotVerified) {
+        toast.error(
+          <div>
+            <div><strong>Телефон не верифицирован</strong></div>
+            <div style={{ marginTop: 5 }}>
+              Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.
+            </div>
+          </div>,
+          {
+            autoClose: 5000,
+          }
+        );
+        setTimeout(() => {
+          navigate("/personal-account", { state: { activeSection: "personal" } });
+        }, 2000);
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Проверяем, достигнут ли лимит активных заказов
       const isMaxOrdersError = error.response?.status === 403 && (
           errorMessage.includes('максимальное количество боксов') || 

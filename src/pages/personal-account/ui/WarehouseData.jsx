@@ -2058,9 +2058,38 @@ const WarehouseData = () => {
                             }, 1500);
                           } catch (error) {
                             console.error('Ошибка при создании заказа:', error);
-                            const errorMessage = error.response?.data?.message || 
-                                                error.response?.data?.details?.[0]?.message ||
+                            const errorData = error.response?.data;
+                            const errorMessage = errorData?.message || 
+                                                errorData?.details?.[0]?.message ||
+                                                errorData?.error ||
                                                 'Не удалось создать заказ. Попробуйте позже.';
+                            
+                            // Проверяем, не верифицирован ли телефон
+                            const isPhoneNotVerified = error.response?.status === 400 && (
+                                errorMessage.includes('Phone number must be verified') ||
+                                errorMessage.includes('phone number') ||
+                                errorData?.code === 'PHONE_NOT_VERIFIED'
+                            );
+                            
+                            if (isPhoneNotVerified) {
+                              toast.error(
+                                <div>
+                                  <div><strong>Телефон не верифицирован</strong></div>
+                                  <div style={{ marginTop: 5 }}>
+                                    Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.
+                                  </div>
+                                </div>,
+                                {
+                                  autoClose: 5000,
+                                }
+                              );
+                              setTimeout(() => {
+                                navigate('/personal-account', { state: { activeSection: 'personal' } });
+                              }, 2000);
+                              setIsCreatingOrder(false);
+                              return;
+                            }
+                            
                             setOrderError(errorMessage);
                             toast.error(errorMessage);
                           } finally {
@@ -2940,9 +2969,38 @@ const WarehouseData = () => {
                             }, 1500);
                           } catch (error) {
                             console.error('Ошибка при создании заказа:', error);
-                            const errorMessage = error.response?.data?.message || 
-                                                error.response?.data?.details?.[0]?.message ||
+                            const errorData = error.response?.data;
+                            const errorMessage = errorData?.message || 
+                                                errorData?.details?.[0]?.message ||
+                                                errorData?.error ||
                                                 'Не удалось создать заказ. Попробуйте позже.';
+                            
+                            // Проверяем, не верифицирован ли телефон
+                            const isPhoneNotVerified = error.response?.status === 400 && (
+                                errorMessage.includes('Phone number must be verified') ||
+                                errorMessage.includes('phone number') ||
+                                errorData?.code === 'PHONE_NOT_VERIFIED'
+                            );
+                            
+                            if (isPhoneNotVerified) {
+                              toast.error(
+                                <div>
+                                  <div><strong>Телефон не верифицирован</strong></div>
+                                  <div style={{ marginTop: 5 }}>
+                                    Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.
+                                  </div>
+                                </div>,
+                                {
+                                  autoClose: 5000,
+                                }
+                              );
+                              setTimeout(() => {
+                                navigate('/personal-account', { state: { activeSection: 'personal' } });
+                              }, 2000);
+                              setIsCreatingOrder(false);
+                              return;
+                            }
+                            
                             setOrderError(errorMessage);
                             toast.error(errorMessage);
                           } finally {
