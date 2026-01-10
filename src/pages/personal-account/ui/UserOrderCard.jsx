@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  getOrderStatusText, 
-  getOrderStatusClass,
-  getPaymentStatusText,
+import {
   getContractStatusText,
   getCargoMarkText 
 } from '../../../shared/lib/types/orders';
@@ -25,7 +22,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { useExtendOrder } from '../../../shared/lib/hooks/use-orders';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Pencil, Zap, CheckCircle, Star, FileText, Download, Plus, Truck, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
@@ -532,6 +529,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           </div>
         </>
       )}
+
       {order.status === 'INACTIVE' && (
         <div className="mb-8 flex justify-end">
           <button
@@ -556,7 +554,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           
           <div className="flex flex-col items-end gap-2">
             {/* Кнопка Оплатить - показывается после подтверждения менеджером (APPROVED или PROCESSING) и если не оплачено */}
-            {((order.status === 'APPROVED' || order.status === 'PROCESSING') && order.payment_status === 'UNPAID') ? (
+            {((order.status === 'PROCESSING' || order.status === 'ACTIVE') && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED') ? (
               <button
                 onClick={() => onPayOrder(order)}
                 className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-3xl hover:bg-white/90 transition-colors"
@@ -577,16 +575,6 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             
             {/* Кнопка Расторгнуть - для активных оплаченных заказов */}
             {order.status === 'ACTIVE' && order.payment_status === 'PAID' ? (
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="px-6 py-2.5 bg-[#B0E4DD] text-[#004743] text-sm font-medium rounded-3xl hover:bg-[#9DD4CC] transition-colors"
-              >
-                Расторгнуть
-              </button>
-            ) : null}
-            
-            {/* Кнопка Расторгнуть - для PROCESSING оплаченных заказов */}
-            {order.status === 'PROCESSING' && order.payment_status === 'PAID' ? (
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
                 className="px-6 py-2.5 bg-[#B0E4DD] text-[#004743] text-sm font-medium rounded-3xl hover:bg-[#9DD4CC] transition-colors"

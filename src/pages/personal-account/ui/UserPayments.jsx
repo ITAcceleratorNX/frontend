@@ -30,15 +30,12 @@ const UserPayments = () => {
     
     switch (activeFilter) {
       case 'active':
-        // Активные - есть хотя бы один неоплаченный платеж
-        return payments.filter(order => 
-          order.order_payment?.some(p => p.status === 'UNPAID')
+        return payments.filter(order =>
+          order.status === 'ACTIVE'
         );
       case 'archive':
-        // Архив - все платежи оплачены или заказ неактивен
-        return payments.filter(order => 
-          order.status === 'INACTIVE' || 
-          (order.order_payment && order.order_payment.every(p => p.status === 'PAID'))
+        return payments.filter(order =>
+          order.status !== 'ACTIVE'
         );
       default:
         return payments;
@@ -146,10 +143,6 @@ const UserPayments = () => {
                 <PaymentCard
                   key={order.id}
                   order={order}
-                  onPayOrder={() => {
-                    // Handle payment
-                    console.log('Pay order:', order);
-                  }}
                 />
               ))}
             </div>

@@ -207,8 +207,7 @@ const UserOrdersPage = () => {
                   key={order.id}
                   order={order}
                   onPayOrder={(order) => {
-                    // Handle payment
-                    console.log('Pay order:', order);
+                    navigate("/personal-account", { state: { activeSection: "payments" } });
                   }}
                 />
               ))}

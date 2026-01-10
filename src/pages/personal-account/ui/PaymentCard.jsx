@@ -44,14 +44,13 @@ const getMonthName = (month) => {
   return months[month - 1] || month;
 };
 
-const PaymentCard = ({ order, onPayOrder }) => {
+const PaymentCard = ({ order }) => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
 
   // Определяем фон карточки: зеленый градиент для оплаченных, серый для неоплаченных
   const getCardBackground = () => {
-    const hasUnpaid = order.order_payment?.some(p => p.status === 'UNPAID');
-    if (hasUnpaid) {
-      return 'bg-[#999999]'; // Серый для неоплаченных
+    if (order?.payment_status !== 'PAID') {
+      return 'bg-[#999999]';
     }
     return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для оплаченных
   };
@@ -158,7 +157,7 @@ const PaymentCard = ({ order, onPayOrder }) => {
                       Скачать PDF - чек
                     </button>
                   </>
-                ) : (
+                ) : payment.status === 'MANUAL' ? (
                   <>
                     <button
                       onClick={() => handlePay(payment.id)}
@@ -167,15 +166,25 @@ const PaymentCard = ({ order, onPayOrder }) => {
                     >
                       Оплатить
                     </button>
+                  </>
+                ) : payment.status === 'UNPAID' && order.status === 'PROCESSING' && payment.payment_page_url ? (
+                  <>
                     <button
-                      onClick={() => handleDownloadReceipt(payment.id)}
-                      disabled={downloadReceiptMutation.isLoading}
-                      className="text-white/90 text-xs font-medium hover:text-white transition-colors underline"
+                        onClick={() => {
+                          window.open(payment.payment_page_url, '_blank');
+                          toast.success('Перенаправляем на страницу оплаты...', {
+                            position: "top-right",
+                            autoClose: 3000,
+                          });
+                          window.location.reload();
+                        }}
+                        disabled={createManualPaymentMutation.isLoading}
+                        className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
                     >
-                      Скачать PDF - чек
+                      Оплатить
                     </button>
                   </>
-                )}
+                ): null}
               </div>
             </div>
           ))}
