@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AlertCircle, Clock } from 'lucide-react';
 
 /**
  * Компонент таймера обратного отсчета до автоматической отмены заказа
@@ -9,40 +9,42 @@ const OrderCancelTimer = ({ order }) => {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
 
-  useEffect(() => {
-    // Проверяем, подходит ли заказ под критерии автоотмены
-    const shouldShowTimer = 
+  // Мемоизируем проверку критериев для оптимизации
+  const shouldShowTimer = useMemo(() => {
+    return (
       order.status === 'PROCESSING' &&
       order.contract_status === 'SIGNED' &&
-      order.payment_status === 'UNPAID';
+      order.payment_status === 'UNPAID'
+    );
+  }, [order.status, order.contract_status, order.payment_status]);
 
-    if (!shouldShowTimer) {
-      setTimeRemaining(null);
-      return;
-    }
+  // Мемоизируем дату подписания контракта
+  const contractSignedAt = useMemo(() => {
+    if (!shouldShowTimer) return null;
 
-    // Находим дату подписания контракта
-    // Сначала проверяем, есть ли контракты в данных заказа
-    let contractSignedAt = null;
+    let signedAt = null;
 
     if (order.contracts && order.contracts.length > 0) {
-      // Находим последний подписанный контракт (status 2 или 3)
       const signedContract = order.contracts.find(
         contract => contract.status === 2 || contract.status === 3
       );
-      if (signedContract && signedContract.created_at) {
-        contractSignedAt = new Date(signedContract.created_at);
+      if (signedContract?.created_at) {
+        signedAt = new Date(signedContract.created_at);
       }
     }
 
-    // Если нет данных о контракте, используем дату создания заказа как fallback
-    // (хотя это не совсем точно, но лучше чем ничего)
-    if (!contractSignedAt && order.created_at) {
-      contractSignedAt = new Date(order.created_at);
+    // Fallback на дату создания заказа, если контракт не найден
+    if (!signedAt && order.created_at) {
+      signedAt = new Date(order.created_at);
     }
 
-    if (!contractSignedAt) {
+    return signedAt;
+  }, [shouldShowTimer, order.contracts, order.created_at]);
+
+  useEffect(() => {
+    if (!shouldShowTimer || !contractSignedAt) {
       setTimeRemaining(null);
+      setIsExpired(false);
       return;
     }
 
@@ -64,61 +66,43 @@ const OrderCancelTimer = ({ order }) => {
       setIsExpired(false);
     };
 
-    // Обновляем таймер сразу и затем каждую секунду
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [order]);
+  }, [shouldShowTimer, contractSignedAt]);
 
   // Не показываем таймер, если заказ не подходит под критерии
-  if (!timeRemaining && !isExpired) {
+  if (!shouldShowTimer || (!timeRemaining && !isExpired)) {
     return null;
   }
 
-  // Если время истекло
+  // Если время истекло - компактный бейдж в стиле карточки
   if (isExpired || (timeRemaining && timeRemaining.minutes === 0 && timeRemaining.seconds === 0)) {
     return (
-      <div className="mt-3 p-3 bg-red-50 border-2 border-red-500 rounded-lg">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-red-700">
-              Время на оплату истекло
-            </p>
-            <p className="text-xs text-red-600 mt-0.5">
-              Заказ будет автоматически отменен в ближайшее время. Пожалуйста, обратитесь в поддержку.
-            </p>
-          </div>
-        </div>
+      <div className="mt-3 flex items-center gap-2">
+        <AlertCircle className="w-3.5 h-3.5 text-white/90 flex-shrink-0" />
+        <span className="text-white/90 text-xs">
+          Время на оплату истекло
+        </span>
       </div>
     );
   }
 
-  // Показываем таймер
+  // Компактный таймер в стиле бейджей из UserOrderCard
+  const isUrgent = timeRemaining.minutes < 10;
+  
   return (
-    <div className="mt-3 p-3 bg-orange-50 border-2 border-orange-400 rounded-lg animate-pulse">
-      <div className="flex items-center gap-2">
-        <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 animate-pulse" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-orange-700 mb-1">
-            ⏰ Время на оплату ограничено!
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-orange-600">
-              Заказ будет автоматически отменен через:
-            </span>
-            <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 rounded border border-orange-300">
-              <span className="text-lg font-bold text-orange-700 tabular-nums">
-                {String(timeRemaining.minutes).padStart(2, '0')}:
-                {String(timeRemaining.seconds).padStart(2, '0')}
-              </span>
-            </div>
-          </div>
-          <p className="text-xs text-orange-600 mt-1">
-            Пожалуйста, оплатите заказ, чтобы сохранить бронирование.
-          </p>
-        </div>
+    <div className="mt-3 flex items-center gap-2">
+      <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${isUrgent ? 'text-orange-300' : 'text-white/90'}`} />
+      <span className="text-white/90 text-xs">
+        Оплата через:
+      </span>
+      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full ${isUrgent ? 'bg-orange-50 border border-orange-200' : 'bg-white'}`}>
+        <span className={`text-xs font-bold tabular-nums ${isUrgent ? 'text-orange-700' : 'text-gray-700'}`}>
+          {String(timeRemaining.minutes).padStart(2, '0')}:
+          {String(timeRemaining.seconds).padStart(2, '0')}
+        </span>
       </div>
     </div>
   );

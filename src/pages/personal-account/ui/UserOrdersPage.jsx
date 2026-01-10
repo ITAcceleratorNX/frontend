@@ -37,14 +37,14 @@ const UserOrdersPage = () => {
     if (!orders) return [];
     
     switch (activeFilter) {
+      case 'in_active':
+        return orders.filter(order => order.status === 'INACTIVE');
+      case 'approved':
+        return orders.filter(order => order.status === 'APPROVED' || order.status === 'PROCESSING');
       case 'active':
         return orders.filter(order => order.status === 'ACTIVE');
-      case 'approved':
-        return orders.filter(order => order.status === 'APPROVED');
-      case 'processing':
-        return orders.filter(order => order.status === 'PROCESSING');
       case 'archive':
-        return orders.filter(order => order.status === 'INACTIVE' || order.status === 'RETURN');
+        return orders.filter(order => order.status === 'CANCELED' || order.status === 'FINISHED');
       default:
         return orders;
     }
@@ -164,25 +164,25 @@ const UserOrdersPage = () => {
                   <span>Все</span>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="active"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+                    value="in_active"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
-                  <Zap className="w-4 h-4" />
-                  <span>Активные</span>
+                  <Star className="w-4 h-4" />
+                  <span>В обработке у менеджера</span>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="approved"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+                    value="approved"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>Подтверждено</span>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="processing"
+                  value="active"
                   className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
                 >
-                  <Star className="w-4 h-4" />
-                  <span>В обработке у менеджера</span>
+                  <Zap className="w-4 h-4" />
+                  <span>Активные</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="archive"

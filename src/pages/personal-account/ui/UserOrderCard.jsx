@@ -320,13 +320,11 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   
   // Определяем фон карточки: зеленый градиент для активных/оплаченных, серый для неоплаченных/в обработке
   const getCardBackground = () => {
-    if (order.status === 'ACTIVE' && order.payment_status === 'PAID') {
+    if (order.status === 'ACTIVE') {
       return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для активных/оплаченных
-    }
-    if (order.status === 'PROCESSING' || order.payment_status === 'UNPAID') {
+    } else {
       return 'bg-[#999999]'; // Серый для неоплаченных/в обработке
     }
-    return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // По умолчанию зеленый
   };
 
   const cardBackground = getCardBackground();
@@ -341,19 +339,13 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             Активный
           </span>
         )}
-        {order.status === 'PROCESSING' && (
+        {order.status === 'INACTIVE' && (
           <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
             <Star className="w-4 h-4 text-gray-500" />
             В обработке у менеджера
           </span>
         )}
-        {order.payment_status === 'PAID' && order.status !== 'PROCESSING' && order.status !== 'ACTIVE' && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
-            <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
-            Оплачен
-          </span>
-        )}
-        {order.payment_status === 'PAID' && order.status === 'ACTIVE' && (
+        {order.payment_status === 'PAID' && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
             <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
             Оплачен
@@ -540,14 +532,16 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           </div>
         </>
       )}
-      <div className="mb-8 flex justify-end">
-        <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="text-white text-sm font-medium hover:text-white/80 transition-colors underline"
-        >
-          Редактировать
-        </button>
-      </div>
+      {order.status === 'INACTIVE' && (
+        <div className="mb-8 flex justify-end">
+          <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="text-white text-sm font-medium hover:text-white/80 transition-colors underline"
+          >
+            Редактировать
+          </button>
+        </div>
+      )}
 
       {/* Итого и кнопки действий */}
       <div className="mt-6">
