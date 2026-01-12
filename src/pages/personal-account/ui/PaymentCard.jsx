@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
 import { toast } from 'react-toastify';
+import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
+import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
+import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
+import furnitureImg from '../../../assets/cloud-tariffs/furniture.png';
+import shinaImg from '../../../assets/cloud-tariffs/shina.png';
+import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
+import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
+import skladImg from '../../../assets/cloud-tariffs/sklad.png';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -46,6 +54,21 @@ const getMonthName = (month) => {
 
 const PaymentCard = ({ order }) => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+  const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
+
+  // Определяем текущий месяц и год
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1; // месяцы в JS с 0, а в данных с 1
+  const currentYear = now.getFullYear();
+
+  // Разделяем платежи на текущий и остальные
+  const payments = order.order_payment || [];
+  const currentPayment = payments.find(
+    (payment) => payment.month === currentMonth && payment.year === currentYear
+  );
+  const otherPayments = payments.filter(
+    (payment) => !(payment.month === currentMonth && payment.year === currentYear)
+  );
 
   // Определяем фон карточки: зеленый градиент для оплаченных, серый для неоплаченных
   const getCardBackground = () => {
@@ -80,6 +103,24 @@ const PaymentCard = ({ order }) => {
     }
   });
 
+  // Функция для получения изображения и названия тарифа по tariff_type
+  const getTariffInfo = (tariffType) => {
+    if (!tariffType || tariffType === 'CUSTOM') return { image: null, name: 'Свои габариты' };
+
+    const tariffMap = {
+      'CLOUD_TARIFF_SUMKA': { image: sumkaImg, name: 'Хранения сумки / коробки вещей' },
+      'CLOUD_TARIFF_SHINA': { image: shinaImg, name: 'Шины' },
+      'CLOUD_TARIFF_MOTORCYCLE': { image: motorcycleImg, name: 'Хранение мотоцикла' },
+      'CLOUD_TARIFF_BICYCLE': { image: bicycleImg, name: 'Хранение велосипед' },
+      'CLOUD_TARIFF_SUNUK': { image: sunukImg, name: 'Сундук до 1 м³' },
+      'CLOUD_TARIFF_FURNITURE': { image: furnitureImg, name: 'Шкаф до 2 м³' },
+      'CLOUD_TARIFF_SKLAD': { image: skladImg, name: 'Кладовка до 3 м³' },
+      'CLOUD_TARIFF_GARAZH': { image: garazhImg, name: 'Гараж до 9м³' }
+    };
+
+    return tariffMap[tariffType] || { image: null, name: 'Свои габариты' };
+  };
+
   const downloadReceiptMutation = useMutation({
     mutationFn: paymentsApi.getPaymentReceipt,
     onSuccess: (blob) => {
@@ -110,6 +151,63 @@ const PaymentCard = ({ order }) => {
     downloadReceiptMutation.mutate(paymentId);
   };
 
+  // Компонент для рендеринга одного платежа
+  const renderPayment = (payment) => (
+    <div key={payment.id} className="flex items-center justify-between">
+      <div className="flex-1">
+        <p className="text-lg font-semibold mb-1">
+          {getMonthName(payment.month)} {payment.year}
+        </p>
+        <p className="text-2xl font-bold">{formatPrice(payment.amount)} 〒</p>
+      </div>
+      <div className="flex flex-col items-end gap-2">
+        {payment.status === 'PAID' ? (
+          <>
+            <button
+              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700"
+            >
+              Оплачено
+            </button>
+            <button
+              onClick={() => handleDownloadReceipt(payment.id)}
+              disabled={downloadReceiptMutation.isLoading}
+              className="text-white/90 text-xs font-medium hover:text-white transition-colors underline"
+            >
+              Скачать PDF - чек
+            </button>
+          </>
+        ) : payment.status === 'MANUAL' ? (
+          <>
+            <button
+              onClick={() => handlePay(payment.id)}
+              disabled={createManualPaymentMutation.isLoading}
+              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
+            >
+              Оплатить
+            </button>
+          </>
+        ) : payment.status === 'UNPAID' && order.status === 'PROCESSING' && payment.payment_page_url ? (
+          <>
+            <button
+              onClick={() => {
+                window.open(payment.payment_page_url, '_blank');
+                toast.success('Перенаправляем на страницу оплаты...', {
+                  position: "top-right",
+                  autoClose: 3000,
+                });
+                window.location.reload();
+              }}
+              disabled={createManualPaymentMutation.isLoading}
+              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
+            >
+              Оплатить
+            </button>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+
   return (
     <div className={`${cardBackground} rounded-3xl p-6 text-white relative overflow-hidden shadow-lg`}>
       {/* Заголовок заказа */}
@@ -122,88 +220,72 @@ const PaymentCard = ({ order }) => {
         </div>
         
         {/* Белый квадрат с идентификатором бокса */}
-        {order.storage?.name && (
-          <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
-            <span className="text-4xl font-bold text-gray-700">{order.storage.name}</span>
-          </div>
-        )}
+        {order?.storage?.storage_type === 'CLOUD' ? (
+            (() => {
+              const tariffInfo = getTariffInfo(order.tariff_type);
+
+              if (tariffInfo.image) {
+                return (
+                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-4">
+                      <img
+                          src={tariffInfo.image}
+                          alt={tariffInfo.name}
+                          className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                );
+              } else {
+                // Для "Свои габариты" показываем текст вместо иконки
+                return (
+                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-3">
+                      <span className="text-xs font-bold text-gray-900 text-center leading-tight">Свои габариты</span>
+                    </div>
+                );
+              }
+            })()
+        ) : order.storage && order.storage.name ? (
+            <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
+              <span className="text-4xl font-bold text-gray-900">{order.storage.name}</span>
+            </div>
+        ) : null}
       </div>
 
       {/* Платежи по месяцам */}
       <div className="mb-6">
-        <h4 className="text-lg font-semibold mb-4">Платежи по месяцам</h4>
+        <h4 className="text-[#D3D3D3] text-xs font-medium mb-4">Платежи по месяцам</h4>
         <div className="space-y-4">
-          {order.order_payment?.map((payment) => (
-            <div key={payment.id} className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-lg font-semibold mb-1">
-                  {getMonthName(payment.month)} {payment.year}
-                </p>
-                <p className="text-2xl font-bold">{formatPrice(payment.amount)} 〒</p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                {payment.status === 'PAID' ? (
-                  <>
-                    <button
-                      className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700"
-                    >
-                      Оплачено
-                    </button>
-                    <button
-                      onClick={() => handleDownloadReceipt(payment.id)}
-                      disabled={downloadReceiptMutation.isLoading}
-                      className="text-white/90 text-xs font-medium hover:text-white transition-colors underline"
-                    >
-                      Скачать PDF - чек
-                    </button>
-                  </>
-                ) : payment.status === 'MANUAL' ? (
-                  <>
-                    <button
-                      onClick={() => handlePay(payment.id)}
-                      disabled={createManualPaymentMutation.isLoading}
-                      className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
-                    >
-                      Оплатить
-                    </button>
-                  </>
-                ) : payment.status === 'UNPAID' && order.status === 'PROCESSING' && payment.payment_page_url ? (
-                  <>
-                    <button
-                        onClick={() => {
-                          window.open(payment.payment_page_url, '_blank');
-                          toast.success('Перенаправляем на страницу оплаты...', {
-                            position: "top-right",
-                            autoClose: 3000,
-                          });
-                          window.location.reload();
-                        }}
-                        disabled={createManualPaymentMutation.isLoading}
-                        className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
-                    >
-                      Оплатить
-                    </button>
-                  </>
-                ): null}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+          {/* Текущий платеж - всегда видимый */}
+          {currentPayment && renderPayment(currentPayment)}
 
-      {/* История платежей */}
-      <div className="flex justify-center">
-        <button
-          onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
-          className="text-white/90 text-sm font-medium hover:text-white transition-colors flex items-center gap-2"
-        >
-          История платежи
-          {isHistoryExpanded ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
+          {/* Остальные платежи - в expand/collapse */}
+          {otherPayments.length > 0 && (
+            <>
+              <div className="flex justify-end mt-2">
+                <button
+                    onClick={() => setIsPaymentsExpanded(!isPaymentsExpanded)}
+                    className="text-[#D3D3D3] text-xs font-medium hover:text-[#D3D3D3]/80 transition-colors flex items-center gap-2"
+                >
+                  {isPaymentsExpanded ? (
+                      <>
+                        История платежи
+                        <ChevronUp className="w-3 h-3" />
+                      </>
+                  ) : (
+                      <>
+                        История платежи
+                        <ChevronDown className="w-3 h-3" />
+                      </>
+                  )}
+                </button>
+              </div>
+              {isPaymentsExpanded && (
+                <div className="space-y-4">
+                  {otherPayments.map((payment) => renderPayment(payment))}
+                </div>
+              )}
+            </>
           )}
-        </button>
+        </div>
       </div>
     </div>
   );
