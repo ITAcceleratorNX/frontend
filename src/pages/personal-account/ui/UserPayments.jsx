@@ -31,11 +31,11 @@ const UserPayments = () => {
     switch (activeFilter) {
       case 'active':
         return payments.filter(order =>
-          order.status === 'ACTIVE'
+          order.status === 'ACTIVE' || order.status === 'PROCESSING'
         );
       case 'archive':
         return payments.filter(order =>
-          order.status !== 'ACTIVE'
+          order.status === 'CANCELED' || order.status === 'FINISHED'
         );
       default:
         return payments;
