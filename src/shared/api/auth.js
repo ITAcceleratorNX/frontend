@@ -45,6 +45,26 @@ export const authApi = {
       throw error;
     }
   },
+
+  // Регистрация юридического лица
+  registerLegal: async (email, unique_code, password, legalData, lead_source = null) => {
+    try {
+      console.log(`Отправка запроса на регистрацию юридического лица: ${email}`, lead_source ? `с источником: ${lead_source}` : '');
+      const response = await api.post('/auth/register-legal', { 
+        email, 
+        unique_code, 
+        password,
+        lead_source,
+        user_type: 'LEGAL',
+        ...legalData
+      });
+      console.log('Успешная регистрация юридического лица');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при регистрации юридического лица:', error.response?.data || error.message);
+      throw error;
+    }
+  },
   
   // Выход из системы
   logout: async () => {

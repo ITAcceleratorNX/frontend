@@ -128,6 +128,33 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Мемоизированная функция для регистрации юридического лица
+  const registerLegal = useCallback(async (email, uniqueCode, password, legalData, leadSource = null) => {
+    try {
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации юридического лица:', email, 'lead_source:', leadSource);
+      
+      const response = await authApi.registerLegal(email, uniqueCode, password, legalData, leadSource);
+      
+      if (response.success) {
+        if (import.meta.env.DEV) console.log('AuthContext: Регистрация юридического лица успешна');
+        // Очищаем сохраненный источник после успешной регистрации
+        if (leadSource) {
+          localStorage.removeItem('extraspace_lead_source');
+        }
+        return { success: true };
+      } else {
+        throw new Error('Не удалось завершить регистрацию');
+      }
+    } catch (error) {
+      console.error('AuthContext: Ошибка при регистрации юридического лица:', error);
+      
+      return { 
+        success: false, 
+        error: error.response?.data?.message || error.message || 'Неизвестная ошибка'
+      };
+    }
+  }, []);
+
   // Мемоизированная функция для выхода
   const logout = useCallback(async () => {
     try {
@@ -180,6 +207,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
+    registerLegal,
     checkEmail,
     refetchUser: refetch
   }), [
@@ -189,7 +217,8 @@ export const AuthProvider = ({ children }) => {
     error, 
     login, 
     logout, 
-    register, 
+    register,
+    registerLegal,
     checkEmail, 
     refetch
   ]);

@@ -1724,7 +1724,7 @@ const HomePage = memo(() => {
             <div className="space-y-4">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
-                Храните там
+                Храните там,
                 </span>
                 <br />
                 
@@ -1733,7 +1733,7 @@ const HomePage = memo(() => {
                 </span>
               </h1>
               <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-              Боксы от 1 до 100 м² с безопасным хранением и доступом 24/7
+              Склады от 1 до 100 м² с безопасным хранением и доступом 24/7
               </p>
             </div>
 
