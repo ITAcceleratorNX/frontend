@@ -752,7 +752,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             ) : null}
             
             {/* Кнопка Отменить заказ - показывается всегда, кроме активных оплаченных заказов */}
-            {!(order.status === 'ACTIVE' && order.payment_status === 'PAID') ? (
+            {!(['ACTIVE', 'CANCELED', 'FINISHED'].includes(order.status) && order.payment_status === 'PAID') ? (
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
                 className="text-white/80 text-xs font-medium hover:text-white transition-colors underline"

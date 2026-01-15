@@ -1,5 +1,5 @@
 import React from 'react';
-import {useState, useMemo} from 'react';
+import {useState, useMemo, useEffect} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Input } from '../../../components/ui/input';
@@ -135,6 +135,17 @@ const OrderManagement = () => {
     active: ordersStats.active,
   }), [ordersStats]);
 
+  // Обновляем selectedOrder при изменении данных заказов
+  useEffect(() => {
+    if (selectedOrder && isOrderDetailOpen) {
+      const ordersToCheck = isSearchActive ? searchedOrders : allOrders;
+      const updatedOrder = ordersToCheck.find(o => o.id === selectedOrder.id);
+      if (updatedOrder && JSON.stringify(updatedOrder) !== JSON.stringify(selectedOrder)) {
+        setSelectedOrder(updatedOrder);
+      }
+    }
+  }, [allOrders, searchedOrders, isSearchActive, isOrderDetailOpen]);
+
   // Функции для пагинации
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -211,6 +222,12 @@ const OrderManagement = () => {
   const handleApproveReturn = async (orderId) => {
     try {
       await approveCancelOrder.mutateAsync(orderId);
+      // Обновляем данные после успешного подтверждения возврата
+      await refetch();
+      if (isSearchActive) {
+        await refetchSearch();
+      }
+      // selectedOrder обновится автоматически через useEffect при изменении данных
     } catch (error) {
       console.error(error);
       toast.error('Ошибка', {
