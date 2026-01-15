@@ -358,7 +358,6 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   };
 
   const months = calculateMonths();
-  const monthlyPrice = months > 0 ? Number(order.total_price) / months : 0;
   const totalPrice = Number(order.total_price) + Number(totalPriceOfServices);
   
   // Проверяем, есть ли услуга доставки (GAZELLE_FROM)
@@ -540,7 +539,6 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           
           <div className="space-y-2">
             {(() => {
-              // Сортируем контракты по contract_id или id (как в Contracts.jsx)
               const sortedContracts = [...order.contracts].sort((a, b) => {
                 const aId = a.contract_id || a.id || 0;
                 const bId = b.contract_id || b.id || 0;
@@ -735,9 +733,6 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           <div>
             <p className="text-white text-sm mb-1">ИТОГ</p>
             <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
-            {months > 0 && (
-              <p className="text-white/80 text-sm mt-1">В месяц: {formatPrice(monthlyPrice)} 〒</p>
-            )}
           </div>
           
           <div className="flex flex-col items-end gap-2">
