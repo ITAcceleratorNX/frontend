@@ -340,14 +340,16 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
       {/* Кнопки действий */}
       {order.status !== 'ACTIVE' && (
         <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
-          <Button
-            onClick={onDelete}
-            disabled={isLoading}
-            variant="destructive"
-            className="flex-1 sm:flex-none"
-          >
-            Удалить заказ
-          </Button>
+          {['CANCELED, FINISHED'].includes(order.status) && (
+              <Button
+                  onClick={onDelete}
+                  disabled={isLoading}
+                  variant="destructive"
+                  className="flex-1 sm:flex-none"
+              >
+                Удалить заказ
+              </Button>
+          )}
           {order.status === 'INACTIVE' && (
             <>
               <Button
