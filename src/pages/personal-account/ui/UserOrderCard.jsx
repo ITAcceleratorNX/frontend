@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   getContractStatusText,
   getCargoMarkText 
@@ -20,14 +20,16 @@ import {
   SelectValue 
 } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
-import { useExtendOrder, useDownloadContract } from '../../../shared/lib/hooks/use-orders';
+import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
+import { useCreateMoving, useCreateAdditionalServicePayment } from '../../../shared/lib/hooks/use-payments';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
 import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
 import { ordersApi } from '../../../shared/api/ordersApi';
+import DatePicker from '../../../shared/ui/DatePicker';
 import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
 import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
 import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
@@ -36,6 +38,18 @@ import shinaImg from '../../../assets/cloud-tariffs/shina.png';
 import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
 import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
 import skladImg from '../../../assets/cloud-tariffs/sklad.png';
+
+const CANCEL_REASON_OPTIONS = [
+  { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
+  { value: 'too_expensive', label: 'Слишком дорого' },
+  { value: 'moving_to_new_location', label: 'Переезжаю в другой район / город / страну' },
+  { value: 'using_other_storage', label: 'Пользуюсь другим местом хранения' },
+  { value: 'ordered_by_mistake', label: 'Оформил(а) заказ по ошибке' },
+  { value: 'service_quality_issues', label: 'Есть замечания по качеству услуги' },
+  { value: 'not_satisfied_with_terms', label: 'Не устроили условия или сервис' },
+  { value: 'rarely_use', label: 'Редко пользуюсь, бокс пустует' },
+  { value: 'other', label: 'Другая причина (укажите ниже)', requiresComment: true },
+];
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -61,11 +75,19 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   const [isItemsExpanded, setIsItemsExpanded] = useState(false);
   const [downloadingItemId, setDownloadingItemId] = useState(null);
   const [isContractsExpanded, setIsContractsExpanded] = useState(false);
+  const [isDebtModalOpen, setIsDebtModalOpen] = useState(false);
+  const [isCancelSurveyOpen, setIsCancelSurveyOpen] = useState(false);
+  const [pendingCancelData, setPendingCancelData] = useState(null);
+  const [selectedCancelReason, setSelectedCancelReason] = useState('');
+  const [cancelReasonComment, setCancelReasonComment] = useState('');
+  const [cancelFormError, setCancelFormError] = useState('');
 
   // Хук для работы с API продления заказа
   const extendOrderMutation = useExtendOrder();
   // Хук для скачивания договора
   const downloadContractMutation = useDownloadContract();
+  // Хук для отмены договора
+  const cancelContractMutation = useCancelContract();
 
   // Обработчик продления заказа
   const handleExtendOrder = async () => {
@@ -147,6 +169,100 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   const handleDownloadContract = (documentId) => {
     if (!documentId) return;
     downloadContractMutation.mutate(documentId);
+  };
+
+  // Получаем детали заказа для модалки отмены
+  const { 
+    data: contractDetails, 
+    isLoading: isLoadingDetails, 
+    error: detailsError 
+  } = useContractDetails(
+    pendingCancelData?.orderId || order.id,
+    { enabled: isCancelSurveyOpen }
+  );
+
+  // Обработчик отмены договора
+  const handleCancelContract = ({ orderId, documentId, cancelReason, cancelComment }, callbacks = {}) => {
+    cancelContractMutation.mutate({ orderId, documentId, cancelReason, cancelComment }, callbacks);
+  };
+
+  const resetCancelSurvey = () => {
+    setPendingCancelData(null);
+    setSelectedCancelReason('');
+    setCancelReasonComment('');
+    setCancelFormError('');
+  };
+
+  const openCancelSurvey = () => {
+    // Получаем первый контракт для отмены
+    const sortedContracts = (order.contracts || []).sort((a, b) => {
+      const aId = a.contract_id || a.id || 0;
+      const bId = b.contract_id || b.id || 0;
+      return aId - bId;
+    });
+    const firstContract = sortedContracts.length > 0 ? sortedContracts[0] : null;
+
+    if (!firstContract || !firstContract.document_id) {
+      setCancelFormError('Не найдено контракта для отмены.');
+      return;
+    }
+
+    setPendingCancelData({
+      orderId: order.id,
+      documentId: firstContract.document_id,
+    });
+    setIsCancelSurveyOpen(true);
+    setSelectedCancelReason('');
+    setCancelReasonComment('');
+    setCancelFormError('');
+  };
+
+  const closeCancelSurvey = () => {
+    setIsCancelSurveyOpen(false);
+    resetCancelSurvey();
+  };
+
+  const handleSubmitCancelSurvey = () => {
+    if (!pendingCancelData?.orderId || !pendingCancelData?.documentId) {
+      setCancelFormError('Не удалось определить договор. Попробуйте ещё раз.');
+      return;
+    }
+
+    if (!selectedCancelReason) {
+      setCancelFormError('Пожалуйста, выберите причину отмены.');
+      return;
+    }
+
+    if (selectedCancelReason === 'other' && !cancelReasonComment.trim()) {
+      setCancelFormError('Пожалуйста, опишите причину в комментарии.');
+      return;
+    }
+
+    setCancelFormError('');
+    handleCancelContract(
+      {
+        orderId: pendingCancelData.orderId,
+        documentId: pendingCancelData.documentId,
+        cancelReason: selectedCancelReason,
+        cancelComment: cancelReasonComment.trim(),
+      },
+      {
+        onSuccess: () => {
+          closeCancelSurvey();
+          window.location.reload();
+        },
+      }
+    );
+  };
+
+  const handleCancelClick = () => {
+    // Проверяем статус оплаты
+    if (order.payment_status !== 'PAID') {
+      setIsDebtModalOpen(true);
+      return;
+    }
+    
+    openCancelSurvey();
   };
 
 // --- Moving statuses helpers (JS) ---
@@ -646,10 +762,11 @@ const UserOrderCard = ({ order, onPayOrder }) => {
             ) : null}
             
             {/* Кнопка Расторгнуть - для активных оплаченных заказов */}
-            {order.status === 'ACTIVE' && order.payment_status === 'PAID' ? (
+            {order.status === 'ACTIVE' && order.payment_status === 'PAID' && order.cancel_status === 'NO' ? (
               <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="px-6 py-2.5 bg-[#B0E4DD] text-[#004743] text-sm font-medium rounded-3xl hover:bg-[#9DD4CC] transition-colors"
+                onClick={handleCancelClick}
+                disabled={cancelContractMutation.isPending}
+                className="px-6 py-2.5 bg-[#B0E4DD] text-[#004743] text-sm font-medium rounded-3xl hover:bg-[#9DD4CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Расторгнуть
               </button>
@@ -774,7 +891,284 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           }}
           onCancel={() => setIsEditModalOpen(false)}
       />
+
+      {/* Модальное окно опроса при отмене */}
+      <CancelSurveyModal
+        isOpen={isCancelSurveyOpen}
+        onClose={closeCancelSurvey}
+        selectedReason={selectedCancelReason}
+        onSelectReason={setSelectedCancelReason}
+        comment={cancelReasonComment}
+        onCommentChange={setCancelReasonComment}
+        onSubmit={handleSubmitCancelSurvey}
+        isSubmitting={cancelContractMutation.isPending}
+        error={cancelFormError}
+        orderId={pendingCancelData?.orderId}
+        orderDetails={contractDetails}
+        isLoadingDetails={isLoadingDetails}
+      />
+
+      {/* Модальное окно задолженности */}
+      <Dialog open={isDebtModalOpen} onOpenChange={setIsDebtModalOpen}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Нельзя отменить договор
+            </DialogTitle>
+            <DialogDescription>
+              По данному заказу есть <b>неоплаченная задолженность</b>. Пожалуйста, оплатите долг, а затем повторите отмену.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsDebtModalOpen(false)}>Понятно</Button>
+            <Button
+                onClick={() => {
+                  setIsDebtModalOpen(false);
+                  navigate('/personal-account', { state: { activeSection: 'payments' } });
+                }}
+            >
+              Перейти к оплате
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+};
+
+// Компонент модального окна опроса при отмене
+const CancelSurveyModal = ({
+  isOpen,
+  onClose,
+  selectedReason,
+  onSelectReason,
+  comment,
+  onCommentChange,
+  onSubmit,
+  isSubmitting,
+  error,
+  orderId,
+  orderDetails,
+  isLoadingDetails,
+}) => {
+  const [pickupMethod, setPickupMethod] = useState(null);
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+
+  const createMovingMutation = useCreateMoving();
+  const createAdditionalServicePaymentMutation = useCreateAdditionalServicePayment();
+
+  // Проверяем, нужно ли показывать выбор способа получения вещей
+  const needsPickupMethod = orderDetails && !orderDetails.hasGazelleTo && !orderDetails.hasPendingToMovingOrder;
+
+  // Сбрасываем состояние при закрытии
+  useEffect(() => {
+    if (!isOpen) {
+      setPickupMethod(null);
+      setDeliveryDate('');
+      setDeliveryAddress('');
+    }
+  }, [isOpen]);
+
+  const handleDeliverySubmit = async () => {
+    if (!deliveryDate) {
+      return;
+    }
+
+    try {
+      await createMovingMutation.mutateAsync({
+        orderId,
+        movingDate: deliveryDate,
+        status: 'PENDING_TO',
+        address: deliveryAddress || null
+      });
+
+      const paymentResult = await createAdditionalServicePaymentMutation.mutateAsync({
+        orderId,
+        serviceType: 'GAZELLE_TO'
+      });
+      
+      // После успешной оплаты автоматически отправляем запрос на отмену
+      if (paymentResult?.payment_page_url) {
+        onSubmit();
+        window.location.href = paymentResult.payment_page_url;
+      }
+    } catch (error) {
+      console.error('Ошибка при создании доставки:', error);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-visible">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили отменить?</DialogTitle>
+          <DialogDescription>
+            Ваш ответ поможет улучшить сервис и условия хранения. Пожалуйста, выберите подходящую причину.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-[60vh] overflow-y-auto pr-1">
+          {isLoadingDetails ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3 mb-4">
+              {CANCEL_REASON_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                    selectedReason === option.value
+                      ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                      : 'border-gray-200 hover:border-[#c7d2fe]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="cancel-reason"
+                    className="mt-1 h-4 w-4"
+                    checked={selectedReason === option.value}
+                    onChange={() => onSelectReason(option.value)}
+                  />
+                  <span className="text-sm text-gray-800">{option.label}</span>
+                </label>
+              ))}
+            </div>
+
+            {selectedReason === 'other' && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
+                <textarea
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
+                  rows={4}
+                  placeholder="Например: хочу поделиться предложениями по улучшению..."
+                  value={comment}
+                  onChange={(e) => onCommentChange(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Блок выбора способа получения вещей */}
+            {selectedReason && needsPickupMethod && (
+              <div className="mt-6 space-y-4 border-t pt-4">
+                <p className="text-sm font-medium text-gray-700">Как вы хотите получить вещи?</p>
+                
+                <div className="space-y-3">
+                  <label
+                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                      pickupMethod === 'self'
+                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                        : 'border-gray-200 hover:border-[#c7d2fe]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="pickup-method"
+                      className="mt-1 h-4 w-4"
+                      checked={pickupMethod === 'self'}
+                      onChange={() => setPickupMethod('self')}
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-gray-800 block">Забрать вещи самому</span>
+                      {orderDetails?.warehouseAddress && (
+                        <span className="text-xs text-gray-600 mt-1 block">
+                          <MapPin className="w-3 h-3 inline mr-1" />
+                          {orderDetails.warehouseAddress}
+                        </span>
+                      )}
+                    </div>
+                  </label>
+
+                  <label
+                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
+                      pickupMethod === 'delivery'
+                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
+                        : 'border-gray-200 hover:border-[#c7d2fe]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="pickup-method"
+                      className="mt-1 h-4 w-4"
+                      checked={pickupMethod === 'delivery'}
+                      onChange={() => setPickupMethod('delivery')}
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-gray-800 block">Заказать доставку</span>
+                      {orderDetails?.gazelleToPrice && (
+                        <span className="text-xs text-gray-600 mt-1 block">
+                          Стоимость: {orderDetails.gazelleToPrice.toLocaleString('ru-RU')} ₸
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                </div>
+
+                {/* Форма для доставки */}
+                {pickupMethod === 'delivery' && (
+                  <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-xl">
+                    <div>
+                      <DatePicker
+                        label="Дата доставки"
+                        value={deliveryDate}
+                        onChange={setDeliveryDate}
+                        placeholder="Выберите дату доставки"
+                        minDate={new Date().toISOString().split('T')[0]}
+                        allowFutureDates={true}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-2">
+                        Адрес доставки (необязательно)
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
+                        placeholder="Введите адрес доставки"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            </>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-4">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            Закрыть
+          </Button>
+          {pickupMethod === 'delivery' && selectedReason ? (
+            <Button
+              onClick={handleDeliverySubmit}
+              disabled={isSubmitting || !deliveryDate || createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            >
+              {(createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending)
+                ? 'Обработка…' 
+                : `Оплатить доставку (${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸)`}
+            </Button>
+          ) : (
+            <Button
+              onClick={onSubmit}
+              disabled={isSubmitting || (needsPickupMethod && !pickupMethod)}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            >
+              {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
