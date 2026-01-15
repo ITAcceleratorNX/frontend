@@ -20,9 +20,9 @@ import {
   SelectValue 
 } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
-import { useExtendOrder } from '../../../shared/lib/hooks/use-orders';
+import { useExtendOrder, useDownloadContract } from '../../../shared/lib/hooks/use-orders';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
@@ -60,9 +60,12 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isItemsExpanded, setIsItemsExpanded] = useState(false);
   const [downloadingItemId, setDownloadingItemId] = useState(null);
+  const [isContractsExpanded, setIsContractsExpanded] = useState(false);
 
   // Хук для работы с API продления заказа
   const extendOrderMutation = useExtendOrder();
+  // Хук для скачивания договора
+  const downloadContractMutation = useDownloadContract();
 
   // Обработчик продления заказа
   const handleExtendOrder = async () => {
@@ -138,6 +141,12 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     } finally {
       setDownloadingItemId(null);
     }
+  };
+
+  // Обработчик скачивания договора
+  const handleDownloadContract = (documentId) => {
+    if (!documentId) return;
+    downloadContractMutation.mutate(documentId);
   };
 
 // --- Moving statuses helpers (JS) ---
@@ -408,20 +417,83 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         </div>
       </div>
 
-      {/* Договор */}
-      <div className="mb-10 flex justify-center">
-        <div className="flex items-center gap-2">
-          <span className="text-white/90 text-sm">Договор:</span>
-          <span className="inline-flex items-center px-2.5 py-1 bg-white rounded-full text-xs font-medium text-gray-700">
-            {getContractStatusText(order.contract_status)}
-          </span>
-          {order.contract_status === 'SIGNED' && (
-            <button className="text-white/90 text-sm font-medium hover:text-white transition-colors underline">
-              Скачать
+      {/* Договоры */}
+      {order.contracts && order.contracts.length > 0 && (
+        <div className="mb-10">
+          <p className="text-white/90 text-sm mb-2">Договоры:</p>
+          
+          <div className="space-y-2">
+            {(() => {
+              // Сортируем контракты по contract_id или id (как в Contracts.jsx)
+              const sortedContracts = [...order.contracts].sort((a, b) => {
+                const aId = a.contract_id || a.id || 0;
+                const bId = b.contract_id || b.id || 0;
+                return aId - bId;
+              });
+              
+              const displayedContracts = isContractsExpanded ? sortedContracts : sortedContracts.slice(0, 3);
+              
+              return displayedContracts.map((contract, index) => {
+                const contractId = contract.contract_id || contract.id;
+                
+                return (
+                  <div key={contractId || index} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <Plus className="w-5 h-5 text-white/90 flex-shrink-0" />
+                      <span className="text-white/90 text-sm">
+                        Договор #{index + 1}
+                        {contract.status && (
+                          <span className="ml-2 text-xs text-white/70">
+                            ({typeof contract.status === 'string' ? contract.status : getContractStatusText(order.contract_status)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {contract.document_id && (
+                      <button
+                        onClick={() => handleDownloadContract(contract.document_id)}
+                        disabled={downloadContractMutation.isPending}
+                        className="text-white/90 text-sm font-medium hover:text-white transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        {downloadContractMutation.isPending ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            Загрузка...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" />
+                            Скачать
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+          
+          {order.contracts.length > 3 && (
+            <button
+              onClick={() => setIsContractsExpanded(!isContractsExpanded)}
+              className="mt-3 flex items-center gap-1 text-white/90 text-sm font-medium hover:text-white transition-colors underline"
+            >
+              {isContractsExpanded ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  Свернуть
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  Показать еще ({order.contracts.length - 3})
+                </>
+              )}
             </button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Предметы */}
       {order.items && order.items.length > 0 && (
