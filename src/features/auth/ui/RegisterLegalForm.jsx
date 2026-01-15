@@ -739,36 +739,7 @@ export const RegisterLegalForm = () => {
                     )}
                   </div>
 
-                  {/* Сумма */}
-                  <div className="flex flex-col gap-[6px] w-full">
-                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      Сумма
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 pr-12 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                          errors.amount ? 'border-red-400 bg-red-50' : 'bg-white'
-                        } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                        placeholder="0"
-                        disabled={isLoading}
-                        onInput={(e) => {
-                          e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                        }}
-                        {...register('amount', {
-                          required: 'Сумма обязательна'
-                        })}
-                      />
-                      <span className="absolute right-4 sm:right-5 top-1/2 transform -translate-y-1/2 text-[#363636] text-[14px] font-medium">
-                        〒
-                      </span>
-                    </div>
-                    {errors.amount && (
-                      <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.amount.message}
-                      </p>
-                    )}
-                  </div>
+                  
                 </div>
 
                 {/* Согласие с условиями */}
