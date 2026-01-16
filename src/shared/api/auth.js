@@ -15,11 +15,25 @@ export const authApi = {
     }
   },
 
-  // Аутентификация пользователя
-  login: async (email, password) => {
+  // Проверка существования телефона в системе и отправка SMS
+  checkPhone: async (phone) => {
     try {
-      console.log(`Отправка запроса на вход пользователя: ${email}`);
-      const response = await api.post('/auth/login', { email, password });
+      console.log(`Отправка запроса на проверку телефона: ${phone}`);
+      const response = await api.post('/auth/phone', { phone });
+      console.log('Ответ сервера:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при проверке телефона:', error.response?.data || error.message);
+      // Пробрасываем ошибку дальше для обработки в компоненте
+      throw error;
+    }
+  },
+
+  // Аутентификация пользователя
+  login: async (phone, password) => {
+    try {
+      console.log(`Отправка запроса на вход пользователя: ${phone}`);
+      const response = await api.post('/auth/login', { phone, password });
       console.log('Успешный вход в систему');
       return response.data;
     } catch (error) {
@@ -29,11 +43,11 @@ export const authApi = {
   },
 
   // Регистрация нового пользователя
-  register: async (email, unique_code, password, lead_source = null) => {
+  register: async (phone, unique_code, password, lead_source = undefined) => {
     try {
-      console.log(`Отправка запроса на регистрацию пользователя: ${email}`, lead_source ? `с источником: ${lead_source}` : '');
+      console.log(`Отправка запроса на регистрацию пользователя: ${phone}`, lead_source ? `с источником: ${lead_source}` : '');
       const response = await api.post('/auth/register', { 
-        email, 
+        phone, 
         unique_code, 
         password,
         lead_source 
@@ -47,7 +61,7 @@ export const authApi = {
   },
 
   // Регистрация юридического лица
-  registerLegal: async (email, unique_code, password, legalData, lead_source = null) => {
+  registerLegal: async (email, unique_code, password, legalData, lead_source = undefined) => {
     try {
       console.log(`Отправка запроса на регистрацию юридического лица: ${email}`, lead_source ? `с источником: ${lead_source}` : '');
       const response = await api.post('/auth/register-legal', { 
@@ -139,12 +153,25 @@ export const authApi = {
     }
   },
 
-  // Восстановление пароля
-  restorePassword: async (email, unique_code, password) => {
+  // Проверка существования телефона для восстановления пароля
+  checkPhoneForRestore: async (phone) => {
     try {
-      console.log(`Отправка запроса на восстановление пароля для: ${email}`);
+      console.log(`Отправка запроса на проверку телефона для восстановления: ${phone}`);
+      const response = await api.post('/auth/check-phone', { phone });
+      console.log('Ответ сервера при проверке телефона:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при проверке телефона для восстановления:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Восстановление пароля
+  restorePassword: async (phone, unique_code, password) => {
+    try {
+      console.log(`Отправка запроса на восстановление пароля для: ${phone}`);
       const response = await api.post('/auth/restore-password', { 
-        email, 
+        phone, 
         unique_code, 
         password 
       });

@@ -3,16 +3,17 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { toast } from 'react-toastify';
-import { EyeIcon, EyeOffIcon, Mail, Lock, RefreshCw } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, Phone, Lock, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
 import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
+import api from '../../../shared/api/axios';
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { register: registerUser, checkEmail } = useAuth();
+  const { register: registerUser, checkPhone } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -32,7 +33,7 @@ export const RegisterForm = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: '',
+      phone: '',
       unique_code: '',
       password: '',
       confirm_password: '',
@@ -42,20 +43,69 @@ export const RegisterForm = () => {
   
   const password = watch('password', '');
 
-  // Автоматическое заполнение email из location.state
+  // Функция форматирования номера телефона
+  const formatPhoneNumber = (value) => {
+    // Если значение пустое, возвращаем пустую строку
+    if (!value || value.trim() === '') {
+      return '';
+    }
+    
+    // Удаляем все символы кроме цифр
+    const numbers = value.replace(/\D/g, '');
+    
+    // Если нет цифр, возвращаем пустую строку
+    if (numbers.length === 0) {
+      return '';
+    }
+    
+    // Если начинается с 8, заменяем на 7
+    let cleaned = numbers;
+    if (cleaned.startsWith('8')) {
+      cleaned = '7' + cleaned.slice(1);
+    }
+    
+    // Если не начинается с 7, добавляем 7
+    if (cleaned && !cleaned.startsWith('7')) {
+      cleaned = '7' + cleaned;
+    }
+    
+    // Ограничиваем до 11 цифр (7 + 10 цифр)
+    cleaned = cleaned.slice(0, 11);
+    
+    // Форматируем в формат +7 (XXX) XXX-XX-XX
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted = '+7';
+      if (cleaned.length > 1) {
+        formatted += ' (' + cleaned.slice(1, 4);
+      }
+      if (cleaned.length > 4) {
+        formatted += ') ' + cleaned.slice(4, 7);
+      }
+      if (cleaned.length > 7) {
+        formatted += '-' + cleaned.slice(7, 9);
+      }
+      if (cleaned.length > 9) {
+        formatted += '-' + cleaned.slice(9, 11);
+      }
+    }
+    
+    return formatted;
+  };
+
+  // Автоматическое заполнение phone из location.state
   useEffect(() => {
-    if (location.state?.email) {
-      console.log('RegisterForm: Автоматическое заполнение email из state:', location.state.email);
-      setValue('email', location.state.email);
-      // Если email уже пришел, то можно показать что код можно отправить повторно
+    if (location.state?.phone) {
+      console.log('RegisterForm: Автоматическое заполнение phone из state:', location.state.phone);
+      setValue('phone', location.state.phone);
       setCodeSent(true);
     } else {
       // Проверяем URL параметры как fallback
       const params = new URLSearchParams(location.search);
-      const emailParam = params.get('email');
-      if (emailParam) {
-        console.log('RegisterForm: Автоматическое заполнение email из URL параметров:', emailParam);
-        setValue('email', emailParam);
+      const phoneParam = params.get('phone');
+      if (phoneParam) {
+        console.log('RegisterForm: Автоматическое заполнение phone из URL параметров:', phoneParam);
+        setValue('phone', phoneParam);
         setCodeSent(true);
       }
     }
@@ -74,36 +124,51 @@ export const RegisterForm = () => {
     return () => clearInterval(interval);
   }, [timer]);
 
-  // Функция для отправки кода на email
+  // Функция для отправки кода на телефон
   const sendCodeAgain = async () => {
-    const email = getValues('email');
+    const phone = getValues('phone');
     
-    if (!email) {
-      toast.error('Введите email для отправки кода');
+    if (!phone) {
+      toast.error('Введите номер телефона для отправки кода');
       return;
     }
 
-    // Простая валидация email
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!emailRegex.test(email)) {
-      toast.error('Введите корректный email');
+    // Простая валидация телефона (минимум 10 цифр после +7)
+    const phoneRegex = /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/;
+    if (!phoneRegex.test(phone)) {
+      toast.error('Введите корректный номер телефона');
       return;
     }
 
     setIsResendingCode(true);
     try {
-      const result = await checkEmail(email);
+      const result = await checkPhone(phone);
       
       if (result.success) {
         setCodeSent(true);
-        setTimer(60); // 60 секунд до повторной отправки
-        toast.success('Код отправлен на вашу почту');
+        if (result.remainingSeconds) {
+          setTimer(result.remainingSeconds);
+        } else {
+          setTimer(60); // 60 секунд до повторной отправки
+        }
+        toast.success('Код отправлен на ваш телефон');
       } else {
-        toast.error(result.error || 'Ошибка при отправке кода');
+        if (result.remainingSeconds) {
+          setTimer(result.remainingSeconds);
+          toast.error(result.error || 'Подождите перед повторной отправкой');
+        } else {
+          toast.error(result.error || 'Ошибка при отправке кода');
+        }
       }
     } catch (error) {
       console.error('Ошибка при отправке кода:', error);
-      toast.error('Произошла ошибка при отправке кода');
+      if (error.response?.status === 429) {
+        const remainingSeconds = error.response?.data?.remainingSeconds || 60;
+        setTimer(remainingSeconds);
+        toast.error(error.response?.data?.error || 'Подождите перед повторной отправкой');
+      } else {
+        toast.error('Произошла ошибка при отправке кода');
+      }
     } finally {
       setIsResendingCode(false);
     }
@@ -128,7 +193,7 @@ export const RegisterForm = () => {
       const leadSource = getStoredLeadSource();
       
       // Отправляем данные регистрации через контекст
-      const result = await registerUser(data.email, data.unique_code, data.password, leadSource);
+      const result = await registerUser(data.phone, data.unique_code, data.password, leadSource);
       
       console.log('RegisterForm: Ответ от регистрации:', result);
       
@@ -136,8 +201,8 @@ export const RegisterForm = () => {
         // В случае успешной регистрации показываем уведомление
         toast.success('Регистрация прошла успешно! Теперь вы можете войти в систему.');
         
-        // Перенаправляем на страницу входа с передачей email
-        navigate('/login', { state: { email: data.email } });
+        // Перенаправляем на страницу входа с передачей phone
+        navigate('/login', { state: { phone: data.phone } });
       } else {
         // Отображаем ошибку, полученную от сервера
         const errorMessage = result.error || 'Ошибка при регистрации. Пожалуйста, попробуйте снова.';
@@ -189,6 +254,31 @@ export const RegisterForm = () => {
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
+
+  const handlePhoneChange = (e) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setValue('phone', formatted, { shouldValidate: true });
+  };
+
+  const handleGoogleRegister = async () => {
+    try {
+      console.log('Начинаем регистрацию через Google');
+      
+      // Перенаправляем пользователя на URL, который обрабатывает бэкенд
+      window.location.href = `${api.defaults.baseURL}/auth/google`;
+      
+    } catch (error) {
+      // Если сервер возвращает 302, axios может воспринять это как ошибку
+      // Проверяем, есть ли в ответе URL для редиректа
+      if (error.response && error.response.status === 302 && error.response.headers.location) {
+        console.log('Получен редирект URL:', error.response.headers.location);
+        window.location.href = error.response.headers.location;
+      } else {
+        console.error('Ошибка при регистрации через Google:', error);
+        toast.error('Не удалось выполнить регистрацию через Google');
+      }
+    }
+  };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] p-4 sm:p-6 lg:p-8">
@@ -213,8 +303,38 @@ export const RegisterForm = () => {
                   Создание аккаунта
                 </h1>
                 <p className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-center text-[#5C5C5C] w-full max-w-[3600px]">
-                  Введите код из email и заполните остальные поля
+                  Введите код из SMS и заполните остальные поля
                 </p>
+              </div>
+            </div>
+            
+            {/* Кнопка Google и разделитель */}
+            <div className="flex flex-col gap-[22px] w-full max-w-[400px]">
+              {/* Кнопка Google */}
+              <button 
+                type="button" 
+                onClick={handleGoogleRegister}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2.5 px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 border border-[#DFDFDF] rounded-[25px] bg-white hover:bg-gray-50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] flex-shrink-0">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span className="text-[15px] sm:text-[16px] lg:text-[18px] font-normal leading-[1.25] text-[#5F6368] font-['Google_Sans',sans-serif]">
+                  Google
+                </span>
+              </button>
+              
+              {/* Разделитель */}
+              <div className="flex items-center justify-between gap-[14px] w-full">
+                <div className="flex-1 h-px bg-[#7A7A7A]"></div>
+                <span className="text-[14px] sm:text-[15px] lg:text-[16px] font-normal leading-[1.19] text-[#7A7A7A] whitespace-nowrap">
+                  ИЛИ ВВЕСТИ
+                </span>
+                <div className="flex-1 h-px bg-[#7A7A7A]"></div>
               </div>
             </div>
             
@@ -222,32 +342,33 @@ export const RegisterForm = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[22px] w-full">
               {/* Поля ввода */}
               <div className="flex flex-col gap-[20px] w-full">
-                {/* Email поле */}
+                {/* Phone поле */}
                 <div className="flex flex-col gap-[6px] w-full">
                   <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                    <Mail className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
-                    Email
+                    <Phone className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                    Телефон
                   </label>
                   <div className="relative">
                     <input
-                      type="email"
-                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                        errors.email ? 'border-red-400 bg-red-50' : 'bg-white'
+                      type="tel"
+                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none ${
+                        errors.phone ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                      placeholder="example@gmail.com"
+                      placeholder="+7 (___) ___-__-__"
                       disabled={isLoading}
-                      {...register('email', {
-                        required: 'Email обязателен',
+                      {...register('phone', {
+                        required: 'Телефон обязателен',
                         pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: 'Неверный формат email',
+                          value: /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/,
+                          message: 'Неверный формат телефона',
                         },
+                        onChange: handlePhoneChange
                       })}
                     />
                   </div>
-                  {errors.email && (
+                  {errors.phone && (
                     <p className="text-xs sm:text-sm text-red-500 mt-1">
-                      {errors.email.message}
+                      {errors.phone.message}
                     </p>
                   )}
                 </div>
@@ -255,14 +376,14 @@ export const RegisterForm = () => {
                 {/* Проверочный код */}
                 <div className="flex flex-col gap-[6px] w-full">
                   <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                    <Mail className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                    <Phone className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
                     Проверочный код
                   </label>
                   <div className="flex gap-[8px] w-full">
                     <input
                       type="text"
                       maxLength="6"
-                      className={`flex-1 min-w-0 h-[48px] sm:h-[52px] lg:h-[56px] px-3 sm:px-4 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] text-center tracking-widest ${
+                      className={`flex-1 min-w-0 h-[48px] sm:h-[52px] lg:h-[56px] px-3 sm:px-4 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none focus:border-[#26B3AB] text-center tracking-widest ${
                         errors.unique_code ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="123456"
@@ -312,7 +433,7 @@ export const RegisterForm = () => {
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
-                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none focus:border-[#26B3AB] ${
                         errors.password ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="Минимум 6 символов"
@@ -352,7 +473,7 @@ export const RegisterForm = () => {
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
-                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none focus:border-[#26B3AB] ${
                         errors.confirm_password ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="Повторите пароль"

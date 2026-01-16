@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { toast } from 'react-toastify';
-import { EyeIcon, EyeOffIcon, Mail, Lock } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, Phone, Lock } from 'lucide-react';
 import '../styles/auth-forms.css';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
@@ -26,23 +26,73 @@ export const LoginForm = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: '',
+      phone: '',
       password: '',
     },
   });
+
+  // Функция форматирования номера телефона
+  const formatPhoneNumber = (value) => {
+    // Если значение пустое, возвращаем пустую строку
+    if (!value || value.trim() === '') {
+      return '';
+    }
+    
+    // Удаляем все символы кроме цифр
+    const numbers = value.replace(/\D/g, '');
+    
+    // Если нет цифр, возвращаем пустую строку
+    if (numbers.length === 0) {
+      return '';
+    }
+    
+    // Если начинается с 8, заменяем на 7
+    let cleaned = numbers;
+    if (cleaned.startsWith('8')) {
+      cleaned = '7' + cleaned.slice(1);
+    }
+    
+    // Если не начинается с 7, добавляем 7
+    if (cleaned && !cleaned.startsWith('7')) {
+      cleaned = '7' + cleaned;
+    }
+    
+    // Ограничиваем до 11 цифр (7 + 10 цифр)
+    cleaned = cleaned.slice(0, 11);
+    
+    // Форматируем в формат +7 (XXX) XXX-XX-XX
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted = '+7';
+      if (cleaned.length > 1) {
+        formatted += ' (' + cleaned.slice(1, 4);
+      }
+      if (cleaned.length > 4) {
+        formatted += ') ' + cleaned.slice(4, 7);
+      }
+      if (cleaned.length > 7) {
+        formatted += '-' + cleaned.slice(7, 9);
+      }
+      if (cleaned.length > 9) {
+        formatted += '-' + cleaned.slice(9, 11);
+      }
+    }
+    
+    return formatted;
+  };
   
-  // Заполняем email, если он пришёл из проверки email
+  // Заполняем phone, если он пришёл из регистрации
   useEffect(() => {
-    if (location.state?.email) {
-      console.log('Вход в систему: устанавливаем email из state:', location.state.email);
-      setValue('email', location.state.email);
+    if (location.state?.phone) {
+      console.log('Вход в систему: устанавливаем phone из state:', location.state.phone);
+      setValue('phone', location.state.phone);
     } else {
       // Проверяем URL параметры
       const params = new URLSearchParams(location.search);
-      const emailParam = params.get('email');
-      if (emailParam) {
-        console.log('Вход в систему: устанавливаем email из URL:', emailParam);
-        setValue('email', emailParam);
+      const phoneParam = params.get('phone');
+      if (phoneParam) {
+        console.log('Вход в систему: устанавливаем phone из URL:', phoneParam);
+        setValue('phone', phoneParam);
       }
     }
     
@@ -52,15 +102,20 @@ export const LoginForm = () => {
     }
   }, [location, setValue]);
   
+  const handlePhoneChange = (e) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setValue('phone', formatted, { shouldValidate: true });
+  };
+
   const onSubmit = async (data) => {
     setIsLoading(true);
     setServerError(null);
     
     try {
-      console.log('LoginForm: Отправка запроса на логин:', data.email);
+      console.log('LoginForm: Отправка запроса на логин:', data.phone);
       
       // Используем функцию login из контекста
-      const result = await login(data.email, data.password);
+      const result = await login(data.phone, data.password);
       
       if (result.success) {
         console.log('LoginForm: Успешный вход, перенаправляем на главную');
@@ -100,7 +155,7 @@ export const LoginForm = () => {
             if (data?.message) {
               errorMessage = data.message;
             } else {
-              errorMessage = 'Неверный email или пароль. Пожалуйста, проверьте введенные данные.';
+              errorMessage = 'Неверный телефон или пароль. Пожалуйста, проверьте введенные данные.';
             }
             break;
           case 400:
@@ -232,32 +287,33 @@ export const LoginForm = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[28px] w-full max-w-[400px]">
               {/* Поля ввода */}
               <div className="flex flex-col gap-[24px] w-full">
-                {/* Email поле */}
+                {/* Phone поле */}
                 <div className="flex flex-col gap-[8px] w-full">
                   <label className="flex items-center gap-[6px] text-[13px] sm:text-[14px] lg:text-[15px] font-normal leading-[1.19] text-[#5C5C5C]">
-                    <Mail className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] text-[#5C5C5C] flex-shrink-0" />
-                    Email
+                    <Phone className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] text-[#5C5C5C] flex-shrink-0" />
+                    Телефон
                   </label>
                   <div className="relative">
                     <input
-                      type="email"
-                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[14px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                        errors.email ? 'border-red-400 bg-red-50' : 'bg-white'
+                      type="tel"
+                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[14px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none ${
+                        errors.phone ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isSubmitting ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                      placeholder="example@gmail.com"
+                      placeholder="+7 (___) ___-__-__"
                       disabled={isSubmitting}
-                      {...register('email', {
-                        required: 'Email обязателен',
+                      {...register('phone', {
+                        required: 'Телефон обязателен',
                         pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: 'Неверный формат email',
+                          value: /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/,
+                          message: 'Неверный формат телефона',
                         },
+                        onChange: handlePhoneChange
                       })}
                     />
                   </div>
-                  {errors.email && (
+                  {errors.phone && (
                     <p className="text-sm text-red-500 mt-1">
-                      {errors.email.message}
+                      {errors.phone.message}
                     </p>
                   )}
                 </div>
@@ -271,7 +327,7 @@ export const LoginForm = () => {
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
-                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[14px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[14px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none focus:border-[#26B3AB] ${
                         errors.password ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isSubmitting ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="Введите пароль"

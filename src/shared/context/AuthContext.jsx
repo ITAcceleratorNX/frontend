@@ -43,12 +43,12 @@ export const AuthProvider = ({ children }) => {
   }, [user, isLoading, isFetching]);
 
   // Мемоизированная функция для входа
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (phone, password) => {
     try {
-      if (import.meta.env.DEV) console.log('AuthContext: Попытка входа:', email);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка входа:', phone);
       
       // Выполняем запрос на авторизацию
-      const response = await authApi.login(email, password);
+      const response = await authApi.login(phone, password);
       
       if (response.success) {
         // Инвалидируем кеш пользователя, чтобы запросить свежие данные
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
         
         switch (status) {
           case 401:
-            userFriendlyError = data?.message || 'Неверный email или пароль';
+            userFriendlyError = data?.message || 'Неверный телефон или пароль';
             break;
           case 400:
             userFriendlyError = data?.message || 'Некорректные данные';
@@ -102,11 +102,11 @@ export const AuthProvider = ({ children }) => {
   }, [queryClient, refetch]);
 
   // Мемоизированная функция для регистрации
-  const register = useCallback(async (email, uniqueCode, password, leadSource = null) => {
+  const register = useCallback(async (phone, uniqueCode, password, leadSource = undefined) => {
     try {
-      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации:', email, 'lead_source:', leadSource);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации:', phone, 'lead_source:', leadSource);
       
-      const response = await authApi.register(email, uniqueCode, password, leadSource);
+      const response = await authApi.register(phone, uniqueCode, password, leadSource);
       
       if (response.success) {
         if (import.meta.env.DEV) console.log('AuthContext: Регистрация успешна');
@@ -198,6 +198,36 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Функция для проверки телефона
+  const checkPhone = useCallback(async (phone) => {
+    try {
+      if (import.meta.env.DEV) console.log('AuthContext: Проверка телефона:', phone);
+      const response = await authApi.checkPhone(phone);
+      
+      return { 
+        success: true, 
+        userExists: response.user_exists,
+        phone: response.phone
+      };
+    } catch (error) {
+      console.error('AuthContext: Ошибка при проверке телефона:', error);
+      
+      // Обработка ошибки rate limit
+      if (error.response?.status === 429) {
+        return {
+          success: false,
+          error: error.response.data?.error || 'Слишком много запросов. Пожалуйста, подождите.',
+          remainingSeconds: error.response.data?.remainingSeconds
+        };
+      }
+      
+      return { 
+        success: false, 
+        error: error.response?.data?.message || error.message || 'Неизвестная ошибка'
+      };
+    }
+  }, []);
+
   // Мемоизируем значение контекста для предотвращения лишних ререндеров
   const value = useMemo(() => ({
     isAuthenticated: !!user,
@@ -209,6 +239,7 @@ export const AuthProvider = ({ children }) => {
     register,
     registerLegal,
     checkEmail,
+    checkPhone,
     refetchUser: refetch
   }), [
     user, 
@@ -219,7 +250,8 @@ export const AuthProvider = ({ children }) => {
     logout, 
     register,
     registerLegal,
-    checkEmail, 
+    checkEmail,
+    checkPhone, 
     refetch
   ]);
 
