@@ -39,6 +39,7 @@ const APPLICATION_STATUS_OPTIONS = [
   { value: 'all', label: 'Все статусы' },
   { value: 'INACTIVE', label: 'Неактивна' },
   { value: 'ACTIVE', label: 'Активна' },
+  { value: 'ARCHIVE', label: 'Архив' },
   { value: 'APPROVED', label: 'Одобрена' },
   { value: 'PROCESSING', label: 'В обработке' },
   { value: 'CANCELED', label: 'Отменена' },
@@ -816,7 +817,11 @@ const Statistics = () => {
     const normalizedSearch = requestsSearch.trim().toLowerCase();
     return requests.filter((item) => {
       const matchesStatus =
-        requestStatusFilter === 'all' ? true : item.status === requestStatusFilter;
+        requestStatusFilter === 'all'
+          ? true
+          : requestStatusFilter === 'ARCHIVE'
+            ? ['FINISHED', 'INACTIVE', 'CANCELED', 'PROCESSING', 'APPROVED'].includes(item.status)
+            : item.status === requestStatusFilter;
       const statusLabel = STATUS_LABELS[item.status] ?? '';
       const matchesSearch =
         !normalizedSearch ||
