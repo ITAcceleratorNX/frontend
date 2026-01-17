@@ -79,9 +79,14 @@ export const useCreateManualPayment = () => {
       // Инвалидируем кеш платежей пользователя
       queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
       
-      // Показываем уведомление об успехе
+      // Показываем уведомление об успехе и открываем страницу оплаты
       if (data.payment_page_url) {
         showGenericSuccess('Ручная оплата создана! Перенаправляем на страницу оплаты...');
+        window.open(data.payment_page_url, '_blank');
+        // Перезагружаем страницу через небольшую задержку, чтобы дать время на открытие URL
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     },
     onError: (error) => {
@@ -258,5 +263,32 @@ export const useGetPrices = (options = {}) => {
     staleTime: 10 * 60 * 1000, // 10 минут - тарифы редко меняются
     cacheTime: 30 * 60 * 1000, // 30 минут
     ...options
+  });
+};
+
+/**
+ * Хук для скачивания PDF-чека оплаченного платежа
+ */
+export const useDownloadPaymentReceipt = () => {
+  return useMutation({
+    mutationFn: async (orderPaymentId) => {
+      const blob = await paymentsApi.getPaymentReceipt(orderPaymentId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `receipt-${orderPaymentId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onSuccess: () => {
+      showGenericSuccess('PDF-чек успешно скачан');
+    },
+    onError: (error) => {
+      console.error('Ошибка при скачивании PDF-чека:', error);
+      const errorMessage = error.response?.data?.message || 'Ошибка при скачивании PDF-чека';
+      showGenericError(errorMessage);
+    },
   });
 }; 

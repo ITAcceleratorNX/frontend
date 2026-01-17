@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { paymentsApi } from '../../../shared/api/paymentsApi';
+import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { toast } from 'react-toastify';
 import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
 import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
@@ -80,28 +79,8 @@ const PaymentCard = ({ order }) => {
 
   const cardBackground = getCardBackground();
 
-  const createManualPaymentMutation = useMutation({
-    mutationFn: paymentsApi.createManualPayment,
-    onSuccess: (data) => {
-      if (data.payment_page_url) {
-        window.open(data.payment_page_url, '_blank');
-        toast.success('Перенаправляем на страницу оплаты...', {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        window.location.reload();
-      } else {
-        toast.error('Ошибка: не получен URL для ручной оплаты');
-      }
-    },
-    onError: (error) => {
-      const errorMessage = error.response?.data?.message || 'Ошибка при создании ручной оплаты';
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-      });
-    }
-  });
+  const createManualPaymentMutation = useCreateManualPayment();
+  const downloadReceiptMutation = useDownloadPaymentReceipt();
 
   // Функция для получения изображения и названия тарифа по tariff_type
   const getTariffInfo = (tariffType) => {
@@ -121,27 +100,6 @@ const PaymentCard = ({ order }) => {
     return tariffMap[tariffType] || { image: null, name: 'Свои габариты' };
   };
 
-  const downloadReceiptMutation = useMutation({
-    mutationFn: paymentsApi.getPaymentReceipt,
-    onSuccess: (blob) => {
-      const fileUrl = window.URL.createObjectURL(blob);
-      window.open(fileUrl, '_blank');
-      setTimeout(() => {
-        window.URL.revokeObjectURL(fileUrl);
-      }, 1000);
-      toast.success('PDF-чек открыт в новой вкладке', {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    },
-    onError: (error) => {
-      const errorMessage = error.response?.data?.message || 'Ошибка при получении PDF-чека';
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-      });
-    }
-  });
 
   const handlePay = (paymentId) => {
     createManualPaymentMutation.mutate(paymentId);
