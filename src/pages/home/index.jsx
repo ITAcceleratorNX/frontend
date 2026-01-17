@@ -1107,7 +1107,7 @@ const HomePage = memo(() => {
         order_items: orderItems,
         is_selected_moving: true,
         is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
-        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudPickupDate),
+        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudBookingStartDate),
         tariff_type: tariff_type, // Добавляем тип тарифа
       };
 
@@ -1176,6 +1176,7 @@ const HomePage = memo(() => {
     }
   }, [
     buildMovingOrders,
+    cloudBookingStartDate,
     cloudMonthsNumber,
     cloudPickupAddress,
     cloudStorage,
@@ -1184,6 +1185,12 @@ const HomePage = memo(() => {
     isSubmittingOrder,
     isUserRole,
     navigate,
+    selectedTariff,
+    serviceOptions,
+    gazelleService,
+    ensureServiceOptions,
+    warehouseApi,
+    toast,
   ]);
 
   const handleIndividualBookingClick = useCallback(() => {
@@ -1218,8 +1225,14 @@ const HomePage = memo(() => {
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
       setCloudPickupAddress("");
+      return;
     }
-  }, [activeStorageTab]);
+    // Устанавливаем "Свои габариты" по умолчанию при переключении на облачное хранение
+    if (!selectedTariff) {
+      setSelectedTariff(customTariff);
+      setCloudDimensions({ width: 1, height: 1, length: 1 });
+    }
+  }, [activeStorageTab, selectedTariff, customTariff]);
 
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
@@ -2565,9 +2578,9 @@ const HomePage = memo(() => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+              <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 items-stretch">
                 {/* Левая колонка - Габариты и расчет */}
-                <div className="flex flex-col h-full justify-between">
+                <div className="flex flex-col h-full justify-between order-1 lg:order-1">
                   <h2 className="text-2xl font-bold text-[#273655] mb-6">
                     {selectedTariff?.isCustom 
                       ? 'Укажите габариты вещей' 
@@ -2667,7 +2680,7 @@ const HomePage = memo(() => {
                   </div>
 
                   {/* Блок ИТОГ */}
-                  <div className="bg-white rounded-3xl px-8 pt-6 pb-8 mb-6 border-2 border-dashed border-gray-300 min-h-[250px]">
+                  <div className="bg-white rounded-3xl px-8 pt-6 pb-8 mb-6 border-2 border-dashed border-gray-300 min-h-[250px] order-2 lg:order-2">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-2xl font-bold text-[#31876D]">ИТОГ</h3>
                       <span className="text-2xl font-bold text-[#31876D]">{cloudVolume.toFixed(2)} м³</span>
@@ -2695,18 +2708,81 @@ const HomePage = memo(() => {
                     </div>
                   </div>
 
-                  {/* Кнопка бронирования */}
+                  {/* Дата начала бронирования - для мобильной версии */}
+                  <div className="mb-6 order-3 lg:hidden">
+                    <DatePicker
+                      label="Дата начала бронирования"
+                      value={cloudBookingStartDate}
+                      onChange={(value) => {
+                        setCloudBookingStartDate(value);
+                        setSubmitError(null);
+                      }}
+                      minDate={new Date().toISOString().split('T')[0]}
+                      allowFutureDates={true}
+                      placeholder="ДД.ММ.ГГГГ"
+                    />
+                  </div>
+
+                  {/* Срок аренды - для мобильной версии */}
+                  <div className="mb-6 order-4 lg:hidden">
+                    <RentalPeriodSelect
+                      value={cloudMonths}
+                      onChange={(value) => {
+                        setCloudMonths(value);
+                        setSubmitError(null);
+                      }}
+                      label="Срок аренды:"
+                      variant="cloud-home"
+                      showLabelInside={true}
+                    />
+                  </div>
+
+                  {/* Адрес откуда забрать вещи - для мобильной версии */}
+                  <div className="mb-6 order-5 lg:hidden">
+                    <label className="block text-sm font-medium text-[#273655] mb-2">
+                      Адрес откуда забрать вещи
+                    </label>
+                    <input
+                      type="text"
+                      value={cloudPickupAddress}
+                      onChange={(e) => {
+                        setCloudPickupAddress(e.target.value);
+                        setSubmitError(null);
+                      }}
+                      placeholder="Например: г.Алматы, Абая 25"
+                      className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white"
+                    />
+                  </div>
+
+                  {/* Кнопка бронирования - для мобильной версии */}
                   <button
                     onClick={handleCloudBookingClick}
                     disabled={!isCloudFormReady || isSubmittingOrder}
-                    className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed order-6 lg:hidden mb-3"
+                  >
+                    {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
+                  </button>
+
+                  {/* Кнопка обратного звонка - для мобильной версии */}
+                  <button
+                    onClick={handleCallbackRequestClick}
+                    className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-3xl hover:bg-gray-200 transition-colors order-7 lg:hidden"
+                  >
+                    Заказать обратный звонок
+                  </button>
+
+                  {/* Кнопка бронирования - для десктопа */}
+                  <button
+                    onClick={handleCloudBookingClick}
+                    disabled={!isCloudFormReady || isSubmittingOrder}
+                    className="hidden lg:block w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-6"
                   >
                     {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
                   </button>
                 </div>
 
-                {/* Правая колонка - Бронирование и услуги */}
-                <div className="flex flex-col h-full pt-16 justify-between">
+                {/* Правая колонка - Бронирование и услуги (только для десктопа) */}
+                <div className="hidden lg:flex flex-col">
                   {/* Дата начала бронирования */}
                   <div className="mb-6">
                     <DatePicker
@@ -2736,41 +2812,10 @@ const HomePage = memo(() => {
                     />
                   </div>
                   
-                  {/* Дополнительные услуги */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold text-[#00A991] mb-3">
-                      Дополнительные услуги
-                    </h3>
-                    <p className="text-sm text-[#273655] mb-2 leading-relaxed">
-                      Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
-                    </p>
-                    <p className="text-sm font-semibold text-[#00A991]"> 
-                      Перевозка и упаковка включены в стоимость.
-                    </p>
-                  </div>
-                  
-                  {/* Дата забора вещей */}
+                  {/* Адрес откуда забрать вещи */}
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Дата забора вещей
-                    </label>
-                    <DatePicker
-                      value={cloudPickupDate}
-                      onChange={(value) => {
-                        setCloudPickupDate(value);
-                        setSubmitError(null);
-                      }}
-                      minDate={new Date().toISOString().split('T')[0]}
-                      allowFutureDates={true}
-                      placeholder=""
-                      className="[&>div]:bg-gray-100 [&>div]:border-0"
-                    />
-                  </div>
-                  
-                  {/* Адрес забора вещей */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Адрес забора вещей
+                      Адрес откуда забрать вещи
                     </label>
                     <input
                       type="text"
