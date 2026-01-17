@@ -1107,7 +1107,7 @@ const HomePage = memo(() => {
         order_items: orderItems,
         is_selected_moving: true,
         is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
-        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudPickupDate),
+        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudBookingStartDate),
         tariff_type: tariff_type, // Добавляем тип тарифа
       };
 
@@ -1176,6 +1176,7 @@ const HomePage = memo(() => {
     }
   }, [
     buildMovingOrders,
+    cloudBookingStartDate,
     cloudMonthsNumber,
     cloudPickupAddress,
     cloudStorage,
@@ -1184,6 +1185,12 @@ const HomePage = memo(() => {
     isSubmittingOrder,
     isUserRole,
     navigate,
+    selectedTariff,
+    serviceOptions,
+    gazelleService,
+    ensureServiceOptions,
+    warehouseApi,
+    toast,
   ]);
 
   const handleIndividualBookingClick = useCallback(() => {
@@ -1218,8 +1225,14 @@ const HomePage = memo(() => {
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
       setCloudPickupAddress("");
+      return;
     }
-  }, [activeStorageTab]);
+    // Устанавливаем "Свои габариты" по умолчанию при переключении на облачное хранение
+    if (!selectedTariff) {
+      setSelectedTariff(customTariff);
+      setCloudDimensions({ width: 1, height: 1, length: 1 });
+    }
+  }, [activeStorageTab, selectedTariff, customTariff]);
 
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
@@ -2724,23 +2737,8 @@ const HomePage = memo(() => {
                     />
                   </div>
 
-                  {/* Выбрать дату доставки - для мобильной версии */}
-                  <div className="mb-6 order-5 lg:hidden">
-                    <DatePicker
-                      label="Выбрать дату доставки"
-                      value={cloudPickupDate}
-                      onChange={(value) => {
-                        setCloudPickupDate(value);
-                        setSubmitError(null);
-                      }}
-                      minDate={new Date().toISOString().split('T')[0]}
-                      allowFutureDates={true}
-                      placeholder="ДД.ММ.ГГГГ"
-                    />
-                  </div>
-
                   {/* Адрес откуда забрать вещи - для мобильной версии */}
-                  <div className="mb-6 order-6 lg:hidden">
+                  <div className="mb-6 order-5 lg:hidden">
                     <label className="block text-sm font-medium text-[#273655] mb-2">
                       Адрес откуда забрать вещи
                     </label>
@@ -2760,7 +2758,7 @@ const HomePage = memo(() => {
                   <button
                     onClick={handleCloudBookingClick}
                     disabled={!isCloudFormReady || isSubmittingOrder}
-                    className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed order-7 lg:hidden mb-3"
+                    className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed order-6 lg:hidden mb-3"
                   >
                     {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
                   </button>
@@ -2768,7 +2766,7 @@ const HomePage = memo(() => {
                   {/* Кнопка обратного звонка - для мобильной версии */}
                   <button
                     onClick={handleCallbackRequestClick}
-                    className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-3xl hover:bg-gray-200 transition-colors order-8 lg:hidden"
+                    className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-3xl hover:bg-gray-200 transition-colors order-7 lg:hidden"
                   >
                     Заказать обратный звонок
                   </button>
@@ -2777,14 +2775,14 @@ const HomePage = memo(() => {
                   <button
                     onClick={handleCloudBookingClick}
                     disabled={!isCloudFormReady || isSubmittingOrder}
-                    className="hidden lg:block w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="hidden lg:block w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-6"
                   >
                     {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
                   </button>
                 </div>
 
                 {/* Правая колонка - Бронирование и услуги (только для десктопа) */}
-                <div className="hidden lg:flex flex-col h-full pt-16 justify-between">
+                <div className="hidden lg:flex flex-col">
                   {/* Дата начала бронирования */}
                   <div className="mb-6">
                     <DatePicker
@@ -2811,21 +2809,6 @@ const HomePage = memo(() => {
                       label="Срок аренды:"
                       variant="cloud-home"
                       showLabelInside={true}
-                    />
-                  </div>
-                  
-                  {/* Выбрать дату доставки */}
-                  <div className="mb-6">
-                    <DatePicker
-                      label="Выбрать дату доставки"
-                      value={cloudPickupDate}
-                      onChange={(value) => {
-                        setCloudPickupDate(value);
-                        setSubmitError(null);
-                      }}
-                      minDate={new Date().toISOString().split('T')[0]}
-                      allowFutureDates={true}
-                      placeholder="ДД.ММ.ГГГГ"
                     />
                   </div>
                   
