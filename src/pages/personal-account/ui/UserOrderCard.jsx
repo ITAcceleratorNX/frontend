@@ -23,7 +23,7 @@ import { Button } from '../../../components/ui/button';
 import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
 import { useCreateMoving, useCreateAdditionalServicePayment } from '../../../shared/lib/hooks/use-payments';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin } from 'lucide-react';
+import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
@@ -555,7 +555,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                     <div className="flex items-center gap-2 flex-1">
                       <Plus className="w-5 h-5 text-white/90 flex-shrink-0" />
                       <span className="text-white/90 text-sm">
-                        Договор #{index + 1}
+                        #{index + 1}
                         {contract.status && (
                           <span className="ml-2 text-xs text-white/70">
                             ({typeof contract.status === 'string' ? contract.status : getContractStatusText(order.contract_status)})
@@ -563,25 +563,38 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                         )}
                       </span>
                     </div>
-                    {contract.document_id && (
-                      <button
-                        onClick={() => handleDownloadContract(contract.document_id)}
-                        disabled={downloadContractMutation.isPending}
-                        className="text-white/90 text-sm font-medium hover:text-white transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        {downloadContractMutation.isPending ? (
-                          <>
-                            <span className="animate-spin">⏳</span>
-                            Загрузка...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="w-4 h-4" />
-                            Скачать
-                          </>
-                        )}
-                      </button>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {contract.url && (
+                        <button
+                          onClick={() => window.open(`https://${contract.url}`, '_blank')}
+                          className="text-white/90 text-sm font-medium hover:text-white transition-colors underline flex items-center gap-1"
+                          title="Посмотреть договор"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Посмотреть
+                        </button>
+                      )}
+                      {contract.document_id && (
+                        <button
+                          onClick={() => handleDownloadContract(contract.document_id)}
+                          disabled={downloadContractMutation.isPending}
+                          className="text-white/90 text-sm font-medium hover:text-white transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                          title="Скачать договор"
+                        >
+                          {downloadContractMutation.isPending ? (
+                            <>
+                              <span className="animate-spin">⏳</span>
+                              Загрузка...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4" />
+                              Скачать
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               });
