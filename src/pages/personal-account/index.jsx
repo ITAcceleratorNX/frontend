@@ -2,6 +2,7 @@ import React, { useState, useEffect, memo, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './ui/Sidebar';
 import PersonalData from './ui/PersonalData';
+import PersonalDataLegal from './ui/PersonalDataLegal';
 import Contracts from './ui/Contracts';
 import ChatSection from './ui/ChatSection';
 import AllUsers from './ui/AllUsers';
@@ -143,7 +144,7 @@ const PersonalAccountPage = memo(() => {
 
 
           {activeNav === 'orders' && <UserOrdersPage />}
-          {activeNav === 'personal' && <PersonalData />}
+          {activeNav === 'personal' && (user?.user_type === 'LEGAL' ? <PersonalDataLegal /> : <PersonalData />)}
           {activeNav === 'contracts' && <Contracts />}
           {activeNav === 'chat' && <ChatSection />}
           {activeNav === 'notifications' && getNotificationsComponent()}
