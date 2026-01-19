@@ -43,12 +43,12 @@ export const AuthProvider = ({ children }) => {
   }, [user, isLoading, isFetching]);
 
   // Мемоизированная функция для входа
-  const login = useCallback(async (phone, password) => {
+  const login = useCallback(async (login, password) => {
     try {
-      if (import.meta.env.DEV) console.log('AuthContext: Попытка входа:', phone);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка входа:', login);
       
       // Выполняем запрос на авторизацию
-      const response = await authApi.login(phone, password);
+      const response = await authApi.login(login, password);
       
       if (response.success) {
         // Инвалидируем кеш пользователя, чтобы запросить свежие данные
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
         
         switch (status) {
           case 401:
-            userFriendlyError = data?.message || 'Неверный телефон или пароль';
+            userFriendlyError = data?.message || 'Неверный логин или пароль';
             break;
           case 400:
             userFriendlyError = data?.message || 'Некорректные данные';

@@ -30,10 +30,10 @@ export const authApi = {
   },
 
   // Аутентификация пользователя
-  login: async (phone, password) => {
+  login: async (login, password) => {
     try {
-      console.log(`Отправка запроса на вход пользователя: ${phone}`);
-      const response = await api.post('/auth/login', { phone, password });
+      console.log(`Отправка запроса на вход пользователя: ${login}`);
+      const response = await api.post('/auth/login', { login, password });
       console.log('Успешный вход в систему');
       return response.data;
     } catch (error) {
