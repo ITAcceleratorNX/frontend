@@ -182,8 +182,8 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   );
 
   // Обработчик отмены договора
-  const handleCancelContract = ({ orderId, documentId, cancelReason, cancelComment }, callbacks = {}) => {
-    cancelContractMutation.mutate({ orderId, documentId, cancelReason, cancelComment }, callbacks);
+  const handleCancelContract = ({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }, callbacks = {}) => {
+    cancelContractMutation.mutate({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }, callbacks);
   };
 
   const resetCancelSurvey = () => {
@@ -222,7 +222,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     resetCancelSurvey();
   };
 
-  const handleSubmitCancelSurvey = () => {
+  const handleSubmitCancelSurvey = (selfPickupDate) => {
     if (!pendingCancelData?.orderId || !pendingCancelData?.documentId) {
       setCancelFormError('Не удалось определить договор. Попробуйте ещё раз.');
       return;
@@ -245,6 +245,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         documentId: pendingCancelData.documentId,
         cancelReason: selectedCancelReason,
         cancelComment: cancelReasonComment.trim(),
+        selfPickupDate: selfPickupDate || null,
       },
       {
         onSuccess: () => {
@@ -963,6 +964,7 @@ const CancelSurveyModal = ({
   const [pickupMethod, setPickupMethod] = useState(null);
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [selfPickupDate, setSelfPickupDate] = useState('');
 
   const createMovingMutation = useCreateMoving();
   const createAdditionalServicePaymentMutation = useCreateAdditionalServicePayment();
@@ -976,6 +978,7 @@ const CancelSurveyModal = ({
       setPickupMethod(null);
       setDeliveryDate('');
       setDeliveryAddress('');
+      setSelfPickupDate('');
     }
   }, [isOpen]);
 
@@ -999,7 +1002,7 @@ const CancelSurveyModal = ({
       
       // После успешной оплаты автоматически отправляем запрос на отмену
       if (paymentResult?.payment_page_url) {
-        onSubmit();
+        onSubmit(null); // Для доставки не передаём selfPickupDate
         window.location.href = paymentResult.payment_page_url;
       }
     } catch (error) {
@@ -1007,174 +1010,198 @@ const CancelSurveyModal = ({
     }
   };
 
+  const handleSelfPickupSubmit = () => {
+    onSubmit(selfPickupDate || null);
+  };
+
+  // Проверка валидности для кнопки подтверждения
+  const isSelfPickupValid = pickupMethod === 'self' && selfPickupDate;
+  const isSubmitDisabled = isSubmitting || (needsPickupMethod && (!pickupMethod || (pickupMethod === 'self' && !selfPickupDate)));
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-visible">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили отменить?</DialogTitle>
-          <DialogDescription>
-            Ваш ответ поможет улучшить сервис и условия хранения. Пожалуйста, выберите подходящую причину.
+      <DialogContent className="sm:max-w-[460px] max-h-[85vh] overflow-visible p-0 rounded-2xl">
+        {/* Заголовок */}
+        <DialogHeader className="px-5 pt-5 pb-3">
+          <DialogTitle className="text-lg font-bold text-[#273655]">Расторжение договора</DialogTitle>
+          <DialogDescription className="text-xs text-[#8A8A8A]">
+            Укажите причину и способ получения вещей
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto pr-1">
+        <div className="px-5 pb-3 max-h-[50vh] overflow-y-auto">
           {isLoadingDetails ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
+            <div className="flex items-center justify-center py-6">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#00A991]"></div>
             </div>
           ) : (
             <>
-              <div className="space-y-3 mb-4">
-              {CANCEL_REASON_OPTIONS.map((option) => (
-                <label
-                  key={option.value}
-                  className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
-                    selectedReason === option.value
-                      ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                      : 'border-gray-200 hover:border-[#c7d2fe]'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="cancel-reason"
-                    className="mt-1 h-4 w-4"
-                    checked={selectedReason === option.value}
-                    onChange={() => onSelectReason(option.value)}
-                  />
-                  <span className="text-sm text-gray-800">{option.label}</span>
-                </label>
-              ))}
-            </div>
-
-            {selectedReason === 'other' && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
-                <textarea
-                  className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
-                  rows={4}
-                  placeholder="Например: хочу поделиться предложениями по улучшению..."
-                  value={comment}
-                  onChange={(e) => onCommentChange(e.target.value)}
-                />
-              </div>
-            )}
-
-            {/* Блок выбора способа получения вещей */}
-            {selectedReason && needsPickupMethod && (
-              <div className="mt-6 space-y-4 border-t pt-4">
-                <p className="text-sm font-medium text-gray-700">Как вы хотите получить вещи?</p>
-                
-                <div className="space-y-3">
-                  <label
-                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
-                      pickupMethod === 'self'
-                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                        : 'border-gray-200 hover:border-[#c7d2fe]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="pickup-method"
-                      className="mt-1 h-4 w-4"
-                      checked={pickupMethod === 'self'}
-                      onChange={() => setPickupMethod('self')}
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-800 block">Забрать вещи самому</span>
-                      {orderDetails?.warehouseAddress && (
-                        <span className="text-xs text-gray-600 mt-1 block">
-                          <MapPin className="w-3 h-3 inline mr-1" />
-                          {orderDetails.warehouseAddress}
-                        </span>
-                      )}
-                    </div>
-                  </label>
-
-                  <label
-                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
-                      pickupMethod === 'delivery'
-                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                        : 'border-gray-200 hover:border-[#c7d2fe]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="pickup-method"
-                      className="mt-1 h-4 w-4"
-                      checked={pickupMethod === 'delivery'}
-                      onChange={() => setPickupMethod('delivery')}
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-800 block">Заказать доставку</span>
-                      {orderDetails?.gazelleToPrice && (
-                        <span className="text-xs text-gray-600 mt-1 block">
-                          Стоимость: {orderDetails.gazelleToPrice.toLocaleString('ru-RU')} ₸
-                        </span>
-                      )}
-                    </div>
-                  </label>
+              {/* Причина отмены - компактные теги */}
+              <div className="mb-4">
+                <p className="text-sm font-medium text-[#273655] mb-2">Причина</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {CANCEL_REASON_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => onSelectReason(option.value)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        selectedReason === option.value
+                          ? 'bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white'
+                          : 'bg-gray-100 text-[#273655] hover:bg-gray-200'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
-
-                {/* Форма для доставки */}
-                {pickupMethod === 'delivery' && (
-                  <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-xl">
-                    <div>
-                      <DatePicker
-                        label="Дата доставки"
-                        value={deliveryDate}
-                        onChange={setDeliveryDate}
-                        placeholder="Выберите дату доставки"
-                        minDate={new Date().toISOString().split('T')[0]}
-                        allowFutureDates={true}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">
-                        Адрес доставки (необязательно)
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
-                        placeholder="Введите адрес доставки"
-                        value={deliveryAddress}
-                        onChange={(e) => setDeliveryAddress(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+              {selectedReason === 'other' && (
+                <div className="mb-4">
+                  <textarea
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#00A991] focus:outline-none resize-none"
+                    rows={2}
+                    placeholder="Опишите причину..."
+                    value={comment}
+                    onChange={(e) => onCommentChange(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {/* Блок выбора способа получения вещей */}
+              {selectedReason && needsPickupMethod && (
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-sm font-medium text-[#273655] mb-2">Как заберёте вещи?</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Самовывоз */}
+                    <button
+                      type="button"
+                      onClick={() => setPickupMethod('self')}
+                      className={`p-3 rounded-xl text-left transition-all ${
+                        pickupMethod === 'self'
+                          ? 'bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Package className={`w-4 h-4 ${pickupMethod === 'self' ? 'text-white' : 'text-[#00A991]'}`} />
+                        <span className={`font-medium text-sm ${pickupMethod === 'self' ? 'text-white' : 'text-[#273655]'}`}>Самовывоз</span>
+                      </div>
+                      <p className={`text-xs ${pickupMethod === 'self' ? 'text-white/80' : 'text-[#8A8A8A]'}`}>Бесплатно</p>
+                    </button>
+
+                    {/* Доставка */}
+                    <button
+                      type="button"
+                      onClick={() => setPickupMethod('delivery')}
+                      className={`p-3 rounded-xl text-left transition-all ${
+                        pickupMethod === 'delivery'
+                          ? 'bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Truck className={`w-4 h-4 ${pickupMethod === 'delivery' ? 'text-white' : 'text-[#00A991]'}`} />
+                        <span className={`font-medium text-sm ${pickupMethod === 'delivery' ? 'text-white' : 'text-[#273655]'}`}>Доставка</span>
+                      </div>
+                      <p className={`text-xs ${pickupMethod === 'delivery' ? 'text-white/80' : 'text-[#8A8A8A]'}`}>
+                        {orderDetails?.gazelleToPrice 
+                          ? `${orderDetails.gazelleToPrice.toLocaleString('ru-RU')} ₸`
+                          : 'Платная'
+                        }
+                      </p>
+                    </button>
+                  </div>
+
+                  {/* Форма для самовывоза */}
+                  {pickupMethod === 'self' && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-xl space-y-2">
+                      {orderDetails?.warehouseAddress && (
+                        <div className="flex items-start gap-2 text-white/90">
+                          <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                          <span className="text-xs">{orderDetails.warehouseAddress}</span>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-xs font-medium text-white/90 block mb-1">Когда заберёте?</label>
+                        <input
+                          type="date"
+                          value={selfPickupDate}
+                          onChange={(e) => setSelfPickupDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Форма для доставки */}
+                  {pickupMethod === 'delivery' && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-xl space-y-2">
+                      <div>
+                        <label className="text-xs font-medium text-white/90 block mb-1">Дата доставки</label>
+                        <input
+                          type="date"
+                          value={deliveryDate}
+                          onChange={(e) => setDeliveryDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-white/90 block mb-1">Адрес доставки</label>
+                        <input
+                          type="text"
+                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/60"
+                          placeholder="г. Алматы, Абая 25"
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-xs text-red-600">{error}</p>
+                </div>
+              )}
             </>
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-4">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Закрыть
-          </Button>
+        {/* Кнопки */}
+        <div className="px-5 py-4 border-t border-gray-100 bg-white rounded-b-2xl flex gap-2">
+          <button 
+            onClick={onClose} 
+            className="flex-1 h-10 rounded-xl border border-gray-200 text-[#273655] text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            Отмена
+          </button>
           {pickupMethod === 'delivery' && selectedReason ? (
-            <Button
+            <button
               onClick={handleDeliverySubmit}
               disabled={isSubmitting || !deliveryDate || createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+              className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {(createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending)
                 ? 'Обработка…' 
-                : `Оплатить доставку (${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸)`}
-            </Button>
+                : `Оплатить ${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸`}
+            </button>
           ) : (
-            <Button
-              onClick={onSubmit}
-              disabled={isSubmitting || (needsPickupMethod && !pickupMethod)}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            <button
+              onClick={handleSelfPickupSubmit}
+              disabled={isSubmitDisabled}
+              className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
-            </Button>
+              {isSubmitting ? 'Отправка…' : 'Подтвердить'}
+            </button>
           )}
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

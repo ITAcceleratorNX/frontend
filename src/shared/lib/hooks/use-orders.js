@@ -236,8 +236,8 @@ export const useCancelContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, documentId, cancelReason, cancelComment }) =>
-      ordersApi.cancelContract({ orderId, documentId, cancelReason, cancelComment }),
+    mutationFn: ({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }) =>
+      ordersApi.cancelContract({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }),
     onSuccess: () => {
       showGenericSuccess('Успешный запрос на отмену договора');
       queryClient.invalidateQueries({ queryKey: ['contracts', 'user'] });
@@ -259,8 +259,8 @@ export const useCancelOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, cancelReason, cancelComment }) =>
-      ordersApi.cancelOrder({ orderId, cancelReason, cancelComment }),
+    mutationFn: ({ orderId, cancelReason, cancelComment, selfPickupDate }) =>
+      ordersApi.cancelOrder({ orderId, cancelReason, cancelComment, selfPickupDate }),
     onSuccess: () => {
       showGenericSuccess('Запрос на расторжение контракта отправлен');
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });

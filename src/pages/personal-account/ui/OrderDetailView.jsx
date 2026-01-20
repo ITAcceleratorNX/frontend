@@ -387,13 +387,18 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                   Клиент запросил возврат заказа. Подтвердите возврат, чтобы продолжить процесс расторжения контракта.
                 </p>
                 {order.cancel_reason && (
-                  <div className="mt-2 pt-2 border-t border-amber-200">
+                  <div className="mt-2 pt-2 border-t border-amber-200 space-y-1">
                     <p className="text-xs text-amber-600">
                       <span className="font-medium">Причина:</span> {order.cancel_reason}
                     </p>
                     {order.cancel_reason_comment && (
-                      <p className="text-xs text-amber-600 mt-1">
+                      <p className="text-xs text-amber-600">
                         <span className="font-medium">Комментарий:</span> {order.cancel_reason_comment}
+                      </p>
+                    )}
+                    {order.self_pickup_date && (
+                      <p className="text-xs text-amber-600">
+                        <span className="font-medium">Дата самовывоза:</span> {formatDate(order.self_pickup_date)}
                       </p>
                     )}
                   </div>
