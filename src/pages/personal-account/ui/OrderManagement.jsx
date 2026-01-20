@@ -14,7 +14,8 @@ import {
   useDeleteOrder,
   useSearchOrders,
   useOrdersStats,
-  useApproveCancelOrder
+  useApproveCancelOrder,
+  useUnlockStorage
 } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderCard from './OrderCard';
@@ -104,9 +105,10 @@ const OrderManagement = () => {
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
   const approveCancelOrder = useApproveCancelOrder();
+  const unlockStorage = useUnlockStorage();
 
   // Проверяем загрузку мутаций
-  const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading || approveCancelOrder.isPending;
+  const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading || approveCancelOrder.isPending || unlockStorage.isPending;
 
   // Определяем какие данные показывать
   const ordersToShow = isSearchActive ? searchedOrders : allOrders;
@@ -116,7 +118,7 @@ const OrderManagement = () => {
     if (statusFilter === 'RETURN') {
       // Фильтр для возвратов: заказы с cancel_status === 'PENDING' или 'APPROVED'
       return ordersToShow.filter(order =>
-        order.cancel_status === 'PENDING' || order.cancel_status === 'APPROVED'
+        order.cancel_status === 'PENDING' || order.cancel_status === 'APPROVED' || order.status === 'CANCELED',
       );
     }
     if (statusFilter === 'ALL') return ordersToShow;
@@ -228,6 +230,29 @@ const OrderManagement = () => {
         await refetchSearch();
       }
       // selectedOrder обновится автоматически через useEffect при изменении данных
+    } catch (error) {
+      console.error(error);
+      toast.error('Ошибка', {
+        duration: 2000,
+        position: 'top-right',
+        description: error.response?.data?.message || error.message,
+      });
+    }
+  };
+
+  const handleUnlockStorage = async (orderId) => {
+    try {
+      await unlockStorage.mutateAsync(orderId);
+      // Обновляем данные после успешной разблокировки
+      await refetch();
+      if (isSearchActive) {
+        await refetchSearch();
+      }
+      // Закрываем модальное окно если открыто
+      if (isOrderDetailOpen) {
+        setIsOrderDetailOpen(false);
+        setSelectedOrder(null);
+      }
     } catch (error) {
       console.error(error);
       toast.error('Ошибка', {
@@ -700,6 +725,7 @@ const OrderManagement = () => {
                 }}
                 isLoading={isMutating}
                 onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
+                onUnlockStorage={statusFilter === 'RETURN' ? handleUnlockStorage : undefined}
               />
             </div>
           )}

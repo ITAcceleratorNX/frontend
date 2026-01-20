@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../components/ui/dialog';
 import { 
   getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
 import EditLocationModal from './EditLocationModal';
+import { AlertTriangle, Unlock } from 'lucide-react';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -17,9 +19,10 @@ const getStorageTypeText = (type) => {
   return type || 'Не указано';
 };
 
-const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn }) => {
+const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn, onUnlockStorage }) => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -420,6 +423,126 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
           </div>
         </div>
       )}
+
+      {/* Кнопка разблокировки бокса для отмененных заказов с cancel_status === 'APPROVED' */}
+      {onUnlockStorage !== undefined && order.status === 'CANCELED' && order.cancel_status === 'SIGNED' && (
+        <div className="space-y-4 pt-6 border-t border-gray-200">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-red-900 mb-1">Бокс заблокирован</h4>
+                <p className="text-sm text-red-700">
+                  Заказ отменен, но бокс все еще заблокирован. Разблокируйте бокс, чтобы сделать его доступным для новых заказов.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setIsUnlockModalOpen(true)}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 min-w-[180px]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+              Разблокировать бокс
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно подтверждения разблокировки бокса */}
+      <Dialog open={isUnlockModalOpen} onOpenChange={setIsUnlockModalOpen}>
+        <DialogContent className="sm:max-w-[420px] p-0 rounded-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] p-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <Unlock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-lg font-bold text-white">
+                    Разблокировка бокса
+                  </DialogTitle>
+                  <DialogDescription className="text-white/80 text-sm mt-0.5">
+                    Подтверждение действия
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-5">
+            {/* Предупреждение */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-amber-100 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-amber-900 mb-1">
+                    Важное предупреждение
+                  </h4>
+                  <p className="text-sm text-amber-700">
+                    Перед разблокировкой бокса убедитесь, что клиент забрал все свои вещи и бокс полностью пуст.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Информация о заказе */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-5">
+              <p className="text-sm text-[#273655]">
+                <span className="font-medium">Заказ:</span> №{order.id}
+              </p>
+              {order.storage && (
+                <p className="text-sm text-[#273655] mt-1">
+                  <span className="font-medium">Бокс:</span> {order.storage.name || `#${order.storage.id}`}
+                </p>
+              )}
+            </div>
+
+            {/* Кнопки */}
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsUnlockModalOpen(false)}
+                className="flex-1 h-11 rounded-xl border-gray-200 text-[#273655] hover:bg-gray-50"
+              >
+                Отмена
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  onUnlockStorage(order.id);
+                  setIsUnlockModalOpen(false);
+                }}
+                disabled={isLoading}
+                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] hover:opacity-90 text-white"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Обработка...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Unlock className="w-4 h-4" />
+                    Подтвердить
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Модальное окно редактирования локации */}
       <EditLocationModal

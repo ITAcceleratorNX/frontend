@@ -179,6 +179,23 @@ export const ordersApi = {
     }
   },
 
+  // Разблокировка бокса (для ADMIN/MANAGER)
+  unlockStorage: async (orderId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Разблокировка бокса для заказа ${orderId}`);
+      }
+      const response = await api.patch(`/orders/${orderId}/unlock-storage`);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Бокс успешно разблокирован:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при разблокировке бокса:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Скачивание файла договора
   downloadContractFile: async (documentId) => {
     try {

@@ -101,8 +101,12 @@ const PaymentCard = ({ order }) => {
   };
 
 
-  const handlePay = (paymentId) => {
-    createManualPaymentMutation.mutate(paymentId);
+  const handlePay = (payment) => {
+    if (payment.payment_page_url) {
+      window.open(payment.payment_page_url, '_blank');
+      return;
+    }
+    createManualPaymentMutation.mutate(payment.id);
   };
 
   const handleDownloadReceipt = (paymentId) => {
@@ -137,7 +141,7 @@ const PaymentCard = ({ order }) => {
         ) : payment.status === 'MANUAL' ? (
           <>
             <button
-              onClick={() => handlePay(payment.id)}
+              onClick={() => handlePay(payment)}
               disabled={createManualPaymentMutation.isLoading}
               className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
             >

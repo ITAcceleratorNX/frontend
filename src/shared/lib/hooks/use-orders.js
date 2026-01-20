@@ -298,6 +298,27 @@ export const useApproveCancelOrder = () => {
 };
 
 /**
+ * Хук для разблокировки бокса (для ADMIN/MANAGER)
+ */
+export const useUnlockStorage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderId) => ordersApi.unlockStorage(orderId),
+    onSuccess: () => {
+      showGenericSuccess('Бокс успешно разблокирован');
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
+    },
+    onError: (error) => {
+      console.error('Ошибка при разблокировке бокса:', error);
+      showGenericError(error.response?.data?.message || 'Не удалось разблокировать бокс');
+    }
+  });
+};
+
+/**
  * Хук для скачивания файла договора
  */
 export const useDownloadContract = () => {
