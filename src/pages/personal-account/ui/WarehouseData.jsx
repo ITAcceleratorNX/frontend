@@ -490,15 +490,16 @@ const WarehouseData = () => {
           
           setMovingOrders(prevOrders => {
             // Проверяем, нет ли уже такого moving_order
-            const exists = prevOrders.some(order => order.status === "PENDING_TO");
+            const exists = prevOrders.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
             if (exists) {
-              console.log("⚠️ moving_order PENDING_TO уже существует");
+              console.log("⚠️ moving_order PENDING (TO_CLIENT) уже существует");
               return prevOrders;
             }
             
             const newOrder = {
               moving_date: returnDate.toISOString(),
-              status: "PENDING_TO",
+              status: "PENDING",
+              direction: "TO_CLIENT",
               address: movingAddressTo || movingAddressFrom || "",
             };
             
@@ -514,7 +515,7 @@ const WarehouseData = () => {
         if (oldOption && oldOption.type === "GAZELLE_TO") {
           console.log("🗑️ GAZELLE_TO удалена, удаляем moving_order");
           // Удаляем moving_order для возврата вещей
-          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+          setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
     }
@@ -528,7 +529,7 @@ const WarehouseData = () => {
       if (serviceToRemove?.service_id && serviceOptions.length > 0) {
         const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
         if (option && option.type === "GAZELLE_TO") {
-          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+          setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
       
@@ -2026,7 +2027,8 @@ const WarehouseData = () => {
                                 },
                                 {
                                   moving_date: returnDate.toISOString(),
-                                  status: 'PENDING_TO',
+                                  status: 'PENDING',
+                                  direction: 'TO_CLIENT',
                                   address: cloudPickupAddress.trim(),
                                 }
                               ];
@@ -2448,7 +2450,7 @@ const WarehouseData = () => {
                                                   setMovingAddressTo(e.target.value);
                                                   // Обновляем адрес в moving_order
                                                   setMovingOrders(prev => prev.map(order => 
-                                                    order.status === "PENDING_TO" 
+                                                    (order.status === "PENDING" && order.direction === "TO_CLIENT") 
                                                       ? { ...order, address: e.target.value }
                                                       : order
                                                   ));
@@ -2867,7 +2869,8 @@ const WarehouseData = () => {
                               
                               allMovingOrders.push({
                                 moving_date: pickupDate.toISOString(),
-                                status: 'PENDING_FROM',
+                                status: 'PENDING',
+                                direction: 'TO_WAREHOUSE',
                                 address: movingAddressFrom.trim(),
                               });
                             }
@@ -2877,12 +2880,13 @@ const WarehouseData = () => {
                               console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
                               
                               // Используем moving_order из состояния или создаем новый
-                              const returnOrder = movingOrders.find(order => order.status === "PENDING_TO");
+                              const returnOrder = movingOrders.find(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
                               if (returnOrder && returnOrder.address && returnOrder.address.trim()) {
                                 console.log("✅ Используем существующий moving_order из состояния");
                                 allMovingOrders.push({
                                   moving_date: returnOrder.moving_date,
-                                  status: "PENDING_TO",
+                                  status: "PENDING",
+                                  direction: "TO_CLIENT",
                                   address: returnOrder.address.trim(),
                                 });
                               } else {
@@ -2905,7 +2909,8 @@ const WarehouseData = () => {
                                 
                                 allMovingOrders.push({
                                   moving_date: returnDate.toISOString(),
-                                  status: "PENDING_TO",
+                                  status: "PENDING",
+                                  direction: "TO_CLIENT",
                                   address: returnAddress,
                                 });
                               }

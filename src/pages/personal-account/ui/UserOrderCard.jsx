@@ -268,24 +268,35 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
 
 // --- Moving statuses helpers (JS) ---
   const MOVING_STATUS_TEXT = {
-    PENDING_FROM:  'Ожидает забора',
-    PENDING_TO:    'Ожидает доставки',
-    IN_PROGRESS:   'В процессе (к складу)',
-    IN_PROGRESS_TO:'В процессе (к клиенту)',
-    DELIVERED:     'Доставлено на склад',
-    DELIVERED_TO:  'Доставлено клиенту',
+    PENDING:  'Ожидает назначения курьера',
+    COURIER_ASSIGNED: 'Курьер назначен',
+    COURIER_IN_TRANSIT: 'Курьер в пути',
+    COURIER_AT_CLIENT: 'Курьер у клиента',
+    IN_PROGRESS:   'В пути',
+    DELIVERED:     'Доставлено',
+    FINISHED: 'Завершено',
     CANCELLED:     'Отменено',
   };
 
-  function getMovingStatusText(s) {
-    return MOVING_STATUS_TEXT[s] || s;
+  function getMovingStatusText(s, direction) {
+    const baseText = MOVING_STATUS_TEXT[s] || s;
+    if (s === 'PENDING') {
+      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+    }
+    if (s === 'IN_PROGRESS') {
+      return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+    }
+    if (s === 'DELIVERED') {
+      return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+    }
+    return baseText;
   }
 
   function getMovingStatusBadgeClass(s) {
     if (s === 'CANCELLED') return 'bg-red-100 text-red-700 border border-red-200';
-    if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-100 text-green-700 border border-green-200';
-    if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-100 text-blue-700 border border-blue-200';
-    if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-100 text-amber-800 border border-amber-200';
+    if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-100 text-green-700 border border-green-200';
+    if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-100 text-blue-700 border border-blue-200';
+    if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-100 text-amber-800 border border-amber-200';
     return 'bg-gray-100 text-gray-700 border border-gray-200';
   }
 
@@ -1026,7 +1037,8 @@ const CancelSurveyModal = ({
       await createMovingMutation.mutateAsync({
         orderId,
         movingDate: deliveryDate,
-        status: 'PENDING_TO',
+        status: 'PENDING',
+        direction: 'TO_CLIENT',
         address: deliveryAddress || null
       });
 

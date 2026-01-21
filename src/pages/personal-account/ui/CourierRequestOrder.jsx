@@ -7,6 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '../../../components/ui/dialog';
 import { api } from '../../../shared/api/axios';
 import { 
   ArrowLeft, 
@@ -24,7 +32,8 @@ import {
   Box,
   Phone,
   Download,
-  Edit
+  Edit,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
@@ -39,7 +48,36 @@ const CourierRequestOrder = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const downloadItemFile = useDownloadItemFile();
+
+  // Проблемные статусы для курьера
+  const issueStatuses = [
+    { value: 'CLIENT_NOT_RESPONDING', label: 'Клиент не отвечает' },
+    { value: 'WRONG_ADDRESS', label: 'Неверный адрес' },
+    { value: 'CLIENT_RESCHEDULED', label: 'Клиент перенёс время' },
+  ];
+
+  const handleIssueStatusChange = async (issueStatus) => {
+    if (!order) return;
+
+    try {
+      setIsUpdating(true);
+      await api.put(`/moving/${orderId}`, {
+        id: orderId,
+        issue_status: issueStatus,
+      });
+      
+      setOrder(prev => ({ ...prev, issue_status: issueStatus }));
+      setIsIssueModalOpen(false);
+      toast.success('Проблемная ситуация отмечена');
+    } catch (err) {
+      console.error('Ошибка при обновлении проблемного статуса:', err);
+      toast.error('Ошибка при обновлении статуса');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   // Функция для обработки навигации в сайдбаре
   const handleNavClick = (navKey) => {
@@ -92,25 +130,28 @@ const CourierRequestOrder = () => {
     try {
       setIsUpdating(true);
 
-      if (order.status === 'DELIVERED') {
-        toast.info('Завершённые заказы нельзя удалить');
+      if (order.status === 'DELIVERED' || order.status === 'FINISHED') {
+        toast.info('Завершённые заказы нельзя изменить');
         return;
       }
 
       let newStatus;
-      if (order.status === 'PENDING_FROM' ) {
+       if (order.status === 'PENDING') {
+        newStatus = 'COURIER_ASSIGNED';
+        toast.success('Заказ принят в работу');
+      } else if (order.status === 'COURIER_ASSIGNED') {
+        newStatus = 'COURIER_IN_TRANSIT';
+        toast.success('Курьер в пути');
+      } else if (order.status === 'COURIER_IN_TRANSIT') {
+        newStatus = 'COURIER_AT_CLIENT';
+        toast.success('Статус обновлен: Курьер у клиента');
+      } else if (order.status === 'COURIER_AT_CLIENT') {
         newStatus = 'IN_PROGRESS';
-        toast.success('Заказ принят в работу');
-      }else if (order.status === 'PENDING_TO') {
-        newStatus = 'IN_PROGRESS_TO';
-        toast.success('Заказ принят в работу');
+        toast.success('Статус обновлен: В пути');
       } else if (order.status === 'IN_PROGRESS') {
         newStatus = 'DELIVERED';
         toast.success('Заказ завершён');
-      } else if (order.status === 'IN_PROGRESS_TO') {
-        newStatus = 'DELIVERED_TO';
-        toast.success('Заказ завершён');
-      }else {
+      } else {
         return;
       }
 
@@ -137,7 +178,7 @@ const CourierRequestOrder = () => {
       className: "flex items-center gap-2"
     };
 
-    if (order.status === 'PENDING_FROM' || order.status === 'PENDING_TO') {
+     if (order.status === 'PENDING') {
       return (
         <Button {...buttonProps} className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90 text-white">
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
@@ -145,7 +186,31 @@ const CourierRequestOrder = () => {
         </Button>
       );
     }
-    if (order.status === 'IN_PROGRESS'||order.status === 'IN_PROGRESS_TO') {
+    if (order.status === 'COURIER_ASSIGNED') {
+      return (
+        <Button {...buttonProps} className="bg-blue-600 hover:bg-blue-700 text-white">
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />}
+          {order.direction === 'TO_CLIENT' ? 'Еду к клиенту' : 'Еду к вам'}
+        </Button>
+      );
+    }
+    if (order.status === 'COURIER_IN_TRANSIT') {
+      return (
+        <Button {...buttonProps} className="bg-purple-600 hover:bg-purple-700 text-white">
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
+          Прибыл к клиенту
+        </Button>
+      );
+    }
+    if (order.status === 'COURIER_AT_CLIENT') {
+      return (
+        <Button {...buttonProps} className="bg-blue-600 hover:bg-blue-700 text-white">
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Box className="w-4 h-4" />}
+          {order.direction === 'TO_CLIENT' ? 'Оставил вещи' : 'Забрал вещи'}
+        </Button>
+      );
+    }
+    if (order.status === 'IN_PROGRESS') {
       return (
         <Button {...buttonProps} className="bg-green-600 hover:bg-green-700 text-white">
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -153,7 +218,7 @@ const CourierRequestOrder = () => {
         </Button>
       );
     }
-    if (order.status === 'DELIVERED' || order.status === 'DELIVERED_TO') {
+    if (order.status === 'DELIVERED' || order.status === 'FINISHED') {
       return null;
     }
     return null;
@@ -163,21 +228,40 @@ const CourierRequestOrder = () => {
     if (!order) return null;
 
     switch (order.status) {
-      case 'PENDING_FROM':
-      case 'PENDING_TO':
+      case 'PENDING':
         return <Badge variant="secondary" className="bg-orange-100 text-orange-800 flex items-center gap-1">
           <Clock className="w-3 h-3" />
-          Ожидает принятия
+          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает назначения курьера'}
+        </Badge>;
+      case 'COURIER_ASSIGNED':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
+          <User className="w-3 h-3" />
+          Курьер назначен
+        </Badge>;
+      case 'COURIER_IN_TRANSIT':
+        return <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
+          <Truck className="w-3 h-3" />
+          Курьер в пути {order.direction === 'TO_CLIENT' ? 'к клиенту' : 'к вам'}
+        </Badge>;
+      case 'COURIER_AT_CLIENT':
+        return <Badge className="bg-purple-100 text-purple-800 flex items-center gap-1">
+          <User className="w-3 h-3" />
+          Курьер у клиента
         </Badge>;
       case 'IN_PROGRESS':
         return <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
           <Truck className="w-3 h-3" />
-          В работе
+          {order.direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу'}
         </Badge>;
       case 'DELIVERED':
         return <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
           <CheckCircle2 className="w-3 h-3" />
-          Выполнен
+          {order.direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад'}
+        </Badge>;
+      case 'FINISHED':
+        return <Badge className="bg-gray-100 text-gray-800 flex items-center gap-1">
+          <CheckCircle2 className="w-3 h-3" />
+          Завершено
         </Badge>;
       default:
         return <Badge variant="outline">Неизвестный статус</Badge>;
@@ -270,6 +354,16 @@ const CourierRequestOrder = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     {getStatusBadge()}
+                    {order.status !== 'DELIVERED' && order.status !== 'FINISHED' && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsIssueModalOpen(true)}
+                        className="flex items-center gap-2 text-orange-600 border-orange-200 hover:bg-orange-50"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                        Проблема
+                      </Button>
+                    )}
                     {getActionButton()}
                   </div>
                 </div>
@@ -322,9 +416,26 @@ const CourierRequestOrder = () => {
                       <Building className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">Склад</p>
-                        <p className="text-gray-700">{order.warehouseAddress || 'Не указан'}</p>
+                        <p className="text-gray-700">
+                          {order.warehouseName 
+                            ? `${order.warehouseName}${order.warehouseAddress ? `, ${order.warehouseAddress}` : ''}` 
+                            : (order.warehouseAddress || 'Не указан')}
+                        </p>
                       </div>
                     </div>
+
+                    {order.delivery_time_interval && (
+                      <>
+                        <Separator />
+                        <div className="flex items-start gap-2">
+                          <Clock className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Время доставки</p>
+                            <p className="text-gray-700">{order.delivery_time_interval}</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     <Separator />
 
@@ -456,6 +567,46 @@ const CourierRequestOrder = () => {
               item={selectedItem}
               onLocationUpdated={handleLocationUpdated}
             />
+
+            {/* Модальное окно выбора проблемного статуса */}
+            <Dialog open={isIssueModalOpen} onOpenChange={setIsIssueModalOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Отметить проблемную ситуацию</DialogTitle>
+                  <DialogDescription>
+                    Выберите проблему, с которой вы столкнулись при выполнении заказа
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-2 py-4">
+                  {issueStatuses.map((issue) => (
+                    <Button
+                      key={issue.value}
+                      onClick={() => handleIssueStatusChange(issue.value)}
+                      className="w-full justify-start text-left h-auto py-3 px-4"
+                      variant="outline"
+                      disabled={isUpdating || order?.issue_status === issue.value}
+                    >
+                      <AlertTriangle className="w-5 h-5 mr-3 text-orange-600" />
+                      <span className="text-lg font-medium">{issue.label}</span>
+                      {order?.issue_status === issue.value && (
+                        <CheckCircle2 className="w-5 h-5 ml-auto text-green-600" />
+                      )}
+                    </Button>
+                  ))}
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsIssueModalOpen(false)}
+                    disabled={isUpdating}
+                  >
+                    Отмена
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             </div>
           </main>
         </div>

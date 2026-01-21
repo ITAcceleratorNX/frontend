@@ -13,7 +13,7 @@ import {
 } from '../../../components/ui/dialog';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { List, Zap, Truck, Edit } from 'lucide-react';
+import { List, Zap, Truck, Edit, Clock } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { toast } from 'react-toastify';
@@ -29,6 +29,17 @@ const UserDelivery = () => {
         moving_date: '',
         address: ''
     });
+    const [timeSelectionModalOpen, setTimeSelectionModalOpen] = useState(false);
+    const [selectedDeliveryForTime, setSelectedDeliveryForTime] = useState(null);
+
+    // Интервалы времени доставки
+    const deliveryTimeIntervals = [
+        '06:00-09:00',
+        '09:00-12:00',
+        '12:00-15:00',
+        '15:00-18:00',
+        '18:00-21:00'
+    ];
 
     const queryClient = useQueryClient();
 
@@ -66,11 +77,11 @@ const UserDelivery = () => {
         switch (activeFilter) {
             case 'inProgress':
                 return deliveries.filter(d =>
-                    ['PENDING_FROM', 'PENDING_TO', 'IN_PROGRESS', 'IN_PROGRESS_TO'].includes(d.status)
+                    ['PENDING', 'COURIER_ASSIGNED', 'COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(d.status)
                 );
             case 'delivered':
                 return deliveries.filter(d =>
-                    ['DELIVERED', 'DELIVERED_TO'].includes(d.status)
+                    ['DELIVERED'].includes(d.status)
                 );
             default:
                 return deliveries;
@@ -87,7 +98,7 @@ const UserDelivery = () => {
                 ['PENDING_FROM', 'PENDING_TO', 'IN_PROGRESS', 'IN_PROGRESS_TO'].includes(d.status)
             ).length,
             delivered: deliveries.filter(d =>
-                ['DELIVERED', 'DELIVERED_TO'].includes(d.status)
+                ['DELIVERED'].includes(d.status)
             ).length,
             addresses: new Set(deliveries.map(d => d.address).filter(Boolean)).size
         };
@@ -124,6 +135,26 @@ const UserDelivery = () => {
             movingOrderId: selectedDelivery.id,
             data: updateData
         });
+    };
+
+    // Обработчик открытия модального окна выбора времени
+    const handleSelectTimeClick = (delivery) => {
+        setSelectedDeliveryForTime(delivery);
+        setTimeSelectionModalOpen(true);
+    };
+
+    // Обработчик выбора времени доставки
+    const handleTimeIntervalSelect = (interval) => {
+        if (!selectedDeliveryForTime) return;
+
+        updateDeliveryMutation.mutate({
+            movingOrderId: selectedDeliveryForTime.id,
+            data: {
+                delivery_time_interval: interval
+            }
+        });
+        setTimeSelectionModalOpen(false);
+        setSelectedDeliveryForTime(null);
     };
 
 
@@ -231,6 +262,7 @@ const UserDelivery = () => {
                                 <DeliveryCard
                                     key={delivery.id}
                                     delivery={delivery}
+                                    onSelectTimeClick={handleSelectTimeClick}
                                 />
                             ))}
                         </div>
@@ -312,6 +344,44 @@ const UserDelivery = () => {
                             className="bg-[#1e2c4f] hover:bg-[#162540]"
                         >
                             {updateDeliveryMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Модальное окно выбора времени доставки */}
+            <Dialog open={timeSelectionModalOpen} onOpenChange={setTimeSelectionModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Выберите время доставки</DialogTitle>
+                        <DialogDescription>
+                            Пожалуйста, выберите удобный для вас интервал времени доставки
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-2 py-4">
+                        {deliveryTimeIntervals.map((interval) => (
+                            <Button
+                                key={interval}
+                                onClick={() => handleTimeIntervalSelect(interval)}
+                                className="w-full justify-start text-left h-auto py-3 px-4"
+                                variant="outline"
+                            >
+                                <Clock className="w-5 h-5 mr-3" />
+                                <span className="text-lg font-medium">{interval}</span>
+                            </Button>
+                        ))}
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setTimeSelectionModalOpen(false);
+                                setSelectedDeliveryForTime(null);
+                            }}
+                        >
+                            Отмена
                         </Button>
                     </DialogFooter>
                 </DialogContent>
