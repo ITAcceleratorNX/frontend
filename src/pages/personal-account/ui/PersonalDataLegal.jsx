@@ -79,33 +79,13 @@ const PersonalDataLegal = memo(() => {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Используем мемоизацию для defaultValues
-  const defaultValues = useMemo(() => ({
-    bin_iin: user?.bin_iin || '',
-    company_name: user?.company_name || '',
-    bik: user?.bik || '',
-    iik: user?.iik || '',
-    region: user?.legal_address?.region || '',
-    city: user?.legal_address?.city || '',
-    street: user?.legal_address?.street || '',
-    house: user?.legal_address?.house || '',
-    building: user?.legal_address?.building || '',
-    office: user?.legal_address?.office || '',
-    postal_code: user?.legal_address?.postal_code || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
-  }), [user]);
-
-  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
-    defaultValues
-  });
-
-  // Получаем текущие значения формы для валидации
-  const formValues = watch();
-
   // Функция форматирования номера телефона
   const formatPhoneNumber = (value) => {
+    if (!value) return '';
     const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length === 0) return '';
+    
     let cleaned = numbers;
     if (cleaned.startsWith('8')) {
       cleaned = '7' + cleaned.slice(1);
@@ -115,24 +95,22 @@ const PersonalDataLegal = memo(() => {
     }
     cleaned = cleaned.slice(0, 11);
     
-    let formatted = '';
-    if (cleaned.length > 0) {
-      formatted = '+7';
-      if (cleaned.length > 1) {
-        formatted += ' (' + cleaned.slice(1, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += ') ' + cleaned.slice(4, 7);
-      }
-      if (cleaned.length > 7) {
-        formatted += '-' + cleaned.slice(7, 9);
-      }
-      if (cleaned.length > 9) {
-        formatted += '-' + cleaned.slice(9, 11);
-      }
-      if (cleaned.length > 4 && cleaned.length <= 7) {
-        formatted += ')';
-      }
+    // Форматируем в формат +7 (XXX) XXX-XX-XX
+    let formatted = '+7';
+    if (cleaned.length > 1) {
+      formatted += ' (' + cleaned.slice(1, 4);
+    }
+    if (cleaned.length >= 4) {
+      formatted += ')';
+    }
+    if (cleaned.length > 4) {
+      formatted += ' ' + cleaned.slice(4, 7);
+    }
+    if (cleaned.length > 7) {
+      formatted += '-' + cleaned.slice(7, 9);
+    }
+    if (cleaned.length > 9) {
+      formatted += '-' + cleaned.slice(9, 11);
     }
     
     return formatted;
@@ -148,6 +126,30 @@ const PersonalDataLegal = memo(() => {
     }
     return formatPhoneNumber(cleaned);
   };
+
+  // Используем мемоизацию для defaultValues с форматированным телефоном
+  const defaultValues = useMemo(() => ({
+    bin_iin: user?.bin_iin || '',
+    company_name: user?.company_name || '',
+    bik: user?.bik || '',
+    iik: user?.iik || '',
+    region: user?.legal_address?.region || '',
+    city: user?.legal_address?.city || '',
+    street: user?.legal_address?.street || '',
+    house: user?.legal_address?.house || '',
+    building: user?.legal_address?.building || '',
+    office: user?.legal_address?.office || '',
+    postal_code: user?.legal_address?.postal_code || '',
+    phone: formatPhoneForDisplay(user?.phone || ''),
+    email: user?.email || '',
+  }), [user]);
+
+  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
+    defaultValues
+  });
+
+  // Получаем текущие значения формы для валидации
+  const formValues = watch();
 
   // Заполняем форму данными пользователя
   useEffect(() => {
@@ -289,7 +291,22 @@ const PersonalDataLegal = memo(() => {
   const toggleEdit = () => {
     setIsEditing(!isEditing);
     if (isEditing) {
-      reset(defaultValues);
+      // При отмене сбрасываем на текущие данные пользователя с форматированным телефоном
+      reset({
+        bin_iin: user?.bin_iin || '',
+        company_name: user?.company_name || '',
+        bik: user?.bik || '',
+        iik: user?.iik || '',
+        region: user?.legal_address?.region || '',
+        city: user?.legal_address?.city || '',
+        street: user?.legal_address?.street || '',
+        house: user?.legal_address?.house || '',
+        building: user?.legal_address?.building || '',
+        office: user?.legal_address?.office || '',
+        postal_code: user?.legal_address?.postal_code || '',
+        phone: formatPhoneForDisplay(user?.phone || ''),
+        email: user?.email || '',
+      });
     }
     clearErrors();
   };

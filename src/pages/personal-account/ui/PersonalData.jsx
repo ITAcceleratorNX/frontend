@@ -37,27 +37,13 @@ const PersonalData = memo(() => {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Используем мемоизацию для defaultValues, чтобы предотвратить повторное создание объекта
-  const defaultValues = useMemo(() => ({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    iin: user?.iin || '',
-    address: user?.address || '',
-    bday: user?.bday || ''
-  }), [user]);
-
-  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
-    defaultValues
-  });
-
-  // Получаем текущие значения формы для валидации
-  const formValues = watch();
-
   // Функция форматирования номера телефона
   const formatPhoneNumber = (value) => {
+    if (!value) return '';
     // Удаляем все символы кроме цифр
     const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length === 0) return '';
     
     // Если начинается с 8, заменяем на 7
     let cleaned = numbers;
@@ -74,24 +60,21 @@ const PersonalData = memo(() => {
     cleaned = cleaned.slice(0, 11);
     
     // Форматируем в формат +7 (XXX) XXX-XX-XX
-    let formatted = '';
-    if (cleaned.length > 0) {
-      formatted = '+7';
-      if (cleaned.length > 1) {
-        formatted += ' (' + cleaned.slice(1, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += ') ' + cleaned.slice(4, 7);
-      }
-      if (cleaned.length > 7) {
-        formatted += '-' + cleaned.slice(7, 9);
-      }
-      if (cleaned.length > 9) {
-        formatted += '-' + cleaned.slice(9, 11);
-      }
-      if (cleaned.length > 4 && cleaned.length <= 7) {
-        formatted += ')';
-      }
+    let formatted = '+7';
+    if (cleaned.length > 1) {
+      formatted += ' (' + cleaned.slice(1, 4);
+    }
+    if (cleaned.length >= 4) {
+      formatted += ')';
+    }
+    if (cleaned.length > 4) {
+      formatted += ' ' + cleaned.slice(4, 7);
+    }
+    if (cleaned.length > 7) {
+      formatted += '-' + cleaned.slice(7, 9);
+    }
+    if (cleaned.length > 9) {
+      formatted += '-' + cleaned.slice(9, 11);
     }
     
     return formatted;
@@ -111,6 +94,23 @@ const PersonalData = memo(() => {
     // Форматируем
     return formatPhoneNumber(cleaned);
   };
+
+  // Используем мемоизацию для defaultValues с форматированным телефоном
+  const defaultValues = useMemo(() => ({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: formatPhoneForDisplay(user?.phone || ''),
+    iin: user?.iin || '',
+    address: user?.address || '',
+    bday: user?.bday || ''
+  }), [user]);
+
+  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
+    defaultValues
+  });
+
+  // Получаем текущие значения формы для валидации
+  const formValues = watch();
 
   // Заполняем форму данными пользователя, когда они доступны, используя зависимость от объекта user
   useEffect(() => {
@@ -231,8 +231,15 @@ const PersonalData = memo(() => {
   const toggleEdit = () => {
     setIsEditing(!isEditing);
     if (isEditing) {
-      // При отмене сбрасываем значения на исходные
-      reset(defaultValues);
+      // При отмене сбрасываем на текущие данные пользователя с форматированным телефоном
+      reset({
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: formatPhoneForDisplay(user?.phone || ''),
+        iin: user?.iin || '',
+        address: user?.address || '',
+        bday: user?.bday || ''
+      });
     }
     clearErrors();
   };

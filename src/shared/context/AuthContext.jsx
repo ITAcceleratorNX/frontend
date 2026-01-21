@@ -128,12 +128,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Мемоизированная функция для регистрации юридического лица
-  const registerLegal = useCallback(async (email, uniqueCode, password, legalData, leadSource = null) => {
+  // Мемоизированная функция для регистрации юридического лица (верификация через SMS по телефону)
+  const registerLegal = useCallback(async (phone, uniqueCode, password, legalData, leadSource = null) => {
     try {
-      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации юридического лица:', email, 'lead_source:', leadSource);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации юридического лица:', phone, 'lead_source:', leadSource);
       
-      const response = await authApi.registerLegal(email, uniqueCode, password, legalData, leadSource);
+      const response = await authApi.registerLegal(phone, uniqueCode, password, legalData, leadSource);
       
       if (response.success) {
         if (import.meta.env.DEV) console.log('AuthContext: Регистрация юридического лица успешна');

@@ -57,7 +57,7 @@ const cities = [
 export const RegisterLegalForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { registerLegal: registerLegalUser, checkEmail } = useAuth();
+  const { registerLegal: registerLegalUser, checkPhone } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState(null);
   
@@ -100,18 +100,66 @@ export const RegisterLegalForm = () => {
     },
   });
 
-  // Автоматическое заполнение email из location.state
+  // Функция форматирования номера телефона
+  const formatPhoneNumber = (value) => {
+    if (!value || value.trim() === '') {
+      return '';
+    }
+    
+    const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length === 0) {
+      return '';
+    }
+    
+    let cleaned = numbers;
+    if (cleaned.startsWith('8')) {
+      cleaned = '7' + cleaned.slice(1);
+    }
+    
+    if (cleaned && !cleaned.startsWith('7')) {
+      cleaned = '7' + cleaned;
+    }
+    
+    cleaned = cleaned.slice(0, 11);
+    
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted = '+7';
+      if (cleaned.length > 1) {
+        formatted += ' (' + cleaned.slice(1, 4);
+      }
+      if (cleaned.length > 4) {
+        formatted += ') ' + cleaned.slice(4, 7);
+      }
+      if (cleaned.length > 7) {
+        formatted += '-' + cleaned.slice(7, 9);
+      }
+      if (cleaned.length > 9) {
+        formatted += '-' + cleaned.slice(9, 11);
+      }
+    }
+    
+    return formatted;
+  };
+
+  const handlePhoneChange = (e) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setValue('phone', formatted, { shouldValidate: true });
+  };
+
+  // Автоматическое заполнение phone из location.state
   useEffect(() => {
-    if (location.state?.email) {
-      console.log('RegisterLegalForm: Автоматическое заполнение email из state:', location.state.email);
-      setValue('email', location.state.email);
+    if (location.state?.phone) {
+      console.log('RegisterLegalForm: Автоматическое заполнение phone из state:', location.state.phone);
+      setValue('phone', location.state.phone);
       setCodeSent(true);
     } else {
       const params = new URLSearchParams(location.search);
-      const emailParam = params.get('email');
-      if (emailParam) {
-        console.log('RegisterLegalForm: Автоматическое заполнение email из URL параметров:', emailParam);
-        setValue('email', emailParam);
+      const phoneParam = params.get('phone');
+      if (phoneParam) {
+        console.log('RegisterLegalForm: Автоматическое заполнение phone из URL параметров:', phoneParam);
+        setValue('phone', phoneParam);
         setCodeSent(true);
       }
     }
@@ -130,35 +178,50 @@ export const RegisterLegalForm = () => {
     return () => clearInterval(interval);
   }, [timer]);
 
-  // Функция для отправки кода на email
+  // Функция для отправки кода на телефон (SMS)
   const sendCodeAgain = async () => {
-    const email = getValues('email');
+    const phone = getValues('phone');
     
-    if (!email) {
-      toast.error('Введите email для отправки кода');
+    if (!phone) {
+      toast.error('Введите номер телефона для отправки кода');
       return;
     }
 
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!emailRegex.test(email)) {
-      toast.error('Введите корректный email');
+    const phoneRegex = /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/;
+    if (!phoneRegex.test(phone)) {
+      toast.error('Введите корректный номер телефона');
       return;
     }
 
     setIsResendingCode(true);
     try {
-      const result = await checkEmail(email);
+      const result = await checkPhone(phone);
       
       if (result.success) {
         setCodeSent(true);
-        setTimer(60);
-        toast.success('Код отправлен на вашу почту');
+        if (result.remainingSeconds) {
+          setTimer(result.remainingSeconds);
+        } else {
+          setTimer(60);
+        }
+        toast.success('Код отправлен на ваш телефон');
       } else {
-        toast.error(result.error || 'Ошибка при отправке кода');
+        if (result.remainingSeconds) {
+          setTimer(result.remainingSeconds);
+          toast.error(result.error || 'Подождите перед повторной отправкой');
+        } else {
+          toast.error(result.error || 'Ошибка при отправке кода');
+        }
       }
     } catch (error) {
       console.error('Ошибка при отправке кода:', error);
-      toast.error('Произошла ошибка при отправке кода');
+      if (error.response?.status === 429) {
+        const remainingSeconds = error.response?.data?.remainingSeconds || 60;
+        setTimer(remainingSeconds);
+        toast.error(error.response?.data?.error || 'Подождите перед повторной отправкой');
+      } else {
+        toast.error('Произошла ошибка при отправке кода');
+      }
     } finally {
       setIsResendingCode(false);
     }
@@ -182,7 +245,7 @@ export const RegisterLegalForm = () => {
       // Получаем сохраненный источник лида
       const leadSource = getStoredLeadSource();
       
-      // Формируем данные для регистрации юридического лица (без email, unique_code, password, lead_source)
+      // Формируем данные для регистрации юридического лица
       const legalEntityData = {
         bin_iin: data.bin_iin,
         company_name: data.company_name,
@@ -193,17 +256,16 @@ export const RegisterLegalForm = () => {
           city: data.city,
           street: data.street,
           house: data.house,
-          building: data.building,
-          office: data.office,
+          building: data.building || '',
+          office: data.office || '',
           postal_code: data.postal_code,
         },
-        phone: data.phone,
-        amount: data.amount,
+        email: data.email || null, // Email опционален, для закрывающих документов
       };
       
-      // Отправляем данные регистрации через контекст
+      // Отправляем данные регистрации через контекст (теперь с phone вместо email для верификации)
       const result = await registerLegalUser(
-        data.email, 
+        data.phone, 
         data.unique_code, 
         data.password, 
         legalEntityData,
@@ -214,7 +276,7 @@ export const RegisterLegalForm = () => {
       
       if (result.success) {
         toast.success('Регистрация прошла успешно! Теперь вы можете войти в систему.');
-        navigate('/login', { state: { email: data.email } });
+        navigate('/login', { state: { phone: data.phone } });
       } else {
         const errorMessage = result.error || 'Ошибка при регистрации. Пожалуйста, попробуйте снова.';
         setServerError(errorMessage);
@@ -225,7 +287,7 @@ export const RegisterLegalForm = () => {
       
       if (error.response) {
         if (error.response.status === 409) {
-          const message = 'Пользователь с таким email уже существует';
+          const message = 'Пользователь с таким номером телефона уже существует';
           setServerError(message);
           toast.error(message);
           return;
@@ -579,54 +641,27 @@ export const RegisterLegalForm = () => {
                     Контактная информация
                   </h2>
 
-                  {/* Телефон */}
+                  {/* Телефон с кнопкой отправки кода */}
                   <div className="flex flex-col gap-[6px] w-full">
                     <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
                       <Phone className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
                       Телефон
                     </label>
-                    <input
-                      type="tel"
-                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                        errors.phone ? 'border-red-400 bg-red-50' : 'bg-white'
-                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                      placeholder="+7 (___) ___-__-__"
-                      disabled={isLoading}
-                      {...register('phone', {
-                        required: 'Телефон обязателен',
-                        pattern: {
-                          value: /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/,
-                          message: 'Введите корректный номер телефона'
-                        }
-                      })}
-                    />
-                    {errors.phone && (
-                      <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.phone.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div className="flex flex-col gap-[6px] w-full">
-                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      <Mail className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
-                      Email
-                    </label>
                     <div className="flex gap-[8px] w-full">
                       <input
-                        type="email"
+                        type="tel"
                         className={`flex-1 min-w-0 h-[48px] sm:h-[52px] lg:h-[56px] px-3 sm:px-4 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                          errors.email ? 'border-red-400 bg-red-50' : 'bg-white'
+                          errors.phone ? 'border-red-400 bg-red-50' : 'bg-white'
                         } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                        placeholder="example@gmail.com"
+                        placeholder="+7 (___) ___-__-__"
                         disabled={isLoading}
-                        {...register('email', {
-                          required: 'Email обязателен',
+                        {...register('phone', {
+                          required: 'Телефон обязателен',
                           pattern: {
-                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                            message: 'Неверный формат email',
+                            value: /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/,
+                            message: 'Введите корректный номер телефона'
                           },
+                          onChange: handlePhoneChange
                         })}
                       />
                       
@@ -646,21 +681,18 @@ export const RegisterLegalForm = () => {
                         <span className="sm:hidden">{timer > 0 ? `${timer}с` : 'Код'}</span>
                       </button>
                     </div>
-                    {errors.email && (
+                    {errors.phone && (
                       <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.email.message}
+                        {errors.phone.message}
                       </p>
                     )}
-                    <p className="text-[11px] sm:text-[12px] text-[#5C5C5C] mt-1">
-                      закрывающие документы придут в письме на почту
-                    </p>
                   </div>
 
                   {/* Проверочный код */}
                   <div className="flex flex-col gap-[6px] w-full">
                     <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      <Mail className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
-                      Проверочный код
+                      <Phone className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                      Проверочный код из SMS
                     </label>
                     <input
                       type="text"
@@ -686,6 +718,36 @@ export const RegisterLegalForm = () => {
                         {errors.unique_code.message}
                       </p>
                     )}
+                  </div>
+
+                  {/* Email (необязательный - для закрывающих документов) */}
+                  <div className="flex flex-col gap-[6px] w-full">
+                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
+                      <Mail className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                      Email (необязательно)
+                    </label>
+                    <input
+                      type="email"
+                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                        errors.email ? 'border-red-400 bg-red-50' : 'bg-white'
+                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                      placeholder="example@gmail.com"
+                      disabled={isLoading}
+                      {...register('email', {
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: 'Неверный формат email',
+                        },
+                      })}
+                    />
+                    {errors.email && (
+                      <p className="text-xs sm:text-sm text-red-500 mt-1">
+                        {errors.email.message}
+                      </p>
+                    )}
+                    <p className="text-[11px] sm:text-[12px] text-[#5C5C5C] mt-1">
+                      закрывающие документы придут в письме на почту
+                    </p>
                   </div>
 
                   {/* Пароль */}
