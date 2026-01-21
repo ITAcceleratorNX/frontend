@@ -54,7 +54,7 @@ const cities = [
   'Экибастуз'
 ];
 
-export const RegisterLegalForm = () => {
+export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSelector = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { registerLegal: registerLegalUser, checkPhone } = useAuth();
@@ -335,13 +335,43 @@ export const RegisterLegalForm = () => {
               {/* Заголовок и подзаголовок */}
               <div className="flex flex-col items-center gap-[6px] w-full">
                 <h1 className="text-[20px] sm:text-[22px] lg:text-[24px] font-medium leading-[1.19] tracking-[-0.05em] text-center text-[#363636] max-w-fit mx-auto">
-                  Оплата по счёту
+                  Создание аккаунта
                 </h1>
-                <p className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-center text-[#5C5C5C] w-full max-w-[360px]">
+                <p className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-center text-[#5C5C5C] w-full max-w-[3600px]">
                   Заполните данные для регистрации юридического лица
                 </p>
               </div>
             </div>
+
+            {/* Выбор типа регистрации */}
+            {showTypeSelector && setUserType && (
+              <div className="w-full flex justify-center">
+                <div className="inline-flex bg-gray-100 rounded-full p-1 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setUserType('INDIVIDUAL')}
+                    className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
+                      userType === 'INDIVIDUAL'
+                        ? 'bg-white text-[#26B3AB] shadow-sm'
+                        : 'text-[#5C5C5C] hover:text-[#363636]'
+                    }`}
+                  >
+                    Физ. лицо
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserType('LEGAL')}
+                    className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
+                      userType === 'LEGAL'
+                        ? 'bg-white text-[#26B3AB] shadow-sm'
+                        : 'text-[#5C5C5C] hover:text-[#363636]'
+                    }`}
+                  >
+                    Юр. лицо
+                  </button>
+                </div>
+              </div>
+            )}
             
             {/* Форма регистрации */}
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[22px] w-full">

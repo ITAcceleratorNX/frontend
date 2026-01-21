@@ -10,7 +10,7 @@ import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
 import api from '../../../shared/api/axios';
 
-export const RegisterForm = () => {
+export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSelector = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { register: registerUser, checkPhone } = useAuth();
@@ -307,6 +307,36 @@ export const RegisterForm = () => {
                 </p>
               </div>
             </div>
+
+            {/* Выбор типа регистрации */}
+            {showTypeSelector && setUserType && (
+              <div className="w-full flex justify-center">
+                <div className="inline-flex bg-gray-100 rounded-full p-1 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setUserType('INDIVIDUAL')}
+                    className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
+                      userType === 'INDIVIDUAL'
+                        ? 'bg-white text-[#26B3AB] shadow-sm'
+                        : 'text-[#5C5C5C] hover:text-[#363636]'
+                    }`}
+                  >
+                    Физ. лицо
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserType('LEGAL')}
+                    className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
+                      userType === 'LEGAL'
+                        ? 'bg-white text-[#26B3AB] shadow-sm'
+                        : 'text-[#5C5C5C] hover:text-[#363636]'
+                    }`}
+                  >
+                    Юр. лицо
+                  </button>
+                </div>
+              </div>
+            )}
             
             {/* Кнопка Google и разделитель */}
             <div className="flex flex-col gap-[22px] w-full max-w-[400px]">
