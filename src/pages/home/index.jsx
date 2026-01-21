@@ -1,5 +1,6 @@
 import React, { useState, memo, useMemo, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Header } from "../../widgets";
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
 import oblachImg from "../../assets/oblach.png";
@@ -75,6 +76,7 @@ const getServiceTypeName = (type) => {
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
   const isUserRole = user?.role === "USER";
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -1103,8 +1105,10 @@ const HomePage = memo(() => {
         }
       );
 
-      setTimeout(() => {
-        navigate("/personal-account", { state: { activeSection: "payments" } });
+      // Обновляем кэш заказов и ждём завершения, затем навигация
+      setTimeout(async () => {
+        await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
+        navigate("/personal-account", { state: { activeSection: "orders" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
@@ -1322,8 +1326,10 @@ const HomePage = memo(() => {
         }
       );
 
-      setTimeout(() => {
-        navigate("/personal-account", { state: { activeSection: "payments" } });
+      // Обновляем кэш заказов и ждём завершения, затем навигация
+      setTimeout(async () => {
+        await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
+        navigate("/personal-account", { state: { activeSection: "orders" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);
