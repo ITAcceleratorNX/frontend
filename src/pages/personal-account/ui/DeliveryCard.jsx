@@ -1,5 +1,6 @@
 import React from 'react';
-import { Truck, MapPin, Clock } from 'lucide-react';
+import { Truck, MapPin, Clock, User, Phone } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -24,24 +25,28 @@ const formatDate = (dateString) => {
   }
 };
 
-const getStatusText = (status) => {
+const getStatusText = (status, direction) => {
   const statusMap = {
-    'PENDING_FROM': 'Ожидает доставки на склад',
-    'PENDING_TO': 'Ожидает отправки со склада',
-    'IN_PROGRESS': 'В пути к складу',
-    'IN_PROGRESS_TO': 'В пути к клиенту',
-    'DELIVERED': 'Доставлено на склад',
-    'DELIVERED_TO': 'Доставлено клиенту'
+    'PENDING': direction === 'TO_CLIENT' ? 'Ожидает отправки со склада' : 'Ожидает доставки на склад',
+    'IN_PROGRESS': direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу',
+    'DELIVERED': direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад',
+    'COURIER_ASSIGNED': 'Курьер назначен',
+    'COURIER_IN_TRANSIT': 'Курьер в пути к вам',
+    'COURIER_AT_CLIENT': 'Курьер у вас',
+    'FINISHED': 'Завершено'
   };
   return statusMap[status] || status;
 };
 
-const DeliveryCard = ({ delivery }) => {
+const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
   const order = delivery.order;
+  
+  // Проверяем, можно ли выбрать время доставки (заказ оплачен и договор подписан)
+  const canSelectTime = order?.payment_status === 'PAID' && order?.contract_status === 'SIGNED';
   
   // Определяем фон карточки: зеленый градиент для доставленных, серый для в процессе
   const getCardBackground = () => {
-    if (delivery.status === 'DELIVERED' || delivery.status === 'DELIVERED_TO') {
+    if (delivery.status === 'DELIVERED') {
       return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для доставленных
     }
     return 'bg-[#999999]'; // Серый для в процессе
@@ -79,7 +84,7 @@ const DeliveryCard = ({ delivery }) => {
         {/* Статус доставки */}
         <div className="flex items-center gap-2">
           <Truck className="w-5 h-5" />
-          <span className="text-lg font-semibold">{getStatusText(delivery.status)}</span>
+          <span className="text-lg font-semibold">{getStatusText(delivery.status, delivery.direction)}</span>
         </div>
 
         {/* Дата доставки */}
@@ -95,6 +100,55 @@ const DeliveryCard = ({ delivery }) => {
           <div className="flex items-start gap-2">
             <MapPin className="w-5 h-5 mt-0.5" />
             <span className="text-sm text-white/90">Адрес: {delivery.address}</span>
+          </div>
+        )}
+
+        {/* Интервал времени доставки */}
+        {delivery.delivery_time_interval && (
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            <span className="text-sm text-white/90">Время доставки: {delivery.delivery_time_interval}</span>
+          </div>
+        )}
+
+        {/* Информация о курьере */}
+        {delivery.courier && (
+          <div className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            <span className="text-sm text-white/90">Курьер: {delivery.courier.name}</span>
+            {delivery.courier.phone && (
+              <a 
+                href={`tel:${delivery.courier.phone}`}
+                className="flex items-center gap-1 text-sm text-white/90 hover:text-white underline"
+              >
+                <Phone className="w-4 h-4" />
+                {delivery.courier.phone}
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Название склада */}
+        {order?.storage?.warehouse?.name && (
+          <div className="flex items-start gap-2">
+            <MapPin className="w-5 h-5 mt-0.5" />
+            <span className="text-sm text-white/90">
+              Склад: {order.storage.warehouse.name}
+              {order.storage.warehouse.address && `, ${order.storage.warehouse.address}`}
+            </span>
+          </div>
+        )}
+
+        {/* Кнопка выбора времени доставки */}
+        {canSelectTime && !delivery.delivery_time_interval && onSelectTimeClick && (
+          <div className="pt-2">
+            <Button
+              onClick={() => onSelectTimeClick(delivery)}
+              className="bg-white text-gray-900 hover:bg-gray-100 text-sm"
+              size="sm"
+            >
+              Выбрать время доставки
+            </Button>
           </div>
         )}
       </div>

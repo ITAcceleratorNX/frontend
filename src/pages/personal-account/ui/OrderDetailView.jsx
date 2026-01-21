@@ -55,24 +55,35 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
   };
 
   const MOVING_STATUS_TEXT = {
-    PENDING_FROM: 'Ожидает забора',
-    PENDING_TO: 'Ожидает доставки',
-    IN_PROGRESS: 'В процессе (к складу)',
-    IN_PROGRESS_TO: 'В процессе (к клиенту)',
-    DELIVERED: 'Доставлено на склад',
-    DELIVERED_TO: 'Доставлено клиенту',
+    PENDING: 'Ожидает назначения курьера',
+    COURIER_ASSIGNED: 'Курьер назначен',
+    COURIER_IN_TRANSIT: 'Курьер в пути',
+    COURIER_AT_CLIENT: 'Курьер у клиента',
+    IN_PROGRESS: 'В пути',
+    DELIVERED: 'Доставлено',
+    FINISHED: 'Завершено',
     CANCELLED: 'Отменено',
   };
 
-  function getMovingStatusText(s) {
-    return MOVING_STATUS_TEXT[s] || s;
+  function getMovingStatusText(s, direction) {
+    const baseText = MOVING_STATUS_TEXT[s] || s;
+    if (s === 'PENDING') {
+      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+    }
+    if (s === 'IN_PROGRESS') {
+      return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+    }
+    if (s === 'DELIVERED') {
+      return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+    }
+    return baseText;
   }
 
   function getMovingStatusClass(s) {
     if (s === 'CANCELLED') return 'bg-red-50 text-red-700 border-red-200';
-    if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-50 text-green-700 border-green-200';
-    if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-50 text-blue-700 border-blue-200';
-    if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-50 text-amber-800 border-amber-200';
+    if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-50 text-green-700 border-green-200';
+    if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-50 text-blue-700 border-blue-200';
+    if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-50 text-amber-800 border-amber-200';
     return 'bg-gray-50 text-gray-700 border-gray-200';
   }
 
@@ -380,7 +391,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-gray-900">Перемещение #{index + 1}</span>
                     <Badge className={`text-xs border ${getMovingStatusClass(movingOrder.status)}`}>
-                      {getMovingStatusText(movingOrder.status)}
+                      {getMovingStatusText(movingOrder.status, movingOrder.direction)}
                     </Badge>
                   </div>
                   <div className="space-y-2 text-xs text-gray-600">
@@ -392,6 +403,12 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                       <div className="mt-2 pt-3 border-t border-gray-200">
                         <span className="font-medium text-gray-700">Адрес:</span>
                         <div className="mt-1 text-gray-700">{movingOrder.address}</div>
+                      </div>
+                    )}
+                    {movingOrder.delivery_time_interval && (
+                      <div className="mt-2 pt-3 border-t border-gray-200">
+                        <span className="font-medium text-gray-700">Время доставки:</span>
+                        <div className="mt-1 text-gray-700">{movingOrder.delivery_time_interval}</div>
                       </div>
                     )}
                   </div>

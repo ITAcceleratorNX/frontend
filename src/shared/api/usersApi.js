@@ -116,5 +116,18 @@ export const usersApi = {
       console.error('Ошибка при верификации телефона:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Получение списка курьеров (для ADMIN и MANAGER)
+  getCouriers: async () => {
+    try {
+      console.log('Отправка запроса на получение курьеров');
+      const response = await api.get('/users/courier');
+      console.log('Курьеры загружены:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при загрузке курьеров:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

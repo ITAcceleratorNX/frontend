@@ -24,15 +24,22 @@ const ItemSearch = () => {
   const [selectedItem, setSelectedItem] = useState(null);
 
   // Функция для получения текста статуса на русском
-  const getMovingStatusText = (status) => {
+  const getMovingStatusText = (status, direction) => {
+    if (status === 'PENDING') {
+      return direction === 'TO_CLIENT' ? 'В ожидании (со склада)' : 'В ожидании (от клиента)';
+    }
+    if (status === 'IN_PROGRESS') {
+      return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+    }
+    if (status === 'DELIVERED') {
+      return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+    }
     const statusMap = {
-      PENDING_FROM:  'В ожидании (от клиента)',
-      PENDING_TO:    'В ожидании (со склада)',
-      IN_PROGRESS:   'В пути к складу',
-      IN_PROGRESS_TO:'В пути к клиенту',
-      DELIVERED:     'Доставлено на склад',
-      DELIVERED_TO:  'Доставлено клиенту',
-      CANCELLED:     'Отменено',
+      COURIER_ASSIGNED: 'Курьер назначен',
+      COURIER_IN_TRANSIT: 'Курьер в пути',
+      COURIER_AT_CLIENT: 'Курьер у клиента',
+      FINISHED: 'Завершено',
+      CANCELLED: 'Отменено',
     };
     return statusMap[status] || status;
   };
@@ -50,10 +57,12 @@ const ItemSearch = () => {
   // Функция для получения цвета статуса
   const getStatusColor = (status) => {
     const colorMap = {
-      'PENDING_FROM': 'text-yellow-600 bg-yellow-50 border-yellow-200',
-      'PENDING_TO': 'text-blue-600 bg-blue-50 border-blue-200',
+      'PENDING': 'text-yellow-600 bg-yellow-50 border-yellow-200',
       'IN_PROGRESS': 'text-purple-600 bg-purple-50 border-purple-200',
-      'DELIVERED': 'text-green-600 bg-green-50 border-green-200'
+      'DELIVERED': 'text-green-600 bg-green-50 border-green-200',
+      'COURIER_ASSIGNED': 'text-blue-600 bg-blue-50 border-blue-200',
+      'COURIER_IN_TRANSIT': 'text-purple-600 bg-purple-50 border-purple-200',
+      'COURIER_AT_CLIENT': 'text-indigo-600 bg-indigo-50 border-indigo-200',
     };
     return colorMap[status] || 'text-gray-600 bg-gray-50 border-gray-200';
   };
@@ -196,7 +205,7 @@ const ItemSearch = () => {
                     <p className="text-sm text-gray-500 mb-2">Статус доставки</p>
                     <div className={`inline-flex items-center px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(searchResult.status)}`}>
                       <Clock className="w-4 h-4 mr-2" />
-                      {getMovingStatusText(searchResult.status)}
+                      {getMovingStatusText(searchResult.status, searchResult.direction)}
                     </div>
                   </div>
                 </div>
