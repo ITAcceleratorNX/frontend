@@ -64,7 +64,7 @@ const getVolumeUnit = (storageType) => {
   return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
 };
 
-const UserOrderCard = ({ order, onPayOrder }) => {
+const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
   const navigate = useNavigate();
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
   const [isCancelExtendDialogOpen, setIsCancelExtendDialogOpen] = useState(false);
@@ -359,11 +359,14 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   };
 
   const months = calculateMonths();
-  // total_price уже включает скидку от промокода, поэтому просто добавляем услуги
-  const totalPrice = Number(order.total_price) + Number(totalPriceOfServices);
-  // Исходная цена без скидки (для отображения)
-  const originalPrice = Number(order.total_price) + Number(order.discount_amount || 0) + Number(totalPriceOfServices);
-  const hasPromoDiscount = order.discount_amount && Number(order.discount_amount) > 0;
+  // total_price - это стоимость аренды (без скидки)
+  // discount_amount - это скидка от полной суммы (аренда + услуги + депозит)
+  // Исходная цена без скидки = аренда + услуги + депозит
+  const originalPrice = Number(order.total_price) + Number(totalPriceOfServices) + Number(depositPrice);
+  // Итоговая цена = исходная цена - скидка
+  const discountAmount = Number(order.discount_amount || 0);
+  const totalPrice = Math.max(0, originalPrice - discountAmount);
+  const hasPromoDiscount = discountAmount > 0;
   
   // Проверяем, есть ли услуга доставки (GAZELLE_FROM)
   const hasDeliveryService = order.services && order.services.some(service => 
@@ -532,7 +535,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           <p className="text-white text-sm">{formatDate(order.end_date)}</p>
         </div>
         <div className="space-y-2">
-          <p className="text-white/90 text-xs">Сумма к оплате:</p>
+          <p className="text-white/90 text-xs">Стоимость аренды:</p>
           <p className="text-white text-sm">{formatPrice(order.total_price)} 〒</p>
           {/* Информация о промокоде */}
           {order.promo_code && (
@@ -542,9 +545,9 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                 Промокод:
               </div>
               <p className="text-white text-sm font-medium">{order.promo_code.code}</p>
-              {order.discount_amount > 0 && (
+              {discountAmount > 0 && (
                 <p className="text-green-300 text-xs">
-                  Скидка: -{formatPrice(order.discount_amount)} ({order.promo_code.discount_percent}%)
+                  Скидка: -{formatPrice(discountAmount)} ({order.promo_code.discount_percent}%)
                 </p>
               )}
             </div>
@@ -772,7 +775,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
                 <div className="flex items-center gap-1 mt-1">
                   <Tag className="w-3 h-3 text-green-300" />
                   <span className="text-green-300 text-xs">
-                    Скидка {order.promo_code?.discount_percent}%: -{formatPrice(order.discount_amount)}
+                    Скидка {order.promo_code?.discount_percent}%: -{formatPrice(discountAmount)}
                   </span>
                 </div>
               </div>

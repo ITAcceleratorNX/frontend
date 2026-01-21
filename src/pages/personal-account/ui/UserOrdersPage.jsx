@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useUserOrders } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -10,12 +10,14 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { List, Zap, CheckCircle, Star, FileText } from 'lucide-react';
+import { paymentsApi } from '../../../shared/api/paymentsApi';
 
 const UserOrdersPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [depositPrice, setDepositPrice] = useState(0);
 
   // Получение заказов пользователя
   const {
@@ -28,6 +30,22 @@ const UserOrdersPage = () => {
       console.error('Ошибка загрузки заказов:', error);
     }
   });
+
+  // Загружаем цену депозита
+  useEffect(() => {
+    const fetchDepositPrice = async () => {
+      try {
+        const prices = await paymentsApi.getPrices();
+        const deposit = prices.find(p => p.type === 'DEPOSIT');
+        if (deposit) {
+          setDepositPrice(Number(deposit.price) || 0);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки цены депозита:', error);
+      }
+    };
+    fetchDepositPrice();
+  }, []);
 
   // Получение уведомлений
   const { notifications = [] } = useNotifications();
@@ -206,6 +224,7 @@ const UserOrdersPage = () => {
                 <UserOrderCard
                   key={order.id}
                   order={order}
+                  depositPrice={depositPrice}
                   onPayOrder={(order) => {
                     navigate("/personal-account", { state: { activeSection: "payments" } });
                   }}

@@ -18,7 +18,7 @@ const getStorageTypeText = (type) => {
   return type;
 };
 
-const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLoading = false }) => {
+const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLoading = false, depositPrice = 0 }) => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   // Функции для форматирования
@@ -282,6 +282,12 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                   <span className="text-gray-600">Аренда:</span>
                   <span className="font-medium text-[#1e2c4f]">{formatPrice(order.total_price)}</span>
                 </div>
+                {depositPrice > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Депозит:</span>
+                    <span className="font-medium text-[#1e2c4f]">{formatPrice(depositPrice)}</span>
+                  </div>
+                )}
                 {/* Промокод */}
                 {order.promo_code && (
                   <div className="flex justify-between items-center">
@@ -305,11 +311,11 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                   <div className="text-right">
                     {order.discount_amount && Number(order.discount_amount) > 0 && (
                       <span className="text-gray-400 line-through text-xs mr-2">
-                        {formatPrice(Number(order.total_price) + Number(order.discount_amount))}
+                        {formatPrice(Number(order.total_price) + Number(depositPrice))}
                       </span>
                     )}
                     <span className="font-bold text-[#1e2c4f] text-base">
-                      {formatPrice(order.total_price)}
+                      {formatPrice(Math.max(0, Number(order.total_price) + Number(depositPrice) - Number(order.discount_amount || 0)))}
                     </span>
                   </div>
                 </div>
