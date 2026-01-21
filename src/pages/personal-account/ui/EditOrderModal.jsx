@@ -181,8 +181,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 count: s.OrderService?.count || 1,
             }))
             
-            // Находим адрес для возврата вещей (PENDING_TO)
-            const returnOrder = order.moving_orders?.find(mo => mo.status === 'PENDING_TO');
+            // Находим адрес для возврата вещей (PENDING с direction TO_CLIENT)
+            const returnOrder = order.moving_orders?.find(mo => mo.status === 'PENDING' && mo.direction === 'TO_CLIENT');
             const returnAddress = returnOrder?.address || '';
             setMovingAddressTo(returnAddress);
             
@@ -296,8 +296,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
     // Синхронизация услуг GAZELLE_FROM и GAZELLE_TO при изменении moving_orders
     const syncMovingServices = (movingOrders, currentServices) => {
-        const hasPendingFrom = movingOrders.some(mo => mo.status === 'PENDING_FROM');
-        const hasPendingTo = movingOrders.some(mo => mo.status === 'PENDING_TO');
+        const hasPendingFrom = movingOrders.some(mo => mo.status === 'PENDING' && mo.direction === 'TO_WAREHOUSE');
+        const hasPendingTo = movingOrders.some(mo => mo.status === 'PENDING' && mo.direction === 'TO_CLIENT');
         
         let updated = [...currentServices];
         
@@ -341,7 +341,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 ...prev.moving_orders,
                 {
                     moving_date: new Date(),
-                    status: "PENDING_FROM",
+                    status: "PENDING",
+                    direction: "TO_WAREHOUSE",
                     address: "",
                 },
             ]
@@ -364,8 +365,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             const newMovingOrders = prev.moving_orders.filter((_, i) => i !== index);
             const updatedServices = syncMovingServices(newMovingOrders, prev.services);
             
-            // Если удаляем PENDING_TO, очищаем адрес возврата
-            if (movingOrderToRemove?.status === 'PENDING_TO') {
+            // Если удаляем возврат вещей, очищаем адрес возврата
+            if (movingOrderToRemove?.status === 'PENDING' && movingOrderToRemove?.direction === 'TO_CLIENT') {
                 setMovingAddressTo('');
             }
             
@@ -384,8 +385,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             const updated = prev.moving_orders.map((mo, i) => {
                 if (i === index) {
                     const updatedMo = { ...mo, [field]: value };
-                    // Если меняем статус на PENDING_TO, добавляем GAZELLE_TO в услуги
-                    if (field === 'status' && value === 'PENDING_TO') {
+                    // Если меняем статус на возврат вещей, добавляем GAZELLE_TO в услуги
+                    if (field === 'status' && value === 'PENDING' && order.direction === 'TO_CLIENT') {
                         // Адрес будет обновлен через movingAddressTo
                         updatedMo.address = movingAddressTo || updatedMo.address;
                     }
@@ -417,11 +418,11 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             const serviceToRemove = prev.services[index];
             const newServices = prev.services.filter((_, i) => i !== index);
             
-            // Если удаляем GAZELLE_TO, удаляем соответствующий moving_order PENDING_TO
+            // Если удаляем GAZELLE_TO, удаляем соответствующий moving_order для возврата
             if (serviceToRemove?.service_id) {
                 const serviceOption = serviceOptions.find(opt => String(opt.id) === serviceToRemove.service_id);
                 if (serviceOption?.type === 'GAZELLE_TO') {
-                    const updatedMovingOrders = prev.moving_orders.filter(mo => mo.status !== 'PENDING_TO');
+                    const updatedMovingOrders = prev.moving_orders.filter(mo => !(mo.status === 'PENDING' && mo.direction === 'TO_CLIENT'));
                     const updatedServices = syncMovingServices(updatedMovingOrders, newServices);
                     setMovingAddressTo('');
                     return {
@@ -463,7 +464,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     
                     const newMovingOrder = {
                         moving_date: returnDate,
-                        status: 'PENDING_TO',
+                        status: 'PENDING',
+                        direction: 'TO_CLIENT',
                         address: movingAddressTo || '',
                     };
                     
@@ -503,9 +505,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             return serviceOption?.type === 'GAZELLE_TO';
         });
         
-        // Если есть GAZELLE_TO, должен быть moving_order PENDING_TO с адресом
+        // Если есть GAZELLE_TO, должен быть moving_order для возврата с адресом
         if (hasGazelleTo) {
-            const pendingToOrder = formData.moving_orders.find(mo => mo.status === 'PENDING_TO');
+            const pendingToOrder = formData.moving_orders.find(mo => mo.status === 'PENDING' && mo.direction === 'TO_CLIENT');
             if (!pendingToOrder) {
                 setError("При выборе услуги 'Газель - возврат вещей' необходимо добавить доставку вещей клиенту")
                 return false
@@ -523,8 +525,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             }
             const invalidOrders = formData.moving_orders
                 .map((mo, i) => {
-                    // Для PENDING_TO используем movingAddressTo если адрес пустой
-                    const address = mo.status === 'PENDING_TO' && !mo.address?.trim() 
+                    // Для возврата вещей используем movingAddressTo если адрес пустой
+                    const address = mo.status === 'PENDING' && mo.direction === 'TO_CLIENT' && !mo.address?.trim() 
                         ? movingAddressTo 
                         : mo.address;
                     return !address?.trim() ? `#${i + 1}` : null;
@@ -560,9 +562,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 return serviceOption?.type === 'GAZELLE_TO';
             });
             
-            // Обновляем адреса в moving_orders для PENDING_TO
+            // Обновляем адреса в moving_orders для возврата вещей
             const updatedMovingOrders = formData.moving_orders.map(mo => {
-                if (mo.status === 'PENDING_TO' && movingAddressTo.trim()) {
+                if (mo.status === 'PENDING' && mo.direction === 'TO_CLIENT' && movingAddressTo.trim()) {
                     return { ...mo, address: movingAddressTo.trim() };
                 }
                 return mo;
@@ -912,13 +914,17 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                             </div>
                                             <div>
                                                 <Label className="text-sm font-medium text-white/90 mb-2 block">Тип перевозки</Label>
-                                                <Select value={mo.status} onValueChange={(value) => updateMovingOrder(index, "status", value)}>
+                                                <Select value={`${mo.status}:${mo.direction || 'TO_WAREHOUSE'}`} onValueChange={(value) => {
+                                                    const [status, direction] = value.split(':');
+                                                    updateMovingOrder(index, "status", status);
+                                                    updateMovingOrder(index, "direction", direction);
+                                                }}>
                                                     <SelectTrigger className="h-12 rounded-3xl bg-white/10 border-white text-white">
                                                         <SelectValue placeholder="Выберите тип" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="PENDING_FROM">Забрать вещи (от клиента)</SelectItem>
-                                                        <SelectItem value="PENDING_TO">Доставить вещи (клиенту)</SelectItem>
+                                                        <SelectItem value="PENDING:TO_WAREHOUSE">Забрать вещи (от клиента)</SelectItem>
+                                                        <SelectItem value="PENDING:TO_CLIENT">Доставить вещи (клиенту)</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1081,7 +1087,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                                         setMovingAddressTo(e.target.value);
                                                                         // Обновляем адрес в moving_order
                                                                         const updatedMovingOrders = formData.moving_orders.map(mo =>
-                                                                            mo.status === 'PENDING_TO' 
+                                                                            mo.status === 'PENDING' && mo.direction === 'TO_CLIENT' 
                                                                                 ? { ...mo, address: e.target.value }
                                                                                 : mo
                                                                         );

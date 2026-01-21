@@ -104,17 +104,40 @@ const HomePage = memo(() => {
   const [cloudMonths, setCloudMonths] = useState("1");
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
   const [cloudVolumeDirect, setCloudVolumeDirect] = useState(1); // Прямой ввод объема для тарифов
-  const [movingAddressFrom, setMovingAddressFrom] = useState("");
+  const [movingStreetFrom, setMovingStreetFrom] = useState("");
+  const [movingHouseFrom, setMovingHouseFrom] = useState("");
+  const [movingApartmentFrom, setMovingApartmentFrom] = useState("");
   const [movingPickupDate, setMovingPickupDate] = useState(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today.toISOString().split('T')[0];
   });
+  const [cloudStreetFrom, setCloudStreetFrom] = useState("");
+  const [cloudHouseFrom, setCloudHouseFrom] = useState("");
+  const [cloudApartmentFrom, setCloudApartmentFrom] = useState("");
+  
+  // Функция для формирования полного адреса из отдельных полей
+  const getMovingAddressFrom = useMemo(() => {
+    const parts = [];
+    if (movingStreetFrom.trim()) parts.push(movingStreetFrom.trim());
+    if (movingHouseFrom.trim()) parts.push(`д. ${movingHouseFrom.trim()}`);
+    if (movingApartmentFrom.trim()) parts.push(`кв. ${movingApartmentFrom.trim()}`);
+    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
+  }, [movingStreetFrom, movingHouseFrom, movingApartmentFrom]);
+  
+  // Функция для формирования полного адреса облачного хранения из отдельных полей
+  const getCloudPickupAddress = useMemo(() => {
+    const parts = [];
+    if (cloudStreetFrom.trim()) parts.push(cloudStreetFrom.trim());
+    if (cloudHouseFrom.trim()) parts.push(`д. ${cloudHouseFrom.trim()}`);
+    if (cloudApartmentFrom.trim()) parts.push(`кв. ${cloudApartmentFrom.trim()}`);
+    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
+  }, [cloudStreetFrom, cloudHouseFrom, cloudApartmentFrom]);
+  
   // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
   const [movingOrders, setMovingOrders] = useState([]);
   // Состояние для адреса возврата (GAZELLE_TO)
   const [movingAddressTo, setMovingAddressTo] = useState("");
-  const [cloudPickupAddress, setCloudPickupAddress] = useState("");
   const [cloudPickupDate, setCloudPickupDate] = useState(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -334,16 +357,17 @@ const HomePage = memo(() => {
             
             setMovingOrders(prev => {
               // Проверяем, нет ли уже такого moving_order
-              const exists = prev.some(order => order.status === "PENDING_TO");
+              const exists = prev.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
               if (exists) {
-                console.log("⚠️ moving_order PENDING_TO уже существует");
+                console.log("⚠️ moving_order для возврата уже существует");
                 return prev;
               }
               
               const newOrder = {
                 moving_date: returnDate.toISOString(),
-                status: "PENDING_TO",
-                address: movingAddressTo || movingAddressFrom || "",
+                status: "PENDING",
+                direction: "TO_CLIENT",
+                address: movingAddressTo || getMovingAddressFrom || "",
               };
               
               console.log("✅ Создан новый moving_order:", newOrder);
@@ -357,7 +381,7 @@ const HomePage = memo(() => {
           const oldOption = serviceOptions.find(opt => String(opt.id) === String(oldService.service_id));
           if (oldOption && oldOption.type === "GAZELLE_TO") {
             // Удаляем moving_order для возврата вещей
-            setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+            setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
           }
         }
       }
@@ -365,7 +389,7 @@ const HomePage = memo(() => {
       return updated;
     });
     setSubmitError(null);
-  }, [serviceOptions, individualBookingStartDate, monthsNumber, movingAddressFrom, movingAddressTo]);
+  }, [serviceOptions, individualBookingStartDate, monthsNumber, movingStreetFrom, movingHouseFrom, movingApartmentFrom, movingAddressTo, getMovingAddressFrom]);
 
   const removeServiceRow = useCallback((index) => {
     setServices((prev) => {
@@ -375,7 +399,7 @@ const HomePage = memo(() => {
       if (serviceToRemove?.service_id && serviceOptions.length > 0) {
         const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
         if (option && option.type === "GAZELLE_TO") {
-          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+          setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
       
@@ -470,14 +494,15 @@ const HomePage = memo(() => {
 
   const isIndividualFormReady = useMemo(() => {
     if (!previewStorage || !monthsNumber || monthsNumber <= 0) return false;
-    if (includeMoving && !movingAddressFrom.trim()) return false;
+    if (includeMoving && !movingStreetFrom.trim()) return false;
     if (includePacking && packagingServicesForOrder.length === 0) return false;
     return true;
   }, [
     includeMoving,
     includePacking,
     monthsNumber,
-    movingAddressFrom,
+    getMovingAddressFrom,
+    movingStreetFrom,
     packagingServicesForOrder.length,
     previewStorage,
   ]);
@@ -505,11 +530,11 @@ const HomePage = memo(() => {
     if (!cloudStorage?.id) return false;
     if (!cloudMonthsNumber || cloudMonthsNumber <= 0) return false;
     if (!cloudVolume || cloudVolume <= 0) return false;
-    if (!cloudPickupAddress.trim()) return false;
+    if (!cloudStreetFrom.trim()) return false;
     // Требуется либо выбран тариф, либо выбрано "Свои габариты"
     if (!selectedTariff) return false;
     return true;
-  }, [cloudStorage, cloudMonthsNumber, cloudPickupAddress, cloudVolume, selectedTariff]);
+  }, [cloudStorage, cloudMonthsNumber, cloudStreetFrom, cloudVolume, selectedTariff]);
 
   const movingServicePrice = useMemo(() => {
     // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
@@ -881,11 +906,12 @@ const HomePage = memo(() => {
     // Устанавливаем время на начало дня для даты забора
     pickupDate.setHours(10, 0, 0, 0); // 10:00 утра для забора
 
-    // Возвращаем только забор вещей (PENDING_FROM)
+    // Возвращаем забор вещей (PENDING с direction TO_WAREHOUSE)
     return [
       {
         moving_date: pickupDate.toISOString(),
-        status: "PENDING_FROM",
+        status: "PENDING",
+        direction: "TO_WAREHOUSE",
         address,
       },
     ];
@@ -915,7 +941,7 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (includeMoving && !movingAddressFrom.trim()) {
+    if (includeMoving && !movingStreetFrom.trim()) {
       setSubmitError("Укажите адрес для перевозки.");
       return;
     }
@@ -943,7 +969,7 @@ const HomePage = memo(() => {
         }
       }
 
-      const trimmedAddress = movingAddressFrom.trim();
+      const trimmedAddress = getMovingAddressFrom;
 
       const orderItems = [
         {
@@ -1036,7 +1062,7 @@ const HomePage = memo(() => {
       const allMovingOrders = [];
       
       if (includeMoving) {
-        // Добавляем забор вещей (PENDING_FROM)
+        // Добавляем забор вещей (PENDING с direction TO_WAREHOUSE)
         const pickupOrder = buildMovingOrders(trimmedAddress, monthsNumber, movingPickupDate)[0];
         allMovingOrders.push(pickupOrder);
       }
@@ -1046,16 +1072,17 @@ const HomePage = memo(() => {
         console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
         
         // Используем moving_order из состояния или создаем новый
-        const returnOrder = movingOrders.find(order => order.status === "PENDING_TO");
+        const returnOrder = movingOrders.find(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
         if (returnOrder) {
           console.log("✅ Используем существующий moving_order из состояния");
           allMovingOrders.push({
             moving_date: returnOrder.moving_date,
-            status: "PENDING_TO",
+            status: "PENDING",
+            direction: "TO_CLIENT",
             address: returnOrder.address || movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
           });
         } else {
-          console.log("✅ Создаем новый moving_order для PENDING_TO");
+          console.log("✅ Создаем новый moving_order для возврата");
           // Создаем дату возврата: дата начала бронирования + количество месяцев
           const startDate = new Date(individualBookingStartDate || new Date());
           const returnDate = new Date(startDate);
@@ -1064,7 +1091,8 @@ const HomePage = memo(() => {
           
           allMovingOrders.push({
             moving_date: returnDate.toISOString(),
-            status: "PENDING_TO",
+            status: "PENDING",
+            direction: "TO_CLIENT",
             address: movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
           });
         }
@@ -1181,7 +1209,8 @@ const HomePage = memo(() => {
     previewStorage,
     selectedWarehouse,
     serviceOptions,
-    movingAddressFrom,
+    getMovingAddressFrom,
+    movingStreetFrom,
     openCallbackModal,
     movingOrders,
     individualBookingStartDate,
@@ -1217,7 +1246,7 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (!cloudPickupAddress.trim()) {
+    if (!cloudStreetFrom.trim()) {
       setSubmitError("Укажите адрес забора вещей.");
       return;
     }
@@ -1226,7 +1255,7 @@ const HomePage = memo(() => {
       setIsSubmittingOrder(true);
       setSubmitError(null);
 
-      const trimmedAddress = cloudPickupAddress.trim();
+      const trimmedAddress = getCloudPickupAddress;
 
       // Определяем название для заказа
       const orderItemName = selectedTariff.isCustom 
@@ -1365,7 +1394,8 @@ const HomePage = memo(() => {
     buildMovingOrders,
     cloudBookingStartDate,
     cloudMonthsNumber,
-    cloudPickupAddress,
+    getCloudPickupAddress,
+    cloudStreetFrom,
     cloudStorage,
     cloudVolume,
     isAuthenticated,
@@ -1412,7 +1442,9 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
-      setCloudPickupAddress("");
+      setCloudStreetFrom("");
+      setCloudHouseFrom("");
+      setCloudApartmentFrom("");
       return;
     }
     // Устанавливаем "Свои габариты" по умолчанию при переключении на облачное хранение
@@ -2353,7 +2385,9 @@ const HomePage = memo(() => {
                         if (checked) {
                           await ensureServiceOptions();
                         } else {
-                          setMovingAddressFrom("");
+                          setMovingStreetFrom("");
+                          setMovingHouseFrom("");
+                          setMovingApartmentFrom("");
                         }
                       }}
                       className="bg-gray-300 data-[state=checked]:bg-[#00A991]"
@@ -2362,7 +2396,7 @@ const HomePage = memo(() => {
 
                   {/* Детали перевозки */}
                   {includeMoving && previewStorage && (
-                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-6 shadow-lg space-y-4">
+                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg space-y-4 w-full max-w-full">
                       <h3 className="text-xl font-bold text-white">Детали перевозки</h3>
                       <div className="space-y-3">
                         <div className="flex flex-col gap-1">
@@ -2379,18 +2413,40 @@ const HomePage = memo(() => {
                             className="[&>div]:bg-gradient-to-r [&>div]:from-[#26B3AB] [&>div]:to-[#104D4A] [&>div]:!border-white [&>div]:rounded-3xl [&_input]:text-white [&_input]:placeholder:text-white/70 [&_label]:text-white/90 [&_button]:text-white [&_button]:hover:text-white [&_button]:hover:bg-transparent [&_button]:hover:!-translate-y-1/2 [&_button]:hover:!top-1/2 [&_button]:transition-none [&_button]:cursor-pointer [&>div]:focus-within:ring-0 [&>div]:focus-within:border-white"
                           />
                         </div>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-2 w-full">
                           <label className="text-s text-white/90">Адрес забора вещей</label>
                           <input
                             type="text"
-                            value={movingAddressFrom}
+                            value={movingStreetFrom}
                             onChange={(e) => {
-                              setMovingAddressFrom(e.target.value);
+                              setMovingStreetFrom(e.target.value);
                               setSubmitError(null);
                             }}
-                            placeholder="Например: г. Алматы, Абая 25"
-                            className="h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                            placeholder="Микрорайон или улица"
+                            className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                           />
+                          <div className="flex gap-2 w-full">
+                            <input
+                              type="text"
+                              value={movingHouseFrom}
+                              onChange={(e) => {
+                                setMovingHouseFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Дом"
+                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            />
+                            <input
+                              type="text"
+                              value={movingApartmentFrom}
+                              onChange={(e) => {
+                                setMovingApartmentFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Квартира"
+                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2521,7 +2577,7 @@ const HomePage = memo(() => {
                                             onChange={(e) => {
                                               setMovingAddressTo(e.target.value);
                                               setMovingOrders(prev => prev.map(order => 
-                                                order.status === "PENDING_TO" 
+                                                (order.status === "PENDING" && order.direction === "TO_CLIENT")
                                                   ? { ...order, address: e.target.value }
                                                   : order
                                               ));
@@ -3087,20 +3143,44 @@ const HomePage = memo(() => {
                   </div>
 
                   {/* Адрес откуда забрать вещи - для мобильной версии */}
-                  <div className="mb-6 order-5 lg:hidden">
+                  <div className="mb-6 order-5 lg:hidden w-full max-w-full">
                     <label className="block text-sm font-medium text-[#273655] mb-2">
                       Адрес откуда забрать вещи
                     </label>
-                    <input
-                      type="text"
-                      value={cloudPickupAddress}
-                      onChange={(e) => {
-                        setCloudPickupAddress(e.target.value);
-                        setSubmitError(null);
-                      }}
-                      placeholder="Например: г.Алматы, Абая 25"
-                      className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white"
-                    />
+                    <div className="flex flex-col gap-2 w-full">
+                      <input
+                        type="text"
+                        value={cloudStreetFrom}
+                        onChange={(e) => {
+                          setCloudStreetFrom(e.target.value);
+                          setSubmitError(null);
+                        }}
+                        placeholder="Микрорайон или улица"
+                        className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                      />
+                      <div className="flex gap-2 w-full">
+                        <input
+                          type="text"
+                          value={cloudHouseFrom}
+                          onChange={(e) => {
+                            setCloudHouseFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Дом"
+                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudApartmentFrom}
+                          onChange={(e) => {
+                            setCloudApartmentFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Квартира"
+                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Кнопка бронирования - для мобильной версии */}
@@ -3162,20 +3242,44 @@ const HomePage = memo(() => {
                   </div>
                   
                   {/* Адрес откуда забрать вещи */}
-                  <div className="mb-6">
+                  <div className="mb-6 w-full max-w-full">
                     <label className="block text-sm font-medium text-[#273655] mb-2">
                       Адрес откуда забрать вещи
                     </label>
-                    <input
-                      type="text"
-                      value={cloudPickupAddress}
-                      onChange={(e) => {
-                        setCloudPickupAddress(e.target.value);
-                        setSubmitError(null);
-                      }}
-                      placeholder="Например: г.Алматы, Абая 25"
-                      className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white"
-                    />
+                    <div className="flex flex-col gap-2 w-full">
+                      <input
+                        type="text"
+                        value={cloudStreetFrom}
+                        onChange={(e) => {
+                          setCloudStreetFrom(e.target.value);
+                          setSubmitError(null);
+                        }}
+                        placeholder="Микрорайон или улица"
+                        className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                      />
+                      <div className="flex gap-2 w-full">
+                        <input
+                          type="text"
+                          value={cloudHouseFrom}
+                          onChange={(e) => {
+                            setCloudHouseFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Дом"
+                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudApartmentFrom}
+                          onChange={(e) => {
+                            setCloudApartmentFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Квартира"
+                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        />
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Кнопка обратного звонка */}

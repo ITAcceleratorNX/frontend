@@ -169,7 +169,7 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
     switch (order.status) {
       case 'PENDING':
         return <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает назначения курьера'}
+          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает забора'}
         </Badge>;
       case 'COURIER_ASSIGNED':
         return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Курьер назначен</Badge>;
@@ -245,6 +245,18 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
               <div>
                 <span className="text-gray-600">Время доставки:</span>
                 <p className="font-medium text-gray-900">{order.delivery_time_interval}</p>
+              </div>
+            </div>
+          )}
+
+          {order?.direction && (
+            <div className="flex items-start gap-2 text-sm">
+              <Truck className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-gray-600">Направление:</span>
+                <p className="font-medium text-gray-900">
+                  {order.direction === 'TO_CLIENT' ? 'К клиенту' : 'К складу'}
+                </p>
               </div>
             </div>
           )}

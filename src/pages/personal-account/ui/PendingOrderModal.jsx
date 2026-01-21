@@ -80,12 +80,13 @@ const translatePaymentStatus = (status) => {
 const translateMovingStatus = (status) => {
   if (!status) return 'Неизвестно';
   const statusMap = {
-    'PENDING_FROM': 'Ожидает забора',
-    'PENDING_TO': 'Ожидает доставки',
-    'IN_PROGRESS': 'В процессе забора',
-    'IN_PROGRESS_TO': 'В процессе доставки',
+    'PENDING': 'Ожидает',
+    'COURIER_ASSIGNED': 'Курьер назначен',
+    'COURIER_IN_TRANSIT': 'Курьер в пути',
+    'COURIER_AT_CLIENT': 'Курьер у клиента',
+    'IN_PROGRESS': 'В процессе',
     'DELIVERED': 'Доставлен',
-    'DELIVERED_TO': 'Доставлен обратно',
+    'FINISHED': 'Завершено',
     'CANCELLED': 'Отменен',
   };
   return statusMap[status] || status;

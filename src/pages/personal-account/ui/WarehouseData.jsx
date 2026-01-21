@@ -2022,7 +2022,8 @@ const WarehouseData = () => {
                               orderData.moving_orders = [
                                 {
                                   moving_date: pickupDate.toISOString(),
-                                  status: 'PENDING_FROM',
+                                  status: 'PENDING',
+                                  direction: 'TO_WAREHOUSE',
                                   address: cloudPickupAddress.trim(),
                                 },
                                 {
@@ -2861,7 +2862,7 @@ const WarehouseData = () => {
                             const allMovingOrders = [];
                             
                             if (includeMoving && movingAddressFrom.trim()) {
-                              // Добавляем забор вещей (PENDING_FROM)
+                              // Добавляем забор вещей (PENDING с direction TO_WAREHOUSE)
                               const pickupDate = movingPickupDate 
                                 ? new Date(movingPickupDate)
                                 : new Date();
@@ -2890,7 +2891,7 @@ const WarehouseData = () => {
                                   address: returnOrder.address.trim(),
                                 });
                               } else {
-                                console.log("✅ Создаем новый moving_order для PENDING_TO");
+                                console.log("✅ Создаем новый moving_order для возврата");
                                 // Создаем дату возврата: дата начала бронирования + количество месяцев
                                 const startDate = new Date(individualBookingStartDate || new Date());
                                 const returnDate = new Date(startDate);
@@ -2918,7 +2919,7 @@ const WarehouseData = () => {
                             
                             console.log("📦 Финальные moving_orders:", allMovingOrders);
 
-                            // is_selected_moving должен быть true, если есть любые moving_orders (включая PENDING_TO от GAZELLE_TO)
+                            // is_selected_moving должен быть true, если есть любые moving_orders (включая возврат от GAZELLE_TO)
                             const isMovingSelected = includeMoving || hasGazelleTo || allMovingOrders.length > 0;
 
                             const orderData = {

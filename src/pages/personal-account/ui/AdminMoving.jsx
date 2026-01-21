@@ -36,7 +36,7 @@ import {
 import { toast } from 'react-toastify';
 // --- Moving statuses helpers ---
 const MOVING_STATUS_TEXT = {
-  PENDING:   'Ожидает назначения курьера',
+  PENDING:   'Ожидает забора',
   COURIER_ASSIGNED: 'Курьер назначен',
   COURIER_IN_TRANSIT: 'Курьер в пути',
   COURIER_AT_CLIENT: 'Курьер у клиента',
@@ -154,10 +154,10 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAss
             </div>
           </div>
           
-            <div className="flex items-start gap-2 text-sm">
-              <Building className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-gray-600">Склад:</span>
+          <div className="flex items-start gap-2 text-sm">
+            <Building className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <span className="text-gray-600">Склад:</span>
                 <p className="font-medium text-gray-900">
                   {order?.warehouseName 
                     ? `${order.warehouseName}${order?.warehouseAddress ? `, ${order.warehouseAddress}` : ''}` 
@@ -175,8 +175,8 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAss
                     {order.courier.name}
                     {order.courier.phone && ` (${order.courier.phone})`}
                   </p>
-                </div>
-              </div>
+            </div>
+          </div>
             )}
 
           <div className="flex items-start gap-2 text-sm">
@@ -193,6 +193,18 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAss
               <div>
                 <span className="text-gray-600">Время доставки:</span>
                 <p className="font-medium text-gray-900">{order.delivery_time_interval}</p>
+              </div>
+            </div>
+          )}
+
+          {order?.direction && (
+            <div className="flex items-start gap-2 text-sm">
+              <Truck className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-gray-600">Направление:</span>
+                <p className="font-medium text-gray-900">
+                  {order.direction === 'TO_CLIENT' ? 'К клиенту' : 'К складу'}
+                </p>
               </div>
             </div>
           )}
@@ -248,7 +260,7 @@ const AdminMoving = () => {
 
       // Фильтрация по availability
       const filterAvailable = (orders) =>
-          orders.filter((order) => order.availability === 'AVAILABLE');
+        orders.filter((order) => order.availability === 'AVAILABLE');
 
       const newOrders = {
         PENDING: filterAvailable([

@@ -120,9 +120,9 @@ const WarehouseOrderPage = memo(() => {
         setIsSelectedPackage(true);
         // Не сбрасываем movingOrders, если уже есть
         if (movingOrders.length === 0) {
-          // Для облачного хранения создаем только забор вещей (PENDING_FROM)
+          // Для облачного хранения создаем только забор вещей (PENDING с direction TO_WAREHOUSE)
           setMovingOrders([
-            { moving_date: new Date().toISOString(), status: 'PENDING_FROM', address: '' }
+            { moving_date: new Date().toISOString(), status: 'PENDING', direction: 'TO_WAREHOUSE', address: '' }
           ]);
           setMovingOrderErrors([{}]);
         }
@@ -158,8 +158,8 @@ const WarehouseOrderPage = memo(() => {
     let updated = [...currentServices];
     
     // Получаем типы перевозок из moving_orders
-    const hasPickup = currentMovingOrders.some(order => order.status === "PENDING_FROM");
-    const hasReturn = currentMovingOrders.some(order => order.status === "PENDING_TO");
+    const hasPickup = currentMovingOrders.some(order => order.status === "PENDING" && order.direction === "TO_WAREHOUSE");
+    const hasReturn = currentMovingOrders.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
     
     // Находим услуги GAZELLE_FROM и GAZELLE_TO
     const gazelleFromOption = prices.find(p => p.type === "GAZELLE_FROM");
@@ -333,7 +333,8 @@ const WarehouseOrderPage = memo(() => {
   const addMovingOrder = () => {
     const newOrder = {
       moving_date: new Date().toISOString(),
-      status: "PENDING_FROM",
+      status: "PENDING",
+      direction: "TO_WAREHOUSE",
       address: "",
     };
     setMovingOrders([...movingOrders, newOrder]);
@@ -1582,7 +1583,7 @@ const WarehouseOrderPage = memo(() => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="block text-sm font-medium text-[#273655] mb-1">
-                              {order.status === 'PENDING_FROM'
+                              {order.status === 'PENDING' && order.direction === 'TO_WAREHOUSE'
                                   ? 'Дата забора вещей'
                                   : 'Дата доставки вещей'}
                             </label>
@@ -1596,7 +1597,7 @@ const WarehouseOrderPage = memo(() => {
                                   updateMovingOrder(index, 'moving_date', newDate.toISOString());
                                 }
                               }}
-                              minDate={order.status === 'PENDING_FROM' ? new Date().toISOString().split('T')[0] : undefined}
+                              minDate={order.status === 'PENDING' && order.direction === 'TO_WAREHOUSE' ? new Date().toISOString().split('T')[0] : undefined}
                               allowFutureDates={true}
                               placeholder="ДД.ММ.ГГГГ"
                             />
@@ -1607,19 +1608,21 @@ const WarehouseOrderPage = memo(() => {
                                   Тип перевозки
                                 </label>
                                 <Select
-                                    value={order.status}
-                                    onValueChange={(value) =>
-                                        updateMovingOrder(index, "status", value)
-                                    }
+                                    value={`${order.status}:${order.direction || 'TO_WAREHOUSE'}`}
+                                    onValueChange={(value) => {
+                                      const [status, direction] = value.split(':');
+                                      updateMovingOrder(index, "status", status);
+                                      updateMovingOrder(index, "direction", direction);
+                                    }}
                                 >
                                   <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-lg">
                                     <SelectValue placeholder="Выберите тип перевозки" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="PENDING_FROM">
+                                    <SelectItem value="PENDING:TO_WAREHOUSE">
                                       Забрать вещи (От клиента на склад)
                                     </SelectItem>
-                                    <SelectItem value="PENDING_TO">
+                                    <SelectItem value="PENDING:TO_CLIENT">
                                       Доставить вещи (Со склада к клиенту)
                                     </SelectItem>
                                   </SelectContent>

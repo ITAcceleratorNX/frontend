@@ -41,8 +41,15 @@ const getStatusText = (status, direction) => {
 const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
   const order = delivery.order;
   
-  // Проверяем, можно ли выбрать время доставки (заказ оплачен и договор подписан)
-  const canSelectTime = order?.payment_status === 'PAID' && order?.contract_status === 'SIGNED';
+  // Статусы, при которых еще можно выбрать время (до начала активной доставки)
+  const allowedStatuses = ['PENDING', 'COURIER_ASSIGNED'];
+  
+  // Проверяем, можно ли выбрать время доставки
+  const canSelectTime = 
+    order?.payment_status === 'PAID' && 
+    order?.contract_status === 'SIGNED' &&
+    allowedStatuses.includes(delivery.status) &&
+    !delivery.delivery_time_interval;
   
   // Определяем фон карточки: зеленый градиент для доставленных, серый для в процессе
   const getCardBackground = () => {
@@ -73,8 +80,10 @@ const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
         
         {/* Белый квадрат с идентификатором бокса */}
         {order?.storage?.name && (
-          <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
-            <span className="text-4xl font-bold text-gray-700">{order.storage.name}</span>
+          <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-1 overflow-hidden">
+            <span className="text-base sm:text-lg font-bold text-gray-700 text-center whitespace-nowrap w-full px-1">
+              {order.storage.name}
+            </span>
           </div>
         )}
       </div>
@@ -139,8 +148,18 @@ const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
           </div>
         )}
 
+        {/* Направление доставки */}
+        {delivery.direction && (
+          <div className="flex items-center gap-2">
+            <Truck className="w-5 h-5" />
+            <span className="text-sm text-white/90">
+              Направление: {delivery.direction === 'TO_CLIENT' ? 'К клиенту' : 'К складу'}
+            </span>
+          </div>
+        )}
+
         {/* Кнопка выбора времени доставки */}
-        {canSelectTime && !delivery.delivery_time_interval && onSelectTimeClick && (
+        {canSelectTime && onSelectTimeClick && (
           <div className="pt-2">
             <Button
               onClick={() => onSelectTimeClick(delivery)}

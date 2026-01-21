@@ -100,12 +100,13 @@ export const paymentsApi = {
       if (isDevelopment) {
         console.log(`PaymentsAPI: Создание заявки на мувинг для заказа ${orderId}`);
       }
-      const { status = "PENDING_FROM", address = null } = options;
+      const { status = "PENDING", direction = "TO_WAREHOUSE", address = null } = options;
       const response = await api.post('/moving', {
         order_id: orderId,
         moving_date: movingDate,
         vehicle_type: "LARGE",
         status: status,
+        direction: direction,
         availability: "AVAILABLE",
         ...(address && { address })
       });

@@ -39,11 +39,8 @@ const PersonalData = memo(() => {
 
   // Функция форматирования номера телефона
   const formatPhoneNumber = (value) => {
-    if (!value) return '';
     // Удаляем все символы кроме цифр
     const numbers = value.replace(/\D/g, '');
-    
-    if (numbers.length === 0) return '';
     
     // Если начинается с 8, заменяем на 7
     let cleaned = numbers;
@@ -60,21 +57,24 @@ const PersonalData = memo(() => {
     cleaned = cleaned.slice(0, 11);
     
     // Форматируем в формат +7 (XXX) XXX-XX-XX
-    let formatted = '+7';
-    if (cleaned.length > 1) {
-      formatted += ' (' + cleaned.slice(1, 4);
-    }
-    if (cleaned.length >= 4) {
-      formatted += ')';
-    }
-    if (cleaned.length > 4) {
-      formatted += ' ' + cleaned.slice(4, 7);
-    }
-    if (cleaned.length > 7) {
-      formatted += '-' + cleaned.slice(7, 9);
-    }
-    if (cleaned.length > 9) {
-      formatted += '-' + cleaned.slice(9, 11);
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted = '+7';
+      if (cleaned.length > 1) {
+        formatted += ' (' + cleaned.slice(1, 4);
+      }
+      if (cleaned.length > 4) {
+        formatted += ') ' + cleaned.slice(4, 7);
+      }
+      if (cleaned.length > 7) {
+        formatted += '-' + cleaned.slice(7, 9);
+      }
+      if (cleaned.length > 9) {
+        formatted += '-' + cleaned.slice(9, 11);
+      }
+      if (cleaned.length > 4 && cleaned.length <= 7) {
+        formatted += ')';
+      }
     }
     
     return formatted;
@@ -95,15 +95,59 @@ const PersonalData = memo(() => {
     return formatPhoneNumber(cleaned);
   };
 
-  // Используем мемоизацию для defaultValues с форматированным телефоном
-  const defaultValues = useMemo(() => ({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: formatPhoneForDisplay(user?.phone || ''),
-    iin: user?.iin || '',
-    address: user?.address || '',
-    bday: user?.bday || ''
-  }), [user]);
+  // Функция для парсинга адреса из строки в отдельные компоненты
+  const parseAddress = (addressStr) => {
+    if (!addressStr) return { street: '', house: '', apartment: '' };
+    
+    // Пытаемся распарсить адрес формата "г. Алматы, ул. Примерная, д. 123, кв. 456"
+    const parts = addressStr.split(',').map(p => p.trim());
+    let street = '';
+    let house = '';
+    let apartment = '';
+    
+    for (const part of parts) {
+      if (part.startsWith('д.') || part.match(/^д\.?\s*/)) {
+        house = part.replace(/^д\.?\s*/, '').trim();
+      } else if (part.startsWith('кв.') || part.match(/^кв\.?\s*/)) {
+        apartment = part.replace(/^кв\.?\s*/, '').trim();
+      } else if (!part.startsWith('г.') && !part.startsWith('г ')) {
+        // Улица - это все, что не город, дом или квартира
+        street = part.replace(/^ул\.?\s*/, '').trim();
+      }
+    }
+    
+    // Если парсинг не удался, пытаемся использовать весь адрес как улицу
+    if (!street && !house && !apartment) {
+      // Убираем "г. Алматы," если есть
+      street = addressStr.replace(/^г\.?\s*Алматы,?\s*/i, '').trim();
+    }
+    
+    return { street, house, apartment };
+  };
+
+  // Функция для объединения адреса из компонентов в строку
+  const combineAddress = (street, house, apartment) => {
+    const parts = [];
+    if (street.trim()) parts.push(street.trim());
+    if (house.trim()) parts.push(`д. ${house.trim()}`);
+    if (apartment.trim()) parts.push(`кв. ${apartment.trim()}`);
+    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
+  };
+
+  // Используем мемоизацию для defaultValues, чтобы предотвратить повторное создание объекта
+  const defaultValues = useMemo(() => {
+    const parsedAddress = parseAddress(user?.address || '');
+    return {
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: formatPhoneForDisplay(user?.phone || ''),
+      iin: user?.iin || '',
+      addressStreet: parsedAddress.street,
+      addressHouse: parsedAddress.house,
+      addressApartment: parsedAddress.apartment,
+      bday: user?.bday || ''
+    };
+  }, [user]);
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
     defaultValues
@@ -115,12 +159,15 @@ const PersonalData = memo(() => {
   // Заполняем форму данными пользователя, когда они доступны, используя зависимость от объекта user
   useEffect(() => {
     if (user) {
+      const parsedAddress = parseAddress(user.address || '');
       reset({
         name: user.name || '',
         email: user.email || '',
         phone: formatPhoneForDisplay(user.phone || ''),
         iin: user.iin || '',
-        address: user.address || '',
+        addressStreet: parsedAddress.street,
+        addressHouse: parsedAddress.house,
+        addressApartment: parsedAddress.apartment,
         bday: user.bday || ''
       });
     }
@@ -172,18 +219,42 @@ const PersonalData = memo(() => {
 
   // Мемоизируем функцию обработки обновления данных пользователя
   const onSubmit = async (formData) => {
+    // Объединяем адрес из отдельных полей
+    const combinedAddress = combineAddress(
+      formData.addressStreet || '',
+      formData.addressHouse || '',
+      formData.addressApartment || ''
+    );
+
     // Нормализуем телефон перед отправкой
     const normalizedData = {
-      ...formData,
-      phone: normalizePhoneForSubmit(formData.phone)
+      name: formData.name,
+      email: formData.email,
+      phone: normalizePhoneForSubmit(formData.phone),
+      iin: formData.iin,
+      address: combinedAddress,
+      bday: formData.bday
     };
 
     // Проверяем, изменились ли данные, чтобы избежать ненужных запросов
-    const hasChanges = Object.keys(normalizedData).some(key => {
-      const currentValue = normalizedData[key];
-      const defaultValue = key === 'phone' ? normalizePhoneForSubmit(defaultValues[key]) : defaultValues[key];
-      return currentValue !== defaultValue;
-    });
+    const currentAddress = combineAddress(
+      formData.addressStreet || '',
+      formData.addressHouse || '',
+      formData.addressApartment || ''
+    );
+    const defaultAddress = combineAddress(
+      defaultValues.addressStreet || '',
+      defaultValues.addressHouse || '',
+      defaultValues.addressApartment || ''
+    );
+    
+    const hasChanges = 
+      normalizedData.name !== defaultValues.name ||
+      normalizedData.email !== defaultValues.email ||
+      normalizedData.phone !== normalizePhoneForSubmit(defaultValues.phone) ||
+      normalizedData.iin !== defaultValues.iin ||
+      currentAddress !== defaultAddress ||
+      normalizedData.bday !== defaultValues.bday;
 
     if (!hasChanges) {
       toast.info('Данные не изменились');
@@ -202,11 +273,17 @@ const PersonalData = memo(() => {
         // Обновляем локальные данные пользователя через кеш
         queryClient.setQueryData([USER_QUERY_KEY], {
           ...user,
-          ...formData
+          ...normalizedData
         });
 
         // Сбрасываем форму с новыми данными
-        reset(formData);
+        const parsedAddress = parseAddress(combinedAddress);
+        reset({
+          ...formData,
+          addressStreet: parsedAddress.street,
+          addressHouse: parsedAddress.house,
+          addressApartment: parsedAddress.apartment
+        });
 
         toast.success('Данные успешно обновлены');
         setIsEditing(false);
@@ -231,15 +308,8 @@ const PersonalData = memo(() => {
   const toggleEdit = () => {
     setIsEditing(!isEditing);
     if (isEditing) {
-      // При отмене сбрасываем на текущие данные пользователя с форматированным телефоном
-      reset({
-        name: user?.name || '',
-        email: user?.email || '',
-        phone: formatPhoneForDisplay(user?.phone || ''),
-        iin: user?.iin || '',
-        address: user?.address || '',
-        bday: user?.bday || ''
-      });
+      // При отмене сбрасываем значения на исходные
+      reset(defaultValues);
     }
     clearErrors();
   };
@@ -446,15 +516,40 @@ const PersonalData = memo(() => {
                     )}
                   </div>
                 </div>
-                <Input
-                  label="Адрес"
-                  placeholder="г. Алматы, ул. Примерная, д. 123"
-                  disabled={!isEditing}
-                  {...register('address', { required: 'Адрес обязателен для заполнения' })}
-                  error={errors.address?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
-                />
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium font-sf-pro-text text-[#000000]">
+                    Адрес
+                  </label>
+                  <Input
+                    label="Микрорайон или улица"
+                    placeholder="Микрорайон или улица"
+                    disabled={!isEditing}
+                    {...register('addressStreet', { required: 'Улица обязательна для заполнения' })}
+                    error={errors.addressStreet?.message}
+                    className="bg-white rounded-lg"
+                    labelClassName="font-sf-pro-text text-[#000000]"
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      label="Дом"
+                      placeholder="Дом"
+                      disabled={!isEditing}
+                      {...register('addressHouse', { required: 'Дом обязателен для заполнения' })}
+                      error={errors.addressHouse?.message}
+                      className="bg-white rounded-lg flex-1"
+                      labelClassName="font-sf-pro-text text-[#000000]"
+                    />
+                    <Input
+                      label="Квартира"
+                      placeholder="Квартира"
+                      disabled={!isEditing}
+                      {...register('addressApartment')}
+                      error={errors.addressApartment?.message}
+                      className="bg-white rounded-lg flex-1"
+                      labelClassName="font-sf-pro-text text-[#000000]"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Правая колонка */}

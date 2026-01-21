@@ -241,6 +241,7 @@ const DatePicker = forwardRef(({
                 className={cn(
                   "absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-200",
                   "text-gray-600 hover:text-gray-900",
+                  "hover:!-translate-y-1/2 transition-none",
                   disabled && "cursor-not-allowed opacity-50"
                 )}
                 onClick={(e) => {

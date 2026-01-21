@@ -37,7 +37,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
   };
 // --- Moving statuses helpers ---
   const MOVING_STATUS_TEXT = {
-    PENDING:       'Ожидает назначения курьера',
+    PENDING:       'Ожидает забора',
     COURIER_ASSIGNED: 'Курьер назначен',
     COURIER_IN_TRANSIT: 'Курьер в пути',
     COURIER_AT_CLIENT: 'Курьер у клиента',

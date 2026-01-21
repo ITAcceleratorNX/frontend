@@ -95,7 +95,7 @@ const UserDelivery = () => {
         return {
             total: deliveries.length,
             inProgress: deliveries.filter(d =>
-                ['PENDING_FROM', 'PENDING_TO', 'IN_PROGRESS', 'IN_PROGRESS_TO'].includes(d.status)
+                ['PENDING', 'COURIER_ASSIGNED', 'COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(d.status)
             ).length,
             delivered: deliveries.filter(d =>
                 ['DELIVERED'].includes(d.status)
