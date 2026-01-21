@@ -132,7 +132,7 @@ const PaymentCard = ({ order }) => {
             </button>
             <button
               onClick={() => handleDownloadReceipt(payment.id)}
-              disabled={downloadReceiptMutation.isLoading}
+              disabled={downloadReceiptMutation.isPending}
               className="text-white/90 text-xs font-medium hover:text-white transition-colors underline"
             >
               Скачать PDF - чек
