@@ -19,7 +19,7 @@ import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
 import { useChatStore } from '../../../entities/chat/model';
-import { Pencil, LogOut, Bell, Package, CreditCard, Truck } from 'lucide-react';
+import { Pencil, LogOut, Bell, Package, CreditCard, Truck, Tag } from 'lucide-react';
 import lichkaLogo from '../../../assets/Lichka2.png';
 import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './notifications/UserNotifications';
@@ -57,6 +57,7 @@ const adminNavItems = [
   { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
   { label: 'Запросы', icon: icon11, key: 'request' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
+  { label: 'Промокоды', icon: Tag, key: 'promocodes' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
   { label: 'Выйти', icon: icon6, key: 'logout' },

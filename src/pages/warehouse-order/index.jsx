@@ -7,6 +7,7 @@ import Footer from "../../widgets/Footer";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
 import { ordersApi } from "../../shared/api/ordersApi";
+import { promoApi } from "../../shared/api/promoApi";
 import { useAuth } from "../../shared/context/AuthContext";
 import InteractiveWarehouseCanvas from "../../components/InteractiveWarehouseCanvas";
 import MainWarehouseCanvas from "../../components/MainWarehouseCanvas";
@@ -34,6 +35,9 @@ import {
   Truck,
   ZoomIn,
   ZoomOut,
+  Tag,
+  Check,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DatePicker from "../../shared/ui/DatePicker";
@@ -406,6 +410,14 @@ const WarehouseOrderPage = memo(() => {
   const [isLoadingBookingInfo, setIsLoadingBookingInfo] = useState(false);
   // Состояние для цен услуг (для расчета процента скидки)
   const [servicePrices, setServicePrices] = useState({});
+  // Состояние для промокода
+  const [promoCode, setPromoCode] = useState("");
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoDiscountPercent, setPromoDiscountPercent] = useState(0);
+  const [promoError, setPromoError] = useState("");
+  const [promoSuccess, setPromoSuccess] = useState(false);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
 
   // Функция расчета цены аренды склада через новый API
   const calculateStoragePrice = async () => {
@@ -549,8 +561,8 @@ const WarehouseOrderPage = memo(() => {
     }
   }, [selectedStorage]);
 
-  // Функция расчета общей стоимости
-  const calculateTotalPrice = () => {
+  // Функция расчета общей стоимости (без учета промокода)
+  const calculateTotalPriceWithoutDiscount = () => {
     if (!selectedStorage) return 0;
     
     let totalPrice = storagePrice;
@@ -570,6 +582,77 @@ const WarehouseOrderPage = memo(() => {
     
     return totalPrice;
   };
+
+  // Функция расчета общей стоимости (с учетом промокода)
+  const calculateTotalPrice = () => {
+    const totalWithoutDiscount = calculateTotalPriceWithoutDiscount();
+    return Math.max(0, totalWithoutDiscount - promoDiscount);
+  };
+
+  // Функция применения промокода
+  const handleApplyPromoCode = async () => {
+    if (!promoCodeInput.trim()) {
+      setPromoError("Введите промокод");
+      return;
+    }
+
+    const totalAmount = calculateTotalPriceWithoutDiscount();
+    if (totalAmount <= 0) {
+      setPromoError("Сначала выберите бокс и срок аренды");
+      return;
+    }
+
+    try {
+      setIsValidatingPromo(true);
+      setPromoError("");
+      setPromoSuccess(false);
+
+      const result = await promoApi.validate(promoCodeInput.trim(), totalAmount);
+
+      if (result.valid) {
+        setPromoCode(promoCodeInput.trim());
+        setPromoDiscount(result.discount_amount);
+        setPromoDiscountPercent(result.discount_percent);
+        setPromoSuccess(true);
+        setPromoError("");
+        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+      } else {
+        setPromoError(result.error || "Недействительный промокод");
+        setPromoCode("");
+        setPromoDiscount(0);
+        setPromoDiscountPercent(0);
+        setPromoSuccess(false);
+      }
+    } catch (error) {
+      console.error("Ошибка при проверке промокода:", error);
+      setPromoError("Ошибка при проверке промокода");
+      setPromoCode("");
+      setPromoDiscount(0);
+      setPromoDiscountPercent(0);
+      setPromoSuccess(false);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
+
+  // Функция удаления промокода
+  const handleRemovePromoCode = () => {
+    setPromoCode("");
+    setPromoCodeInput("");
+    setPromoDiscount(0);
+    setPromoDiscountPercent(0);
+    setPromoError("");
+    setPromoSuccess(false);
+  };
+
+  // Пересчитываем скидку при изменении общей суммы
+  useEffect(() => {
+    if (promoCode && promoDiscountPercent > 0) {
+      const totalAmount = calculateTotalPriceWithoutDiscount();
+      const newDiscount = Math.round((totalAmount * promoDiscountPercent / 100) * 100) / 100;
+      setPromoDiscount(newDiscount);
+    }
+  }, [storagePrice, services, isSelectedPackage, promoCode, promoDiscountPercent]);
 
   // Функция создания заказа
   const handleCreateOrder = async () => {
@@ -656,6 +739,11 @@ const WarehouseOrderPage = memo(() => {
         is_selected_moving: isSelectedMoving,
         is_selected_package: isSelectedPackage && validServices.length > 0,
       };
+
+      // Добавляем промокод, если он применен
+      if (promoCode) {
+        orderData.promo_code = promoCode;
+      }
 
       if (isSelectedMoving && movingOrders.length > 0) {
         orderData.moving_orders = movingOrders.map((order) => ({
@@ -1744,6 +1832,74 @@ const WarehouseOrderPage = memo(() => {
                   </div>
                 </div>
                   
+                  {/* Промокод */}
+                  {selectedStorage && (
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-[#273655] mb-2">
+                        Промокод
+                      </label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            value={promoCodeInput}
+                            onChange={(e) => {
+                              setPromoCodeInput(e.target.value.toUpperCase());
+                              setPromoError("");
+                            }}
+                            placeholder="Введите промокод"
+                            disabled={promoSuccess || isValidatingPromo}
+                            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:border-[#273655] ${
+                              promoSuccess 
+                                ? "border-green-500 bg-green-50" 
+                                : promoError 
+                                  ? "border-red-500 bg-red-50" 
+                                  : "border-gray-300"
+                            } disabled:bg-gray-100`}
+                          />
+                          {promoSuccess && (
+                            <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
+                          )}
+                        </div>
+                        {promoSuccess ? (
+                          <button
+                            type="button"
+                            onClick={handleRemovePromoCode}
+                            className="px-4 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2"
+                          >
+                            <X className="w-5 h-5" />
+                            <span className="hidden sm:inline">Удалить</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleApplyPromoCode}
+                            disabled={isValidatingPromo || !promoCodeInput.trim()}
+                            className="px-4 py-3 bg-[#273655] text-white rounded-lg hover:bg-[#1e2a4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          >
+                            {isValidatingPromo ? (
+                              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                            ) : (
+                              <>
+                                <Check className="w-5 h-5" />
+                                <span className="hidden sm:inline">Применить</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      {promoError && (
+                        <p className="text-sm text-red-600 mt-1">{promoError}</p>
+                      )}
+                      {promoSuccess && (
+                        <p className="text-sm text-green-600 mt-1">
+                          Промокод <strong>{promoCode}</strong> применен! Скидка {promoDiscountPercent}% (-{promoDiscount.toLocaleString()} ₸)
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Отображение стоимости */}
                   {selectedStorage && (
                     <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
@@ -1859,6 +2015,23 @@ const WarehouseOrderPage = memo(() => {
                               </div>
                             )}
 
+                            {/* Скидка по промокоду */}
+                            {promoSuccess && promoDiscount > 0 && (
+                              <div className="mb-3 bg-green-100 border border-green-300 rounded-lg p-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Tag className="w-4 h-4 text-green-600" />
+                                    <span className="text-sm text-green-700">
+                                      Промокод <strong>{promoCode}</strong>
+                                    </span>
+                                  </div>
+                                  <span className="text-sm font-semibold text-green-700">
+                                    -{promoDiscount.toLocaleString()} ₸
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
                             {/* Общая стоимость */}
                             <div className="border-t border-green-300 pt-3">
                               <div className="flex items-center justify-between mb-1">
@@ -1903,6 +2076,11 @@ const WarehouseOrderPage = memo(() => {
                                 })()}
                               </div>
                               <div className="text-[20px] font-bold text-[#273655]">
+                                {promoSuccess && promoDiscount > 0 && (
+                                  <span className="text-[16px] text-gray-400 line-through mr-2">
+                                    {calculateTotalPriceWithoutDiscount().toLocaleString()} ₸
+                                  </span>
+                                )}
                                 {calculateTotalPrice().toLocaleString()} ₸
                               </div>
                               <div className="text-[12px] text-[#6B6B6B] mt-1">
@@ -1910,6 +2088,7 @@ const WarehouseOrderPage = memo(() => {
                                 {selectedWarehouse?.type !== 'CLOUD' && isSelectedPackage && ' + услуги упаковки'}
                                 {selectedWarehouse?.type !== 'CLOUD' && isSelectedMoving && ' + услуги перевозки'}
                                 {selectedWarehouse?.type === 'CLOUD' && (isSelectedPackage || isSelectedMoving) && ' + услуги бесплатно'}
+                                {promoSuccess && promoDiscount > 0 && ` (скидка ${promoDiscountPercent}%)`}
                               </div>
                             </div>
                           </>

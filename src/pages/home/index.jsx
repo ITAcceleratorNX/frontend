@@ -9,6 +9,7 @@ import WarehouseMap from "../../components/WarehouseMap";
 import WarehouseSVGMap from "../../components/WarehouseSVGMap";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
+import { promoApi } from "../../shared/api/promoApi";
 import { Dropdown } from '../../shared/components/Dropdown.jsx';
 import {
   Tabs,
@@ -21,7 +22,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
@@ -156,6 +157,22 @@ const HomePage = memo(() => {
   const [tariffPrices, setTariffPrices] = useState({});
   // Состояние для цен кастомного тарифа (CLOUD_PRICE_LOW и CLOUD_PRICE_HIGH)
   const [cloudCustomPrices, setCloudCustomPrices] = useState({ low: null, high: null });
+  // Состояние для промокода (индивидуальное хранение)
+  const [promoCode, setPromoCode] = useState("");
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoDiscountPercent, setPromoDiscountPercent] = useState(0);
+  const [promoError, setPromoError] = useState("");
+  const [promoSuccess, setPromoSuccess] = useState(false);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  // Состояние для промокода (облачное хранение)
+  const [cloudPromoCode, setCloudPromoCode] = useState("");
+  const [cloudPromoCodeInput, setCloudPromoCodeInput] = useState("");
+  const [cloudPromoDiscount, setCloudPromoDiscount] = useState(0);
+  const [cloudPromoDiscountPercent, setCloudPromoDiscountPercent] = useState(0);
+  const [cloudPromoError, setCloudPromoError] = useState("");
+  const [cloudPromoSuccess, setCloudPromoSuccess] = useState(false);
+  const [isValidatingCloudPromo, setIsValidatingCloudPromo] = useState(false);
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -507,6 +524,148 @@ const HomePage = memo(() => {
     };
   }, [pricePreview, serviceSummary.total]);
 
+  // Расчет итоговой суммы с учетом промокода (индивидуальное хранение)
+  const finalIndividualTotal = useMemo(() => {
+    const total = costSummary.combinedTotal || 0;
+    return Math.max(0, total - promoDiscount);
+  }, [costSummary.combinedTotal, promoDiscount]);
+
+  // Расчет итоговой суммы с учетом промокода (облачное хранение)
+  const finalCloudTotal = useMemo(() => {
+    const total = cloudPricePreview?.total || 0;
+    return Math.max(0, total - cloudPromoDiscount);
+  }, [cloudPricePreview, cloudPromoDiscount]);
+
+  // Функция применения промокода для индивидуального хранения
+  const handleApplyPromoCode = useCallback(async () => {
+    if (!promoCodeInput.trim()) {
+      setPromoError("Введите промокод");
+      return;
+    }
+
+    const totalAmount = costSummary.combinedTotal || 0;
+    if (totalAmount <= 0) {
+      setPromoError("Сначала выберите бокс и срок аренды");
+      return;
+    }
+
+    try {
+      setIsValidatingPromo(true);
+      setPromoError("");
+      setPromoSuccess(false);
+
+      const result = await promoApi.validate(promoCodeInput.trim(), totalAmount);
+
+      if (result.valid) {
+        setPromoCode(promoCodeInput.trim());
+        setPromoDiscount(result.discount_amount);
+        setPromoDiscountPercent(result.discount_percent);
+        setPromoSuccess(true);
+        setPromoError("");
+        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+      } else {
+        setPromoError(result.error || "Недействительный промокод");
+        setPromoCode("");
+        setPromoDiscount(0);
+        setPromoDiscountPercent(0);
+        setPromoSuccess(false);
+      }
+    } catch (error) {
+      console.error("Ошибка при проверке промокода:", error);
+      setPromoError("Ошибка при проверке промокода");
+      setPromoCode("");
+      setPromoDiscount(0);
+      setPromoDiscountPercent(0);
+      setPromoSuccess(false);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  }, [promoCodeInput, costSummary.combinedTotal]);
+
+  // Функция удаления промокода для индивидуального хранения
+  const handleRemovePromoCode = useCallback(() => {
+    setPromoCode("");
+    setPromoCodeInput("");
+    setPromoDiscount(0);
+    setPromoDiscountPercent(0);
+    setPromoError("");
+    setPromoSuccess(false);
+  }, []);
+
+  // Функция применения промокода для облачного хранения
+  const handleApplyCloudPromoCode = useCallback(async () => {
+    if (!cloudPromoCodeInput.trim()) {
+      setCloudPromoError("Введите промокод");
+      return;
+    }
+
+    const totalAmount = cloudPricePreview?.total || 0;
+    if (totalAmount <= 0) {
+      setCloudPromoError("Сначала выберите тариф и срок аренды");
+      return;
+    }
+
+    try {
+      setIsValidatingCloudPromo(true);
+      setCloudPromoError("");
+      setCloudPromoSuccess(false);
+
+      const result = await promoApi.validate(cloudPromoCodeInput.trim(), totalAmount);
+
+      if (result.valid) {
+        setCloudPromoCode(cloudPromoCodeInput.trim());
+        setCloudPromoDiscount(result.discount_amount);
+        setCloudPromoDiscountPercent(result.discount_percent);
+        setCloudPromoSuccess(true);
+        setCloudPromoError("");
+        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+      } else {
+        setCloudPromoError(result.error || "Недействительный промокод");
+        setCloudPromoCode("");
+        setCloudPromoDiscount(0);
+        setCloudPromoDiscountPercent(0);
+        setCloudPromoSuccess(false);
+      }
+    } catch (error) {
+      console.error("Ошибка при проверке промокода:", error);
+      setCloudPromoError("Ошибка при проверке промокода");
+      setCloudPromoCode("");
+      setCloudPromoDiscount(0);
+      setCloudPromoDiscountPercent(0);
+      setCloudPromoSuccess(false);
+    } finally {
+      setIsValidatingCloudPromo(false);
+    }
+  }, [cloudPromoCodeInput, cloudPricePreview]);
+
+  // Функция удаления промокода для облачного хранения
+  const handleRemoveCloudPromoCode = useCallback(() => {
+    setCloudPromoCode("");
+    setCloudPromoCodeInput("");
+    setCloudPromoDiscount(0);
+    setCloudPromoDiscountPercent(0);
+    setCloudPromoError("");
+    setCloudPromoSuccess(false);
+  }, []);
+
+  // Пересчитываем скидку при изменении общей суммы (индивидуальное хранение)
+  useEffect(() => {
+    if (promoCode && promoDiscountPercent > 0) {
+      const totalAmount = costSummary.combinedTotal || 0;
+      const newDiscount = Math.round((totalAmount * promoDiscountPercent / 100) * 100) / 100;
+      setPromoDiscount(newDiscount);
+    }
+  }, [costSummary.combinedTotal, promoCode, promoDiscountPercent]);
+
+  // Пересчитываем скидку при изменении общей суммы (облачное хранение)
+  useEffect(() => {
+    if (cloudPromoCode && cloudPromoDiscountPercent > 0) {
+      const totalAmount = cloudPricePreview?.total || 0;
+      const newDiscount = Math.round((totalAmount * cloudPromoDiscountPercent / 100) * 100) / 100;
+      setCloudPromoDiscount(newDiscount);
+    }
+  }, [cloudPricePreview, cloudPromoCode, cloudPromoDiscountPercent]);
+
   // Показываем модальное окно источника лида при первом посещении
   useEffect(() => {
     if (!isAuthenticated && shouldShowLeadSourceModal()) {
@@ -835,6 +994,11 @@ const HomePage = memo(() => {
         is_selected_package: isPackageSelected,
       };
 
+      // Добавляем промокод, если он применен
+      if (promoCode) {
+        orderData.promo_code = promoCode;
+      }
+
       // Проверяем наличие GAZELLE_TO в услугах (независимо от includeMoving)
       const hasGazelleTo = finalServices.some(s => {
         const service = availableOptions.find(opt => opt.id === s.service_id);
@@ -1006,6 +1170,7 @@ const HomePage = memo(() => {
     openCallbackModal,
     movingOrders,
     individualBookingStartDate,
+    promoCode,
   ]);
 
   const handleCreateCloudOrder = useCallback(async () => {
@@ -1111,6 +1276,11 @@ const HomePage = memo(() => {
         tariff_type: tariff_type, // Добавляем тип тарифа
       };
 
+      // Добавляем промокод, если он применен
+      if (cloudPromoCode) {
+        orderData.promo_code = cloudPromoCode;
+      }
+
       console.error("availableOptions: ", availableOptions);
 
       // Добавляем услугу "Газель - забор" для перевозки (только GAZELLE_FROM)
@@ -1191,6 +1361,7 @@ const HomePage = memo(() => {
     ensureServiceOptions,
     warehouseApi,
     toast,
+    cloudPromoCode,
   ]);
 
   const handleIndividualBookingClick = useCallback(() => {
@@ -2422,11 +2593,91 @@ const HomePage = memo(() => {
                             <div className="text-sm text-gray-600">
                               Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
                             </div>
+                            
+                            {/* Промокод */}
+                            <div className="mt-4 mb-3">
+                              <label className="block text-sm font-medium text-[#273655] mb-2">
+                                Промокод
+                              </label>
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  <input
+                                    type="text"
+                                    value={promoCodeInput}
+                                    onChange={(e) => {
+                                      setPromoCodeInput(e.target.value.toUpperCase());
+                                      setPromoError("");
+                                    }}
+                                    placeholder="Введите промокод"
+                                    disabled={promoSuccess || isValidatingPromo}
+                                    className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
+                                      promoSuccess 
+                                        ? "border-green-500 bg-green-50" 
+                                        : promoError 
+                                          ? "border-red-500 bg-red-50" 
+                                          : "border-gray-300"
+                                    } disabled:bg-gray-100`}
+                                  />
+                                  {promoSuccess && (
+                                    <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                                  )}
+                                </div>
+                                {promoSuccess ? (
+                                  <button
+                                    type="button"
+                                    onClick={handleRemovePromoCode}
+                                    className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={handleApplyPromoCode}
+                                    disabled={isValidatingPromo || !promoCodeInput.trim()}
+                                    className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                  >
+                                    {isValidatingPromo ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                                    ) : (
+                                      <Check className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                              {promoError && (
+                                <p className="text-xs text-red-600 mt-1">{promoError}</p>
+                              )}
+                              {promoSuccess && (
+                                <p className="text-xs text-green-600 mt-1">
+                                  Промокод <strong>{promoCode}</strong> применен! Скидка {promoDiscountPercent}%
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Скидка по промокоду */}
+                            {promoSuccess && promoDiscount > 0 && (
+                              <div className="flex items-center justify-between text-sm text-green-600 mb-2">
+                                <span className="flex items-center gap-1">
+                                  <Tag className="w-3 h-3" />
+                                  Скидка ({promoDiscountPercent}%):
+                                </span>
+                                <span>-{promoDiscount.toLocaleString()} ₸</span>
+                              </div>
+                            )}
+
                             <div className="text-lg font-bold text-[#273655]">
-                              Общая стоимость: {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
+                              Общая стоимость: {promoSuccess && promoDiscount > 0 && (
+                                <span className="text-sm text-gray-400 line-through mr-1">
+                                  {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
+                                </span>
+                              )}
+                              {finalIndividualTotal?.toLocaleString() ?? "—"} ₸
                             </div>
                             <div className="text-xs text-gray-500">
                               за {monthsNumber} {monthsNumber === 1 ? 'месяц' : monthsNumber < 5 ? 'месяца' : 'месяцев'}
+                              {promoSuccess && ` (скидка ${promoDiscountPercent}%)`}
                             </div>
                           </>
                         )}
@@ -2701,9 +2952,90 @@ const HomePage = memo(() => {
                         <span className="text-[#00A991]">За месяц</span>
                         <span className="font-medium text-[#00A991]">{cloudPricePreview?.monthly?.toLocaleString() ?? "—"} ₸</span>
                       </div>
+
+                      {/* Промокод для облачного хранения */}
+                      <div className="mt-4 mb-4 pt-4 border-t border-gray-200">
+                        <label className="block text-sm font-medium text-[#273655] mb-2">
+                          Промокод
+                        </label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                              type="text"
+                              value={cloudPromoCodeInput}
+                              onChange={(e) => {
+                                setCloudPromoCodeInput(e.target.value.toUpperCase());
+                                setCloudPromoError("");
+                              }}
+                              placeholder="Введите промокод"
+                              disabled={cloudPromoSuccess || isValidatingCloudPromo}
+                              className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
+                                cloudPromoSuccess 
+                                  ? "border-green-500 bg-green-50" 
+                                  : cloudPromoError 
+                                    ? "border-red-500 bg-red-50" 
+                                    : "border-gray-300"
+                              } disabled:bg-gray-100`}
+                            />
+                            {cloudPromoSuccess && (
+                              <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                            )}
+                          </div>
+                          {cloudPromoSuccess ? (
+                            <button
+                              type="button"
+                              onClick={handleRemoveCloudPromoCode}
+                              className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleApplyCloudPromoCode}
+                              disabled={isValidatingCloudPromo || !cloudPromoCodeInput.trim()}
+                              className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                            >
+                              {isValidatingCloudPromo ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                              ) : (
+                                <Check className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                        {cloudPromoError && (
+                          <p className="text-xs text-red-600 mt-1">{cloudPromoError}</p>
+                        )}
+                        {cloudPromoSuccess && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Промокод <strong>{cloudPromoCode}</strong> применен! Скидка {cloudPromoDiscountPercent}%
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Скидка по промокоду */}
+                      {cloudPromoSuccess && cloudPromoDiscount > 0 && (
+                        <div className="flex items-center justify-between text-sm text-green-600 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Tag className="w-3 h-3" />
+                            Скидка ({cloudPromoDiscountPercent}%):
+                          </span>
+                          <span>-{cloudPromoDiscount.toLocaleString()} ₸</span>
+                        </div>
+                      )}
+
                       <div className="flex justify-between">
                         <span className="text-xl font-bold text-[#31876D]">За {cloudMonthsNumber} {cloudMonthsNumber === 1 ? 'месяц' : cloudMonthsNumber < 5 ? 'месяца' : 'месяцев'}</span>
-                        <span className="text-xl font-bold text-[#31876D]">{cloudPricePreview?.total?.toLocaleString() ?? "—"} ₸</span>
+                        <span className="text-xl font-bold text-[#31876D]">
+                          {cloudPromoSuccess && cloudPromoDiscount > 0 && (
+                            <span className="text-sm text-gray-400 line-through mr-2">
+                              {cloudPricePreview?.total?.toLocaleString() ?? "—"} ₸
+                            </span>
+                          )}
+                          {finalCloudTotal?.toLocaleString() ?? "—"} ₸
+                        </span>
                       </div>
                     </div>
                   </div>

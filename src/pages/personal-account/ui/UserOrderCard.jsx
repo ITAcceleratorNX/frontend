@@ -23,7 +23,7 @@ import { Button } from '../../../components/ui/button';
 import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
 import { useCreateMoving, useCreateAdditionalServicePayment } from '../../../shared/lib/hooks/use-payments';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye } from 'lucide-react';
+import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
@@ -359,7 +359,11 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   };
 
   const months = calculateMonths();
+  // total_price уже включает скидку от промокода, поэтому просто добавляем услуги
   const totalPrice = Number(order.total_price) + Number(totalPriceOfServices);
+  // Исходная цена без скидки (для отображения)
+  const originalPrice = Number(order.total_price) + Number(order.discount_amount || 0) + Number(totalPriceOfServices);
+  const hasPromoDiscount = order.discount_amount && Number(order.discount_amount) > 0;
   
   // Проверяем, есть ли услуга доставки (GAZELLE_FROM)
   const hasDeliveryService = order.services && order.services.some(service => 
@@ -530,6 +534,21 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         <div className="space-y-2">
           <p className="text-white/90 text-xs">Сумма к оплате:</p>
           <p className="text-white text-sm">{formatPrice(order.total_price)} 〒</p>
+          {/* Информация о промокоде */}
+          {order.promo_code && (
+            <div className="mt-2">
+              <div className="flex items-center gap-1 text-white/90 text-xs">
+                <Tag className="w-3 h-3" />
+                Промокод:
+              </div>
+              <p className="text-white text-sm font-medium">{order.promo_code.code}</p>
+              {order.discount_amount > 0 && (
+                <p className="text-green-300 text-xs">
+                  Скидка: -{formatPrice(order.discount_amount)} ({order.promo_code.discount_percent}%)
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -746,7 +765,20 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-white text-sm mb-1">ИТОГ</p>
-            <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
+            {hasPromoDiscount ? (
+              <div>
+                <p className="text-white/60 text-lg line-through">{formatPrice(originalPrice)} 〒</p>
+                <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <Tag className="w-3 h-3 text-green-300" />
+                  <span className="text-green-300 text-xs">
+                    Скидка {order.promo_code?.discount_percent}%: -{formatPrice(order.discount_amount)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
+            )}
           </div>
           
           <div className="flex flex-col items-end gap-2">

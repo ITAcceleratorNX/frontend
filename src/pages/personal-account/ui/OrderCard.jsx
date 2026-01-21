@@ -6,6 +6,7 @@ import {
   getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
+import { Tag } from 'lucide-react';
 import EditLocationModal from './EditLocationModal';
 
 const getStorageTypeText = (type) => {
@@ -281,11 +282,36 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                   <span className="text-gray-600">Аренда:</span>
                   <span className="font-medium text-[#1e2c4f]">{formatPrice(order.total_price)}</span>
                 </div>
+                {/* Промокод */}
+                {order.promo_code && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      <Tag className="w-3 h-3" />
+                      Промокод:
+                    </span>
+                    <Badge className="bg-green-100 text-green-700 border-green-200">
+                      {order.promo_code.code} (-{order.promo_code.discount_percent}%)
+                    </Badge>
+                  </div>
+                )}
+                {order.discount_amount && Number(order.discount_amount) > 0 && (
+                  <div className="flex justify-between items-center text-green-600">
+                    <span>Скидка:</span>
+                    <span className="font-medium">-{formatPrice(order.discount_amount)}</span>
+                  </div>
+                )}
                 <div className="pt-2 border-t border-green-200 flex justify-between items-center">
                   <span className="font-semibold text-gray-900">Итого:</span>
-                  <span className="font-bold text-[#1e2c4f] text-base">
-                    {formatPrice(order.total_price)}
-                  </span>
+                  <div className="text-right">
+                    {order.discount_amount && Number(order.discount_amount) > 0 && (
+                      <span className="text-gray-400 line-through text-xs mr-2">
+                        {formatPrice(Number(order.total_price) + Number(order.discount_amount))}
+                      </span>
+                    )}
+                    <span className="font-bold text-[#1e2c4f] text-base">
+                      {formatPrice(order.total_price)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </CardContent>
