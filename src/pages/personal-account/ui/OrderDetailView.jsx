@@ -8,7 +8,7 @@ import {
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
 import EditLocationModal from './EditLocationModal';
-import { AlertTriangle, Unlock } from 'lucide-react';
+import { AlertTriangle, Unlock, Tag } from 'lucide-react';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -19,10 +19,26 @@ const getStorageTypeText = (type) => {
   return type || 'Не указано';
 };
 
-const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn, onUnlockStorage }) => {
+const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn, onUnlockStorage, depositPrice = 0 }) => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+
+  // Расчёт суммы услуг
+  const getServicesTotal = () => {
+    if (!order.services || order.services.length === 0) return 0;
+    return order.services.reduce((total, service) => {
+      if (service.OrderService && service.OrderService.total_price) {
+        return total + parseFloat(service.OrderService.total_price);
+      }
+      return total;
+    }, 0);
+  };
+
+  const servicesTotal = getServicesTotal();
+  const totalBeforeDiscount = Number(order.total_price) + servicesTotal + Number(depositPrice);
+  const discountAmount = Number(order.discount_amount || 0);
+  const totalPrice = Math.max(0, totalBeforeDiscount - discountAmount);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -152,12 +168,58 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
         <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Финансовая информация</h3>
         <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
           <InfoRow label="Стоимость аренды" value={formatPrice(order.total_price)} />
+          {/* Услуги */}
+          {servicesTotal > 0 && (
+            <>
+              <Separator className="bg-gray-300" />
+              <InfoRow label="Стоимость услуг" value={formatPrice(servicesTotal)} />
+            </>
+          )}
+          {/* Депозит */}
+          {depositPrice > 0 && (
+            <>
+              <Separator className="bg-gray-300" />
+              <InfoRow label="Депозит" value={formatPrice(depositPrice)} />
+            </>
+          )}
+          {/* Промокод */}
+          {order.promo_code && (
+            <>
+              <Separator className="bg-gray-300" />
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm text-gray-600 flex items-center gap-1">
+                  <Tag className="w-3 h-3" />
+                  Промокод
+                </span>
+                <Badge className="bg-green-100 text-green-700 border-green-200">
+                  {order.promo_code.code} (-{order.promo_code.discount_percent}%)
+                </Badge>
+              </div>
+            </>
+          )}
+          {/* Скидка */}
+          {discountAmount > 0 && (
+            <>
+              <Separator className="bg-gray-300" />
+              <div className="flex justify-between items-center py-2 text-green-600">
+                <span className="text-sm">Скидка</span>
+                <span className="font-medium">-{formatPrice(discountAmount)}</span>
+              </div>
+            </>
+          )}
           <Separator className="bg-gray-300" />
           <div className="flex justify-between items-center py-3 pt-4 border-t-2 border-gray-300 mt-2">
             <span className="text-base font-semibold text-gray-900">Итого</span>
-            <span className="text-xl font-bold text-[#1e2c4f]">
-              {formatPrice(order.total_price)}
-            </span>
+            <div className="text-right">
+              {discountAmount > 0 && (
+                <span className="text-gray-400 line-through text-sm mr-2">
+                  {formatPrice(totalBeforeDiscount)}
+                </span>
+              )}
+              <span className="text-xl font-bold text-[#1e2c4f]">
+                {formatPrice(totalPrice)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

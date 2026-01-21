@@ -25,6 +25,7 @@ import {toast} from "react-toastify";
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import {useNavigate} from "react-router-dom";
 import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
+import { paymentsApi } from '../../../shared/api/paymentsApi';
 
 // Функция для расчета месяцев аренды
 const calculateRentalMonths = (startDate, endDate) => {
@@ -76,6 +77,34 @@ const OrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
+  const [depositPrice, setDepositPrice] = useState(0);
+
+  // Загружаем цену депозита
+  useEffect(() => {
+    const fetchDepositPrice = async () => {
+      try {
+        const prices = await paymentsApi.getPrices();
+        const deposit = prices.find(p => p.type === 'DEPOSIT');
+        if (deposit) {
+          setDepositPrice(Number(deposit.price) || 0);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки цены депозита:', error);
+      }
+    };
+    fetchDepositPrice();
+  }, []);
+
+  // Функция для расчёта суммы услуг заказа
+  const getOrderServicesTotal = (order) => {
+    if (!order.services || order.services.length === 0) return 0;
+    return order.services.reduce((total, service) => {
+      if (service.OrderService && service.OrderService.total_price) {
+        return total + parseFloat(service.OrderService.total_price);
+      }
+      return total;
+    }, 0);
+  };
 
   // Хуки для данных
   const {
@@ -586,7 +615,26 @@ const OrderManagement = () => {
                         {calculateRentalMonths(order.start_date, order.end_date)} мес.
                       </TableCell>
                       <TableCell className="font-medium">
-                        {formatPrice(order.total_price)}
+                        {(() => {
+                          const servicesTotal = getOrderServicesTotal(order);
+                          const totalBeforeDiscount = Number(order.total_price) + servicesTotal + depositPrice;
+                          const discountAmount = Number(order.discount_amount || 0);
+                          const totalPrice = Math.max(0, totalBeforeDiscount - discountAmount);
+                          
+                          return (
+                            <div className="flex flex-col">
+                              {discountAmount > 0 ? (
+                                <>
+                                  <span className="text-gray-400 line-through text-xs">{formatPrice(totalBeforeDiscount)}</span>
+                                  <span className="text-green-600">{formatPrice(totalPrice)}</span>
+                                  <span className="text-xs text-green-500">-{order.promo_code?.discount_percent || ''}%</span>
+                                </>
+                              ) : (
+                                <span>{formatPrice(totalBeforeDiscount)}</span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
@@ -696,6 +744,7 @@ const OrderManagement = () => {
               isOpen={!!modalData}
               order={modalData.order}
               onClose={() => closeModal()}
+              depositPrice={depositPrice}
           />
       )}
 
@@ -726,6 +775,7 @@ const OrderManagement = () => {
                 isLoading={isMutating}
                 onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
                 onUnlockStorage={statusFilter === 'RETURN' ? handleUnlockStorage : undefined}
+                depositPrice={depositPrice}
               />
             </div>
           )}
