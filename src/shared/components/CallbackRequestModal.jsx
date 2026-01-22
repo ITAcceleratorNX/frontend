@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Phone } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '@/shared/api/axios.js';
 
@@ -73,6 +73,7 @@ const CallbackRequestModal = ({
   title = 'Заказать обратный звонок',
   description,
 }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -203,13 +204,23 @@ const CallbackRequestModal = ({
             </div>
 
             {showRegisterPrompt && (
-              <div className="rounded-xl border border-dashed border-[#00A991]/30 bg-[#00A991]/5 p-3 text-sm">
-                <Link to="/register" className="font-semibold text-[#00A991] underline underline-offset-4">
-                  Зарегистрируйтесь
-                </Link>
-                <span className="text-[#273655]">
+              <div className="rounded-xl border border-dashed border-[#00A991]/30 bg-[#00A991]/5 p-3 text-sm space-y-3">
+                <p className="text-[#273655]">
+                  <Link to="/register" className="font-semibold text-[#00A991] underline underline-offset-4">
+                    Зарегистрируйтесь
+                  </Link>
                   {' '}и бронируйте бокс самостоятельно — быстро и без ожидания звонка
-                </span>
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate('/login', { state: { from: '/' } });
+                  }}
+                  className="w-full h-10 rounded-xl bg-[#273655] text-sm font-semibold text-white transition hover:bg-[#1e2a4a]"
+                >
+                  Войти
+                </Button>
               </div>
             )}
           </div>
