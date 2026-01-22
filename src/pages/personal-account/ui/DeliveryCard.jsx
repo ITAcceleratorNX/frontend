@@ -1,6 +1,7 @@
 import React from 'react';
 import { Truck, MapPin, Clock, User, Phone } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -61,6 +62,24 @@ const DeliveryCard = ({ delivery, onSelectTimeClick, embeddedMobile = false }) =
 
   const cardBackground = getCardBackground();
 
+  // Функция для получения изображения и названия тарифа по tariff_type
+  const getTariffInfo = (tariffType) => {
+    if (!tariffType || tariffType === 'CUSTOM') return { image: null, name: 'Свои габариты' };
+
+    const tariffMap = {
+      'CLOUD_TARIFF_SUMKA': { image: sumkaImg, name: 'Хранения сумки / коробки вещей' },
+      'CLOUD_TARIFF_SHINA': { image: shinaImg, name: 'Шины' },
+      'CLOUD_TARIFF_MOTORCYCLE': { image: motorcycleImg, name: 'Хранение мотоцикла' },
+      'CLOUD_TARIFF_BICYCLE': { image: bicycleImg, name: 'Хранение велосипед' },
+      'CLOUD_TARIFF_SUNUK': { image: sunukImg, name: 'Сундук до 1 м³' },
+      'CLOUD_TARIFF_FURNITURE': { image: furnitureImg, name: 'Шкаф до 2 м³' },
+      'CLOUD_TARIFF_SKLAD': { image: skladImg, name: 'Кладовка до 3 м³' },
+      'CLOUD_TARIFF_GARAZH': { image: garazhImg, name: 'Гараж до 9м³' }
+    };
+
+    return tariffMap[tariffType] || { image: null, name: 'Свои габариты' };
+  };
+
   return (
     <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
       {/* Заголовок заказа */}
@@ -79,13 +98,7 @@ const DeliveryCard = ({ delivery, onSelectTimeClick, embeddedMobile = false }) =
         </div>
         
         {/* Белый квадрат с идентификатором бокса */}
-        {order?.storage?.name && (
-          <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1 overflow-hidden ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
-            <span className={`font-bold text-gray-700 text-center truncate w-full px-0.5 ${embeddedMobile ? 'text-sm min-[360px]:text-base' : 'text-base sm:text-lg'}`}>
-              {order.storage.name}
-            </span>
-          </div>
-        )}
+        <StorageBadge order={order} embeddedMobile={embeddedMobile} />
       </div>
 
       {/* Информация о доставке */}

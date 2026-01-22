@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { toast } from 'react-toastify';
-import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
-import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
-import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
-import furnitureImg from '../../../assets/cloud-tariffs/furniture.png';
-import shinaImg from '../../../assets/cloud-tariffs/shina.png';
-import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
-import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
-import skladImg from '../../../assets/cloud-tariffs/sklad.png';
+import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -182,34 +175,7 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
         </div>
         
         {/* Белый квадрат с идентификатором бокса */}
-        {order?.storage?.storage_type === 'CLOUD' ? (
-            (() => {
-              const tariffInfo = getTariffInfo(order.tariff_type);
-
-              if (tariffInfo.image) {
-                return (
-                    <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1.5 min-[360px]:p-2 sm:p-4 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
-                      <img
-                          src={tariffInfo.image}
-                          alt={tariffInfo.name}
-                          className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
-                );
-              } else {
-                // Для "Свои габариты" показываем текст вместо иконки
-                return (
-                    <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1.5 min-[360px]:p-2 sm:p-3 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
-                      <span className="text-xs font-bold text-gray-900 text-center leading-tight">Свои габариты</span>
-                    </div>
-                );
-              }
-            })()
-        ) : order.storage && order.storage.name ? (
-            <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
-              <span className={`font-bold text-gray-900 truncate px-1 ${embeddedMobile ? 'text-lg min-[360px]:text-2xl' : 'text-4xl'}`}>{order.storage.name}</span>
-            </div>
-        ) : null}
+        <StorageBadge order={order} embeddedMobile={embeddedMobile} />
       </div>
 
       {/* Платежи по месяцам */}
