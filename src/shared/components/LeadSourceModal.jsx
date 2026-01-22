@@ -3,12 +3,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { X } from 'lucide-react';
 
 // Импортируем иконки из Figma
-import SiteIcon from '@/assets/lead-source-icons/site.svg';
-import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.svg';
-import TwoGisIcon from '@/assets/2gis.png';
-import InstagramIcon from '@/assets/lead-source-icons/instagram.svg';
-import TiktokIcon from '@/assets/lead-source-icons/tiktok.svg';
-import AdsIcon from '@/assets/lead-source-icons/ads.svg';
+import SiteIcon from '@/assets/lead-source-icons/site.png';
+import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.png';
+import TwoGisIcon from '@/assets/lead-source-icons/2gis.png';
+import InstagramIcon from '@/assets/lead-source-icons/instagram.png';
+import TiktokIcon from '@/assets/lead-source-icons/tiktok.png';
+import AdsIcon from '@/assets/lead-source-icons/ads.png';
 
 const LEAD_SOURCES = [
   { value: 'site', label: 'Сайт', icon: SiteIcon },
