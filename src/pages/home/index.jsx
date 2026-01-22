@@ -28,6 +28,13 @@ import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
+// Импортируем иконки для предзагрузки
+import SiteIcon from '@/assets/lead-source-icons/site.svg';
+import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.svg';
+import TelegramIcon from '@/assets/lead-source-icons/telegram.svg';
+import InstagramIcon from '@/assets/lead-source-icons/instagram.svg';
+import TiktokIcon from '@/assets/lead-source-icons/tiktok.svg';
+import AdsIcon from '@/assets/lead-source-icons/ads.svg';
 import DatePicker from "../../shared/ui/DatePicker";
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import sumkaImg from '../../assets/cloud-tariffs/sumka.png';
@@ -106,6 +113,7 @@ const HomePage = memo(() => {
   const [cloudVolumeDirect, setCloudVolumeDirect] = useState(1); // Прямой ввод объема для тарифов
   const [movingStreetFrom, setMovingStreetFrom] = useState("");
   const [movingHouseFrom, setMovingHouseFrom] = useState("");
+  const [movingFloorFrom, setMovingFloorFrom] = useState("");
   const [movingApartmentFrom, setMovingApartmentFrom] = useState("");
   const [movingPickupDate, setMovingPickupDate] = useState(() => {
     const today = new Date();
@@ -114,6 +122,7 @@ const HomePage = memo(() => {
   });
   const [cloudStreetFrom, setCloudStreetFrom] = useState("");
   const [cloudHouseFrom, setCloudHouseFrom] = useState("");
+  const [cloudFloorFrom, setCloudFloorFrom] = useState("");
   const [cloudApartmentFrom, setCloudApartmentFrom] = useState("");
   
   // Функция для формирования полного адреса из отдельных полей
@@ -121,18 +130,20 @@ const HomePage = memo(() => {
     const parts = [];
     if (movingStreetFrom.trim()) parts.push(movingStreetFrom.trim());
     if (movingHouseFrom.trim()) parts.push(`д. ${movingHouseFrom.trim()}`);
+    if (movingFloorFrom.trim()) parts.push(`эт. ${movingFloorFrom.trim()}`);
     if (movingApartmentFrom.trim()) parts.push(`кв. ${movingApartmentFrom.trim()}`);
-    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
-  }, [movingStreetFrom, movingHouseFrom, movingApartmentFrom]);
+    return parts.length > 0 ? parts.join(', ') : '';
+  }, [movingStreetFrom, movingHouseFrom, movingFloorFrom, movingApartmentFrom]);
   
   // Функция для формирования полного адреса облачного хранения из отдельных полей
   const getCloudPickupAddress = useMemo(() => {
     const parts = [];
     if (cloudStreetFrom.trim()) parts.push(cloudStreetFrom.trim());
     if (cloudHouseFrom.trim()) parts.push(`д. ${cloudHouseFrom.trim()}`);
+    if (cloudFloorFrom.trim()) parts.push(`эт. ${cloudFloorFrom.trim()}`);
     if (cloudApartmentFrom.trim()) parts.push(`кв. ${cloudApartmentFrom.trim()}`);
-    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
-  }, [cloudStreetFrom, cloudHouseFrom, cloudApartmentFrom]);
+    return parts.length > 0 ? parts.join(', ') : '';
+  }, [cloudStreetFrom, cloudHouseFrom, cloudFloorFrom, cloudApartmentFrom]);
   
   // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
   const [movingOrders, setMovingOrders] = useState([]);
@@ -704,8 +715,27 @@ const HomePage = memo(() => {
     }
   }, [cloudPricePreview, cloudPromoCode, cloudPromoDiscountPercent]);
 
-  // Показываем модальное окно источника лида при первом посещении
+  // Предзагрузка изображений для опросника и показ модального окна источника лида
   useEffect(() => {
+    // Предзагружаем изображения опросника сразу при загрузке страницы
+    if (typeof window !== 'undefined' && shouldShowLeadSourceModal()) {
+      // Предзагружаем все иконки опросника
+      const icons = [SiteIcon, WhatsappIcon, TelegramIcon, InstagramIcon, TiktokIcon, AdsIcon];
+      icons.forEach((icon) => {
+        const img = new Image();
+        img.src = icon;
+        img.loading = 'eager';
+        // Добавляем preload link в head для еще более ранней загрузки
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = icon;
+        if (!document.querySelector(`link[href="${icon}"]`)) {
+          document.head.appendChild(link);
+        }
+      });
+    }
+    
     if (!isAuthenticated && shouldShowLeadSourceModal()) {
       // Небольшая задержка для лучшего UX
       const timer = setTimeout(() => {
@@ -1444,6 +1474,7 @@ const HomePage = memo(() => {
     if (activeStorageTab !== "CLOUD") {
       setCloudStreetFrom("");
       setCloudHouseFrom("");
+      setCloudFloorFrom("");
       setCloudApartmentFrom("");
       return;
     }
@@ -2387,6 +2418,7 @@ const HomePage = memo(() => {
                         } else {
                           setMovingStreetFrom("");
                           setMovingHouseFrom("");
+                          setMovingFloorFrom("");
                           setMovingApartmentFrom("");
                         }
                       }}
@@ -2434,6 +2466,16 @@ const HomePage = memo(() => {
                                 setSubmitError(null);
                               }}
                               placeholder="Дом"
+                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            />
+                            <input
+                              type="text"
+                              value={movingFloorFrom}
+                              onChange={(e) => {
+                                setMovingFloorFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Этаж"
                               className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                             />
                             <input
@@ -3143,11 +3185,9 @@ const HomePage = memo(() => {
                   </div>
 
                   {/* Адрес откуда забрать вещи - для мобильной версии */}
-                  <div className="mb-6 order-5 lg:hidden w-full max-w-full">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Адрес откуда забрать вещи
-                    </label>
+                  <div className="mb-6 order-5 lg:hidden w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
                     <div className="flex flex-col gap-2 w-full">
+                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
                       <input
                         type="text"
                         value={cloudStreetFrom}
@@ -3156,7 +3196,7 @@ const HomePage = memo(() => {
                           setSubmitError(null);
                         }}
                         placeholder="Микрорайон или улица"
-                        className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                       />
                       <div className="flex gap-2 w-full">
                         <input
@@ -3167,7 +3207,17 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Дом"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudFloorFrom}
+                          onChange={(e) => {
+                            setCloudFloorFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Этаж"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                         <input
                           type="text"
@@ -3177,7 +3227,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Квартира"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                       </div>
                     </div>
@@ -3242,11 +3292,9 @@ const HomePage = memo(() => {
                   </div>
                   
                   {/* Адрес откуда забрать вещи */}
-                  <div className="mb-6 w-full max-w-full">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Адрес откуда забрать вещи
-                    </label>
+                  <div className="mb-6 w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
                     <div className="flex flex-col gap-2 w-full">
+                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
                       <input
                         type="text"
                         value={cloudStreetFrom}
@@ -3255,7 +3303,7 @@ const HomePage = memo(() => {
                           setSubmitError(null);
                         }}
                         placeholder="Микрорайон или улица"
-                        className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                       />
                       <div className="flex gap-2 w-full">
                         <input
@@ -3266,7 +3314,17 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Дом"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudFloorFrom}
+                          onChange={(e) => {
+                            setCloudFloorFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Этаж"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                         <input
                           type="text"
@@ -3276,7 +3334,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Квартира"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                       </div>
                     </div>
