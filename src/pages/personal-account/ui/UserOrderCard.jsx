@@ -64,7 +64,7 @@ const getVolumeUnit = (storageType) => {
   return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
 };
 
-const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
+const UserOrderCard = ({ order, onPayOrder, depositPrice = 0, embeddedMobile = false }) => {
   const navigate = useNavigate();
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
   const [isCancelExtendDialogOpen, setIsCancelExtendDialogOpen] = useState(false);
@@ -470,9 +470,9 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
   const cardBackground = getCardBackground();
 
   return (
-    <div className={`${cardBackground} rounded-3xl p-6 text-white relative overflow-hidden shadow-lg`}>
+    <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
       {/* Статусные бейджи вверху - белые кнопки */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className={`flex flex-wrap items-center gap-1.5 min-[360px]:gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
         {order.status === 'ACTIVE' && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
             <Zap className="w-3.5 h-3.5 text-gray-500" />
@@ -511,9 +511,9 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
       </div>
 
       {/* Заголовок заказа и белый квадрат с идентификатором бокса */}
-      <div className="flex items-start justify-between mb-10 relative">
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2">Заказ №{order.id}</h3>
+      <div className={`flex items-start justify-between relative gap-2 ${embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}`}>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <h3 className={`font-bold mb-2 truncate ${embeddedMobile ? 'text-base min-[360px]:text-lg' : 'text-2xl'}`}>Заказ №{order.id}</h3>
           <p className="text-white/90 text-xs mb-1">Создан: {formatDate(order.created_at)}</p>
           <p className="text-white/90 text-sm mb-1">Тип: {getStorageTypeText(order.storage?.storage_type || 'INDIVIDUAL')}</p>
           <p className="text-white/90 text-sm">Объем: {order.total_volume} {getVolumeUnit(order.storage?.storage_type || 'INDIVIDUAL')}</p>
@@ -525,7 +525,7 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
             
             if (tariffInfo.image) {
               return (
-                <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-4">
+                <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1.5 min-[360px]:p-2 sm:p-4 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
                   <img 
                     src={tariffInfo.image} 
                     alt={tariffInfo.name} 
@@ -536,21 +536,21 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
             } else {
               // Для "Свои габариты" показываем текст вместо иконки
               return (
-                <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-3">
+                <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1.5 min-[360px]:p-2 sm:p-3 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
                   <span className="text-xs font-bold text-gray-900 text-center leading-tight">Свои габариты</span>
                 </div>
               );
             }
           })()
         ) : order.storage && order.storage.name ? (
-          <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
-            <span className="text-4xl font-bold text-gray-900">{order.storage.name}</span>
+          <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
+            <span className={`font-bold text-gray-900 truncate px-1 ${embeddedMobile ? 'text-lg min-[360px]:text-2xl' : 'text-4xl'}`}>{order.storage.name}</span>
           </div>
         ) : null}
       </div>
 
       {/* Информация о датах и оплате в двух колонках */}
-      <div className="mb-10 grid grid-cols-2 gap-4">
+      <div className={`grid gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'mb-4 min-[360px]:mb-6 grid-cols-1' : 'mb-10 grid-cols-2'}`}>
         <div className="space-y-2">
           <p className="text-white/90 text-xs">Дата начала:</p>
           <p className="text-white text-sm">{formatDate(order.start_date)}</p>
@@ -580,7 +580,7 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
 
       {/* Договоры */}
       {order.contracts && order.contracts.length > 0 && (
-        <div className="mb-10">
+        <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}>
           <p className="text-white/90 text-sm mb-2">Договоры:</p>
           
           <div className="space-y-2">
@@ -670,7 +670,7 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
 
       {/* Предметы */}
       {order.items && order.items.length > 0 && (
-        <div className="mb-10">
+        <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}>
           <p className="text-white/90 text-sm mb-2">Предметы:</p>
           
           <div className="space-y-2">
@@ -787,14 +787,14 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
       )}
 
       {/* Итого и кнопки действий */}
-      <div className="mt-6">
-        <div className="flex items-start justify-between gap-4">
+      <div className={embeddedMobile ? 'mt-3 min-[360px]:mt-4' : 'mt-6'}>
+        <div className={`flex items-start justify-between gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'flex-col sm:flex-row' : ''}`}>
           <div>
             <p className="text-white text-sm mb-1">ИТОГ</p>
             {hasPromoDiscount ? (
               <div>
                 <p className="text-white/60 text-lg line-through">{formatPrice(originalPrice)} 〒</p>
-                <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
+                <p className={`text-white font-bold ${embeddedMobile ? 'text-xl min-[360px]:text-2xl' : 'text-3xl'}`}>{formatPrice(totalPrice)} 〒</p>
                 <div className="flex items-center gap-1 mt-1">
                   <Tag className="w-3 h-3 text-green-300" />
                   <span className="text-green-300 text-xs">
@@ -803,7 +803,7 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0 }) => {
                 </div>
               </div>
             ) : (
-              <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
+              <p className={`text-white font-bold ${embeddedMobile ? 'text-xl min-[360px]:text-2xl' : 'text-3xl'}`}>{formatPrice(totalPrice)} 〒</p>
             )}
           </div>
           

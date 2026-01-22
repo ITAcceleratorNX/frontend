@@ -4,13 +4,12 @@ import { toast } from 'react-toastify';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import Input from '../../../shared/ui/Input';
-import Button from '../../../shared/ui/Button';
 import DatePicker from '../../../shared/ui/DatePicker';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import ChangePasswordModal from './ChangePasswordModal';
-import { Lock, User, CheckCircle2 } from 'lucide-react';
+import { Lock, User, CheckCircle2, LogOut } from 'lucide-react';
 import IinTooltip from '../../../shared/ui/IinTooltip';
 import { usersApi } from '../../../shared/api/usersApi';
 import {
@@ -24,7 +23,7 @@ import {
 
 
 // Мемоизированный компонент личных данных с дополнительной оптимизацией
-const PersonalData = memo(() => {
+const PersonalData = memo(({ embeddedMobile = false }) => {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -32,7 +31,7 @@ const PersonalData = memo(() => {
   const [verificationCode, setVerificationCode] = useState('');
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const { user, isAuthenticated, isLoading, refetchUser } = useAuth();
+  const { user, isAuthenticated, isLoading, refetchUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -400,71 +399,89 @@ const PersonalData = memo(() => {
 
   // Отображение состояния загрузки
   if (isLoading) {
-    return <div className="w-full text-center py-10">Загрузка данных...</div>;
+    return (
+      <div className={`w-full text-center ${embeddedMobile ? 'py-6 text-sm' : 'py-10'}`}>
+        Загрузка данных...
+      </div>
+    );
   }
 
   // Если нет пользователя и загрузка завершена, показываем сообщение об ошибке
   if (!user && !isLoading) {
-    return <div className="w-full text-center py-10">Не удалось загрузить данные пользователя</div>;
+    return (
+      <div className={`w-full text-center ${embeddedMobile ? 'py-6 text-sm' : 'py-10'}`}>
+        Не удалось загрузить данные пользователя
+      </div>
+    );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gray-50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Добро пожаловать в Extra Space!
-            </h1>
-            <p className="text-lg text-gray-600">
-              Привет, {user?.name || 'Пользователь'}. Добро пожаловать.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
-            className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
-          >
-            Личный кабинет
-          </button>
-        </div>
+  const desc1 = 'Просмотрите и обновите данные вашей учетной записи.';
+  const desc2 = 'Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.';
+  const description = `${desc1} ${desc2}`;
+
+  const profileBlock = (
+    <>
+      {/* Заголовок секции */}
+      <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
+        <h2 className={embeddedMobile ? 'text-base min-[360px]:text-2xl sm:text-3xl font-semibold text-[#363636] mb-1 break-words' : 'text-2xl font-bold text-gray-900 mb-2'}>
+          Профиль
+        </h2>
+        {embeddedMobile ? (
+          <p className="text-xs min-[360px]:text-xs text-[#A2A2A2] break-words leading-snug">{description}</p>
+        ) : (
+          <>
+            <p className="text-[#A2A2A2] mb-2">{desc1}</p>
+            <p className="text-[#A2A2A2]">{desc2}</p>
+          </>
+        )}
       </div>
 
-      {/* Main Content */}
-      <div className="px-6 py-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Заголовок секции */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Профиль</h2>
-            <p className="text-[#A2A2A2] mb-2">
-              Просмотрите и обновите данные вашей учетной записи
-            </p>
-            <p className="text-[#A2A2A2]">
-              Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.
+      {/* Блок с информацией пользователя */}
+      <div className={`bg-white rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] ${embeddedMobile ? 'p-3 min-[360px]:p-4 mb-3 min-[360px]:mb-4' : 'bg-gray-100 rounded-2xl p-6 mb-6'}`}>
+        <div className="flex items-start gap-3 min-[360px]:gap-4">
+          <div className={`rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 ${embeddedMobile ? 'w-10 h-10 min-[360px]:w-12 min-[360px]:h-12' : 'w-12 h-12'}`}>
+            <User className={`text-gray-600 ${embeddedMobile ? 'w-5 h-5 min-[360px]:w-6 min-[360px]:h-6' : 'w-6 h-6'}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className={`font-semibold text-[#363636] break-words ${embeddedMobile ? 'text-sm min-[360px]:text-base' : 'text-lg mb-2'}`}>
+              {user?.name || 'Пользователь'}
+            </h3>
+            <p className={`text-[#999] break-words ${embeddedMobile ? 'text-xs min-[360px]:text-xs leading-snug' : 'text-sm'}`}>
+              {desc2}
             </p>
           </div>
+        </div>
+      </div>
+    </>
+  );
 
-          {/* Блок с информацией пользователя */}
-          <div className="bg-gray-100 rounded-2xl p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                <User className="w-6 h-6 text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  {user?.name || 'Пользователь'}
-                </h3>
-                <p className="text-sm text-[#A2A2A2]">
-                  Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.
-                </p>
-              </div>
+  return (
+    <div className={embeddedMobile ? 'min-w-0' : 'min-h-screen bg-gray-50'}>
+      {!embeddedMobile && (
+        <div className="bg-gray-50 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Добро пожаловать в Extra Space!</h1>
+              <p className="text-lg text-gray-600">Привет, {user?.name || 'Пользователь'}. Добро пожаловать.</p>
             </div>
+            <button
+              onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
+              className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
+            >
+              Личный кабинет
+            </button>
           </div>
+        </div>
+      )}
+
+      <div className={embeddedMobile ? '' : 'px-6 py-6'}>
+        <div className={embeddedMobile ? '' : 'max-w-5xl mx-auto'}>
+          {profileBlock}
 
           {/* Форма личных данных */}
-          <form className="w-full mb-8" onSubmit={handleSubmit(onSubmit)}>
-            {/* Основные поля в 2 колонки */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <form className={`w-full ${embeddedMobile ? 'mb-4' : 'mb-8'}`} onSubmit={handleSubmit(onSubmit)}>
+            {/* Стили по макету Figma (86-3512) для мобилки: лейблы #363636 semibold, инпуты без границы, rounded-[25px], тень */}
+            <div className={`grid gap-3 min-[360px]:gap-4 mb-4 min-[360px]:mb-6 ${embeddedMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {/* Левая колонка */}
               <div className="space-y-4">
                 <Input
@@ -473,8 +490,8 @@ const PersonalData = memo(() => {
                   disabled={!isEditing}
                   {...register('name', { required: 'Имя обязательно для заполнения' })}
                   error={errors.name?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                  labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                 />
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -492,8 +509,8 @@ const PersonalData = memo(() => {
                         onChange: handlePhoneChange
                       })}
                       error={errors.phone?.message}
-                      className="bg-white rounded-lg flex-1"
-                      labelClassName="font-sf-pro-text text-[#000000]"
+                      className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 flex-1' : 'bg-white rounded-lg flex-1'}
+                      labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                     />
                     {!isEditing && user?.phone && (
                       <div className="flex items-center gap-2 mt-6">
@@ -517,7 +534,7 @@ const PersonalData = memo(() => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium font-sf-pro-text text-[#000000]">
+                  <label className={`block text-sm font-medium font-sf-pro-text ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}>
                     Адрес
                   </label>
                   <Input
@@ -526,8 +543,8 @@ const PersonalData = memo(() => {
                     disabled={!isEditing}
                     {...register('addressStreet', { required: 'Улица обязательна для заполнения' })}
                     error={errors.addressStreet?.message}
-                    className="bg-white rounded-lg"
-                    labelClassName="font-sf-pro-text text-[#000000]"
+                    className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                    labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                   />
                   <div className="flex gap-2">
                     <Input
@@ -536,8 +553,8 @@ const PersonalData = memo(() => {
                       disabled={!isEditing}
                       {...register('addressHouse', { required: 'Дом обязателен для заполнения' })}
                       error={errors.addressHouse?.message}
-                      className="bg-white rounded-lg flex-1"
-                      labelClassName="font-sf-pro-text text-[#000000]"
+                      className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 flex-1' : 'bg-white rounded-lg flex-1'}
+                      labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                     />
                     <Input
                       label="Квартира"
@@ -545,8 +562,8 @@ const PersonalData = memo(() => {
                       disabled={!isEditing}
                       {...register('addressApartment')}
                       error={errors.addressApartment?.message}
-                      className="bg-white rounded-lg flex-1"
-                      labelClassName="font-sf-pro-text text-[#000000]"
+                      className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 flex-1' : 'bg-white rounded-lg flex-1'}
+                      labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                     />
                   </div>
                 </div>
@@ -566,13 +583,13 @@ const PersonalData = memo(() => {
                     }
                   })}
                   error={errors.email?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                  labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                 />
                 <Input
                   id="iin"
                   label={
-                    <span className="flex items-center gap-2 font-sf-pro-text text-[#000000]">
+                    <span className={`flex items-center gap-2 font-sf-pro-text ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}>
                       ИИН
                       <IinTooltip />
                     </span>
@@ -587,10 +604,10 @@ const PersonalData = memo(() => {
                     }
                   })}
                   error={errors.iin?.message}
-                  className="bg-white rounded-lg"
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
                 />
                 <div className="w-full space-y-2">
-                  <label className="block text-sm font-medium font-sf-pro-text text-[#000000]">
+                  <label className={`block text-sm font-medium font-sf-pro-text ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}>
                     Дата рождения
                   </label>
                   <Controller
@@ -631,7 +648,10 @@ const PersonalData = memo(() => {
                         }}
                         onBlur={field.onBlur}
                         error={errors.bday?.message}
-                        className="w-full [&>div]:rounded-lg [&>div]:bg-white [&>div]:border-gray-300 [&>div]:min-h-[42px] [&>div]:p-0 [&>div]:px-4 [&>div]:py-2.5 [&>div]:min-h-[42px]"
+                        captionLayout="dropdown"
+                        className={embeddedMobile
+                          ? 'w-full [&>div]:border-0 [&>div]:rounded-[25px] [&>div]:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] [&>div]:bg-white [&>div]:min-h-[42px] [&>div]:p-0 [&>div]:px-4 [&>div]:py-2.5'
+                          : 'w-full [&>div]:rounded-lg [&>div]:bg-white [&>div]:border-gray-300 [&>div]:min-h-[42px] [&>div]:p-0 [&>div]:px-4 [&>div]:py-2.5 [&>div]:min-h-[42px]'}
                       />
                     )}
                   />
@@ -647,47 +667,59 @@ const PersonalData = memo(() => {
 
             {/* Кнопки действий */}
             {isEditing ? (
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Button
+              <div className={`flex flex-col gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'mb-4' : ''}`}>
+                <button
                   type="button"
-                  variant="secondary"
                   onClick={toggleEdit}
-                  className="w-full sm:w-[120px] bg-[#C3C3C3] text-white hover:bg-[#A3A3A3] border-none rounded-md"
+                  className="w-full px-5 py-2.5 rounded-[25px] bg-gray-200 text-gray-700 hover:bg-gray-300 font-medium text-sm min-[360px]:text-base transition-colors"
                 >
                   Отмена
-                </Button>
-                <Button
+                </button>
+                <button
                   type="submit"
-                  variant="primary"
-                  onClick={handleSubmit(onSubmit)}
                   disabled={saving || isSubmitting}
-                  className="w-full sm:w-[120px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
+                  className="w-full px-5 py-2.5 rounded-[25px] bg-[#00A991] text-white hover:bg-[#00A991]/90 font-medium text-sm min-[360px]:text-base transition-colors disabled:opacity-60"
                 >
                   {(saving || isSubmitting) ? 'Сохранение...' : 'Сохранить'}
-                </Button>
+                </button>
               </div>
             ) : (
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="secondary"
+              <div className={`flex flex-col gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'mb-4' : ''}`}>
+                <button
+                  type="button"
                   onClick={toggleEdit}
-                  className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] hover:from-[#2AC3BB] hover:to-[#115D5A] border-none rounded-md"
+                  className="w-full px-5 py-2.5 rounded-[25px] bg-[#00A991] text-white hover:bg-[#00A991]/90 font-medium text-sm min-[360px]:text-base transition-colors"
                 >
                   Изменить
-                </Button>
+                </button>
                 {user?.auth_method !== 'oauth' && (
-                  <Button
-                    variant="outline"
+                  <button
+                    type="button"
                     onClick={() => setIsChangePasswordModalOpen(true)}
-                    className="border-gray-300 !text-[#00A991] bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
+                    className="w-full px-5 py-2.5 rounded-[25px] border-2 border-[#00A991] text-[#00A991] bg-white hover:bg-[#00A991]/5 font-medium text-sm min-[360px]:text-base transition-colors"
                   >
-                    <Lock className="w-4 h-4 mr-2 text-[#00A991]" />
+                    <Lock className="w-4 h-4 mr-2 inline-block align-middle" />
                     Изменить пароль
-                  </Button>
+                  </button>
                 )}
               </div>
             )}
           </form>
+
+          {/* Кнопка Выйти */}
+          <div className={embeddedMobile ? 'mt-4 pt-4 border-t border-gray-200' : 'mt-6 pt-6 border-t border-gray-200'}>
+            <button
+              type="button"
+              onClick={async () => {
+                await logout();
+                navigate('/login');
+              }}
+              className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-[25px] border-2 border-red-500 text-red-600 bg-white hover:bg-red-50 font-medium text-sm min-[360px]:text-base transition-colors"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              Выйти
+            </button>
+          </div>
         </div>
       </div>
 
@@ -723,27 +755,26 @@ const PersonalData = memo(() => {
               labelClassName="font-sf-pro-text text-[#000000]"
             />
           </div>
-          <DialogFooter>
-            <Button
+          <DialogFooter className="gap-2 sm:gap-3">
+            <button
               type="button"
-              variant="secondary"
               onClick={() => {
                 setIsPhoneVerificationModalOpen(false);
                 setVerificationCode('');
               }}
               disabled={verifying}
+              className="px-5 py-2.5 rounded-[25px] bg-gray-200 text-gray-700 hover:bg-gray-300 font-medium transition-colors disabled:opacity-60"
             >
               Отмена
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="primary"
               onClick={handleVerifyPhone}
               disabled={verifying || verificationCode.length !== 6}
-              className="bg-[#1e2c4f] text-white hover:bg-[#1d2742]"
+              className="px-5 py-2.5 rounded-[25px] bg-[#00A991] text-white hover:bg-[#00A991]/90 font-medium transition-colors disabled:opacity-60"
             >
               {verifying ? 'Проверка...' : 'Подтвердить'}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

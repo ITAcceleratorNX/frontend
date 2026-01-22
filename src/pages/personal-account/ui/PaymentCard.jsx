@@ -51,7 +51,7 @@ const getMonthName = (month) => {
   return months[month - 1] || month;
 };
 
-const PaymentCard = ({ order }) => {
+const PaymentCard = ({ order, embeddedMobile = false }) => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
 
@@ -171,11 +171,11 @@ const PaymentCard = ({ order }) => {
   );
 
   return (
-    <div className={`${cardBackground} rounded-3xl p-6 text-white relative overflow-hidden shadow-lg`}>
+    <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
       {/* Заголовок заказа */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2">Заказ №{order.id}</h3>
+      <div className={`flex items-start justify-between gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <h3 className={`font-bold mb-2 truncate ${embeddedMobile ? 'text-base min-[360px]:text-lg' : 'text-2xl'}`}>Заказ №{order.id}</h3>
           <p className="text-xs text-white/90 mb-1">Создан: {formatDate(order.created_at)}</p>
           <p className="text-sm text-white/90">Тип: {getStorageTypeText(order.storage_type)}</p>
           <p className="text-sm text-white/90">Объем: {order.volume} м³</p>
@@ -188,7 +188,7 @@ const PaymentCard = ({ order }) => {
 
               if (tariffInfo.image) {
                 return (
-                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-4">
+                    <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1.5 min-[360px]:p-2 sm:p-4 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
                       <img
                           src={tariffInfo.image}
                           alt={tariffInfo.name}
@@ -199,21 +199,21 @@ const PaymentCard = ({ order }) => {
               } else {
                 // Для "Свои габариты" показываем текст вместо иконки
                 return (
-                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-3">
+                    <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1.5 min-[360px]:p-2 sm:p-3 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
                       <span className="text-xs font-bold text-gray-900 text-center leading-tight">Свои габариты</span>
                     </div>
                 );
               }
             })()
         ) : order.storage && order.storage.name ? (
-            <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
-              <span className="text-4xl font-bold text-gray-900">{order.storage.name}</span>
+            <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
+              <span className={`font-bold text-gray-900 truncate px-1 ${embeddedMobile ? 'text-lg min-[360px]:text-2xl' : 'text-4xl'}`}>{order.storage.name}</span>
             </div>
         ) : null}
       </div>
 
       {/* Платежи по месяцам */}
-      <div className="mb-6">
+      <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
         <h4 className="text-[#D3D3D3] text-xs font-medium mb-4">Платежи по месяцам</h4>
         <div className="space-y-4">
           {/* Текущий платеж - всегда видимый */}

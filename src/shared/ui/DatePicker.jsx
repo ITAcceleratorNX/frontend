@@ -19,6 +19,8 @@ const DatePicker = forwardRef(({
   minDate = null, // Минимальная дата (по умолчанию null - нет ограничения)
   maxDate = null, // Максимальная дата (по умолчанию null - нет ограничения)
   allowFutureDates = false, // Разрешить будущие даты (по умолчанию false - только прошлые)
+  /** "dropdown" — выбор месяца и года из выпадающих списков (удобно для даты рождения) */
+  captionLayout = 'label',
   ...props 
 }, ref) => {
   const [open, setOpen] = useState(false);
@@ -280,6 +282,19 @@ const DatePicker = forwardRef(({
               onSelect={handleSelect}
               initialFocus={false}
               locale={ru}
+              captionLayout={captionLayout}
+              {...(captionLayout === 'dropdown' && {
+                startMonth: new Date(1900, 0),
+                endMonth: new Date(),
+                defaultMonth: dateValue || (() => {
+                  const d = new Date();
+                  d.setFullYear(d.getFullYear() - 25);
+                  d.setMonth(0);
+                  d.setDate(1);
+                  return d;
+                })(),
+                hideNavigation: true,
+              })}
               disabled={(date) => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);

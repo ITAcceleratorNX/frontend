@@ -38,7 +38,7 @@ const getStatusText = (status, direction) => {
   return statusMap[status] || status;
 };
 
-const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
+const DeliveryCard = ({ delivery, onSelectTimeClick, embeddedMobile = false }) => {
   const order = delivery.order;
   
   // Статусы, при которых еще можно выбрать время (до начала активной доставки)
@@ -62,11 +62,11 @@ const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
   const cardBackground = getCardBackground();
 
   return (
-    <div className={`${cardBackground} rounded-3xl p-6 text-white relative overflow-hidden shadow-lg`}>
+    <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
       {/* Заголовок заказа */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2">Заказ №{delivery.order_id}</h3>
+      <div className={`flex items-start justify-between gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <h3 className={`font-bold mb-2 truncate ${embeddedMobile ? 'text-base min-[360px]:text-lg' : 'text-2xl'}`}>Заказ №{delivery.order_id}</h3>
           {order?.created_at && (
             <p className="text-xs text-white/90 mb-1">Создан: {formatDate(order.created_at)}</p>
           )}
@@ -80,8 +80,8 @@ const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
         
         {/* Белый квадрат с идентификатором бокса */}
         {order?.storage?.name && (
-          <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-1 overflow-hidden">
-            <span className="text-base sm:text-lg font-bold text-gray-700 text-center whitespace-nowrap w-full px-1">
+          <div className={`bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-1 min-[360px]:ml-2 sm:ml-4 p-1 overflow-hidden ${embeddedMobile ? 'w-16 h-16 min-[360px]:w-20 min-[360px]:h-20' : 'w-28 h-28'}`}>
+            <span className={`font-bold text-gray-700 text-center truncate w-full px-0.5 ${embeddedMobile ? 'text-sm min-[360px]:text-base' : 'text-base sm:text-lg'}`}>
               {order.storage.name}
             </span>
           </div>
@@ -89,7 +89,7 @@ const DeliveryCard = ({ delivery, onSelectTimeClick }) => {
       </div>
 
       {/* Информация о доставке */}
-      <div className="space-y-4">
+      <div className={embeddedMobile ? 'space-y-2 min-[360px]:space-y-3' : 'space-y-4'}>
         {/* Статус доставки */}
         <div className="flex items-center gap-2">
           <Truck className="w-5 h-5" />

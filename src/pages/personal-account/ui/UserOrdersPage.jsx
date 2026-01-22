@@ -4,6 +4,7 @@ import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import { useAuth } from '../../../shared/context/AuthContext';
 import UserOrderCard from './UserOrderCard';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Switch } from '../../../components/ui/switch';
 import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import { format } from 'date-fns';
@@ -12,7 +13,15 @@ import { useNavigate } from 'react-router-dom';
 import { List, Zap, CheckCircle, Star, FileText } from 'lucide-react';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
 
-const UserOrdersPage = () => {
+const ORDER_FILTER_OPTIONS = [
+  { value: 'all', label: 'Все' },
+  { value: 'in_active', label: 'В обработке у менеджера' },
+  { value: 'approved', label: 'Подтверждено' },
+  { value: 'active', label: 'Активные' },
+  { value: 'archive', label: 'В архиве' },
+];
+
+const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
@@ -123,9 +132,17 @@ const UserOrdersPage = () => {
     return groups;
   }, [filteredNotifications]);
 
+  const handlePayOrder = (order) => {
+    if (onPayOrder) {
+      onPayOrder(order);
+    } else {
+      navigate('/personal-account', { state: { activeSection: 'payments' } });
+    }
+  };
+
   if (ordersLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className={embeddedMobile ? 'flex items-center justify-center py-16' : 'flex items-center justify-center min-h-screen'}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#004743]"></div>
       </div>
     );
@@ -133,7 +150,7 @@ const UserOrdersPage = () => {
 
   if (ordersError) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className={embeddedMobile ? 'text-center py-12' : 'flex items-center justify-center min-h-screen'}>
         <div className="text-center">
           <p className="text-red-600">Ошибка при загрузке заказов</p>
         </div>
@@ -141,9 +158,96 @@ const UserOrdersPage = () => {
     );
   }
 
+  const ordersContent = (
+    <>
+      <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
+        <div className={embeddedMobile ? 'flex flex-wrap items-center justify-between gap-2 mb-2 min-[360px]:mb-3' : 'mb-4'}>
+          <h2 className="text-base min-[360px]:text-2xl sm:text-3xl font-semibold text-[#363636] min-w-0 flex-1">Мои заказы</h2>
+          {embeddedMobile && (
+            <Select value={activeFilter} onValueChange={setActiveFilter}>
+              <SelectTrigger className="w-[100px] min-[360px]:w-[120px] min-[400px]:w-[130px] h-8 min-[360px]:h-9 bg-white border border-[#00A991]/70 rounded-xl flex items-center gap-1.5 flex-shrink-0 text-gray-700 shadow-none [&>svg]:text-[#00A991]">
+                <List className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 text-[#00A991] flex-shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ORDER_FILTER_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        {!embeddedMobile && (
+          <Tabs value={activeFilter} onValueChange={setActiveFilter}>
+            <TabsList className="bg-white px-2 py-4 rounded-[32px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] h-auto">
+              <TabsTrigger
+                value="all"
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+              >
+                <List className="w-4 h-4" />
+                <span>Все</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="in_active"
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+              >
+                <Star className="w-4 h-4" />
+                <span>В обработке у менеджера</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="approved"
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>Подтверждено</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="active"
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+              >
+                <Zap className="w-4 h-4" />
+                <span>Активные</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="archive"
+                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                <span>В архиве</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+      </div>
+
+      {filteredOrders.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          Нет заказов для отображения
+        </div>
+      ) : (
+        <div className={embeddedMobile ? 'flex flex-col gap-3 min-[360px]:gap-4 min-w-0' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
+          {filteredOrders.map((order) => (
+            <UserOrderCard
+              key={order.id}
+              order={order}
+              depositPrice={depositPrice}
+              onPayOrder={handlePayOrder}
+              embeddedMobile={embeddedMobile}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  if (embeddedMobile) {
+    return <div className="flex-1">{ordersContent}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-gray-50 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
@@ -162,79 +266,8 @@ const UserOrdersPage = () => {
           </button>
         </div>
       </div>
-
-      {/* Main Content */}
       <div className="flex gap-6 px-6 py-6">
-        
-        {/* Center - Orders */}
-        <div className="flex-1">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Мои заказы</h2>
-            
-            {/* Filter Tabs */}
-            <Tabs value={activeFilter} onValueChange={setActiveFilter}>
-              <TabsList className="bg-white px-2 py-4 rounded-[32px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] h-auto">
-                <TabsTrigger
-                  value="all"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                >
-                  <List className="w-4 h-4" />
-                  <span>Все</span>
-                </TabsTrigger>
-                <TabsTrigger
-                    value="in_active"
-                    className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                >
-                  <Star className="w-4 h-4" />
-                  <span>В обработке у менеджера</span>
-                </TabsTrigger>
-                <TabsTrigger
-                    value="approved"
-                    className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Подтверждено</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="active"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                >
-                  <Zap className="w-4 h-4" />
-                  <span>Активные</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="archive"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>В архиве</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Order Cards */}
-          {filteredOrders.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              Нет заказов для отображения
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filteredOrders.map((order) => (
-                <UserOrderCard
-                  key={order.id}
-                  order={order}
-                  depositPrice={depositPrice}
-                  onPayOrder={(order) => {
-                    navigate("/personal-account", { state: { activeSection: "payments" } });
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Right Side - Statistics */}
+        <div className="flex-1">{ordersContent}</div>
         <div className="w-64 flex-shrink-0 self-start mt-36">
           <div className="bg-transparent border border-[#DFDFDF] rounded-2xl p-6">
             <div className="space-y-4">
