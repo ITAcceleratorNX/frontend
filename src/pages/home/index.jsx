@@ -3159,11 +3159,9 @@ const HomePage = memo(() => {
                   </div>
 
                   {/* Адрес откуда забрать вещи - для мобильной версии */}
-                  <div className="mb-6 order-5 lg:hidden w-full max-w-full">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Адрес откуда забрать вещи
-                    </label>
+                  <div className="mb-6 order-5 lg:hidden w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
                     <div className="flex flex-col gap-2 w-full">
+                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
                       <input
                         type="text"
                         value={cloudStreetFrom}
@@ -3172,7 +3170,7 @@ const HomePage = memo(() => {
                           setSubmitError(null);
                         }}
                         placeholder="Микрорайон или улица"
-                        className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                       />
                       <div className="flex gap-2 w-full">
                         <input
@@ -3183,7 +3181,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Дом"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                         <input
                           type="text"
@@ -3193,7 +3191,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Этаж"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                         <input
                           type="text"
@@ -3203,7 +3201,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Квартира"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                       </div>
                     </div>
@@ -3268,11 +3266,9 @@ const HomePage = memo(() => {
                   </div>
                   
                   {/* Адрес откуда забрать вещи */}
-                  <div className="mb-6 w-full max-w-full">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Адрес откуда забрать вещи
-                    </label>
+                  <div className="mb-6 w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
                     <div className="flex flex-col gap-2 w-full">
+                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
                       <input
                         type="text"
                         value={cloudStreetFrom}
@@ -3281,7 +3277,7 @@ const HomePage = memo(() => {
                           setSubmitError(null);
                         }}
                         placeholder="Микрорайон или улица"
-                        className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                       />
                       <div className="flex gap-2 w-full">
                         <input
@@ -3292,7 +3288,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Дом"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                         <input
                           type="text"
@@ -3302,7 +3298,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Этаж"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                         <input
                           type="text"
@@ -3312,7 +3308,7 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Квартира"
-                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                         />
                       </div>
                     </div>
