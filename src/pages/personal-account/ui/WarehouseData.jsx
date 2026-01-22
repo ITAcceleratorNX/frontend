@@ -1074,16 +1074,19 @@ const WarehouseData = () => {
                   setIsLoadingPendingOrder(true);
                   try {
                     const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                    if (order) {
-                      setPendingOrder(order);
-                      setIsPendingOrderModalOpen(true);
-                    } else {
-                      setPreviewStorage(storage);
-                    }
+                    setPendingOrder(order);
+                    setIsPendingOrderModalOpen(true);
+                    setIsMapModalOpen(false);
                   } catch (error) {
-                    console.error('Ошибка при загрузке заказа:', error);
-                    setPreviewStorage(storage);
+                    if (error.response?.status === 404) {
+                      setPendingOrder(null);
+                      setIsPendingOrderModalOpen(true);
+                      setIsMapModalOpen(false);
+                    } else {
+                      console.error('Ошибка при загрузке заказа:', error);
+                    }
                   } finally {
+                    setPreviewStorage(storage);
                     setIsLoadingPendingOrder(false);
                   }
                 } else {
