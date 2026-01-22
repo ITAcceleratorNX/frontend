@@ -424,7 +424,6 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
         ) : (
           <>
             <p className="text-[#A2A2A2] mb-2">{desc1}</p>
-            <p className="text-[#A2A2A2]">{desc2}</p>
           </>
         )}
       </div>
