@@ -30,10 +30,10 @@ export const authApi = {
   },
 
   // Аутентификация пользователя
-  login: async (phone, password) => {
+  login: async (login, password) => {
     try {
-      console.log(`Отправка запроса на вход пользователя: ${phone}`);
-      const response = await api.post('/auth/login', { phone, password });
+      console.log(`Отправка запроса на вход пользователя: ${login}`);
+      const response = await api.post('/auth/login', { login, password });
       console.log('Успешный вход в систему');
       return response.data;
     } catch (error) {
@@ -60,12 +60,12 @@ export const authApi = {
     }
   },
 
-  // Регистрация юридического лица
-  registerLegal: async (email, unique_code, password, legalData, lead_source = undefined) => {
+  // Регистрация юридического лица (верификация через SMS по номеру телефона)
+  registerLegal: async (phone, unique_code, password, legalData, lead_source = undefined) => {
     try {
-      console.log(`Отправка запроса на регистрацию юридического лица: ${email}`, lead_source ? `с источником: ${lead_source}` : '');
+      console.log(`Отправка запроса на регистрацию юридического лица: ${phone}`, lead_source ? `с источником: ${lead_source}` : '');
       const response = await api.post('/auth/register-legal', { 
-        email, 
+        phone, 
         unique_code, 
         password,
         lead_source,

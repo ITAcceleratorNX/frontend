@@ -92,21 +92,40 @@ const AdminMovingOrder = () => {
     if (!order) return null;
 
     switch (order.status) {
-      case 'PENDING_FROM':
-      case 'PENDING_TO':
+      case 'PENDING':
         return <Badge variant="secondary" className="bg-orange-100 text-orange-800 flex items-center gap-1">
           <Clock className="w-3 h-3" />
-          Ожидает принятия
+          {order.direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора'}
+        </Badge>;
+      case 'COURIER_ASSIGNED':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
+          <User className="w-3 h-3" />
+          Курьер назначен
+        </Badge>;
+      case 'COURIER_IN_TRANSIT':
+        return <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
+          <Truck className="w-3 h-3" />
+          {order.direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу'}
+        </Badge>;
+      case 'COURIER_AT_CLIENT':
+        return <Badge className="bg-purple-100 text-purple-800 flex items-center gap-1">
+          <User className="w-3 h-3" />
+          Курьер у клиента
         </Badge>;
       case 'IN_PROGRESS':
         return <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
           <Truck className="w-3 h-3" />
-          В работе
+          {order.direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу'}
         </Badge>;
       case 'DELIVERED':
         return <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
           <CheckCircle2 className="w-3 h-3" />
-          Выполнен
+          {order.direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад'}
+        </Badge>;
+      case 'FINISHED':
+        return <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+          <CheckCircle2 className="w-3 h-3" />
+          Завершено
         </Badge>;
       default:
         return <Badge variant="outline">Неизвестный статус</Badge>;

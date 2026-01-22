@@ -4,12 +4,11 @@ import { toast } from 'react-toastify';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import Input from '../../../shared/ui/Input';
-import Button from '../../../shared/ui/Button';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import ChangePasswordModal from './ChangePasswordModal';
-import { Lock, Building2, CheckCircle2, MapPin, ChevronDown } from 'lucide-react';
+import { Lock, Building2, CheckCircle2, MapPin, ChevronDown, LogOut } from 'lucide-react';
 import { usersApi } from '../../../shared/api/usersApi';
 import {
   Dialog,
@@ -66,7 +65,7 @@ const cities = [
 ];
 
 // Мемоизированный компонент личных данных для юридических лиц
-const PersonalDataLegal = memo(() => {
+const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -74,38 +73,18 @@ const PersonalDataLegal = memo(() => {
   const [verificationCode, setVerificationCode] = useState('');
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const { user, isAuthenticated, isLoading, refetchUser } = useAuth();
+  const { user, isAuthenticated, isLoading, refetchUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Используем мемоизацию для defaultValues
-  const defaultValues = useMemo(() => ({
-    bin_iin: user?.bin_iin || '',
-    company_name: user?.company_name || '',
-    bik: user?.bik || '',
-    iik: user?.iik || '',
-    region: user?.legal_address?.region || '',
-    city: user?.legal_address?.city || '',
-    street: user?.legal_address?.street || '',
-    house: user?.legal_address?.house || '',
-    building: user?.legal_address?.building || '',
-    office: user?.legal_address?.office || '',
-    postal_code: user?.legal_address?.postal_code || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
-  }), [user]);
-
-  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
-    defaultValues
-  });
-
-  // Получаем текущие значения формы для валидации
-  const formValues = watch();
-
   // Функция форматирования номера телефона
   const formatPhoneNumber = (value) => {
+    if (!value) return '';
     const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length === 0) return '';
+    
     let cleaned = numbers;
     if (cleaned.startsWith('8')) {
       cleaned = '7' + cleaned.slice(1);
@@ -115,24 +94,22 @@ const PersonalDataLegal = memo(() => {
     }
     cleaned = cleaned.slice(0, 11);
     
-    let formatted = '';
-    if (cleaned.length > 0) {
-      formatted = '+7';
-      if (cleaned.length > 1) {
-        formatted += ' (' + cleaned.slice(1, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += ') ' + cleaned.slice(4, 7);
-      }
-      if (cleaned.length > 7) {
-        formatted += '-' + cleaned.slice(7, 9);
-      }
-      if (cleaned.length > 9) {
-        formatted += '-' + cleaned.slice(9, 11);
-      }
-      if (cleaned.length > 4 && cleaned.length <= 7) {
-        formatted += ')';
-      }
+    // Форматируем в формат +7 (XXX) XXX-XX-XX
+    let formatted = '+7';
+    if (cleaned.length > 1) {
+      formatted += ' (' + cleaned.slice(1, 4);
+    }
+    if (cleaned.length >= 4) {
+      formatted += ')';
+    }
+    if (cleaned.length > 4) {
+      formatted += ' ' + cleaned.slice(4, 7);
+    }
+    if (cleaned.length > 7) {
+      formatted += '-' + cleaned.slice(7, 9);
+    }
+    if (cleaned.length > 9) {
+      formatted += '-' + cleaned.slice(9, 11);
     }
     
     return formatted;
@@ -148,6 +125,30 @@ const PersonalDataLegal = memo(() => {
     }
     return formatPhoneNumber(cleaned);
   };
+
+  // Используем мемоизацию для defaultValues с форматированным телефоном
+  const defaultValues = useMemo(() => ({
+    bin_iin: user?.bin_iin || '',
+    company_name: user?.company_name || '',
+    bik: user?.bik || '',
+    iik: user?.iik || '',
+    region: user?.legal_address?.region || '',
+    city: user?.legal_address?.city || '',
+    street: user?.legal_address?.street || '',
+    house: user?.legal_address?.house || '',
+    building: user?.legal_address?.building || '',
+    office: user?.legal_address?.office || '',
+    postal_code: user?.legal_address?.postal_code || '',
+    phone: formatPhoneForDisplay(user?.phone || ''),
+    email: user?.email || '',
+  }), [user]);
+
+  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
+    defaultValues
+  });
+
+  // Получаем текущие значения формы для валидации
+  const formValues = watch();
 
   // Заполняем форму данными пользователя
   useEffect(() => {
@@ -289,7 +290,22 @@ const PersonalDataLegal = memo(() => {
   const toggleEdit = () => {
     setIsEditing(!isEditing);
     if (isEditing) {
-      reset(defaultValues);
+      // При отмене сбрасываем на текущие данные пользователя с форматированным телефоном
+      reset({
+        bin_iin: user?.bin_iin || '',
+        company_name: user?.company_name || '',
+        bik: user?.bik || '',
+        iik: user?.iik || '',
+        region: user?.legal_address?.region || '',
+        city: user?.legal_address?.city || '',
+        street: user?.legal_address?.street || '',
+        house: user?.legal_address?.house || '',
+        building: user?.legal_address?.building || '',
+        office: user?.legal_address?.office || '',
+        postal_code: user?.legal_address?.postal_code || '',
+        phone: formatPhoneForDisplay(user?.phone || ''),
+        email: user?.email || '',
+      });
     }
     clearErrors();
   };
@@ -377,71 +393,86 @@ const PersonalDataLegal = memo(() => {
 
   // Отображение состояния загрузки
   if (isLoading) {
-    return <div className="w-full text-center py-10">Загрузка данных...</div>;
+    return (
+      <div className={`w-full text-center ${embeddedMobile ? 'py-6 text-sm' : 'py-10'}`}>
+        Загрузка данных...
+      </div>
+    );
   }
 
   // Если нет пользователя и загрузка завершена, показываем сообщение об ошибке
   if (!user && !isLoading) {
-    return <div className="w-full text-center py-10">Не удалось загрузить данные пользователя</div>;
+    return (
+      <div className={`w-full text-center ${embeddedMobile ? 'py-6 text-sm' : 'py-10'}`}>
+        Не удалось загрузить данные пользователя
+      </div>
+    );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gray-50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Добро пожаловать в Extra Space!
-            </h1>
-            <p className="text-lg text-gray-600">
-              Привет, {user?.company_name || 'Организация'}. Добро пожаловать.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
-            className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
-          >
-            Личный кабинет
-          </button>
-        </div>
+  const desc1 = 'Просмотрите и обновите данные вашей организации.';
+  const desc2 = 'Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.';
+  const description = `${desc1} ${desc2}`;
+
+  const profileBlock = (
+    <>
+      <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
+        <h2 className={embeddedMobile ? 'text-base min-[360px]:text-2xl sm:text-3xl font-semibold text-[#363636] mb-1 break-words' : 'text-2xl font-bold text-gray-900 mb-2'}>
+          Профиль юридического лица
+        </h2>
+        {embeddedMobile ? (
+          <p className="text-xs min-[360px]:text-xs text-[#A2A2A2] break-words leading-snug">{description}</p>
+        ) : (
+          <>
+            <p className="text-[#A2A2A2] mb-2">{desc1}</p>
+          </>
+        )}
       </div>
 
-      {/* Main Content */}
-      <div className="px-6 py-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Заголовок секции */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Профиль юридического лица</h2>
-            <p className="text-[#A2A2A2] mb-2">
-              Просмотрите и обновите данные вашей организации
-            </p>
-            <p className="text-[#A2A2A2]">
-              Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.
+      <div className={`bg-white rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] ${embeddedMobile ? 'p-3 min-[360px]:p-4 mb-3 min-[360px]:mb-4' : 'bg-gray-100 rounded-2xl p-6 mb-6'}`}>
+        <div className="flex items-start gap-3 min-[360px]:gap-4">
+          <div className={`rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 ${embeddedMobile ? 'w-10 h-10 min-[360px]:w-12 min-[360px]:h-12' : 'w-12 h-12'}`}>
+            <Building2 className={`text-gray-600 ${embeddedMobile ? 'w-5 h-5 min-[360px]:w-6 min-[360px]:h-6' : 'w-6 h-6'}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className={`font-semibold text-[#363636] break-words ${embeddedMobile ? 'text-sm min-[360px]:text-base' : 'text-lg mb-2'}`}>
+              {user?.company_name || 'Организация'}
+            </h3>
+            <p className={`text-[#999] break-words ${embeddedMobile ? 'text-xs min-[360px]:text-xs leading-snug' : 'text-sm'}`}>
+              {desc2}
             </p>
           </div>
+        </div>
+      </div>
+    </>
+  );
 
-          {/* Блок с информацией организации */}
-          <div className="bg-gray-100 rounded-2xl p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-6 h-6 text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  {user?.company_name || 'Организация'}
-                </h3>
-                <p className="text-sm text-[#A2A2A2]">
-                  Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.
-                </p>
-              </div>
+  return (
+    <div className={embeddedMobile ? 'min-w-0' : 'min-h-screen bg-gray-50'}>
+      {!embeddedMobile && (
+        <div className="bg-gray-50 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Добро пожаловать в Extra Space!</h1>
+              <p className="text-lg text-gray-600">Привет, {user?.company_name || 'Организация'}. Добро пожаловать.</p>
             </div>
+            <button
+              onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
+              className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
+            >
+              Личный кабинет
+            </button>
           </div>
+        </div>
+      )}
+
+      <div className={embeddedMobile ? '' : 'px-6 py-6'}>
+        <div className={embeddedMobile ? '' : 'max-w-5xl mx-auto'}>
+          {profileBlock}
 
           {/* Форма личных данных */}
-          <form className="w-full mb-8" onSubmit={handleSubmit(onSubmit)}>
-            {/* Основные поля организации */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <form className={`w-full ${embeddedMobile ? 'mb-4' : 'mb-8'}`} onSubmit={handleSubmit(onSubmit)}>
+            {/* Стили по макету Figma (86-3512) для мобилки: лейблы #363636 semibold, инпуты без границы, rounded-[25px], тень */}
+            <div className={`grid gap-3 min-[360px]:gap-4 mb-4 min-[360px]:mb-6 ${embeddedMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {/* Левая колонка */}
               <div className="space-y-4">
                 <Input
@@ -456,8 +487,8 @@ const PersonalDataLegal = memo(() => {
                     }
                   })}
                   error={errors.bin_iin?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                  labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                 />
                 <Input
                   label="Наименование организации"
@@ -467,8 +498,8 @@ const PersonalDataLegal = memo(() => {
                     required: 'Наименование обязательно для заполнения'
                   })}
                   error={errors.company_name?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                  labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <Input
@@ -479,8 +510,8 @@ const PersonalDataLegal = memo(() => {
                       required: 'БИК обязателен для заполнения'
                     })}
                     error={errors.bik?.message}
-                    className="bg-white rounded-lg"
-                    labelClassName="font-sf-pro-text text-[#000000]"
+                    className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                    labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                   />
                   <Input
                     label="ИИК"
@@ -490,8 +521,8 @@ const PersonalDataLegal = memo(() => {
                       required: 'ИИК обязателен для заполнения'
                     })}
                     error={errors.iik?.message}
-                    className="bg-white rounded-lg"
-                    labelClassName="font-sf-pro-text text-[#000000]"
+                    className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                    labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                   />
                 </div>
                 <div className="space-y-2">
@@ -510,8 +541,8 @@ const PersonalDataLegal = memo(() => {
                         onChange: handlePhoneChange
                       })}
                       error={errors.phone?.message}
-                      className="bg-white rounded-lg flex-1"
-                      labelClassName="font-sf-pro-text text-[#000000]"
+                      className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 flex-1' : 'bg-white rounded-lg flex-1'}
+                      labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                     />
                     {!isEditing && user?.phone && (
                       <div className="flex items-center gap-2 mt-6">
@@ -550,24 +581,26 @@ const PersonalDataLegal = memo(() => {
                     }
                   })}
                   error={errors.email?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                  labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                 />
               </div>
             </div>
 
             {/* Юридический адрес */}
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Юридический адрес</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={embeddedMobile ? 'mb-4' : 'mb-6'}>
+              <h3 className={`font-bold mb-4 ${embeddedMobile ? 'text-base min-[360px]:text-lg text-[#363636]' : 'text-lg text-gray-900'}`}>Юридический адрес</h3>
+              <div className={`grid gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                 <div className="relative">
-                  <label className="block text-sm font-medium font-sf-pro-text text-[#000000] mb-2">
+                  <label className={`block text-sm font-medium font-sf-pro-text mb-2 ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}>
                     Регион <span className="text-red-500">*</span>
                   </label>
                   <select
-                    className={`w-full rounded-md border px-4 py-2.5 text-sm shadow-sm transition-colors duration-200 font-sf-pro-text text-[#737373] ${
-                      errors.region ? 'border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                    } bg-white appearance-none cursor-pointer ${!isEditing ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full text-sm transition-colors duration-200 font-sf-pro-text text-[#737373] appearance-none cursor-pointer ${!isEditing ? 'cursor-not-allowed opacity-70' : ''} ${
+                      embeddedMobile
+                        ? `rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 ${errors.region ? 'ring-2 ring-red-500' : ''} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
+                        : `rounded-md border px-4 py-2.5 shadow-sm ${errors.region ? 'border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
+                    }`}
                     disabled={!isEditing}
                     {...register('region', {
                       required: 'Регион обязателен для заполнения'
@@ -580,20 +613,22 @@ const PersonalDataLegal = memo(() => {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-9 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                  <ChevronDown className={`absolute right-4 w-4 h-4 text-gray-500 pointer-events-none ${embeddedMobile ? 'top-[2.6rem] min-[360px]:top-[2.75rem]' : 'top-9 transform -translate-y-1/2'}`} />
                   {errors.region && (
                     <p className="mt-1.5 text-sm font-medium text-red-500">{errors.region.message}</p>
                   )}
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-medium font-sf-pro-text text-[#000000] mb-2">
+                  <label className={`block text-sm font-medium font-sf-pro-text mb-2 ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}>
                     Город <span className="text-red-500">*</span>
                   </label>
                   <select
-                    className={`w-full rounded-md border px-4 py-2.5 text-sm shadow-sm transition-colors duration-200 font-sf-pro-text text-[#737373] ${
-                      errors.city ? 'border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                    } bg-white appearance-none cursor-pointer ${!isEditing ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full text-sm transition-colors duration-200 font-sf-pro-text text-[#737373] appearance-none cursor-pointer ${!isEditing ? 'cursor-not-allowed opacity-70' : ''} ${
+                      embeddedMobile
+                        ? `rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 ${errors.city ? 'ring-2 ring-red-500' : ''} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
+                        : `rounded-md border px-4 py-2.5 shadow-sm ${errors.city ? 'border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
+                    }`}
                     disabled={!isEditing}
                     {...register('city', {
                       required: 'Город обязателен для заполнения'
@@ -606,7 +641,7 @@ const PersonalDataLegal = memo(() => {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-9 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                  <ChevronDown className={`absolute right-4 w-4 h-4 text-gray-500 pointer-events-none ${embeddedMobile ? 'top-[2.6rem] min-[360px]:top-[2.75rem]' : 'top-9 transform -translate-y-1/2'}`} />
                   {errors.city && (
                     <p className="mt-1.5 text-sm font-medium text-red-500">{errors.city.message}</p>
                   )}
@@ -620,8 +655,8 @@ const PersonalDataLegal = memo(() => {
                     required: 'Улица обязательна для заполнения'
                   })}
                   error={errors.street?.message}
-                  className="bg-white rounded-lg"
-                  labelClassName="font-sf-pro-text text-[#000000]"
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                  labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                 />
 
                 <div className="grid grid-cols-2 gap-4">
@@ -633,8 +668,8 @@ const PersonalDataLegal = memo(() => {
                       required: 'Дом обязателен для заполнения'
                     })}
                     error={errors.house?.message}
-                    className="bg-white rounded-lg"
-                    labelClassName="font-sf-pro-text text-[#000000]"
+                    className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                    labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                   />
                   <Input
                     label="Корпус"
@@ -642,8 +677,8 @@ const PersonalDataLegal = memo(() => {
                     disabled={!isEditing}
                     {...register('building')}
                     error={errors.building?.message}
-                    className="bg-white rounded-lg"
-                    labelClassName="font-sf-pro-text text-[#000000]"
+                    className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                    labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                   />
                 </div>
 
@@ -654,8 +689,8 @@ const PersonalDataLegal = memo(() => {
                     disabled={!isEditing}
                     {...register('office')}
                     error={errors.office?.message}
-                    className="bg-white rounded-lg"
-                    labelClassName="font-sf-pro-text text-[#000000]"
+                    className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                    labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                   />
                   <Input
                     label="Индекс"
@@ -669,8 +704,8 @@ const PersonalDataLegal = memo(() => {
                       }
                     })}
                     error={errors.postal_code?.message}
-                    className="bg-white rounded-lg"
-                    labelClassName="font-sf-pro-text text-[#000000]"
+                    className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                    labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
                   />
                 </div>
               </div>
@@ -678,47 +713,59 @@ const PersonalDataLegal = memo(() => {
 
             {/* Кнопки действий */}
             {isEditing ? (
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Button
+              <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 ${embeddedMobile ? 'mb-4' : ''}`}>
+                <button
                   type="button"
-                  variant="secondary"
                   onClick={toggleEdit}
-                  className="w-full sm:w-[120px] bg-[#C3C3C3] text-white hover:bg-[#A3A3A3] border-none rounded-md"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-[25px] bg-gray-200 text-gray-700 hover:bg-gray-300 font-medium text-sm min-[360px]:text-base transition-colors"
                 >
                   Отмена
-                </Button>
-                <Button
+                </button>
+                <button
                   type="submit"
-                  variant="primary"
-                  onClick={handleSubmit(onSubmit)}
                   disabled={saving || isSubmitting}
-                  className="w-full sm:w-[120px] bg-[#1e2c4f] text-white hover:bg-[#1d2742] border-none rounded-md"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-[25px] bg-[#00A991] text-white hover:bg-[#00A991]/90 font-medium text-sm min-[360px]:text-base transition-colors disabled:opacity-60"
                 >
                   {(saving || isSubmitting) ? 'Сохранение...' : 'Сохранить'}
-                </Button>
+                </button>
               </div>
             ) : (
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="secondary"
+              <div className={`flex flex-wrap items-center gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'mb-4' : ''}`}>
+                <button
+                  type="button"
                   onClick={toggleEdit}
-                  className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] hover:from-[#2AC3BB] hover:to-[#115D5A] border-none rounded-md"
+                  className="px-5 py-2.5 rounded-[25px] bg-[#00A991] text-white hover:bg-[#00A991]/90 font-medium text-sm min-[360px]:text-base transition-colors"
                 >
                   Изменить
-                </Button>
+                </button>
                 {user?.auth_method !== 'oauth' && (
-                  <Button
-                    variant="outline"
+                  <button
+                    type="button"
                     onClick={() => setIsChangePasswordModalOpen(true)}
-                    className="border-gray-300 !text-[#00A991] bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
+                    className="px-5 py-2.5 rounded-[25px] border-2 border-[#00A991] text-[#00A991] bg-white hover:bg-[#00A991]/5 font-medium text-sm min-[360px]:text-base transition-colors"
                   >
-                    <Lock className="w-4 h-4 mr-2 text-[#00A991]" />
+                    <Lock className="w-4 h-4 mr-2 inline-block align-middle" />
                     Изменить пароль
-                  </Button>
+                  </button>
                 )}
               </div>
             )}
           </form>
+
+          {/* Кнопка Выйти */}
+          <div className={embeddedMobile ? 'mt-4 pt-4 border-t border-gray-200' : 'mt-6 pt-6 border-t border-gray-200'}>
+            <button
+              type="button"
+              onClick={async () => {
+                await logout();
+                navigate('/login');
+              }}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-[25px] border-2 border-red-500 text-red-600 bg-white hover:bg-red-50 font-medium text-sm min-[360px]:text-base transition-colors"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              Выйти
+            </button>
+          </div>
         </div>
       </div>
 
@@ -754,27 +801,26 @@ const PersonalDataLegal = memo(() => {
               labelClassName="font-sf-pro-text text-[#000000]"
             />
           </div>
-          <DialogFooter>
-            <Button
+          <DialogFooter className="gap-2 sm:gap-3">
+            <button
               type="button"
-              variant="secondary"
               onClick={() => {
                 setIsPhoneVerificationModalOpen(false);
                 setVerificationCode('');
               }}
               disabled={verifying}
+              className="px-5 py-2.5 rounded-[25px] bg-gray-200 text-gray-700 hover:bg-gray-300 font-medium transition-colors disabled:opacity-60"
             >
               Отмена
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="primary"
               onClick={handleVerifyPhone}
               disabled={verifying || verificationCode.length !== 6}
-              className="bg-[#1e2c4f] text-white hover:bg-[#1d2742]"
+              className="px-5 py-2.5 rounded-[25px] bg-[#00A991] text-white hover:bg-[#00A991]/90 font-medium transition-colors disabled:opacity-60"
             >
               {verifying ? 'Проверка...' : 'Подтвердить'}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -43,12 +43,12 @@ export const AuthProvider = ({ children }) => {
   }, [user, isLoading, isFetching]);
 
   // Мемоизированная функция для входа
-  const login = useCallback(async (phone, password) => {
+  const login = useCallback(async (login, password) => {
     try {
-      if (import.meta.env.DEV) console.log('AuthContext: Попытка входа:', phone);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка входа:', login);
       
       // Выполняем запрос на авторизацию
-      const response = await authApi.login(phone, password);
+      const response = await authApi.login(login, password);
       
       if (response.success) {
         // Инвалидируем кеш пользователя, чтобы запросить свежие данные
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
         
         switch (status) {
           case 401:
-            userFriendlyError = data?.message || 'Неверный телефон или пароль';
+            userFriendlyError = data?.message || 'Неверный логин или пароль';
             break;
           case 400:
             userFriendlyError = data?.message || 'Некорректные данные';
@@ -128,12 +128,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Мемоизированная функция для регистрации юридического лица
-  const registerLegal = useCallback(async (email, uniqueCode, password, legalData, leadSource = null) => {
+  // Мемоизированная функция для регистрации юридического лица (верификация через SMS по телефону)
+  const registerLegal = useCallback(async (phone, uniqueCode, password, legalData, leadSource = null) => {
     try {
-      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации юридического лица:', email, 'lead_source:', leadSource);
+      if (import.meta.env.DEV) console.log('AuthContext: Попытка регистрации юридического лица:', phone, 'lead_source:', leadSource);
       
-      const response = await authApi.registerLegal(email, uniqueCode, password, legalData, leadSource);
+      const response = await authApi.registerLegal(phone, uniqueCode, password, legalData, leadSource);
       
       if (response.success) {
         if (import.meta.env.DEV) console.log('AuthContext: Регистрация юридического лица успешна');

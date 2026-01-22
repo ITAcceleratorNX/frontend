@@ -236,8 +236,8 @@ export const useCancelContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, documentId, cancelReason, cancelComment }) =>
-      ordersApi.cancelContract({ orderId, documentId, cancelReason, cancelComment }),
+    mutationFn: ({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }) =>
+      ordersApi.cancelContract({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }),
     onSuccess: () => {
       showGenericSuccess('Успешный запрос на отмену договора');
       queryClient.invalidateQueries({ queryKey: ['contracts', 'user'] });
@@ -259,8 +259,8 @@ export const useCancelOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, cancelReason, cancelComment }) =>
-      ordersApi.cancelOrder({ orderId, cancelReason, cancelComment }),
+    mutationFn: ({ orderId, cancelReason, cancelComment, selfPickupDate }) =>
+      ordersApi.cancelOrder({ orderId, cancelReason, cancelComment, selfPickupDate }),
     onSuccess: () => {
       showGenericSuccess('Запрос на расторжение контракта отправлен');
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
@@ -293,6 +293,27 @@ export const useApproveCancelOrder = () => {
     onError: (error) => {
       console.error('Ошибка при подтверждении возврата:', error);
       showGenericError(error.response?.data?.message || 'Не удалось подтвердить возврат');
+    }
+  });
+};
+
+/**
+ * Хук для разблокировки бокса (для ADMIN/MANAGER)
+ */
+export const useUnlockStorage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderId) => ordersApi.unlockStorage(orderId),
+    onSuccess: () => {
+      showGenericSuccess('Бокс успешно разблокирован');
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.ALL_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEYS.USER_ORDERS });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'stats'] });
+    },
+    onError: (error) => {
+      console.error('Ошибка при разблокировке бокса:', error);
+      showGenericError(error.response?.data?.message || 'Не удалось разблокировать бокс');
     }
   });
 };

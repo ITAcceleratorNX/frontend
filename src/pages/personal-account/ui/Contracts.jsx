@@ -129,23 +129,30 @@ const statusStyles = {
 };
 
 // Функция для преобразования статусов перемещения
-const getMovingStatusText = (status) => {
+const getMovingStatusText = (status, direction) => {
+  if (status === 'PENDING') {
+    return direction === 'TO_CLIENT' ? 'В ожидании (со склада)' : 'В ожидании (от клиента)';
+  }
+  if (status === 'IN_PROGRESS') {
+    return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+  }
+  if (status === 'DELIVERED') {
+    return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+  }
   const statusMap = {
-    PENDING_FROM:  'В ожидании (от клиента)',
-    PENDING_TO:    'В ожидании (со склада)',
-    IN_PROGRESS:   'В пути к складу',
-    IN_PROGRESS_TO:'В пути к клиенту',
-    DELIVERED:     'Доставлено на склад',
-    DELIVERED_TO:  'Доставлено клиенту',
-    CANCELLED:     'Отменено',
+    COURIER_ASSIGNED: 'Курьер назначен',
+    COURIER_IN_TRANSIT: 'Курьер в пути',
+    COURIER_AT_CLIENT: 'Курьер у клиента',
+    FINISHED: 'Завершено',
+    CANCELLED: 'Отменено',
   };
   return statusMap[status] || status;
 };
 const getMovingStatusVariant = (status) => {
   if (status === 'CANCELLED') return 'danger';
-  if (status === 'DELIVERED' || status === 'DELIVERED_TO') return 'success';
-  if (status === 'IN_PROGRESS' || status === 'IN_PROGRESS_TO') return 'info';
-  if (status === 'PENDING_FROM' || status === 'PENDING_TO') return 'warning';
+  if (status === 'DELIVERED' || status === 'FINISHED') return 'success';
+  if (status === 'IN_PROGRESS' || status === 'COURIER_IN_TRANSIT' || status === 'COURIER_AT_CLIENT') return 'info';
+  if (status === 'PENDING' || status === 'COURIER_ASSIGNED') return 'warning';
   return 'default';
 };
 
@@ -481,7 +488,7 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
                   isMobile ? (
                     <div className="space-y-3">
                       {details.movingOrders.map((moving) => {
-                        const status = getMovingStatusText(moving.status);
+                        const status = getMovingStatusText(moving.status, moving.direction);
                         const statusVariant = getMovingStatusVariant(moving.status);
 
                         return (
@@ -632,7 +639,8 @@ const CancelSurveyModal = ({
       await createMovingMutation.mutateAsync({
         orderId,
         movingDate: deliveryDate,
-        status: 'PENDING_TO',
+        status: 'PENDING',
+        direction: 'TO_CLIENT',
         address: deliveryAddress || null
       });
 

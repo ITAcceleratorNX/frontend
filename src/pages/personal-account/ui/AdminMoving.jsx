@@ -5,6 +5,14 @@ import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
 import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '../../../components/ui/dialog';
+import { 
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -13,6 +21,7 @@ import {
   PaginationPrevious,
 } from '../../../components/ui/pagination';
 import { api, getDeliveredOrdersPaginated } from '../../../shared/api/axios';
+import { usersApi } from '../../../shared/api/usersApi';
 import { 
   Truck, 
   Package, 
@@ -27,22 +36,35 @@ import {
 import { toast } from 'react-toastify';
 // --- Moving statuses helpers ---
 const MOVING_STATUS_TEXT = {
-  PENDING_FROM:   'Ожидает забора',
-  PENDING_TO:     'Ожидает доставки',
-  IN_PROGRESS:    'В работе (к складу)',
-  IN_PROGRESS_TO: 'В работе (к клиенту)',
-  DELIVERED:      'Доставлено на склад',
-  DELIVERED_TO:   'Доставлено клиенту',
+  PENDING:   'Ожидает забора',
+  COURIER_ASSIGNED: 'Курьер назначен',
+  COURIER_IN_TRANSIT: 'Курьер в пути',
+  COURIER_AT_CLIENT: 'Курьер у клиента',
+  IN_PROGRESS:    'В пути',
+  DELIVERED:      'Доставлено',
+  FINISHED:       'Завершено',
   CANCELLED:      'Отменён',
 };
 
-const getMovingStatusText = (s) => MOVING_STATUS_TEXT[s] || s;
+const getMovingStatusText = (s, direction) => {
+  const baseText = MOVING_STATUS_TEXT[s] || s;
+  if (s === 'PENDING') {
+    return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+  }
+  if (s === 'IN_PROGRESS') {
+    return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+  }
+  if (s === 'DELIVERED') {
+    return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+  }
+  return baseText;
+};
 
 const getMovingStatusBadgeClass = (s) => {
   if (s === 'CANCELLED') return 'bg-red-100 text-red-800 border border-red-200';
-  if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-100 text-green-800 border border-green-200';
-  if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-100 text-blue-800 border border-blue-200';
-  if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-100 text-amber-800 border border-amber-200';
+  if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-100 text-green-800 border border-green-200';
+  if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-100 text-blue-800 border border-blue-200';
+  if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-100 text-amber-800 border border-amber-200';
   return 'bg-gray-100 text-gray-700 border border-gray-200';
 };
 const columns = [
@@ -69,21 +91,40 @@ const columns = [
   },
 ];
 
-const OrderCard = ({ order, isLoading = false, isDelivered = false }) => {
+const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAssign }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
     navigate(`/admin/moving/order/${order.movingOrderId}`);
   };
 
-  // Админ только просматривает - никаких кнопок действий
+  // Кнопка назначения курьера
+  const handleAssignCourierClick = (e) => {
+    e.stopPropagation();
+    if (onCourierAssign) {
+      onCourierAssign(order);
+    }
+  };
+
   const getActionButton = () => {
+    // Показываем кнопку назначения курьера только для заказов, ожидающих курьера
+    if (order.status === 'PENDING' && !order.courier) {
+      return (
+        <Button
+          onClick={handleAssignCourierClick}
+          disabled={isLoading}
+          className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90 text-white h-8 text-xs"
+        >
+          Назначить курьера
+        </Button>
+      );
+    }
     return null;
   };
 
   const getStatusBadge = () => (
       <Badge className={`text-xs ${getMovingStatusBadgeClass(order.status)}`}>
-        {getMovingStatusText(order.status)}
+        {getMovingStatusText(order.status, order.direction)}
       </Badge>
   );
 
@@ -117,9 +158,26 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false }) => {
             <Building className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
             <div>
               <span className="text-gray-600">Склад:</span>
-              <p className="font-medium text-gray-900">{order?.warehouseAddress || 'Не указан'}</p>
+                <p className="font-medium text-gray-900">
+                  {order?.warehouseName 
+                    ? `${order.warehouseName}${order?.warehouseAddress ? `, ${order.warehouseAddress}` : ''}` 
+                    : (order?.warehouseAddress || 'Не указан')}
+                </p>
+              </div>
+            </div>
+
+            {order?.courier && (
+              <div className="flex items-start gap-2 text-sm">
+                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-gray-600">Курьер:</span>
+                  <p className="font-medium text-gray-900">
+                    {order.courier.name}
+                    {order.courier.phone && ` (${order.courier.phone})`}
+                  </p>
             </div>
           </div>
+            )}
 
           <div className="flex items-start gap-2 text-sm">
             <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
@@ -128,11 +186,33 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false }) => {
               <p className="font-medium text-gray-900">{order?.storageName || 'Не указано'}</p>
             </div>
           </div>
+
+          {order?.delivery_time_interval && (
+            <div className="flex items-start gap-2 text-sm">
+              <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-gray-600">Время доставки:</span>
+                <p className="font-medium text-gray-900">{order.delivery_time_interval}</p>
+              </div>
+            </div>
+          )}
+
+          {order?.direction && (
+            <div className="flex items-start gap-2 text-sm">
+              <Truck className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-gray-600">Направление:</span>
+                <p className="font-medium text-gray-900">
+                  {order.direction === 'TO_CLIENT' ? 'К клиенту' : 'К складу'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <Separator />
         
-        {/* Кнопка действия - для админа всегда null */}
+        {/* Кнопка назначения курьера */}
         <div className="flex justify-end">
           {getActionButton()}
         </div>
@@ -158,6 +238,11 @@ const AdminMoving = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeliveredLoading, setIsDeliveredLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [courierModalOpen, setCourierModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [couriers, setCouriers] = useState([]);
+  const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
 
 
   const fetchOrders = async () => {
@@ -166,10 +251,11 @@ const AdminMoving = () => {
       setError(null);
       
       const results = await Promise.all([
-        api.get('/moving/status/PENDING_FROM'),
-        api.get('/moving/status/PENDING_TO'),
+        api.get('/moving/status/PENDING'),
+        api.get('/moving/status/COURIER_ASSIGNED'),
+        api.get('/moving/status/COURIER_IN_TRANSIT'),
+        api.get('/moving/status/COURIER_AT_CLIENT'),
         api.get('/moving/status/IN_PROGRESS'),
-        api.get('/moving/status/IN_PROGRESS_TO'),
       ]);
 
       // Фильтрация по availability
@@ -177,8 +263,15 @@ const AdminMoving = () => {
         orders.filter((order) => order.availability === 'AVAILABLE');
 
       const newOrders = {
-        PENDING: filterAvailable([...results[0].data, ...results[1].data]),
-        IN_PROGRESS: filterAvailable([...results[2].data, ...results[3].data]),
+        PENDING: filterAvailable([
+          ...results[0].data,  // PENDING
+          ...results[1].data,  // COURIER_ASSIGNED
+        ]),
+        IN_PROGRESS: filterAvailable([
+          ...results[2].data,  // COURIER_IN_TRANSIT
+          ...results[3].data,  // COURIER_AT_CLIENT
+          ...results[4].data,  // IN_PROGRESS
+        ]),
       };
 
       setOrders(newOrders);
@@ -206,6 +299,52 @@ const AdminMoving = () => {
       toast.error('Ошибка загрузки завершённых заказов');
     } finally {
       setIsDeliveredLoading(false);
+    }
+  };
+
+  // Загрузка списка курьеров
+  const fetchCouriers = async () => {
+    try {
+      setIsLoadingCouriers(true);
+      const data = await usersApi.getCouriers();
+      setCouriers(data || []);
+    } catch (err) {
+      console.error('Ошибка при загрузке курьеров:', err);
+      toast.error('Ошибка загрузки списка курьеров');
+    } finally {
+      setIsLoadingCouriers(false);
+    }
+  };
+
+  // Обработчик открытия модального окна назначения курьера
+  const handleAssignCourier = (order) => {
+    setSelectedOrder(order);
+    if (couriers.length === 0) {
+      fetchCouriers();
+    }
+    setCourierModalOpen(true);
+  };
+
+  // Обработчик назначения курьера
+  const handleCourierSelect = async (courierId) => {
+    if (!selectedOrder) return;
+
+    try {
+      setIsAssigning(true);
+      await api.put(`/moving/${selectedOrder.movingOrderId}`, {
+        courier_id: courierId,
+        status: 'COURIER_ASSIGNED'
+      });
+      
+      toast.success('Курьер успешно назначен');
+      setCourierModalOpen(false);
+      setSelectedOrder(null);
+      fetchOrders(); // Обновляем список заказов
+    } catch (error) {
+      console.error('Ошибка при назначении курьера:', error);
+      toast.error('Не удалось назначить курьера');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -377,6 +516,7 @@ const AdminMoving = () => {
                       key={order.movingOrderId} 
                       order={order} 
                       isLoading={isLoading}
+                      onCourierAssign={handleAssignCourier}
                     />
                   ))
                 )}
@@ -431,6 +571,57 @@ const AdminMoving = () => {
             )}
           </div>
         </div>
+
+        {/* Модальное окно назначения курьера */}
+        <Dialog open={courierModalOpen} onOpenChange={setCourierModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Назначить курьера</DialogTitle>
+              <DialogDescription>
+                Выберите курьера для заказа #{selectedOrder?.movingOrderId}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-2 py-4 max-h-96 overflow-y-auto">
+              {isLoadingCouriers ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Загрузка курьеров...</p>
+                </div>
+              ) : couriers.length === 0 ? (
+                <p className="text-center py-8 text-gray-500">Нет доступных курьеров</p>
+              ) : (
+                couriers.map((courier) => (
+                  <Button
+                    key={courier.id}
+                    onClick={() => handleCourierSelect(courier.id)}
+                    className="w-full justify-start text-left h-auto py-3 px-4"
+                    variant="outline"
+                    disabled={isAssigning}
+                  >
+                    <User className="w-5 h-5 mr-3 text-[#1e2c4f]" />
+                    <div className="flex-1">
+                      <p className="font-medium">{courier.name || 'Без имени'}</p>
+                      {courier.phone && (
+                        <p className="text-sm text-gray-500">{courier.phone}</p>
+                      )}
+                    </div>
+                  </Button>
+                ))
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setCourierModalOpen(false)}
+                disabled={isAssigning}
+              >
+                Отмена
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

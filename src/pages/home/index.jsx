@@ -1,5 +1,6 @@
 import React, { useState, memo, useMemo, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Header } from "../../widgets";
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
 import oblachImg from "../../assets/oblach.png";
@@ -9,6 +10,7 @@ import WarehouseMap from "../../components/WarehouseMap";
 import WarehouseSVGMap from "../../components/WarehouseSVGMap";
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
+import { promoApi } from "../../shared/api/promoApi";
 import { Dropdown } from '../../shared/components/Dropdown.jsx';
 import {
   Tabs,
@@ -21,11 +23,18 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
+// Импортируем иконки для предзагрузки
+import SiteIcon from '@/assets/lead-source-icons/site.svg';
+import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.svg';
+import TelegramIcon from '@/assets/lead-source-icons/telegram.svg';
+import InstagramIcon from '@/assets/lead-source-icons/instagram.svg';
+import TiktokIcon from '@/assets/lead-source-icons/tiktok.svg';
+import AdsIcon from '@/assets/lead-source-icons/ads.svg';
 import DatePicker from "../../shared/ui/DatePicker";
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import sumkaImg from '../../assets/cloud-tariffs/sumka.png';
@@ -74,6 +83,7 @@ const getServiceTypeName = (type) => {
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
 const HomePage = memo(() => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
   const isUserRole = user?.role === "USER";
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -101,17 +111,44 @@ const HomePage = memo(() => {
   const [cloudMonths, setCloudMonths] = useState("1");
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
   const [cloudVolumeDirect, setCloudVolumeDirect] = useState(1); // Прямой ввод объема для тарифов
-  const [movingAddressFrom, setMovingAddressFrom] = useState("");
+  const [movingStreetFrom, setMovingStreetFrom] = useState("");
+  const [movingHouseFrom, setMovingHouseFrom] = useState("");
+  const [movingFloorFrom, setMovingFloorFrom] = useState("");
+  const [movingApartmentFrom, setMovingApartmentFrom] = useState("");
   const [movingPickupDate, setMovingPickupDate] = useState(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today.toISOString().split('T')[0];
   });
+  const [cloudStreetFrom, setCloudStreetFrom] = useState("");
+  const [cloudHouseFrom, setCloudHouseFrom] = useState("");
+  const [cloudFloorFrom, setCloudFloorFrom] = useState("");
+  const [cloudApartmentFrom, setCloudApartmentFrom] = useState("");
+  
+  // Функция для формирования полного адреса из отдельных полей
+  const getMovingAddressFrom = useMemo(() => {
+    const parts = [];
+    if (movingStreetFrom.trim()) parts.push(movingStreetFrom.trim());
+    if (movingHouseFrom.trim()) parts.push(`д. ${movingHouseFrom.trim()}`);
+    if (movingFloorFrom.trim()) parts.push(`эт. ${movingFloorFrom.trim()}`);
+    if (movingApartmentFrom.trim()) parts.push(`кв. ${movingApartmentFrom.trim()}`);
+    return parts.length > 0 ? parts.join(', ') : '';
+  }, [movingStreetFrom, movingHouseFrom, movingFloorFrom, movingApartmentFrom]);
+  
+  // Функция для формирования полного адреса облачного хранения из отдельных полей
+  const getCloudPickupAddress = useMemo(() => {
+    const parts = [];
+    if (cloudStreetFrom.trim()) parts.push(cloudStreetFrom.trim());
+    if (cloudHouseFrom.trim()) parts.push(`д. ${cloudHouseFrom.trim()}`);
+    if (cloudFloorFrom.trim()) parts.push(`эт. ${cloudFloorFrom.trim()}`);
+    if (cloudApartmentFrom.trim()) parts.push(`кв. ${cloudApartmentFrom.trim()}`);
+    return parts.length > 0 ? parts.join(', ') : '';
+  }, [cloudStreetFrom, cloudHouseFrom, cloudFloorFrom, cloudApartmentFrom]);
+  
   // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
   const [movingOrders, setMovingOrders] = useState([]);
   // Состояние для адреса возврата (GAZELLE_TO)
   const [movingAddressTo, setMovingAddressTo] = useState("");
-  const [cloudPickupAddress, setCloudPickupAddress] = useState("");
   const [cloudPickupDate, setCloudPickupDate] = useState(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -136,6 +173,7 @@ const HomePage = memo(() => {
   const [isServicesLoading, setIsServicesLoading] = useState(false);
   const [servicesError, setServicesError] = useState(null);
   const [services, setServices] = useState([]);
+  const [depositPrice, setDepositPrice] = useState(0); // Цена депозита
   const [gazelleService, setGazelleService] = useState(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -156,6 +194,22 @@ const HomePage = memo(() => {
   const [tariffPrices, setTariffPrices] = useState({});
   // Состояние для цен кастомного тарифа (CLOUD_PRICE_LOW и CLOUD_PRICE_HIGH)
   const [cloudCustomPrices, setCloudCustomPrices] = useState({ low: null, high: null });
+  // Состояние для промокода (индивидуальное хранение)
+  const [promoCode, setPromoCode] = useState("");
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoDiscountPercent, setPromoDiscountPercent] = useState(0);
+  const [promoError, setPromoError] = useState("");
+  const [promoSuccess, setPromoSuccess] = useState(false);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  // Состояние для промокода (облачное хранение)
+  const [cloudPromoCode, setCloudPromoCode] = useState("");
+  const [cloudPromoCodeInput, setCloudPromoCodeInput] = useState("");
+  const [cloudPromoDiscount, setCloudPromoDiscount] = useState(0);
+  const [cloudPromoDiscountPercent, setCloudPromoDiscountPercent] = useState(0);
+  const [cloudPromoError, setCloudPromoError] = useState("");
+  const [cloudPromoSuccess, setCloudPromoSuccess] = useState(false);
+  const [isValidatingCloudPromo, setIsValidatingCloudPromo] = useState(false);
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -215,6 +269,13 @@ const HomePage = memo(() => {
       setIsServicesLoading(true);
       setServicesError(null);
       const pricesData = await paymentsApi.getPrices();
+      
+      // Находим и сохраняем цену депозита
+      const depositService = pricesData.find((price) => price.type === "DEPOSIT");
+      if (depositService) {
+        setDepositPrice(Number(depositService.price) || 0);
+      }
+      
       const filteredPrices = pricesData.filter((price) => {
         const excludedTypes = [
           "DEPOSIT",
@@ -307,16 +368,17 @@ const HomePage = memo(() => {
             
             setMovingOrders(prev => {
               // Проверяем, нет ли уже такого moving_order
-              const exists = prev.some(order => order.status === "PENDING_TO");
+              const exists = prev.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
               if (exists) {
-                console.log("⚠️ moving_order PENDING_TO уже существует");
+                console.log("⚠️ moving_order для возврата уже существует");
                 return prev;
               }
               
               const newOrder = {
                 moving_date: returnDate.toISOString(),
-                status: "PENDING_TO",
-                address: movingAddressTo || movingAddressFrom || "",
+                status: "PENDING",
+                direction: "TO_CLIENT",
+                address: movingAddressTo || getMovingAddressFrom || "",
               };
               
               console.log("✅ Создан новый moving_order:", newOrder);
@@ -330,7 +392,7 @@ const HomePage = memo(() => {
           const oldOption = serviceOptions.find(opt => String(opt.id) === String(oldService.service_id));
           if (oldOption && oldOption.type === "GAZELLE_TO") {
             // Удаляем moving_order для возврата вещей
-            setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+            setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
           }
         }
       }
@@ -338,7 +400,7 @@ const HomePage = memo(() => {
       return updated;
     });
     setSubmitError(null);
-  }, [serviceOptions, individualBookingStartDate, monthsNumber, movingAddressFrom, movingAddressTo]);
+  }, [serviceOptions, individualBookingStartDate, monthsNumber, movingStreetFrom, movingHouseFrom, movingApartmentFrom, movingAddressTo, getMovingAddressFrom]);
 
   const removeServiceRow = useCallback((index) => {
     setServices((prev) => {
@@ -348,7 +410,7 @@ const HomePage = memo(() => {
       if (serviceToRemove?.service_id && serviceOptions.length > 0) {
         const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
         if (option && option.type === "GAZELLE_TO") {
-          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+          setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
       
@@ -443,14 +505,15 @@ const HomePage = memo(() => {
 
   const isIndividualFormReady = useMemo(() => {
     if (!previewStorage || !monthsNumber || monthsNumber <= 0) return false;
-    if (includeMoving && !movingAddressFrom.trim()) return false;
+    if (includeMoving && !movingStreetFrom.trim()) return false;
     if (includePacking && packagingServicesForOrder.length === 0) return false;
     return true;
   }, [
     includeMoving,
     includePacking,
     monthsNumber,
-    movingAddressFrom,
+    getMovingAddressFrom,
+    movingStreetFrom,
     packagingServicesForOrder.length,
     previewStorage,
   ]);
@@ -478,11 +541,11 @@ const HomePage = memo(() => {
     if (!cloudStorage?.id) return false;
     if (!cloudMonthsNumber || cloudMonthsNumber <= 0) return false;
     if (!cloudVolume || cloudVolume <= 0) return false;
-    if (!cloudPickupAddress.trim()) return false;
+    if (!cloudStreetFrom.trim()) return false;
     // Требуется либо выбран тариф, либо выбрано "Свои габариты"
     if (!selectedTariff) return false;
     return true;
-  }, [cloudStorage, cloudMonthsNumber, cloudPickupAddress, cloudVolume, selectedTariff]);
+  }, [cloudStorage, cloudMonthsNumber, cloudStreetFrom, cloudVolume, selectedTariff]);
 
   const movingServicePrice = useMemo(() => {
     // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
@@ -497,18 +560,182 @@ const HomePage = memo(() => {
     const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
     const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
     const serviceTotal = serviceSummary.total;
-    const combinedTotal = (baseTotal || 0) + serviceTotal;
+    // combinedTotal включает аренду + услуги + депозит
+    const combinedTotal = (baseTotal || 0) + serviceTotal + depositPrice;
 
     return {
       baseMonthly,
       baseTotal,
       serviceTotal,
+      depositPrice,
       combinedTotal,
     };
-  }, [pricePreview, serviceSummary.total]);
+  }, [pricePreview, serviceSummary.total, depositPrice]);
 
-  // Показываем модальное окно источника лида при первом посещении
+  // Расчет итоговой суммы с учетом промокода (индивидуальное хранение)
+  const finalIndividualTotal = useMemo(() => {
+    const total = costSummary.combinedTotal || 0;
+    return Math.max(0, total - promoDiscount);
+  }, [costSummary.combinedTotal, promoDiscount]);
+
+  // Расчет итоговой суммы с учетом промокода (облачное хранение)
+  const finalCloudTotal = useMemo(() => {
+    const total = (cloudPricePreview?.total || 0) + depositPrice;
+    return Math.max(0, total - cloudPromoDiscount);
+  }, [cloudPricePreview, cloudPromoDiscount, depositPrice]);
+
+  // Функция применения промокода для индивидуального хранения
+  const handleApplyPromoCode = useCallback(async () => {
+    if (!promoCodeInput.trim()) {
+      setPromoError("Введите промокод");
+      return;
+    }
+
+    const totalAmount = costSummary.combinedTotal || 0;
+    if (totalAmount <= 0) {
+      setPromoError("Сначала выберите бокс и срок аренды");
+      return;
+    }
+
+    try {
+      setIsValidatingPromo(true);
+      setPromoError("");
+      setPromoSuccess(false);
+
+      const result = await promoApi.validate(promoCodeInput.trim(), totalAmount);
+
+      if (result.valid) {
+        setPromoCode(promoCodeInput.trim());
+        setPromoDiscount(result.discount_amount);
+        setPromoDiscountPercent(result.discount_percent);
+        setPromoSuccess(true);
+        setPromoError("");
+        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+      } else {
+        setPromoError(result.error || "Недействительный промокод");
+        setPromoCode("");
+        setPromoDiscount(0);
+        setPromoDiscountPercent(0);
+        setPromoSuccess(false);
+      }
+    } catch (error) {
+      console.error("Ошибка при проверке промокода:", error);
+      setPromoError("Ошибка при проверке промокода");
+      setPromoCode("");
+      setPromoDiscount(0);
+      setPromoDiscountPercent(0);
+      setPromoSuccess(false);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  }, [promoCodeInput, costSummary.combinedTotal]);
+
+  // Функция удаления промокода для индивидуального хранения
+  const handleRemovePromoCode = useCallback(() => {
+    setPromoCode("");
+    setPromoCodeInput("");
+    setPromoDiscount(0);
+    setPromoDiscountPercent(0);
+    setPromoError("");
+    setPromoSuccess(false);
+  }, []);
+
+  // Функция применения промокода для облачного хранения
+  const handleApplyCloudPromoCode = useCallback(async () => {
+    if (!cloudPromoCodeInput.trim()) {
+      setCloudPromoError("Введите промокод");
+      return;
+    }
+
+    // Включаем депозит в общую сумму для валидации промокода
+    const totalAmount = (cloudPricePreview?.total || 0) + depositPrice;
+    if (totalAmount <= 0) {
+      setCloudPromoError("Сначала выберите тариф и срок аренды");
+      return;
+    }
+
+    try {
+      setIsValidatingCloudPromo(true);
+      setCloudPromoError("");
+      setCloudPromoSuccess(false);
+
+      const result = await promoApi.validate(cloudPromoCodeInput.trim(), totalAmount);
+
+      if (result.valid) {
+        setCloudPromoCode(cloudPromoCodeInput.trim());
+        setCloudPromoDiscount(result.discount_amount);
+        setCloudPromoDiscountPercent(result.discount_percent);
+        setCloudPromoSuccess(true);
+        setCloudPromoError("");
+        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+      } else {
+        setCloudPromoError(result.error || "Недействительный промокод");
+        setCloudPromoCode("");
+        setCloudPromoDiscount(0);
+        setCloudPromoDiscountPercent(0);
+        setCloudPromoSuccess(false);
+      }
+    } catch (error) {
+      console.error("Ошибка при проверке промокода:", error);
+      setCloudPromoError("Ошибка при проверке промокода");
+      setCloudPromoCode("");
+      setCloudPromoDiscount(0);
+      setCloudPromoDiscountPercent(0);
+      setCloudPromoSuccess(false);
+    } finally {
+      setIsValidatingCloudPromo(false);
+    }
+  }, [cloudPromoCodeInput, cloudPricePreview, depositPrice]);
+
+  // Функция удаления промокода для облачного хранения
+  const handleRemoveCloudPromoCode = useCallback(() => {
+    setCloudPromoCode("");
+    setCloudPromoCodeInput("");
+    setCloudPromoDiscount(0);
+    setCloudPromoDiscountPercent(0);
+    setCloudPromoError("");
+    setCloudPromoSuccess(false);
+  }, []);
+
+  // Пересчитываем скидку при изменении общей суммы (индивидуальное хранение)
   useEffect(() => {
+    if (promoCode && promoDiscountPercent > 0) {
+      const totalAmount = costSummary.combinedTotal || 0;
+      const newDiscount = Math.round((totalAmount * promoDiscountPercent / 100) * 100) / 100;
+      setPromoDiscount(newDiscount);
+    }
+  }, [costSummary.combinedTotal, promoCode, promoDiscountPercent]);
+
+  // Пересчитываем скидку при изменении общей суммы (облачное хранение)
+  useEffect(() => {
+    if (cloudPromoCode && cloudPromoDiscountPercent > 0) {
+      const totalAmount = cloudPricePreview?.total || 0;
+      const newDiscount = Math.round((totalAmount * cloudPromoDiscountPercent / 100) * 100) / 100;
+      setCloudPromoDiscount(newDiscount);
+    }
+  }, [cloudPricePreview, cloudPromoCode, cloudPromoDiscountPercent]);
+
+  // Предзагрузка изображений для опросника и показ модального окна источника лида
+  useEffect(() => {
+    // Предзагружаем изображения опросника сразу при загрузке страницы
+    if (typeof window !== 'undefined' && shouldShowLeadSourceModal()) {
+      // Предзагружаем все иконки опросника
+      const icons = [SiteIcon, WhatsappIcon, TelegramIcon, InstagramIcon, TiktokIcon, AdsIcon];
+      icons.forEach((icon) => {
+        const img = new Image();
+        img.src = icon;
+        img.loading = 'eager';
+        // Добавляем preload link в head для еще более ранней загрузки
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = icon;
+        if (!document.querySelector(`link[href="${icon}"]`)) {
+          document.head.appendChild(link);
+        }
+      });
+    }
+    
     if (!isAuthenticated && shouldShowLeadSourceModal()) {
       // Небольшая задержка для лучшего UX
       const timer = setTimeout(() => {
@@ -709,11 +936,12 @@ const HomePage = memo(() => {
     // Устанавливаем время на начало дня для даты забора
     pickupDate.setHours(10, 0, 0, 0); // 10:00 утра для забора
 
-    // Возвращаем только забор вещей (PENDING_FROM)
+    // Возвращаем забор вещей (PENDING с direction TO_WAREHOUSE)
     return [
       {
         moving_date: pickupDate.toISOString(),
-        status: "PENDING_FROM",
+        status: "PENDING",
+        direction: "TO_WAREHOUSE",
         address,
       },
     ];
@@ -743,7 +971,7 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (includeMoving && !movingAddressFrom.trim()) {
+    if (includeMoving && !movingStreetFrom.trim()) {
       setSubmitError("Укажите адрес для перевозки.");
       return;
     }
@@ -771,7 +999,7 @@ const HomePage = memo(() => {
         }
       }
 
-      const trimmedAddress = movingAddressFrom.trim();
+      const trimmedAddress = getMovingAddressFrom;
 
       const orderItems = [
         {
@@ -835,6 +1063,11 @@ const HomePage = memo(() => {
         is_selected_package: isPackageSelected,
       };
 
+      // Добавляем промокод, если он применен
+      if (promoCode) {
+        orderData.promo_code = promoCode;
+      }
+
       // Проверяем наличие GAZELLE_TO в услугах (независимо от includeMoving)
       const hasGazelleTo = finalServices.some(s => {
         const service = availableOptions.find(opt => opt.id === s.service_id);
@@ -859,7 +1092,7 @@ const HomePage = memo(() => {
       const allMovingOrders = [];
       
       if (includeMoving) {
-        // Добавляем забор вещей (PENDING_FROM)
+        // Добавляем забор вещей (PENDING с direction TO_WAREHOUSE)
         const pickupOrder = buildMovingOrders(trimmedAddress, monthsNumber, movingPickupDate)[0];
         allMovingOrders.push(pickupOrder);
       }
@@ -869,16 +1102,17 @@ const HomePage = memo(() => {
         console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
         
         // Используем moving_order из состояния или создаем новый
-        const returnOrder = movingOrders.find(order => order.status === "PENDING_TO");
+        const returnOrder = movingOrders.find(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
         if (returnOrder) {
           console.log("✅ Используем существующий moving_order из состояния");
           allMovingOrders.push({
             moving_date: returnOrder.moving_date,
-            status: "PENDING_TO",
+            status: "PENDING",
+            direction: "TO_CLIENT",
             address: returnOrder.address || movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
           });
         } else {
-          console.log("✅ Создаем новый moving_order для PENDING_TO");
+          console.log("✅ Создаем новый moving_order для возврата");
           // Создаем дату возврата: дата начала бронирования + количество месяцев
           const startDate = new Date(individualBookingStartDate || new Date());
           const returnDate = new Date(startDate);
@@ -887,7 +1121,8 @@ const HomePage = memo(() => {
           
           allMovingOrders.push({
             moving_date: returnDate.toISOString(),
-            status: "PENDING_TO",
+            status: "PENDING",
+            direction: "TO_CLIENT",
             address: movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
           });
         }
@@ -928,8 +1163,10 @@ const HomePage = memo(() => {
         }
       );
 
-      setTimeout(() => {
-        navigate("/personal-account", { state: { activeSection: "payments" } });
+      // Обновляем кэш заказов и ждём завершения, затем навигация
+      setTimeout(async () => {
+        await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
+        navigate("/personal-account", { state: { activeSection: "orders" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
@@ -1002,10 +1239,12 @@ const HomePage = memo(() => {
     previewStorage,
     selectedWarehouse,
     serviceOptions,
-    movingAddressFrom,
+    getMovingAddressFrom,
+    movingStreetFrom,
     openCallbackModal,
     movingOrders,
     individualBookingStartDate,
+    promoCode,
   ]);
 
   const handleCreateCloudOrder = useCallback(async () => {
@@ -1037,7 +1276,7 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (!cloudPickupAddress.trim()) {
+    if (!cloudStreetFrom.trim()) {
       setSubmitError("Укажите адрес забора вещей.");
       return;
     }
@@ -1046,7 +1285,7 @@ const HomePage = memo(() => {
       setIsSubmittingOrder(true);
       setSubmitError(null);
 
-      const trimmedAddress = cloudPickupAddress.trim();
+      const trimmedAddress = getCloudPickupAddress;
 
       // Определяем название для заказа
       const orderItemName = selectedTariff.isCustom 
@@ -1111,6 +1350,11 @@ const HomePage = memo(() => {
         tariff_type: tariff_type, // Добавляем тип тарифа
       };
 
+      // Добавляем промокод, если он применен
+      if (cloudPromoCode) {
+        orderData.promo_code = cloudPromoCode;
+      }
+
       console.error("availableOptions: ", availableOptions);
 
       // Добавляем услугу "Газель - забор" для перевозки (только GAZELLE_FROM)
@@ -1141,8 +1385,10 @@ const HomePage = memo(() => {
         }
       );
 
-      setTimeout(() => {
-        navigate("/personal-account", { state: { activeSection: "payments" } });
+      // Обновляем кэш заказов и ждём завершения, затем навигация
+      setTimeout(async () => {
+        await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
+        navigate("/personal-account", { state: { activeSection: "orders" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);
@@ -1178,7 +1424,8 @@ const HomePage = memo(() => {
     buildMovingOrders,
     cloudBookingStartDate,
     cloudMonthsNumber,
-    cloudPickupAddress,
+    getCloudPickupAddress,
+    cloudStreetFrom,
     cloudStorage,
     cloudVolume,
     isAuthenticated,
@@ -1191,6 +1438,7 @@ const HomePage = memo(() => {
     ensureServiceOptions,
     warehouseApi,
     toast,
+    cloudPromoCode,
   ]);
 
   const handleIndividualBookingClick = useCallback(() => {
@@ -1224,7 +1472,10 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
-      setCloudPickupAddress("");
+      setCloudStreetFrom("");
+      setCloudHouseFrom("");
+      setCloudFloorFrom("");
+      setCloudApartmentFrom("");
       return;
     }
     // Устанавливаем "Свои габариты" по умолчанию при переключении на облачное хранение
@@ -2165,7 +2416,10 @@ const HomePage = memo(() => {
                         if (checked) {
                           await ensureServiceOptions();
                         } else {
-                          setMovingAddressFrom("");
+                          setMovingStreetFrom("");
+                          setMovingHouseFrom("");
+                          setMovingFloorFrom("");
+                          setMovingApartmentFrom("");
                         }
                       }}
                       className="bg-gray-300 data-[state=checked]:bg-[#00A991]"
@@ -2174,7 +2428,7 @@ const HomePage = memo(() => {
 
                   {/* Детали перевозки */}
                   {includeMoving && previewStorage && (
-                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-6 shadow-lg space-y-4">
+                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg space-y-4 w-full max-w-full">
                       <h3 className="text-xl font-bold text-white">Детали перевозки</h3>
                       <div className="space-y-3">
                         <div className="flex flex-col gap-1">
@@ -2191,18 +2445,50 @@ const HomePage = memo(() => {
                             className="[&>div]:bg-gradient-to-r [&>div]:from-[#26B3AB] [&>div]:to-[#104D4A] [&>div]:!border-white [&>div]:rounded-3xl [&_input]:text-white [&_input]:placeholder:text-white/70 [&_label]:text-white/90 [&_button]:text-white [&_button]:hover:text-white [&_button]:hover:bg-transparent [&_button]:hover:!-translate-y-1/2 [&_button]:hover:!top-1/2 [&_button]:transition-none [&_button]:cursor-pointer [&>div]:focus-within:ring-0 [&>div]:focus-within:border-white"
                           />
                         </div>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-2 w-full">
                           <label className="text-s text-white/90">Адрес забора вещей</label>
                           <input
                             type="text"
-                            value={movingAddressFrom}
+                            value={movingStreetFrom}
                             onChange={(e) => {
-                              setMovingAddressFrom(e.target.value);
+                              setMovingStreetFrom(e.target.value);
                               setSubmitError(null);
                             }}
-                            placeholder="Например: г. Алматы, Абая 25"
-                            className="h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                            placeholder="Микрорайон или улица"
+                            className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                           />
+                          <div className="flex gap-2 w-full">
+                            <input
+                              type="text"
+                              value={movingHouseFrom}
+                              onChange={(e) => {
+                                setMovingHouseFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Дом"
+                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            />
+                            <input
+                              type="text"
+                              value={movingFloorFrom}
+                              onChange={(e) => {
+                                setMovingFloorFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Этаж"
+                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            />
+                            <input
+                              type="text"
+                              value={movingApartmentFrom}
+                              onChange={(e) => {
+                                setMovingApartmentFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Квартира"
+                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2333,7 +2619,7 @@ const HomePage = memo(() => {
                                             onChange={(e) => {
                                               setMovingAddressTo(e.target.value);
                                               setMovingOrders(prev => prev.map(order => 
-                                                order.status === "PENDING_TO" 
+                                                (order.status === "PENDING" && order.direction === "TO_CLIENT")
                                                   ? { ...order, address: e.target.value }
                                                   : order
                                               ));
@@ -2422,11 +2708,91 @@ const HomePage = memo(() => {
                             <div className="text-sm text-gray-600">
                               Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
                             </div>
+                            
+                            {/* Промокод */}
+                            <div className="mt-4 mb-3">
+                              <label className="block text-sm font-medium text-[#273655] mb-2">
+                                Промокод
+                              </label>
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  <input
+                                    type="text"
+                                    value={promoCodeInput}
+                                    onChange={(e) => {
+                                      setPromoCodeInput(e.target.value.toUpperCase());
+                                      setPromoError("");
+                                    }}
+                                    placeholder="Введите промокод"
+                                    disabled={promoSuccess || isValidatingPromo}
+                                    className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
+                                      promoSuccess 
+                                        ? "border-green-500 bg-green-50" 
+                                        : promoError 
+                                          ? "border-red-500 bg-red-50" 
+                                          : "border-gray-300"
+                                    } disabled:bg-gray-100`}
+                                  />
+                                  {promoSuccess && (
+                                    <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                                  )}
+                                </div>
+                                {promoSuccess ? (
+                                  <button
+                                    type="button"
+                                    onClick={handleRemovePromoCode}
+                                    className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={handleApplyPromoCode}
+                                    disabled={isValidatingPromo || !promoCodeInput.trim()}
+                                    className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                  >
+                                    {isValidatingPromo ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                                    ) : (
+                                      <Check className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                              {promoError && (
+                                <p className="text-xs text-red-600 mt-1">{promoError}</p>
+                              )}
+                              {promoSuccess && (
+                                <p className="text-xs text-green-600 mt-1">
+                                  Промокод <strong>{promoCode}</strong> применен! Скидка {promoDiscountPercent}%
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Скидка по промокоду */}
+                            {promoSuccess && promoDiscount > 0 && (
+                              <div className="flex items-center justify-between text-sm text-green-600 mb-2">
+                                <span className="flex items-center gap-1">
+                                  <Tag className="w-3 h-3" />
+                                  Скидка ({promoDiscountPercent}%):
+                                </span>
+                                <span>-{promoDiscount.toLocaleString()} ₸</span>
+                              </div>
+                            )}
+
                             <div className="text-lg font-bold text-[#273655]">
-                              Общая стоимость: {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
+                              Общая стоимость: {promoSuccess && promoDiscount > 0 && (
+                                <span className="text-sm text-gray-400 line-through mr-1">
+                                  {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
+                                </span>
+                              )}
+                              {finalIndividualTotal?.toLocaleString() ?? "—"} ₸
                             </div>
                             <div className="text-xs text-gray-500">
                               за {monthsNumber} {monthsNumber === 1 ? 'месяц' : monthsNumber < 5 ? 'месяца' : 'месяцев'}
+                              {promoSuccess && ` (скидка ${promoDiscountPercent}%)`}
                             </div>
                           </>
                         )}
@@ -2701,9 +3067,90 @@ const HomePage = memo(() => {
                         <span className="text-[#00A991]">За месяц</span>
                         <span className="font-medium text-[#00A991]">{cloudPricePreview?.monthly?.toLocaleString() ?? "—"} ₸</span>
                       </div>
+
+                      {/* Промокод для облачного хранения */}
+                      <div className="mt-4 mb-4 pt-4 border-t border-gray-200">
+                        <label className="block text-sm font-medium text-[#273655] mb-2">
+                          Промокод
+                        </label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                              type="text"
+                              value={cloudPromoCodeInput}
+                              onChange={(e) => {
+                                setCloudPromoCodeInput(e.target.value.toUpperCase());
+                                setCloudPromoError("");
+                              }}
+                              placeholder="Введите промокод"
+                              disabled={cloudPromoSuccess || isValidatingCloudPromo}
+                              className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
+                                cloudPromoSuccess 
+                                  ? "border-green-500 bg-green-50" 
+                                  : cloudPromoError 
+                                    ? "border-red-500 bg-red-50" 
+                                    : "border-gray-300"
+                              } disabled:bg-gray-100`}
+                            />
+                            {cloudPromoSuccess && (
+                              <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                            )}
+                          </div>
+                          {cloudPromoSuccess ? (
+                            <button
+                              type="button"
+                              onClick={handleRemoveCloudPromoCode}
+                              className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleApplyCloudPromoCode}
+                              disabled={isValidatingCloudPromo || !cloudPromoCodeInput.trim()}
+                              className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                            >
+                              {isValidatingCloudPromo ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                              ) : (
+                                <Check className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                        {cloudPromoError && (
+                          <p className="text-xs text-red-600 mt-1">{cloudPromoError}</p>
+                        )}
+                        {cloudPromoSuccess && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Промокод <strong>{cloudPromoCode}</strong> применен! Скидка {cloudPromoDiscountPercent}%
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Скидка по промокоду */}
+                      {cloudPromoSuccess && cloudPromoDiscount > 0 && (
+                        <div className="flex items-center justify-between text-sm text-green-600 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Tag className="w-3 h-3" />
+                            Скидка ({cloudPromoDiscountPercent}%):
+                          </span>
+                          <span>-{cloudPromoDiscount.toLocaleString()} ₸</span>
+                        </div>
+                      )}
+
                       <div className="flex justify-between">
                         <span className="text-xl font-bold text-[#31876D]">За {cloudMonthsNumber} {cloudMonthsNumber === 1 ? 'месяц' : cloudMonthsNumber < 5 ? 'месяца' : 'месяцев'}</span>
-                        <span className="text-xl font-bold text-[#31876D]">{cloudPricePreview?.total?.toLocaleString() ?? "—"} ₸</span>
+                        <span className="text-xl font-bold text-[#31876D]">
+                          {cloudPromoSuccess && cloudPromoDiscount > 0 && (
+                            <span className="text-sm text-gray-400 line-through mr-2">
+                              {cloudPricePreview?.total?.toLocaleString() ?? "—"} ₸
+                            </span>
+                          )}
+                          {finalCloudTotal?.toLocaleString() ?? "—"} ₸
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -2738,20 +3185,52 @@ const HomePage = memo(() => {
                   </div>
 
                   {/* Адрес откуда забрать вещи - для мобильной версии */}
-                  <div className="mb-6 order-5 lg:hidden">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Адрес откуда забрать вещи
-                    </label>
-                    <input
-                      type="text"
-                      value={cloudPickupAddress}
-                      onChange={(e) => {
-                        setCloudPickupAddress(e.target.value);
-                        setSubmitError(null);
-                      }}
-                      placeholder="Например: г.Алматы, Абая 25"
-                      className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white"
-                    />
+                  <div className="mb-6 order-5 lg:hidden w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
+                    <div className="flex flex-col gap-2 w-full">
+                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
+                      <input
+                        type="text"
+                        value={cloudStreetFrom}
+                        onChange={(e) => {
+                          setCloudStreetFrom(e.target.value);
+                          setSubmitError(null);
+                        }}
+                        placeholder="Микрорайон или улица"
+                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                      />
+                      <div className="flex gap-2 w-full">
+                        <input
+                          type="text"
+                          value={cloudHouseFrom}
+                          onChange={(e) => {
+                            setCloudHouseFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Дом"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudFloorFrom}
+                          onChange={(e) => {
+                            setCloudFloorFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Этаж"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudApartmentFrom}
+                          onChange={(e) => {
+                            setCloudApartmentFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Квартира"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Кнопка бронирования - для мобильной версии */}
@@ -2813,20 +3292,52 @@ const HomePage = memo(() => {
                   </div>
                   
                   {/* Адрес откуда забрать вещи */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-[#273655] mb-2">
-                      Адрес откуда забрать вещи
-                    </label>
-                    <input
-                      type="text"
-                      value={cloudPickupAddress}
-                      onChange={(e) => {
-                        setCloudPickupAddress(e.target.value);
-                        setSubmitError(null);
-                      }}
-                      placeholder="Например: г.Алматы, Абая 25"
-                      className="w-full h-12 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white"
-                    />
+                  <div className="mb-6 w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
+                    <div className="flex flex-col gap-2 w-full">
+                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
+                      <input
+                        type="text"
+                        value={cloudStreetFrom}
+                        onChange={(e) => {
+                          setCloudStreetFrom(e.target.value);
+                          setSubmitError(null);
+                        }}
+                        placeholder="Микрорайон или улица"
+                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                      />
+                      <div className="flex gap-2 w-full">
+                        <input
+                          type="text"
+                          value={cloudHouseFrom}
+                          onChange={(e) => {
+                            setCloudHouseFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Дом"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudFloorFrom}
+                          onChange={(e) => {
+                            setCloudFloorFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Этаж"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudApartmentFrom}
+                          onChange={(e) => {
+                            setCloudApartmentFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Квартира"
+                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                        />
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Кнопка обратного звонка */}

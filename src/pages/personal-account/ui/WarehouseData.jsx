@@ -490,15 +490,16 @@ const WarehouseData = () => {
           
           setMovingOrders(prevOrders => {
             // Проверяем, нет ли уже такого moving_order
-            const exists = prevOrders.some(order => order.status === "PENDING_TO");
+            const exists = prevOrders.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
             if (exists) {
-              console.log("⚠️ moving_order PENDING_TO уже существует");
+              console.log("⚠️ moving_order PENDING (TO_CLIENT) уже существует");
               return prevOrders;
             }
             
             const newOrder = {
               moving_date: returnDate.toISOString(),
-              status: "PENDING_TO",
+              status: "PENDING",
+              direction: "TO_CLIENT",
               address: movingAddressTo || movingAddressFrom || "",
             };
             
@@ -514,7 +515,7 @@ const WarehouseData = () => {
         if (oldOption && oldOption.type === "GAZELLE_TO") {
           console.log("🗑️ GAZELLE_TO удалена, удаляем moving_order");
           // Удаляем moving_order для возврата вещей
-          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+          setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
     }
@@ -528,7 +529,7 @@ const WarehouseData = () => {
       if (serviceToRemove?.service_id && serviceOptions.length > 0) {
         const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
         if (option && option.type === "GAZELLE_TO") {
-          setMovingOrders(prev => prev.filter(order => order.status !== "PENDING_TO"));
+          setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
       
@@ -2156,12 +2157,14 @@ const WarehouseData = () => {
                               orderData.moving_orders = [
                                 {
                                   moving_date: pickupDate.toISOString(),
-                                  status: 'PENDING_FROM',
+                                  status: 'PENDING',
+                                  direction: 'TO_WAREHOUSE',
                                   address: cloudPickupAddress.trim(),
                                 },
                                 {
                                   moving_date: returnDate.toISOString(),
-                                  status: 'PENDING_TO',
+                                  status: 'PENDING',
+                                  direction: 'TO_CLIENT',
                                   address: cloudPickupAddress.trim(),
                                 }
                               ];
@@ -2549,7 +2552,7 @@ const WarehouseData = () => {
                                                   setMovingAddressTo(e.target.value);
                                                   // Обновляем адрес в moving_order
                                                   setMovingOrders(prev => prev.map(order => 
-                                                    order.status === "PENDING_TO" 
+                                                    (order.status === "PENDING" && order.direction === "TO_CLIENT") 
                                                       ? { ...order, address: e.target.value }
                                                       : order
                                                   ));
@@ -2960,7 +2963,7 @@ const WarehouseData = () => {
                             const allMovingOrders = [];
                             
                             if (includeMoving && movingAddressFrom.trim()) {
-                              // Добавляем забор вещей (PENDING_FROM)
+                              // Добавляем забор вещей (PENDING с direction TO_WAREHOUSE)
                               const pickupDate = movingPickupDate 
                                 ? new Date(movingPickupDate)
                                 : new Date();
@@ -2968,7 +2971,8 @@ const WarehouseData = () => {
                               
                               allMovingOrders.push({
                                 moving_date: pickupDate.toISOString(),
-                                status: 'PENDING_FROM',
+                                status: 'PENDING',
+                                direction: 'TO_WAREHOUSE',
                                 address: movingAddressFrom.trim(),
                               });
                             }
@@ -2978,16 +2982,17 @@ const WarehouseData = () => {
                               console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
                               
                               // Используем moving_order из состояния или создаем новый
-                              const returnOrder = movingOrders.find(order => order.status === "PENDING_TO");
+                              const returnOrder = movingOrders.find(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
                               if (returnOrder && returnOrder.address && returnOrder.address.trim()) {
                                 console.log("✅ Используем существующий moving_order из состояния");
                                 allMovingOrders.push({
                                   moving_date: returnOrder.moving_date,
-                                  status: "PENDING_TO",
+                                  status: "PENDING",
+                                  direction: "TO_CLIENT",
                                   address: returnOrder.address.trim(),
                                 });
                               } else {
-                                console.log("✅ Создаем новый moving_order для PENDING_TO");
+                                console.log("✅ Создаем новый moving_order для возврата");
                                 // Создаем дату возврата: дата начала бронирования + количество месяцев
                                 const startDate = new Date(individualBookingStartDate || new Date());
                                 const returnDate = new Date(startDate);
@@ -3006,7 +3011,8 @@ const WarehouseData = () => {
                                 
                                 allMovingOrders.push({
                                   moving_date: returnDate.toISOString(),
-                                  status: "PENDING_TO",
+                                  status: "PENDING",
+                                  direction: "TO_CLIENT",
                                   address: returnAddress,
                                 });
                               }
@@ -3014,7 +3020,7 @@ const WarehouseData = () => {
                             
                             console.log("📦 Финальные moving_orders:", allMovingOrders);
 
-                            // is_selected_moving должен быть true, если есть любые moving_orders (включая PENDING_TO от GAZELLE_TO)
+                            // is_selected_moving должен быть true, если есть любые moving_orders (включая возврат от GAZELLE_TO)
                             const isMovingSelected = includeMoving || hasGazelleTo || allMovingOrders.length > 0;
 
                             const orderData = {

@@ -17,3 +17,6 @@ export { default as UserPayments } from './UserPayments';
 export { default as UserOrderCard } from './UserOrderCard';
 export { default as PaymentModal } from './PaymentModal';
 export { default as PaymentHistory } from './PaymentHistory';
+
+// Компоненты управления промокодами
+export { default as PromoCodeManagement } from './PromoCodeManagement';

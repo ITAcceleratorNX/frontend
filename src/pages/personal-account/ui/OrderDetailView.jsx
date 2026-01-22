@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../components/ui/dialog';
 import { 
   getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
 import EditLocationModal from './EditLocationModal';
+import { AlertTriangle, Unlock, Tag } from 'lucide-react';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -17,9 +19,26 @@ const getStorageTypeText = (type) => {
   return type || 'Не указано';
 };
 
-const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn }) => {
+const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn, onUnlockStorage, depositPrice = 0 }) => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+
+  // Расчёт суммы услуг
+  const getServicesTotal = () => {
+    if (!order.services || order.services.length === 0) return 0;
+    return order.services.reduce((total, service) => {
+      if (service.OrderService && service.OrderService.total_price) {
+        return total + parseFloat(service.OrderService.total_price);
+      }
+      return total;
+    }, 0);
+  };
+
+  const servicesTotal = getServicesTotal();
+  const totalBeforeDiscount = Number(order.total_price) + servicesTotal + Number(depositPrice);
+  const discountAmount = Number(order.discount_amount || 0);
+  const totalPrice = Math.max(0, totalBeforeDiscount - discountAmount);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -36,24 +55,35 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
   };
 
   const MOVING_STATUS_TEXT = {
-    PENDING_FROM: 'Ожидает забора',
-    PENDING_TO: 'Ожидает доставки',
-    IN_PROGRESS: 'В процессе (к складу)',
-    IN_PROGRESS_TO: 'В процессе (к клиенту)',
-    DELIVERED: 'Доставлено на склад',
-    DELIVERED_TO: 'Доставлено клиенту',
+    PENDING: 'Ожидает забора',
+    COURIER_ASSIGNED: 'Курьер назначен',
+    COURIER_IN_TRANSIT: 'Курьер в пути',
+    COURIER_AT_CLIENT: 'Курьер у клиента',
+    IN_PROGRESS: 'В пути',
+    DELIVERED: 'Доставлено',
+    FINISHED: 'Завершено',
     CANCELLED: 'Отменено',
   };
 
-  function getMovingStatusText(s) {
-    return MOVING_STATUS_TEXT[s] || s;
+  function getMovingStatusText(s, direction) {
+    const baseText = MOVING_STATUS_TEXT[s] || s;
+    if (s === 'PENDING') {
+      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+    }
+    if (s === 'IN_PROGRESS') {
+      return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+    }
+    if (s === 'DELIVERED') {
+      return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+    }
+    return baseText;
   }
 
   function getMovingStatusClass(s) {
     if (s === 'CANCELLED') return 'bg-red-50 text-red-700 border-red-200';
-    if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-50 text-green-700 border-green-200';
-    if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-50 text-blue-700 border-blue-200';
-    if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-50 text-amber-800 border-amber-200';
+    if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-50 text-green-700 border-green-200';
+    if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-50 text-blue-700 border-blue-200';
+    if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-50 text-amber-800 border-amber-200';
     return 'bg-gray-50 text-gray-700 border-gray-200';
   }
 
@@ -149,12 +179,58 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
         <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Финансовая информация</h3>
         <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
           <InfoRow label="Стоимость аренды" value={formatPrice(order.total_price)} />
+          {/* Услуги */}
+          {servicesTotal > 0 && (
+            <>
+              <Separator className="bg-gray-300" />
+              <InfoRow label="Стоимость услуг" value={formatPrice(servicesTotal)} />
+            </>
+          )}
+          {/* Депозит */}
+          {depositPrice > 0 && (
+            <>
+              <Separator className="bg-gray-300" />
+              <InfoRow label="Депозит" value={formatPrice(depositPrice)} />
+            </>
+          )}
+          {/* Промокод */}
+          {order.promo_code && (
+            <>
+              <Separator className="bg-gray-300" />
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm text-gray-600 flex items-center gap-1">
+                  <Tag className="w-3 h-3" />
+                  Промокод
+                </span>
+                <Badge className="bg-green-100 text-green-700 border-green-200">
+                  {order.promo_code.code} (-{order.promo_code.discount_percent}%)
+                </Badge>
+              </div>
+            </>
+          )}
+          {/* Скидка */}
+          {discountAmount > 0 && (
+            <>
+              <Separator className="bg-gray-300" />
+              <div className="flex justify-between items-center py-2 text-green-600">
+                <span className="text-sm">Скидка</span>
+                <span className="font-medium">-{formatPrice(discountAmount)}</span>
+              </div>
+            </>
+          )}
           <Separator className="bg-gray-300" />
           <div className="flex justify-between items-center py-3 pt-4 border-t-2 border-gray-300 mt-2">
             <span className="text-base font-semibold text-gray-900">Итого</span>
-            <span className="text-xl font-bold text-[#1e2c4f]">
-              {formatPrice(order.total_price)}
-            </span>
+            <div className="text-right">
+              {discountAmount > 0 && (
+                <span className="text-gray-400 line-through text-sm mr-2">
+                  {formatPrice(totalBeforeDiscount)}
+                </span>
+              )}
+              <span className="text-xl font-bold text-[#1e2c4f]">
+                {formatPrice(totalPrice)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -315,7 +391,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-gray-900">Перемещение #{index + 1}</span>
                     <Badge className={`text-xs border ${getMovingStatusClass(movingOrder.status)}`}>
-                      {getMovingStatusText(movingOrder.status)}
+                      {getMovingStatusText(movingOrder.status, movingOrder.direction)}
                     </Badge>
                   </div>
                   <div className="space-y-2 text-xs text-gray-600">
@@ -327,6 +403,12 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                       <div className="mt-2 pt-3 border-t border-gray-200">
                         <span className="font-medium text-gray-700">Адрес:</span>
                         <div className="mt-1 text-gray-700">{movingOrder.address}</div>
+                      </div>
+                    )}
+                    {movingOrder.delivery_time_interval && (
+                      <div className="mt-2 pt-3 border-t border-gray-200">
+                        <span className="font-medium text-gray-700">Время доставки:</span>
+                        <div className="mt-1 text-gray-700">{movingOrder.delivery_time_interval}</div>
                       </div>
                     )}
                   </div>
@@ -387,13 +469,18 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                   Клиент запросил возврат заказа. Подтвердите возврат, чтобы продолжить процесс расторжения контракта.
                 </p>
                 {order.cancel_reason && (
-                  <div className="mt-2 pt-2 border-t border-amber-200">
+                  <div className="mt-2 pt-2 border-t border-amber-200 space-y-1">
                     <p className="text-xs text-amber-600">
                       <span className="font-medium">Причина:</span> {order.cancel_reason}
                     </p>
                     {order.cancel_reason_comment && (
-                      <p className="text-xs text-amber-600 mt-1">
+                      <p className="text-xs text-amber-600">
                         <span className="font-medium">Комментарий:</span> {order.cancel_reason_comment}
+                      </p>
+                    )}
+                    {order.self_pickup_date && (
+                      <p className="text-xs text-amber-600">
+                        <span className="font-medium">Дата самовывоза:</span> {formatDate(order.self_pickup_date)}
                       </p>
                     )}
                   </div>
@@ -415,6 +502,126 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
           </div>
         </div>
       )}
+
+      {/* Кнопка разблокировки бокса для отмененных заказов с cancel_status === 'APPROVED' */}
+      {onUnlockStorage !== undefined && order.status === 'CANCELED' && order.cancel_status === 'SIGNED' && (
+        <div className="space-y-4 pt-6 border-t border-gray-200">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-red-900 mb-1">Бокс заблокирован</h4>
+                <p className="text-sm text-red-700">
+                  Заказ отменен, но бокс все еще заблокирован. Разблокируйте бокс, чтобы сделать его доступным для новых заказов.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setIsUnlockModalOpen(true)}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 min-w-[180px]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+              Разблокировать бокс
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно подтверждения разблокировки бокса */}
+      <Dialog open={isUnlockModalOpen} onOpenChange={setIsUnlockModalOpen}>
+        <DialogContent className="sm:max-w-[420px] p-0 rounded-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] p-5">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <Unlock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-lg font-bold text-white">
+                    Разблокировка бокса
+                  </DialogTitle>
+                  <DialogDescription className="text-white/80 text-sm mt-0.5">
+                    Подтверждение действия
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-5">
+            {/* Предупреждение */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-amber-100 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-amber-900 mb-1">
+                    Важное предупреждение
+                  </h4>
+                  <p className="text-sm text-amber-700">
+                    Перед разблокировкой бокса убедитесь, что клиент забрал все свои вещи и бокс полностью пуст.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Информация о заказе */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-5">
+              <p className="text-sm text-[#273655]">
+                <span className="font-medium">Заказ:</span> №{order.id}
+              </p>
+              {order.storage && (
+                <p className="text-sm text-[#273655] mt-1">
+                  <span className="font-medium">Бокс:</span> {order.storage.name || `#${order.storage.id}`}
+                </p>
+              )}
+            </div>
+
+            {/* Кнопки */}
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsUnlockModalOpen(false)}
+                className="flex-1 h-11 rounded-xl border-gray-200 text-[#273655] hover:bg-gray-50"
+              >
+                Отмена
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  onUnlockStorage(order.id);
+                  setIsUnlockModalOpen(false);
+                }}
+                disabled={isLoading}
+                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] hover:opacity-90 text-white"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Обработка...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Unlock className="w-4 h-4" />
+                    Подтвердить
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Модальное окно редактирования локации */}
       <EditLocationModal

@@ -6,6 +6,7 @@ import {
   getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
+import { Tag } from 'lucide-react';
 import EditLocationModal from './EditLocationModal';
 
 const getStorageTypeText = (type) => {
@@ -17,7 +18,7 @@ const getStorageTypeText = (type) => {
   return type;
 };
 
-const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLoading = false }) => {
+const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLoading = false, depositPrice = 0 }) => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   // Функции для форматирования
@@ -36,24 +37,34 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
   };
 // --- Moving statuses helpers ---
   const MOVING_STATUS_TEXT = {
-    PENDING_FROM:  'Ожидает забора',
-    PENDING_TO:    'Ожидает доставки',
-    IN_PROGRESS:   'В процессе (к складу)',
-    IN_PROGRESS_TO:'В процессе (к клиенту)',
-    DELIVERED:     'Доставлено на склад',
-    DELIVERED_TO:  'Доставлено клиенту',
+    PENDING:       'Ожидает забора',
+    COURIER_ASSIGNED: 'Курьер назначен',
+    COURIER_IN_TRANSIT: 'Курьер в пути',
+    COURIER_AT_CLIENT: 'Курьер у клиента',
+    IN_PROGRESS:   'В пути',
+    DELIVERED:     'Доставлено',
     CANCELLED:     'Отменено',
   };
 
-  function getMovingStatusText(s) {
-    return MOVING_STATUS_TEXT[s] || s;
+  function getMovingStatusText(s, direction) {
+    const baseText = MOVING_STATUS_TEXT[s] || s;
+    if (s === 'PENDING') {
+      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+    }
+    if (s === 'IN_PROGRESS') {
+      return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+    }
+    if (s === 'DELIVERED') {
+      return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+    }
+    return baseText;
   }
 
   function getMovingStatusClass(s) {
     if (s === 'CANCELLED') return 'bg-red-100 text-red-700 border-red-200';
-    if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-100 text-green-700 border-green-200';
-    if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-100 text-blue-700 border-blue-200';
-    if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-100 text-amber-800 border-amber-200';
+    if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-100 text-green-700 border-green-200';
+    if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-100 text-blue-700 border-blue-200';
+    if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-100 text-amber-800 border-amber-200';
     return 'bg-gray-100 text-gray-700 border-gray-200';
   }
 
@@ -281,11 +292,42 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                   <span className="text-gray-600">Аренда:</span>
                   <span className="font-medium text-[#1e2c4f]">{formatPrice(order.total_price)}</span>
                 </div>
+                {depositPrice > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Депозит:</span>
+                    <span className="font-medium text-[#1e2c4f]">{formatPrice(depositPrice)}</span>
+                  </div>
+                )}
+                {/* Промокод */}
+                {order.promo_code && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      <Tag className="w-3 h-3" />
+                      Промокод:
+                    </span>
+                    <Badge className="bg-green-100 text-green-700 border-green-200">
+                      {order.promo_code.code} (-{order.promo_code.discount_percent}%)
+                    </Badge>
+                  </div>
+                )}
+                {order.discount_amount && Number(order.discount_amount) > 0 && (
+                  <div className="flex justify-between items-center text-green-600">
+                    <span>Скидка:</span>
+                    <span className="font-medium">-{formatPrice(order.discount_amount)}</span>
+                  </div>
+                )}
                 <div className="pt-2 border-t border-green-200 flex justify-between items-center">
                   <span className="font-semibold text-gray-900">Итого:</span>
-                  <span className="font-bold text-[#1e2c4f] text-base">
-                    {formatPrice(order.total_price)}
-                  </span>
+                  <div className="text-right">
+                    {order.discount_amount && Number(order.discount_amount) > 0 && (
+                      <span className="text-gray-400 line-through text-xs mr-2">
+                        {formatPrice(Number(order.total_price) + Number(depositPrice))}
+                      </span>
+                    )}
+                    <span className="font-bold text-[#1e2c4f] text-base">
+                      {formatPrice(Math.max(0, Number(order.total_price) + Number(depositPrice) - Number(order.discount_amount || 0)))}
+                    </span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -611,7 +653,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-green-700">#{index + 1}</span>
                           <Badge className={`text-xs border ${getMovingStatusClass(movingOrder.status)}`}>
-                            {getMovingStatusText(movingOrder.status)}
+                            {getMovingStatusText(movingOrder.status, movingOrder.direction)}
                           </Badge>
                         </div>
                         

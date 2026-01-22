@@ -120,7 +120,7 @@ export const ordersApi = {
   },
 
   // Отмена договора (для USER с document_id и reason)
-  cancelContract: async ({ orderId, documentId, cancelReason, cancelComment }) => {
+  cancelContract: async ({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }) => {
     try {
       if (isDevelopment) {
         console.log(`OrdersAPI: Отмена договора для заказа ${orderId} с документом ${documentId}`);
@@ -129,6 +129,7 @@ export const ordersApi = {
         document_id: documentId,
         cancel_reason: cancelReason,
         cancel_comment: cancelComment,
+        self_pickup_date: selfPickupDate,
       });
       if (isDevelopment) {
         console.log('OrdersAPI: Договор успешно отменен:', response.data);
@@ -141,7 +142,7 @@ export const ordersApi = {
   },
 
   // Расторжение заказа (для USER без document_id, только с reason)
-  cancelOrder: async ({ orderId, cancelReason, cancelComment }) => {
+  cancelOrder: async ({ orderId, cancelReason, cancelComment, selfPickupDate }) => {
     try {
       if (isDevelopment) {
         console.log(`OrdersAPI: Расторжение заказа ${orderId}`);
@@ -149,6 +150,7 @@ export const ordersApi = {
       const response = await api.put(`/orders/${orderId}/cancel`, {
         cancel_reason: cancelReason,
         cancel_comment: cancelComment,
+        self_pickup_date: selfPickupDate,
       });
       if (isDevelopment) {
         console.log('OrdersAPI: Заказ успешно расторгнут:', response.data);
@@ -173,6 +175,23 @@ export const ordersApi = {
       return response.data;
     } catch (error) {
       console.error('OrdersAPI: Ошибка при подтверждении возврата:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Разблокировка бокса (для ADMIN/MANAGER)
+  unlockStorage: async (orderId) => {
+    try {
+      if (isDevelopment) {
+        console.log(`OrdersAPI: Разблокировка бокса для заказа ${orderId}`);
+      }
+      const response = await api.patch(`/orders/${orderId}/unlock-storage`);
+      if (isDevelopment) {
+        console.log('OrdersAPI: Бокс успешно разблокирован:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при разблокировке бокса:', error.response?.data || error.message);
       throw error;
     }
   },

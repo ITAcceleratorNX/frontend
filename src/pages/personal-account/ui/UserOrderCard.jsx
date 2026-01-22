@@ -23,21 +23,13 @@ import { Button } from '../../../components/ui/button';
 import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
 import { useCreateMoving, useCreateAdditionalServicePayment } from '../../../shared/lib/hooks/use-payments';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye } from 'lucide-react';
+import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
 import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
 import { ordersApi } from '../../../shared/api/ordersApi';
-import DatePicker from '../../../shared/ui/DatePicker';
-import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
-import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
-import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
-import furnitureImg from '../../../assets/cloud-tariffs/furniture.png';
-import shinaImg from '../../../assets/cloud-tariffs/shina.png';
-import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
-import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
-import skladImg from '../../../assets/cloud-tariffs/sklad.png';
+import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -64,7 +56,7 @@ const getVolumeUnit = (storageType) => {
   return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
 };
 
-const UserOrderCard = ({ order, onPayOrder }) => {
+const UserOrderCard = ({ order, onPayOrder, depositPrice = 0, embeddedMobile = false }) => {
   const navigate = useNavigate();
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
   const [isCancelExtendDialogOpen, setIsCancelExtendDialogOpen] = useState(false);
@@ -182,8 +174,8 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   );
 
   // Обработчик отмены договора
-  const handleCancelContract = ({ orderId, documentId, cancelReason, cancelComment }, callbacks = {}) => {
-    cancelContractMutation.mutate({ orderId, documentId, cancelReason, cancelComment }, callbacks);
+  const handleCancelContract = ({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }, callbacks = {}) => {
+    cancelContractMutation.mutate({ orderId, documentId, cancelReason, cancelComment, selfPickupDate }, callbacks);
   };
 
   const resetCancelSurvey = () => {
@@ -222,7 +214,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
     resetCancelSurvey();
   };
 
-  const handleSubmitCancelSurvey = () => {
+  const handleSubmitCancelSurvey = (selfPickupDate) => {
     if (!pendingCancelData?.orderId || !pendingCancelData?.documentId) {
       setCancelFormError('Не удалось определить договор. Попробуйте ещё раз.');
       return;
@@ -245,6 +237,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
         documentId: pendingCancelData.documentId,
         cancelReason: selectedCancelReason,
         cancelComment: cancelReasonComment.trim(),
+        selfPickupDate: selfPickupDate || null,
       },
       {
         onSuccess: () => {
@@ -267,24 +260,35 @@ const UserOrderCard = ({ order, onPayOrder }) => {
 
 // --- Moving statuses helpers (JS) ---
   const MOVING_STATUS_TEXT = {
-    PENDING_FROM:  'Ожидает забора',
-    PENDING_TO:    'Ожидает доставки',
-    IN_PROGRESS:   'В процессе (к складу)',
-    IN_PROGRESS_TO:'В процессе (к клиенту)',
-    DELIVERED:     'Доставлено на склад',
-    DELIVERED_TO:  'Доставлено клиенту',
+    PENDING:  'Ожидает забора',
+    COURIER_ASSIGNED: 'Курьер назначен',
+    COURIER_IN_TRANSIT: 'Курьер в пути',
+    COURIER_AT_CLIENT: 'Курьер у клиента',
+    IN_PROGRESS:   'В пути',
+    DELIVERED:     'Доставлено',
+    FINISHED: 'Завершено',
     CANCELLED:     'Отменено',
   };
 
-  function getMovingStatusText(s) {
-    return MOVING_STATUS_TEXT[s] || s;
+  function getMovingStatusText(s, direction) {
+    const baseText = MOVING_STATUS_TEXT[s] || s;
+    if (s === 'PENDING') {
+      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+    }
+    if (s === 'IN_PROGRESS') {
+      return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
+    }
+    if (s === 'DELIVERED') {
+      return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
+    }
+    return baseText;
   }
 
   function getMovingStatusBadgeClass(s) {
     if (s === 'CANCELLED') return 'bg-red-100 text-red-700 border border-red-200';
-    if (s === 'DELIVERED' || s === 'DELIVERED_TO') return 'bg-green-100 text-green-700 border border-green-200';
-    if (s === 'IN_PROGRESS' || s === 'IN_PROGRESS_TO') return 'bg-blue-100 text-blue-700 border border-blue-200';
-    if (s === 'PENDING_FROM' || s === 'PENDING_TO') return 'bg-amber-100 text-amber-800 border border-amber-200';
+    if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-100 text-green-700 border border-green-200';
+    if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-100 text-blue-700 border border-blue-200';
+    if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-100 text-amber-800 border border-amber-200';
     return 'bg-gray-100 text-gray-700 border border-gray-200';
   }
 
@@ -358,7 +362,14 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   };
 
   const months = calculateMonths();
-  const totalPrice = Number(order.total_price) + Number(totalPriceOfServices);
+  // total_price - это стоимость аренды (без скидки)
+  // discount_amount - это скидка от полной суммы (аренда + услуги + депозит)
+  // Исходная цена без скидки = аренда + услуги + депозит
+  const originalPrice = Number(order.total_price) + Number(totalPriceOfServices) + Number(depositPrice);
+  // Итоговая цена = исходная цена - скидка
+  const discountAmount = Number(order.discount_amount || 0);
+  const totalPrice = Math.max(0, originalPrice - discountAmount);
+  const hasPromoDiscount = discountAmount > 0;
   
   // Проверяем, есть ли услуга доставки (GAZELLE_FROM)
   const hasDeliveryService = order.services && order.services.some(service => 
@@ -451,13 +462,25 @@ const UserOrderCard = ({ order, onPayOrder }) => {
   const cardBackground = getCardBackground();
 
   return (
-    <div className={`${cardBackground} rounded-3xl p-6 text-white relative overflow-hidden shadow-lg`}>
+    <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
       {/* Статусные бейджи вверху - белые кнопки */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className={`flex flex-wrap items-center gap-1.5 min-[360px]:gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
         {order.status === 'ACTIVE' && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
             <Zap className="w-3.5 h-3.5 text-gray-500" />
             Активный
+          </span>
+        )}
+        {['APPROVED', 'PROCESSING'].includes(order.status) && (
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
+            <CheckCircle className="w-4 h-4 text-gray-500" />
+            Подтверждено
+          </span>
+        )}
+        {['CANCELED', 'FINISHED'].includes(order.status) && (
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
+            <FileText className="w-4 h-4 text-gray-500"/>
+            В архиве
           </span>
         )}
         {order.status === 'INACTIVE' && (
@@ -480,46 +503,20 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       </div>
 
       {/* Заголовок заказа и белый квадрат с идентификатором бокса */}
-      <div className="flex items-start justify-between mb-10 relative">
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2">Заказ №{order.id}</h3>
+      <div className={`flex items-start justify-between relative gap-2 ${embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}`}>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <h3 className={`font-bold mb-2 truncate ${embeddedMobile ? 'text-base min-[360px]:text-lg' : 'text-2xl'}`}>Заказ №{order.id}</h3>
           <p className="text-white/90 text-xs mb-1">Создан: {formatDate(order.created_at)}</p>
           <p className="text-white/90 text-sm mb-1">Тип: {getStorageTypeText(order.storage?.storage_type || 'INDIVIDUAL')}</p>
           <p className="text-white/90 text-sm">Объем: {order.total_volume} {getVolumeUnit(order.storage?.storage_type || 'INDIVIDUAL')}</p>
         </div>
         {/* Белый квадрат с идентификатором бокса или иконка тарифа для облачного хранения */}
-        {order.storage?.storage_type === 'CLOUD' ? (
-          (() => {
-            const tariffInfo = getTariffInfo(order.tariff_type);
-            
-            if (tariffInfo.image) {
-              return (
-                <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-4">
-                  <img 
-                    src={tariffInfo.image} 
-                    alt={tariffInfo.name} 
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-              );
-            } else {
-              // Для "Свои габариты" показываем текст вместо иконки
-              return (
-                <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-3">
-                  <span className="text-xs font-bold text-gray-900 text-center leading-tight">Свои габариты</span>
-                </div>
-              );
-            }
-          })()
-        ) : order.storage && order.storage.name ? (
-          <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
-            <span className="text-4xl font-bold text-gray-900">{order.storage.name}</span>
-          </div>
-        ) : null}
+        <StorageBadge order={order} embeddedMobile={embeddedMobile} />
+
       </div>
 
       {/* Информация о датах и оплате в двух колонках */}
-      <div className="mb-10 grid grid-cols-2 gap-4">
+      <div className={`grid gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'mb-4 min-[360px]:mb-6 grid-cols-1' : 'mb-10 grid-cols-2'}`}>
         <div className="space-y-2">
           <p className="text-white/90 text-xs">Дата начала:</p>
           <p className="text-white text-sm">{formatDate(order.start_date)}</p>
@@ -527,14 +524,29 @@ const UserOrderCard = ({ order, onPayOrder }) => {
           <p className="text-white text-sm">{formatDate(order.end_date)}</p>
         </div>
         <div className="space-y-2">
-          <p className="text-white/90 text-xs">Сумма к оплате:</p>
+          <p className="text-white/90 text-xs">Стоимость аренды:</p>
           <p className="text-white text-sm">{formatPrice(order.total_price)} 〒</p>
+          {/* Информация о промокоде */}
+          {order.promo_code && (
+            <div className="mt-2">
+              <div className="flex items-center gap-1 text-white/90 text-xs">
+                <Tag className="w-3 h-3" />
+                Промокод:
+              </div>
+              <p className="text-white text-sm font-medium">{order.promo_code.code}</p>
+              {discountAmount > 0 && (
+                <p className="text-green-300 text-xs">
+                  Скидка: -{formatPrice(discountAmount)} ({order.promo_code.discount_percent}%)
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Договоры */}
       {order.contracts && order.contracts.length > 0 && (
-        <div className="mb-10">
+        <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}>
           <p className="text-white/90 text-sm mb-2">Договоры:</p>
           
           <div className="space-y-2">
@@ -624,7 +636,7 @@ const UserOrderCard = ({ order, onPayOrder }) => {
 
       {/* Предметы */}
       {order.items && order.items.length > 0 && (
-        <div className="mb-10">
+        <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}>
           <p className="text-white/90 text-sm mb-2">Предметы:</p>
           
           <div className="space-y-2">
@@ -741,11 +753,24 @@ const UserOrderCard = ({ order, onPayOrder }) => {
       )}
 
       {/* Итого и кнопки действий */}
-      <div className="mt-6">
-        <div className="flex items-start justify-between gap-4">
+      <div className={embeddedMobile ? 'mt-3 min-[360px]:mt-4' : 'mt-6'}>
+        <div className={`flex items-start justify-between gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'flex-col sm:flex-row' : ''}`}>
           <div>
             <p className="text-white text-sm mb-1">ИТОГ</p>
-            <p className="text-white text-3xl font-bold">{formatPrice(totalPrice)} 〒</p>
+            {hasPromoDiscount ? (
+              <div>
+                <p className="text-white/60 text-lg line-through">{formatPrice(originalPrice)} 〒</p>
+                <p className={`text-white font-bold ${embeddedMobile ? 'text-xl min-[360px]:text-2xl' : 'text-3xl'}`}>{formatPrice(totalPrice)} 〒</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <Tag className="w-3 h-3 text-green-300" />
+                  <span className="text-green-300 text-xs">
+                    Скидка {order.promo_code?.discount_percent}%: -{formatPrice(discountAmount)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className={`text-white font-bold ${embeddedMobile ? 'text-xl min-[360px]:text-2xl' : 'text-3xl'}`}>{formatPrice(totalPrice)} 〒</p>
+            )}
           </div>
           
           <div className="flex flex-col items-end gap-2">
@@ -963,6 +988,7 @@ const CancelSurveyModal = ({
   const [pickupMethod, setPickupMethod] = useState(null);
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [selfPickupDate, setSelfPickupDate] = useState('');
 
   const createMovingMutation = useCreateMoving();
   const createAdditionalServicePaymentMutation = useCreateAdditionalServicePayment();
@@ -976,6 +1002,7 @@ const CancelSurveyModal = ({
       setPickupMethod(null);
       setDeliveryDate('');
       setDeliveryAddress('');
+      setSelfPickupDate('');
     }
   }, [isOpen]);
 
@@ -988,7 +1015,8 @@ const CancelSurveyModal = ({
       await createMovingMutation.mutateAsync({
         orderId,
         movingDate: deliveryDate,
-        status: 'PENDING_TO',
+        status: 'PENDING',
+        direction: 'TO_CLIENT',
         address: deliveryAddress || null
       });
 
@@ -999,7 +1027,7 @@ const CancelSurveyModal = ({
       
       // После успешной оплаты автоматически отправляем запрос на отмену
       if (paymentResult?.payment_page_url) {
-        onSubmit();
+        onSubmit(null); // Для доставки не передаём selfPickupDate
         window.location.href = paymentResult.payment_page_url;
       }
     } catch (error) {
@@ -1007,174 +1035,198 @@ const CancelSurveyModal = ({
     }
   };
 
+  const handleSelfPickupSubmit = () => {
+    onSubmit(selfPickupDate || null);
+  };
+
+  // Проверка валидности для кнопки подтверждения
+  const isSelfPickupValid = pickupMethod === 'self' && selfPickupDate;
+  const isSubmitDisabled = isSubmitting || (needsPickupMethod && (!pickupMethod || (pickupMethod === 'self' && !selfPickupDate)));
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-visible">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили отменить?</DialogTitle>
-          <DialogDescription>
-            Ваш ответ поможет улучшить сервис и условия хранения. Пожалуйста, выберите подходящую причину.
+      <DialogContent className="sm:max-w-[460px] max-h-[85vh] overflow-visible p-0 rounded-2xl">
+        {/* Заголовок */}
+        <DialogHeader className="px-5 pt-5 pb-3">
+          <DialogTitle className="text-lg font-bold text-[#273655]">Расторжение договора</DialogTitle>
+          <DialogDescription className="text-xs text-[#8A8A8A]">
+            Укажите причину и способ получения вещей
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto pr-1">
+        <div className="px-5 pb-3 max-h-[50vh] overflow-y-auto">
           {isLoadingDetails ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#273655]"></div>
+            <div className="flex items-center justify-center py-6">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#00A991]"></div>
             </div>
           ) : (
             <>
-              <div className="space-y-3 mb-4">
-              {CANCEL_REASON_OPTIONS.map((option) => (
-                <label
-                  key={option.value}
-                  className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
-                    selectedReason === option.value
-                      ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                      : 'border-gray-200 hover:border-[#c7d2fe]'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="cancel-reason"
-                    className="mt-1 h-4 w-4"
-                    checked={selectedReason === option.value}
-                    onChange={() => onSelectReason(option.value)}
-                  />
-                  <span className="text-sm text-gray-800">{option.label}</span>
-                </label>
-              ))}
-            </div>
-
-            {selectedReason === 'other' && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
-                <textarea
-                  className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
-                  rows={4}
-                  placeholder="Например: хочу поделиться предложениями по улучшению..."
-                  value={comment}
-                  onChange={(e) => onCommentChange(e.target.value)}
-                />
-              </div>
-            )}
-
-            {/* Блок выбора способа получения вещей */}
-            {selectedReason && needsPickupMethod && (
-              <div className="mt-6 space-y-4 border-t pt-4">
-                <p className="text-sm font-medium text-gray-700">Как вы хотите получить вещи?</p>
-                
-                <div className="space-y-3">
-                  <label
-                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
-                      pickupMethod === 'self'
-                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                        : 'border-gray-200 hover:border-[#c7d2fe]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="pickup-method"
-                      className="mt-1 h-4 w-4"
-                      checked={pickupMethod === 'self'}
-                      onChange={() => setPickupMethod('self')}
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-800 block">Забрать вещи самому</span>
-                      {orderDetails?.warehouseAddress && (
-                        <span className="text-xs text-gray-600 mt-1 block">
-                          <MapPin className="w-3 h-3 inline mr-1" />
-                          {orderDetails.warehouseAddress}
-                        </span>
-                      )}
-                    </div>
-                  </label>
-
-                  <label
-                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
-                      pickupMethod === 'delivery'
-                        ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                        : 'border-gray-200 hover:border-[#c7d2fe]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="pickup-method"
-                      className="mt-1 h-4 w-4"
-                      checked={pickupMethod === 'delivery'}
-                      onChange={() => setPickupMethod('delivery')}
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-800 block">Заказать доставку</span>
-                      {orderDetails?.gazelleToPrice && (
-                        <span className="text-xs text-gray-600 mt-1 block">
-                          Стоимость: {orderDetails.gazelleToPrice.toLocaleString('ru-RU')} ₸
-                        </span>
-                      )}
-                    </div>
-                  </label>
+              {/* Причина отмены - компактные теги */}
+              <div className="mb-4">
+                <p className="text-sm font-medium text-[#273655] mb-2">Причина</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {CANCEL_REASON_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => onSelectReason(option.value)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        selectedReason === option.value
+                          ? 'bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white'
+                          : 'bg-gray-100 text-[#273655] hover:bg-gray-200'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
-
-                {/* Форма для доставки */}
-                {pickupMethod === 'delivery' && (
-                  <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-xl">
-                    <div>
-                      <DatePicker
-                        label="Дата доставки"
-                        value={deliveryDate}
-                        onChange={setDeliveryDate}
-                        placeholder="Выберите дату доставки"
-                        minDate={new Date().toISOString().split('T')[0]}
-                        allowFutureDates={true}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">
-                        Адрес доставки (необязательно)
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
-                        placeholder="Введите адрес доставки"
-                        value={deliveryAddress}
-                        onChange={(e) => setDeliveryAddress(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+              {selectedReason === 'other' && (
+                <div className="mb-4">
+                  <textarea
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#00A991] focus:outline-none resize-none"
+                    rows={2}
+                    placeholder="Опишите причину..."
+                    value={comment}
+                    onChange={(e) => onCommentChange(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {/* Блок выбора способа получения вещей */}
+              {selectedReason && needsPickupMethod && (
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-sm font-medium text-[#273655] mb-2">Как заберёте вещи?</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Самовывоз */}
+                    <button
+                      type="button"
+                      onClick={() => setPickupMethod('self')}
+                      className={`p-3 rounded-xl text-left transition-all ${
+                        pickupMethod === 'self'
+                          ? 'bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Package className={`w-4 h-4 ${pickupMethod === 'self' ? 'text-white' : 'text-[#00A991]'}`} />
+                        <span className={`font-medium text-sm ${pickupMethod === 'self' ? 'text-white' : 'text-[#273655]'}`}>Самовывоз</span>
+                      </div>
+                      <p className={`text-xs ${pickupMethod === 'self' ? 'text-white/80' : 'text-[#8A8A8A]'}`}>Бесплатно</p>
+                    </button>
+
+                    {/* Доставка */}
+                    <button
+                      type="button"
+                      onClick={() => setPickupMethod('delivery')}
+                      className={`p-3 rounded-xl text-left transition-all ${
+                        pickupMethod === 'delivery'
+                          ? 'bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Truck className={`w-4 h-4 ${pickupMethod === 'delivery' ? 'text-white' : 'text-[#00A991]'}`} />
+                        <span className={`font-medium text-sm ${pickupMethod === 'delivery' ? 'text-white' : 'text-[#273655]'}`}>Доставка</span>
+                      </div>
+                      <p className={`text-xs ${pickupMethod === 'delivery' ? 'text-white/80' : 'text-[#8A8A8A]'}`}>
+                        {orderDetails?.gazelleToPrice 
+                          ? `${orderDetails.gazelleToPrice.toLocaleString('ru-RU')} ₸`
+                          : 'Платная'
+                        }
+                      </p>
+                    </button>
+                  </div>
+
+                  {/* Форма для самовывоза */}
+                  {pickupMethod === 'self' && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-xl space-y-2">
+                      {orderDetails?.warehouseAddress && (
+                        <div className="flex items-start gap-2 text-white/90">
+                          <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                          <span className="text-xs">{orderDetails.warehouseAddress}</span>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-xs font-medium text-white/90 block mb-1">Когда заберёте?</label>
+                        <input
+                          type="date"
+                          value={selfPickupDate}
+                          onChange={(e) => setSelfPickupDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Форма для доставки */}
+                  {pickupMethod === 'delivery' && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-xl space-y-2">
+                      <div>
+                        <label className="text-xs font-medium text-white/90 block mb-1">Дата доставки</label>
+                        <input
+                          type="date"
+                          value={deliveryDate}
+                          onChange={(e) => setDeliveryDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-white/90 block mb-1">Адрес доставки</label>
+                        <input
+                          type="text"
+                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/60"
+                          placeholder="г. Алматы, Абая 25"
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-xs text-red-600">{error}</p>
+                </div>
+              )}
             </>
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-4">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Закрыть
-          </Button>
+        {/* Кнопки */}
+        <div className="px-5 py-4 border-t border-gray-100 bg-white rounded-b-2xl flex gap-2">
+          <button 
+            onClick={onClose} 
+            className="flex-1 h-10 rounded-xl border border-gray-200 text-[#273655] text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            Отмена
+          </button>
           {pickupMethod === 'delivery' && selectedReason ? (
-            <Button
+            <button
               onClick={handleDeliverySubmit}
               disabled={isSubmitting || !deliveryDate || createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+              className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {(createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending)
                 ? 'Обработка…' 
-                : `Оплатить доставку (${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸)`}
-            </Button>
+                : `Оплатить ${orderDetails?.gazelleToPrice?.toLocaleString('ru-RU') || 0} ₸`}
+            </button>
           ) : (
-            <Button
-              onClick={onSubmit}
-              disabled={isSubmitting || (needsPickupMethod && !pickupMethod)}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            <button
+              onClick={handleSelfPickupSubmit}
+              disabled={isSubmitDisabled}
+              className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Отправка…' : 'Подтвердить отмену'}
-            </Button>
+              {isSubmitting ? 'Отправка…' : 'Подтвердить'}
+            </button>
           )}
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -17,8 +17,10 @@ import UserDelivery from './ui/UserDelivery';
 import UserOrdersPage from './ui/UserOrdersPage';
 import ItemSearch from './ui/ItemSearch';
 import Statistics from './ui/Statistics';
+import PromoCodeManagement from './ui/PromoCodeManagement';
 import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
 import MobileSidebar from './ui/MobileSidebar';
+import MobileOrdersLayout from './ui/MobileOrdersLayout';
 import '@szhsin/react-menu/dist/index.css';
 
 import { 
@@ -45,6 +47,9 @@ const PersonalAccountPage = memo(() => {
     }
     return 'personal';
   });
+
+  // Последняя вкладка orders/payments/delivery для кнопки «Назад» на мобильных (Профиль / Уведомления)
+  const [lastOrdersTab, setLastOrdersTab] = useState('orders');
 
 
   // Сбрасываем раздел чата для ролей USER и MANAGER
@@ -101,6 +106,14 @@ const PersonalAccountPage = memo(() => {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
+  // При переходе в Профиль/Уведомления с Брони/Платежи/Доставка — запоминаем вкладку для «Назад»
+  const handleMobileNav = (newNav) => {
+    if (['personal', 'notifications'].includes(newNav) && ['orders', 'payments', 'delivery'].includes(activeNav)) {
+      setLastOrdersTab(activeNav);
+    }
+    setActiveNav(newNav);
+  };
+
   // Выбор компонента уведомлений в зависимости от роли
   const getNotificationsComponent = () => {
     if (!user) return null;
@@ -127,6 +140,19 @@ const PersonalAccountPage = memo(() => {
           <p className="text-xl text-gray-600">Загрузка...</p>
         </div>
       </div>
+    );
+  }
+
+    // Мобильный layout для USER: Брони | Платежи | Доставка | Профиль | Уведомления (один хедер, для Профиля/Уведомлений — кнопка «Назад»)
+  const useMobileOrdersLayout = isMobile && user?.role === 'USER' && ['orders', 'payments', 'delivery', 'personal', 'notifications'].includes(activeNav);
+
+  if (useMobileOrdersLayout) {
+    return (
+      <MobileOrdersLayout
+        activeNav={activeNav}
+        setActiveNav={handleMobileNav}
+        lastOrdersTab={lastOrdersTab}
+      />
     );
   }
 
@@ -161,11 +187,12 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'delivery' && <UserDelivery />}
           {activeNav === 'itemsearch' && <ItemSearch />}
           {activeNav === 'statistics' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <Statistics />}
+          {activeNav === 'promocodes' && user?.role === 'ADMIN' && <PromoCodeManagement />}
         </main>
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated, user, isMobile]);
+  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab]);
 
   if (import.meta.env.DEV) {
     console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 

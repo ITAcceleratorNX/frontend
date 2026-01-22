@@ -203,13 +203,12 @@ const CallbackRequestModal = ({
             </div>
 
             {showRegisterPrompt && (
-              <div className="rounded-xl border border-dashed border-[#273655]/20 bg-white/80 p-3 text-sm text-[#273655]">
-                <span className="text-[#6B6B6B]">Или&nbsp;</span>
-                <Link to="/register" className="font-semibold text-[#273655] underline underline-offset-4">
-                  зарегистрируйтесь
+              <div className="rounded-xl border border-dashed border-[#00A991]/30 bg-[#00A991]/5 p-3 text-sm">
+                <Link to="/register" className="font-semibold text-[#00A991] underline underline-offset-4">
+                  Зарегистрируйтесь
                 </Link>
-                <span className="text-[#6B6B6B]">
-                  , чтобы открыть личный кабинет и воспользоваться дополнительными возможностями.
+                <span className="text-[#273655]">
+                  {' '}и бронируйте бокс самостоятельно — быстро и без ожидания звонка
                 </span>
               </div>
             )}

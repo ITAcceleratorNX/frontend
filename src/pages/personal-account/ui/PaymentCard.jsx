@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { toast } from 'react-toastify';
-import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
-import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
-import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
-import furnitureImg from '../../../assets/cloud-tariffs/furniture.png';
-import shinaImg from '../../../assets/cloud-tariffs/shina.png';
-import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
-import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
-import skladImg from '../../../assets/cloud-tariffs/sklad.png';
+import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -51,7 +44,7 @@ const getMonthName = (month) => {
   return months[month - 1] || month;
 };
 
-const PaymentCard = ({ order }) => {
+const PaymentCard = ({ order, embeddedMobile = false }) => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
 
@@ -101,8 +94,12 @@ const PaymentCard = ({ order }) => {
   };
 
 
-  const handlePay = (paymentId) => {
-    createManualPaymentMutation.mutate(paymentId);
+  const handlePay = (payment) => {
+    if (payment.payment_page_url) {
+      window.open(payment.payment_page_url, '_blank');
+      return;
+    }
+    createManualPaymentMutation.mutate(payment.id);
   };
 
   const handleDownloadReceipt = (paymentId) => {
@@ -128,7 +125,7 @@ const PaymentCard = ({ order }) => {
             </button>
             <button
               onClick={() => handleDownloadReceipt(payment.id)}
-              disabled={downloadReceiptMutation.isLoading}
+              disabled={downloadReceiptMutation.isPending}
               className="text-white/90 text-xs font-medium hover:text-white transition-colors underline"
             >
               Скачать PDF - чек
@@ -137,7 +134,7 @@ const PaymentCard = ({ order }) => {
         ) : payment.status === 'MANUAL' ? (
           <>
             <button
-              onClick={() => handlePay(payment.id)}
+              onClick={() => handlePay(payment)}
               disabled={createManualPaymentMutation.isLoading}
               className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
             >
@@ -167,49 +164,22 @@ const PaymentCard = ({ order }) => {
   );
 
   return (
-    <div className={`${cardBackground} rounded-3xl p-6 text-white relative overflow-hidden shadow-lg`}>
+    <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
       {/* Заголовок заказа */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2">Заказ №{order.id}</h3>
+      <div className={`flex items-start justify-between gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <h3 className={`font-bold mb-2 truncate ${embeddedMobile ? 'text-base min-[360px]:text-lg' : 'text-2xl'}`}>Заказ №{order.id}</h3>
           <p className="text-xs text-white/90 mb-1">Создан: {formatDate(order.created_at)}</p>
           <p className="text-sm text-white/90">Тип: {getStorageTypeText(order.storage_type)}</p>
           <p className="text-sm text-white/90">Объем: {order.volume} м³</p>
         </div>
         
         {/* Белый квадрат с идентификатором бокса */}
-        {order?.storage?.storage_type === 'CLOUD' ? (
-            (() => {
-              const tariffInfo = getTariffInfo(order.tariff_type);
-
-              if (tariffInfo.image) {
-                return (
-                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-4">
-                      <img
-                          src={tariffInfo.image}
-                          alt={tariffInfo.name}
-                          className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
-                );
-              } else {
-                // Для "Свои габариты" показываем текст вместо иконки
-                return (
-                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4 p-3">
-                      <span className="text-xs font-bold text-gray-900 text-center leading-tight">Свои габариты</span>
-                    </div>
-                );
-              }
-            })()
-        ) : order.storage && order.storage.name ? (
-            <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 ml-4">
-              <span className="text-4xl font-bold text-gray-900">{order.storage.name}</span>
-            </div>
-        ) : null}
+        <StorageBadge order={order} embeddedMobile={embeddedMobile} />
       </div>
 
       {/* Платежи по месяцам */}
-      <div className="mb-6">
+      <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
         <h4 className="text-[#D3D3D3] text-xs font-medium mb-4">Платежи по месяцам</h4>
         <div className="space-y-4">
           {/* Текущий платеж - всегда видимый */}

@@ -11,12 +11,12 @@ import { Card, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Separator } from '../../../components/ui/separator';
-import { CheckCircle, Package } from 'lucide-react';
+import { CheckCircle, Package, Tag } from 'lucide-react';
 import { useApproveOrder } from '../../../shared/lib/hooks/use-orders';
 import { getCargoMarkText } from '../../../shared/lib/types/orders';
 import {toast} from "react-toastify";
 
-const OrderConfirmModal = ({ isOpen, order, onClose }) => {
+const OrderConfirmModal = ({ isOpen, order, onClose, depositPrice = 0 }) => {
   const approveOrderMutation = useApproveOrder();
 
   // Функция для получения иконки услуги по типу
@@ -140,11 +140,21 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
     }, 0);
   };
 
-  // Общая сумма: аренда + услуги
+  // Общая сумма: аренда + услуги + депозит - скидка
   const getTotalPrice = () => {
     const basePrice = parseFloat(order.total_price) || 0;
     const servicesPrice = getServicesTotal();
-    return basePrice + servicesPrice;
+    const deposit = parseFloat(depositPrice) || 0;
+    const discount = parseFloat(order.discount_amount) || 0;
+    return Math.max(0, basePrice + servicesPrice + deposit - discount);
+  };
+  
+  // Сумма до скидки
+  const getTotalBeforeDiscount = () => {
+    const basePrice = parseFloat(order.total_price) || 0;
+    const servicesPrice = getServicesTotal();
+    const deposit = parseFloat(depositPrice) || 0;
+    return basePrice + servicesPrice + deposit;
   };
 
   if (!isOpen || !order) return null;
@@ -287,15 +297,54 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                     <span className="text-sm text-gray-600">Стоимость услуг:</span>
                     <span className="text-lg font-bold text-amber-600">{formatPrice(getServicesTotal())} ₸</span>
                   </div>
+                </>
+              )}
+              
+              {/* Депозит */}
+              {depositPrice > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Депозит:</span>
+                  <span className="text-lg font-bold text-[#1e2c4f]">{formatPrice(depositPrice)} ₸</span>
+                </div>
+              )}
+              
+              <Separator />
+              
+              {/* Промокод и скидка */}
+              {order.promo_code && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    Промокод:
+                  </span>
+                  <Badge className="bg-green-100 text-green-700 border-green-200">
+                    {order.promo_code.code} (-{order.promo_code.discount_percent}%)
+                  </Badge>
+                </div>
+              )}
+              
+              {order.discount_amount && Number(order.discount_amount) > 0 && (
+                <>
+                  <div className="flex justify-between items-center text-green-600">
+                    <span className="text-sm">Скидка:</span>
+                    <span className="text-lg font-bold">-{formatPrice(order.discount_amount)} ₸</span>
+                  </div>
                   <Separator />
                 </>
               )}
               
               <div className="flex justify-between items-center p-3 bg-[#1e2c4f] rounded-md text-white">
                 <span className="text-sm font-medium">Общая сумма:</span>
-                <span className="text-xl font-bold">
-                  {formatPrice(getTotalPrice())} ₸
-                </span>
+                <div className="text-right">
+                  {order.discount_amount && Number(order.discount_amount) > 0 && (
+                    <span className="text-gray-300 line-through text-sm mr-2">
+                      {formatPrice(getTotalBeforeDiscount())} ₸
+                    </span>
+                  )}
+                  <span className="text-xl font-bold">
+                    {formatPrice(getTotalPrice())} ₸
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
