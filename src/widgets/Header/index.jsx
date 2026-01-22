@@ -130,8 +130,8 @@ export const Header = memo(() => {
           clsx(
               "fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full",
               isScrolled
-                  ? "bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 backdrop-blur-sm shadow-md"
-                  : "bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 backdrop-blur-sm"
+                  ? "bg-[#FFF] backdrop-blur-sm shadow-md"
+                  : "bg-[#FFF] backdrop-blur-sm"
           )
       , [isScrolled]);
 

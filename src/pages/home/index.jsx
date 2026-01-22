@@ -23,7 +23,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, CreditCard } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
@@ -1969,7 +1969,7 @@ const HomePage = memo(() => {
     <div className="font-['Montserrat'] min-h-screen bg-white flex flex-col">
       <Header />
 
-      <div className="flex-1 relative overflow-hidden bg-gradient-to-r from-[#E0F2FE] to-white -mt-16 pt-16">
+      <div className="flex-1 relative overflow-hidden bg-gradient-to-r bg-[#FFF] -mt-16 pt-16">
         {/* Декоративные элементы на фоне - начинаются от самого верха страницы */}
         <div className="absolute inset-0 pointer-events-none overflow-visible z-0">
           {/* Большой круг слева */}
@@ -1985,7 +1985,7 @@ const HomePage = memo(() => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Левая часть - текст */}
-            <div className="space-y-4">
+            <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
                 Храните там,
@@ -2024,29 +2024,22 @@ const HomePage = memo(() => {
                         Облачное хранение
                         </h3>
                         <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                        Хранение вещей без вашего приезда на склад <br />
-Мы забираем ваши вещи, аккуратно упаковываем их в фирменные коробки, размещаем на складе и возвращаем по запросу. 
-Все операции: размещение, возврат и управление вещами, выполняются онлайн.
+                          Сдайте вещи без аренды бокса — мы разместим их на индивидуальной полке в охраняемом складе. Удобно, если вещей немного.
 
                         </p>
                         <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>экономия времени — все процессы организованы без вашего участия;</span>
+                            <span>Платите только за объём</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>не нужно покупать коробки и упаковочные материалы;</span>
+                            <span>Быстрая приёмка вещей</span>
                             
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>аккуратная логистика и бережная работа с вещами;</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>сервис подходит как для личных вещей, так и для бизнеса;
-                            </span>
+                            <span>Упрощённый доступ</span>
                           </li>
                         </ul>
                         <button
@@ -2081,30 +2074,16 @@ const HomePage = memo(() => {
                         Индивидуальное хранение
                         </h3>
                         <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                        Надёжное и удобное хранение в личном складе <br />
-Персональный закрытый склад для самостоятельного хранения ваших вещей. Вы полностью контролируете доступ, размещение и использование пространства. При необходимости вы можете как самостоятельно привозить и забирать вещи, так и доверить эти процессы нашей команде.
-
+                          Ваш личный закрытый бокс. Только вы имеете доступ — как мини-склад под ключ.
                         </p>
                         <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>круглосуточный доступ к боксу без согласований;</span>
+                            <span>Полная приватность</span>
                           </li>
                           <li className="flex items-start">
                             <span className="mr-2">•</span>
-                            <span>индивидуальный доступ — только для вас;</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>возможность установки и использования стеллажей;</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>постоянная физическая охрана объекта;</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>условия, обеспечивающие безопасное хранение имущества;</span>
+                            <span>Круглосуточный доступ</span>
                           </li>
                         </ul>
                         <button
@@ -2142,13 +2121,13 @@ const HomePage = memo(() => {
       </div>
 
       {/* Анимированная бегущая строка с преимуществами */}
-      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white pb-6 overflow-hidden relative">
+      <section className="w-full bg-[#FFF] pb-6 overflow-hidden relative">
         <div className="flex animate-scroll">
           {/* Первый набор элементов */}
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
+              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2156,7 +2135,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2183,7 +2162,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2210,7 +2189,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -2248,10 +2227,10 @@ const HomePage = memo(() => {
       </section>
 
       {/* Отступ с фоном хэдера */}
-      <div className="w-full bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 h-4 sm:h-8"></div>
+      <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
 
       {/* Второй фрейм: преимущества */}
-      <section ref={tabsSectionRef} className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-6 sm:py-8">
+      <section ref={tabsSectionRef} className="w-full bg-[#FFF] py-6 sm:py-8">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {/* Заголовок */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">
@@ -2265,7 +2244,7 @@ const HomePage = memo(() => {
               onClick={() => setActiveStorageTab("INDIVIDUAL")}
               className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
                 activeStorageTab === "INDIVIDUAL"
-                  ? "bg-[#00A991] text-white"
+                  ? "bg-gradient-to-r from-[#00A991] to-[#31876D] text-white"
                   : "bg-gray-100/50 text-gray-600"
               }`}
             >
@@ -2275,7 +2254,7 @@ const HomePage = memo(() => {
               onClick={() => setActiveStorageTab("CLOUD")}
               className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
                 activeStorageTab === "CLOUD"
-                  ? "bg-[#00A991] text-white"
+                  ? "bg-gradient-to-r from-[#00A991] to-[#31876D] text-white"
                   : "bg-gray-100/50 text-gray-600"
               }`}
             >
@@ -3437,10 +3416,10 @@ const HomePage = memo(() => {
       )}
 
       {/* Отступ с фоном хэдера */}
-      <div className="w-full bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 h-4 sm:h-8"></div>
+      <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
 
       {/* Инструкция по бронированию */}
-      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-8 md:py-12 px-4 md:px-6 lg:px-8">
+      <section className="w-full bg-[#FFF] py-8 md:py-12 px-4 md:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#273655] mb-6 md:mb-8 text-center">
             Простой процесс бронирования бокса
@@ -3591,7 +3570,7 @@ const HomePage = memo(() => {
       </section>
 
       {/* Шестой фрейм: филиалы Extra Space */}
-      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white font-['Montserrat'] py-6 sm:py-8">
+      <section className="w-full bg-[#FFF] font-['Montserrat'] py-6 sm:py-8">
         <div className="w-full px-4 sm:px-6 lg:px-8 mb-4">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-2">
             Филиалы
@@ -3624,7 +3603,7 @@ const HomePage = memo(() => {
       />
 
       {/* Анимированная бегущая строка с преимуществами перед футером */}
-      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white pb-6 overflow-hidden relative">
+      <section className="w-full bg-[#FFF] pb-6 overflow-hidden relative">
         <div className="flex animate-scroll">
           {/* Первый набор элементов */}
           <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0">
@@ -3638,7 +3617,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -3665,7 +3644,7 @@ const HomePage = memo(() => {
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
               <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
@@ -3729,7 +3708,7 @@ const HomePage = memo(() => {
         `}</style>
       </section>
 
-      <div className="w-full bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 h-8 sm:h-16"></div>
+      <div className="w-full bg-[#FFF] h-8 sm:h-16"></div>
 
       <Footer />
     </div>

@@ -22,7 +22,7 @@ const Footer = () => {
 
   return (
       <>
-        <footer className="bg-gradient-to-r from-[#009F97] to-[#003936] w-full text-white font-['SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif] pt-10 pb-6" style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+        <footer className="bg-[#00534E] w-full text-white font-['SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif] pt-10 pb-6" style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
           <div className="max-w-[1240px] mx-auto px-4">
             {/* Верхняя часть: логотип и описание */}
             <div className="mb-8">
