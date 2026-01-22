@@ -2247,87 +2247,6 @@ const HomePage = memo(() => {
         `}</style>
       </section>
 
-      {/* Инструкция по бронированию (только для мобильной версии) */}
-      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-8 px-4 md:hidden">
-        <div className="max-w-md mx-auto">
-          <h2 className="text-2xl font-bold text-[#273655] mb-6 text-center">
-            Простой процесс бронирования бокса
-          </h2>
-          <div className="space-y-4">
-            {/* Верхний ряд: 3 карточки */}
-            <div className="grid grid-cols-3 gap-4">
-              {/* Шаг 1 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <Box className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">1</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Забронируйте бокс
-                </p>
-              </div>
-
-              {/* Шаг 2 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <UserCircle className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">2</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Подтверждение от менеджера
-                </p>
-              </div>
-
-              {/* Шаг 3 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <MessageSquare className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">3</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Подпишите договор по СМС
-                </p>
-              </div>
-            </div>
-
-            {/* Нижний ряд: 2 карточки */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Шаг 4 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <Globe className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">4</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Оплатите онлайн или по СМС
-                </p>
-              </div>
-
-              {/* Шаг 5 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <Truck className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">5</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Назначьте доставку
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Отступ с фоном хэдера */}
       <div className="w-full bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 h-4 sm:h-8"></div>
 
@@ -3519,6 +3438,157 @@ const HomePage = memo(() => {
 
       {/* Отступ с фоном хэдера */}
       <div className="w-full bg-gradient-to-r from-[#E0F2FE]/95 to-white/95 h-4 sm:h-8"></div>
+
+      {/* Инструкция по бронированию */}
+      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-8 md:py-12 px-4 md:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#273655] mb-6 md:mb-8 text-center">
+            Простой процесс бронирования бокса
+          </h2>
+          
+          {/* Мобильная версия: 3+2 карточки */}
+          <div className="md:hidden space-y-4">
+            {/* Верхний ряд: 3 карточки */}
+            <div className="grid grid-cols-3 gap-4">
+              {/* Шаг 1 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <Box className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">1</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Забронируйте бокс
+                </p>
+              </div>
+
+              {/* Шаг 2 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <UserCircle className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">2</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Подтверждение от менеджера
+                </p>
+              </div>
+
+              {/* Шаг 3 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <MessageSquare className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">3</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Подпишите договор по СМС
+                </p>
+              </div>
+            </div>
+
+            {/* Нижний ряд: 2 карточки */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Шаг 4 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <Globe className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">4</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Оплатите онлайн или по СМС
+                </p>
+              </div>
+
+              {/* Шаг 5 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <Truck className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">5</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Назначьте доставку
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Десктопная версия: все 5 карточек в один ряд */}
+          <div className="hidden md:grid md:grid-cols-5 gap-6 lg:gap-8">
+            {/* Шаг 1 */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
+              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
+                <Box className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
+                <span className="text-white font-bold text-base lg:text-lg">1</span>
+              </div>
+              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
+                Забронируйте бокс
+              </p>
+            </div>
+
+            {/* Шаг 2 */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
+              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
+                <UserCircle className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
+                <span className="text-white font-bold text-base lg:text-lg">2</span>
+              </div>
+              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
+                Подтверждение от менеджера
+              </p>
+            </div>
+
+            {/* Шаг 3 */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
+              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
+                <MessageSquare className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
+                <span className="text-white font-bold text-base lg:text-lg">3</span>
+              </div>
+              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
+                Подпишите договор по СМС
+              </p>
+            </div>
+
+            {/* Шаг 4 */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
+              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
+                <Globe className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
+                <span className="text-white font-bold text-base lg:text-lg">4</span>
+              </div>
+              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
+                Оплатите онлайн или по СМС
+              </p>
+            </div>
+
+            {/* Шаг 5 */}
+            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
+              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
+                <Truck className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
+              </div>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
+                <span className="text-white font-bold text-base lg:text-lg">5</span>
+              </div>
+              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
+                Назначьте доставку
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white font-['Montserrat'] py-6 sm:py-8">
