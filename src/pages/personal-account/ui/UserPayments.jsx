@@ -6,7 +6,9 @@ import PaymentCard from './PaymentCard';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { useNavigate } from 'react-router-dom';
-import { List, Zap, FileText } from 'lucide-react';
+import { List, Zap, FileText, HelpCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
+import instImage from '../../../assets/inst.png';
 
 const PAYMENT_FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },
@@ -18,6 +20,7 @@ const UserPayments = ({ embeddedMobile = false }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
+  const [isInstructionOpen, setIsInstructionOpen] = useState(false);
 
   // Получение платежей пользователя
   const {
@@ -161,14 +164,33 @@ const UserPayments = ({ embeddedMobile = false }) => {
               Привет, {user?.name || 'Пользователь'}. Добро пожаловать.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
-            className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
-          >
-            Личный кабинет
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsInstructionOpen(true)}
+              className="p-2 text-[#00A991] hover:text-[#009882] hover:bg-[#00A991]/10 rounded-full transition-colors"
+              title="Инструкция"
+            >
+              <HelpCircle className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
+              className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
+            >
+              Личный кабинет
+            </button>
+          </div>
         </div>
       </div>
+      <Dialog open={isInstructionOpen} onOpenChange={setIsInstructionOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Инструкция</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <img src={instImage} alt="Инструкция" className="max-w-full h-auto" />
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="flex gap-6 px-6 py-6">
         <div className="flex-1">{paymentsContent}</div>
         <div className="w-64 flex-shrink-0 self-start mt-36">

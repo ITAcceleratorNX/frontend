@@ -14,11 +14,12 @@ import {
 } from '../../../components/ui/dialog';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { List, Zap, Truck, Edit, Clock } from 'lucide-react';
+import { List, Zap, Truck, Edit, Clock, HelpCircle } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { toast } from 'react-toastify';
 import DeliveryCard from './DeliveryCard';
+import instImage from '../../../assets/inst.png';
 
 const DELIVERY_FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },
@@ -38,6 +39,7 @@ const UserDelivery = ({ embeddedMobile = false }) => {
     });
     const [timeSelectionModalOpen, setTimeSelectionModalOpen] = useState(false);
     const [selectedDeliveryForTime, setSelectedDeliveryForTime] = useState(null);
+    const [isInstructionOpen, setIsInstructionOpen] = useState(false);
 
     // Интервалы времени доставки
     const deliveryTimeIntervals = [
@@ -372,12 +374,21 @@ const UserDelivery = ({ embeddedMobile = false }) => {
                             Привет, {user?.name || 'Пользователь'}. Добро пожаловать.
                         </p>
                     </div>
-                    <button
-                        onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
-                        className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
-                    >
-                        Личный кабинет
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsInstructionOpen(true)}
+                            className="p-2 text-[#00A991] hover:text-[#009882] hover:bg-[#00A991]/10 rounded-full transition-colors"
+                            title="Инструкция"
+                        >
+                            <HelpCircle className="w-6 h-6" />
+                        </button>
+                        <button
+                            onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
+                            className="px-6 py-2 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] rounded-full shadow-md hover:shadow-lg transition-shadow font-sf-pro-text"
+                        >
+                            Личный кабинет
+                        </button>
+                    </div>
                 </div>
             </div>
             <div className="flex gap-6 px-6 py-6">
@@ -405,6 +416,16 @@ const UserDelivery = ({ embeddedMobile = false }) => {
                     </div>
                 </div>
             </div>
+            <Dialog open={isInstructionOpen} onOpenChange={setIsInstructionOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Инструкция</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex justify-center">
+                        <img src={instImage} alt="Инструкция" className="max-w-full h-auto" />
+                    </div>
+                </DialogContent>
+            </Dialog>
             {deliveryModals}
         </div>
     );
