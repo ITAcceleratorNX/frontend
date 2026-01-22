@@ -2182,23 +2182,22 @@ const WarehouseData = () => {
                             isCompact={true}
                             onViewMore={() => setIsMapModalOpen(true)}
                             onBoxSelect={async (storage) => {
-                              if (storage?.status === 'PENDING' && storage?.status === 'OCCUPIED' && isAdminOrManager) {
+                              if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
                                 setIsLoadingPendingOrder(true);
                                 try {
                                   const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                                  if (order) {
-                                    setPendingOrder(order);
+                                  setPendingOrder(order);
+                                  setIsPendingOrderModalOpen(true);
+                                } catch (error) {
+                                  if (error.response?.status === 404) {
+                                    setPendingOrder(null);
                                     setIsPendingOrderModalOpen(true);
                                   } else {
-                                    // Если заказа нет, просто выбираем бокс
-                                    setPreviewStorage(storage);
+                                    console.error('Ошибка при загрузке заказа:', error);
                                   }
-                                } catch (error) {
-                                  console.error('Ошибка при загрузке заказа:', error);
-                                  // В случае ошибки все равно выбираем бокс
-                                  setPreviewStorage(storage);
                                 } finally {
                                   setIsLoadingPendingOrder(false);
+                                  setPreviewStorage(storage);
                                 }
                               } else {
                                 // Для обычных боксов просто выбираем
@@ -3087,24 +3086,25 @@ const WarehouseData = () => {
                       isFullscreen={true}
                       onBoxSelect={async (storage) => {
                         // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
-                        if (storage?.status === 'PENDING' && isAdminOrManager) {
+                        if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
                           setIsLoadingPendingOrder(true);
                           try {
                             const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                            if (order) {
-                              setPendingOrder(order);
-                              setIsPendingOrderModalOpen(true);
-                              setIsMapModalOpen(false); // Закрываем модальное окно карты
-                            } else {
-                              // Если заказа нет, просто выбираем бокс
-                              setPreviewStorage(storage);
-                            }
+                            setPendingOrder(order);
+                            setIsPendingOrderModalOpen(true);
+                            setIsMapModalOpen(false);
                           } catch (error) {
-                            console.error('Ошибка при загрузке заказа:', error);
-                            // В случае ошибки все равно выбираем бокс
-                            setPreviewStorage(storage);
+                            if (error.response.status === 404) {
+                              setPendingOrder(null);
+                              setIsPendingOrderModalOpen(true);
+                              setIsMapModalOpen(false);
+                            } else {
+                              console.error('Ошибка при загрузке заказа:', error);
+                            }
+
                           } finally {
                             setIsLoadingPendingOrder(false);
+                            setPreviewStorage(storage);
                           }
                         } else {
                           // Для обычных боксов просто выбираем
@@ -3154,20 +3154,19 @@ const WarehouseData = () => {
                           setIsLoadingPendingOrder(true);
                           try {
                             const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                            if (order) {
-                              setPendingOrder(order);
-                              setIsPendingOrderModalOpen(true);
-                              setIsMapModalOpen(false); // Закрываем модальное окно карты
-                            } else {
-                              // Если заказа нет, просто выбираем бокс
-                              setPreviewStorage(storage);
-                            }
+                            setPendingOrder(order);
+                            setIsPendingOrderModalOpen(true);
+                            setIsMapModalOpen(false);
                           } catch (error) {
-                            console.error('Ошибка при загрузке заказа:', error);
-                            // В случае ошибки все равно выбираем бокс
-                            setPreviewStorage(storage);
+                            if (error.response.status === 404) {
+                              setPendingOrder(null);
+                              setIsPendingOrderModalOpen(true);
+                            } else {
+                              console.error('Ошибка при загрузке заказа:', error);
+                            }
                           } finally {
                             setIsLoadingPendingOrder(false);
+                            setPreviewStorage(storage);
                           }
                         } else {
                           // Для обычных боксов просто выбираем
@@ -3205,6 +3204,7 @@ const WarehouseData = () => {
         <PendingOrderModal
           isOpen={isPendingOrderModalOpen}
           order={pendingOrder}
+          storageId={previewStorage?.id}
           onClose={() => {
             setIsPendingOrderModalOpen(false);
             setPendingOrder(null);

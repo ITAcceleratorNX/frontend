@@ -90,5 +90,18 @@ export const warehouseApi = {
       console.error('Ошибка при загрузке цен услуг:', error.response?.data || error.message);
       throw error;
     }
-  }
+  },
+
+  // Обновление склада (для ADMIN и MANAGER)
+  resetStorageInfo: async (storageId) => {
+    try {
+      console.log('Отправка запроса на восстановления склада:', storageId);
+      const response = await api.patch(`/storages/${storageId}`);
+      console.log('Склад успешно обновлен:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении склада:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 }; 
