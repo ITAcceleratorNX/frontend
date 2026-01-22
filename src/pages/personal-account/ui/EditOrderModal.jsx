@@ -651,43 +651,43 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     return (
         <Dialog open={isOpen} onOpenChange={onCancel}>
             <DialogContent
-                className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto p-0 sm:w-full bg-white rounded-3xl"
+                className="flex flex-col w-[calc(100vw-1rem)] sm:w-[95vw] max-w-4xl h-[90dvh] max-h-[90dvh] sm:h-[95vh] sm:max-h-[95vh] overflow-hidden p-0 bg-white rounded-2xl sm:rounded-3xl mx-auto"
                 style={{ boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             >
-                <DialogHeader className="px-6 sm:px-8 pt-6 sm:pt-8 pb-6 border-b border-[#d7dbe6]">
-                    <DialogTitle className="text-xl sm:text-2xl font-bold text-[#273655] flex items-center gap-3">
-                        <Package className="w-5 h-5 sm:w-6 sm:h-6 text-[#00A991]" />
-                        <span className="truncate">Редактирование заказа №{order.id}</span>
+                <DialogHeader className="flex-shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-4 sm:pb-6 border-b border-[#d7dbe6] pr-12">
+                    <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-[#273655] flex items-center gap-2 sm:gap-3">
+                        <Package className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 text-[#00A991]" />
+                        <span className="truncate min-w-0">Редактирование заказа №{order.id}</span>
                     </DialogTitle>
-                    <DialogDescription className="text-sm sm:text-base text-[#6B6B6B] mt-2">
+                    <DialogDescription className="text-xs sm:text-sm lg:text-base text-[#6B6B6B] mt-1 sm:mt-2">
                         Измените параметры хранения, предметы и дополнительные услуги
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="px-6 sm:px-8 py-6 space-y-6">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
                     {/* Даты */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                        <div className="space-y-2">
-                            <Label className="text-sm sm:text-base font-medium text-[#273655]">Дата начала</Label>
-                            <div className="flex items-center h-12 px-4 border border-[#d7dbe6] rounded-3xl bg-gray-50 text-sm sm:text-base text-[#273655]">
-                                <CalendarIcon className="mr-2 h-4 w-4 text-[#6B6B6B]" />
-                                {format(formData.start_date, "dd.MM.yyyy", { locale: ru })}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+                        <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                            <Label className="text-xs sm:text-sm lg:text-base font-medium text-[#273655]">Дата начала</Label>
+                            <div className="flex items-center h-11 sm:h-12 px-3 sm:px-4 border border-[#d7dbe6] rounded-2xl sm:rounded-3xl bg-gray-50 text-xs sm:text-sm lg:text-base text-[#273655]">
+                                <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0 text-[#6B6B6B]" />
+                                <span className="truncate min-w-0">{format(formData.start_date, "dd.MM.yyyy", { locale: ru })}</span>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm sm:text-base font-medium text-[#273655]">Дата окончания хранения</Label>
-                            <div className="flex items-center h-12 px-4 border border-[#d7dbe6] rounded-3xl bg-gray-50 text-sm sm:text-base text-[#273655]">
-                                <CalendarIcon className="mr-2 h-4 w-4 text-[#6B6B6B]" />
-                                {format(formData.end_date, "dd.MM.yyyy", { locale: ru })}
+                        <div className="space-y-1.5 sm:space-y-2 min-w-0">
+                            <Label className="text-xs sm:text-sm lg:text-base font-medium text-[#273655]">Дата окончания хранения</Label>
+                            <div className="flex items-center h-11 sm:h-12 px-3 sm:px-4 border border-[#d7dbe6] rounded-2xl sm:rounded-3xl bg-gray-50 text-xs sm:text-sm lg:text-base text-[#273655]">
+                                <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0 text-[#6B6B6B]" />
+                                <span className="truncate min-w-0">{format(formData.end_date, "dd.MM.yyyy", { locale: ru })}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Выбор тарифа для облачного хранения */}
                     {order.storage?.storage_type === 'CLOUD' && (
-                        <div className="space-y-4">
-                            <Label className="text-lg sm:text-xl font-bold text-[#273655]">Тариф облачного хранения</Label>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        <div className="space-y-3 sm:space-y-4">
+                            <Label className="text-base sm:text-lg lg:text-xl font-bold text-[#273655]">Тариф облачного хранения</Label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                                 {(() => {
                                     const regularTariffs = [
                                         { id: 'sumka', name: 'Хранения сумки / коробки вещей', image: sumkaImg, baseVolume: 0.25, maxVolume: 0.25 },
@@ -709,22 +709,22 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                 key={tariff.id}
                                                 type="button"
                                                 onClick={() => handleTariffChange(tariff)}
-                                                className={`p-4 border-2 rounded-2xl transition-all ${
+                                                className={`p-2 sm:p-3 lg:p-4 border-2 rounded-xl sm:rounded-2xl transition-all min-w-0 ${
                                                     isSelected 
                                                         ? 'border-[#00A991] bg-[#00A991]/10' 
                                                         : 'border-[#d7dbe6] hover:border-[#00A991]/50'
                                                 }`}
                                             >
                                                 {tariff.image ? (
-                                                    <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center">
+                                                    <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-1 sm:mb-2 flex items-center justify-center">
                                                         <img src={tariff.image} alt={tariff.name} className="max-w-full max-h-full object-contain" />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center bg-gray-100 rounded-lg">
-                                                        <span className="text-xs font-bold text-gray-600 text-center">Свои габариты</span>
+                                                    <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-1 sm:mb-2 flex items-center justify-center bg-gray-100 rounded-lg">
+                                                        <span className="text-[10px] sm:text-xs font-bold text-gray-600 text-center leading-tight">Свои габариты</span>
                                                     </div>
                                                 )}
-                                                <p className="text-xs font-medium text-[#273655] text-center">{tariff.name}</p>
+                                                <p className="text-[10px] sm:text-xs font-medium text-[#273655] text-center line-clamp-2 leading-tight">{tariff.name}</p>
                                             </button>
                                         );
                                     });
@@ -735,38 +735,37 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
                     {/* Предметы */}
                     {totalVolume > parseFloat(storage_available_volume) && (
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
-                            <p className="text-red-600 font-medium text-sm">
+                        <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl">
+                            <p className="text-red-600 font-medium text-xs sm:text-sm">
                                 ⚠️ Объем превышает доступное место в боксе!
                             </p>
                         </div>
                     )}
-                    <div className="space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <Label className="text-lg sm:text-xl font-bold text-[#273655]">Ваши вещи</Label>
-                            {/* Кнопка "Добавить" показывается только для INDIVIDUAL или для CLOUD с тарифом "Свои габариты" */}
+                    <div className="space-y-3 sm:space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
+                            <Label className="text-base sm:text-lg lg:text-xl font-bold text-[#273655]">Ваши вещи</Label>
                             {(order.storage?.storage_type !== 'CLOUD' || (selectedTariff && selectedTariff.isCustom)) && (
                                 <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
                                     onClick={addOrderItem}
-                                    className="flex items-center gap-2 text-sm h-10 w-full sm:w-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
+                                    className="flex items-center justify-center gap-2 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-2xl sm:rounded-3xl flex-shrink-0"
                                 >
-                                    <Plus className="w-4 h-4" /> Добавить
+                                    <Plus className="w-4 h-4 flex-shrink-0" /> Добавить
                                 </Button>
                             )}
                         </div>
                         {formData.order_items.map((item, index) => (
-                            <div key={index} className="space-y-4 p-4 sm:p-6 border border-[#d7dbe6] rounded-2xl bg-white shadow-sm">
+                            <div key={index} className="space-y-3 sm:space-y-4 p-3 sm:p-4 lg:p-6 border border-[#d7dbe6] rounded-xl sm:rounded-2xl bg-white shadow-sm">
                                 {/* Название - всегда на полную ширину */}
-                                <div>
-                                    <Label className="text-sm font-medium text-[#273655] mb-2 block">Название</Label>
+                                <div className="min-w-0">
+                                    <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-1.5 sm:mb-2 block">Название</Label>
                                     <Input
                                         value={item.name}
                                         onChange={(e) => updateOrderItem(index, "name", e.target.value)}
                                         placeholder="Например: шкаф"
-                                        className="h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
+                                        className="h-11 sm:h-12 text-sm rounded-2xl sm:rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 min-w-0"
                                     />
                                 </div>
 
@@ -778,9 +777,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                     const isDimensionsDisabled = isCloud && selectedTariff && !selectedTariff.isCustom;
                                     
                                     return (
-                                        <div className={`grid ${isIndividual ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} gap-3 sm:gap-4`}>
-                                            <div>
-                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Длина (м)</Label>
+                                        <div className={`grid min-w-0 ${isIndividual ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} gap-2 sm:gap-3 lg:gap-4`}>
+                                            <div className="min-w-0">
+                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-1 sm:mb-2 block">Длина (м)</Label>
                                                 <Input
                                                     type="number"
                                                     step="0.01"
@@ -788,11 +787,11 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                     onChange={(e) => updateOrderItem(index, "length", e.target.value)}
                                                     placeholder="1.2"
                                                     disabled={isDimensionsDisabled}
-                                                    className={`h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                    className={`h-11 sm:h-12 text-sm rounded-2xl sm:rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 min-w-0 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                                 />
                                             </div>
-                                            <div>
-                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Ширина (м)</Label>
+                                            <div className="min-w-0">
+                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-1 sm:mb-2 block">Ширина (м)</Label>
                                                 <Input
                                                     type="number"
                                                     step="0.01"
@@ -800,12 +799,12 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                     onChange={(e) => updateOrderItem(index, "width", e.target.value)}
                                                     placeholder="0.8"
                                                     disabled={isDimensionsDisabled}
-                                                    className={`h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                    className={`h-11 sm:h-12 text-sm rounded-2xl sm:rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 min-w-0 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                                 />
                                             </div>
                                             {isCloud && (
-                                                <div>
-                                                    <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">Высота (м)</Label>
+                                                <div className="min-w-0">
+                                                    <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-1 sm:mb-2 block">Высота (м)</Label>
                                                     <Input
                                                         type="number"
                                                         step="0.01"
@@ -813,29 +812,29 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                         onChange={(e) => updateOrderItem(index, "height", e.target.value)}
                                                         placeholder="2.0"
                                                         disabled={isDimensionsDisabled}
-                                                        className={`h-12 text-sm rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                        className={`h-11 sm:h-12 text-sm rounded-2xl sm:rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20 min-w-0 ${isDimensionsDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                                     />
                                                 </div>
                                             )}
-                                            <div>
-                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-2 block">
+                                            <div className="min-w-0">
+                                                <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-1 sm:mb-2 block">
                                                     {isIndividual ? 'Площадь (м²)' : 'Объём (м³)'}
                                                 </Label>
-                                                <Input type="text" value={item.volume} disabled className="h-12 bg-gray-100 text-sm rounded-3xl border-[#d7dbe6] text-[#6B6B6B]" />
+                                                <Input type="text" value={item.volume} disabled className="h-11 sm:h-12 bg-gray-100 text-sm rounded-2xl sm:rounded-3xl border-[#d7dbe6] text-[#6B6B6B] min-w-0" />
                                             </div>
                                         </div>
                                     );
                                 })()}
 
                                 {/* Тип груза и кнопка удаления */}
-                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
-                                    <div className="flex-1">
-                                        <Label className="text-sm font-medium text-[#273655] mb-2 block">Тип груза</Label>
+                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-end min-w-0">
+                                    <div className="flex-1 min-w-0">
+                                        <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-1.5 sm:mb-2 block">Тип груза</Label>
                                         <Select
                                             value={item.cargo_mark}
                                             onValueChange={(value) => updateOrderItem(index, "cargo_mark", value)}
                                         >
-                                            <SelectTrigger className="h-12 rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20">
+                                            <SelectTrigger className="h-11 sm:h-12 rounded-2xl sm:rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20">
                                                 <SelectValue placeholder="Выберите тип" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -851,7 +850,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => removeOrderItem(index)}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-12 w-12 rounded-3xl sm:h-auto sm:w-auto"
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-11 w-11 sm:h-12 sm:w-12 rounded-2xl sm:rounded-3xl flex-shrink-0 self-end sm:self-auto"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
@@ -862,13 +861,13 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     </div>
 
                     {/* Перевозка */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-3xl">
-                            <div className="flex items-center gap-3">
-                                <Truck className="w-5 h-5 text-[#6B6B6B]" />
+                    <div className="space-y-3 sm:space-y-4">
+                        <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-2xl sm:rounded-3xl gap-2">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                <Truck className="w-5 h-5 flex-shrink-0 text-[#6B6B6B]" />
                                 <Label
                                     htmlFor="moving"
-                                    className="text-base sm:text-lg font-medium text-[#273655] cursor-pointer"
+                                    className="text-sm sm:text-base lg:text-lg font-medium text-[#273655] cursor-pointer truncate"
                                 >
                                     Нужна перевозка?
                                 </Label>
@@ -884,24 +883,24 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                         moving_orders: e.target.checked ? prev.moving_orders : [],
                                     }))
                                 }
-                                className="w-5 h-5 rounded border-gray-300 text-[#00A991] focus:ring-[#00A991] cursor-pointer"
+                                className="w-5 h-5 rounded border-gray-300 text-[#00A991] focus:ring-[#00A991] cursor-pointer flex-shrink-0"
                             />
                         </div>
                         {formData.is_selected_moving && (
                             <>
                                 {formData.moving_orders.map((mo, index) => (
-                                    <div key={index} className="border border-[#d7dbe6] rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] shadow-lg">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                                            <div>
-                                                <Label className="text-sm font-medium text-white/90 mb-2 block">Дата перевозки</Label>
+                                    <div key={index} className="border border-[#d7dbe6] rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] shadow-lg">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                            <div className="min-w-0">
+                                                <Label className="text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2 block">Дата перевозки</Label>
                                                 <Popover>
                                                     <PopoverTrigger asChild>
-                                                        <Button variant="outline" className="w-full justify-start h-12 text-sm bg-white/10 border-white text-white hover:bg-white/20 rounded-3xl">
-                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                            {format(mo.moving_date, "dd.MM.yyyy", { locale: ru })}
+                                                        <Button variant="outline" className="w-full justify-start h-11 sm:h-12 text-sm bg-white/10 border-white text-white hover:bg-white/20 rounded-2xl sm:rounded-3xl">
+                                                            <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                                                            <span className="truncate min-w-0">{format(mo.moving_date, "dd.MM.yyyy", { locale: ru })}</span>
                                                         </Button>
                                                     </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0" align="start">
+                                                    <PopoverContent className="w-auto p-0 max-w-[min(320px,calc(100vw-1.5rem))]" align="start" side="bottom">
                                                         <Calendar
                                                             mode="single"
                                                             selected={mo.moving_date}
@@ -912,14 +911,14 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                     </PopoverContent>
                                                 </Popover>
                                             </div>
-                                            <div>
-                                                <Label className="text-sm font-medium text-white/90 mb-2 block">Тип перевозки</Label>
+                                            <div className="min-w-0">
+                                                <Label className="text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2 block">Тип перевозки</Label>
                                                 <Select value={`${mo.status}:${mo.direction || 'TO_WAREHOUSE'}`} onValueChange={(value) => {
                                                     const [status, direction] = value.split(':');
                                                     updateMovingOrder(index, "status", status);
                                                     updateMovingOrder(index, "direction", direction);
                                                 }}>
-                                                    <SelectTrigger className="h-12 rounded-3xl bg-white/10 border-white text-white">
+                                                    <SelectTrigger className="h-11 sm:h-12 rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white min-w-0">
                                                         <SelectValue placeholder="Выберите тип" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -928,13 +927,13 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <div className="sm:col-span-2 lg:col-span-1">
-                                                <Label className="text-sm font-medium text-white/90 mb-2 block">Адрес</Label>
+                                            <div className="sm:col-span-2 lg:col-span-1 min-w-0">
+                                                <Label className="text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2 block">Адрес</Label>
                                                 <Input
                                                     value={mo.address}
                                                     onChange={(e) => updateMovingOrder(index, "address", e.target.value)}
                                                     placeholder="Улица, дом, квартира"
-                                                    className="h-12 text-sm rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70 focus:ring-2 focus:ring-white/50"
+                                                    className="h-11 sm:h-12 text-sm rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70 focus:ring-2 focus:ring-white/50 min-w-0"
                                                 />
                                             </div>
                                         </div>
@@ -943,9 +942,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => removeMovingOrder(index)}
-                                            className="text-white hover:text-white hover:bg-white/20 text-sm rounded-3xl"
+                                            className="text-white hover:text-white hover:bg-white/20 text-xs sm:text-sm rounded-2xl sm:rounded-3xl"
                                         >
-                                            <Trash2 className="w-4 h-4 mr-2" /> Удалить перевозку
+                                            <Trash2 className="w-4 h-4 mr-2 flex-shrink-0" /> Удалить перевозку
                                         </Button>
                                     </div>
                                 ))}
@@ -954,22 +953,22 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                     variant="outline"
                                     size="sm"
                                     onClick={addMovingOrder}
-                                    className="flex items-center gap-2 text-sm w-full sm:w-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
+                                    className="flex items-center justify-center gap-2 text-xs sm:text-sm w-full sm:w-auto h-10 sm:h-auto bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-2xl sm:rounded-3xl"
                                 >
-                                    <Plus className="w-4 h-4" /> Добавить дату перевозки
+                                    <Plus className="w-4 h-4 flex-shrink-0" /> Добавить дату перевозки
                                 </Button>
                             </>
                         )}
                     </div>
 
                     {/* Упаковка */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-3xl">
-                            <div className="flex items-center gap-3">
-                                <Package className="w-5 h-5 text-[#6B6B6B]" />
+                    <div className="space-y-3 sm:space-y-4">
+                        <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-2xl sm:rounded-3xl gap-2">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                <Package className="w-5 h-5 flex-shrink-0 text-[#6B6B6B]" />
                                 <Label
                                     htmlFor="package"
-                                    className="text-base sm:text-lg font-medium text-[#273655] cursor-pointer"
+                                    className="text-sm sm:text-base lg:text-lg font-medium text-[#273655] cursor-pointer truncate"
                                 >
                                     Нужна упаковка?
                                 </Label>
@@ -985,7 +984,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                         services: e.target.checked ? prev.services : [],
                                     }))
                                 }
-                                className="w-5 h-5 rounded border-gray-300 text-[#00A991] focus:ring-[#00A991] cursor-pointer"
+                                className="w-5 h-5 rounded border-gray-300 text-[#00A991] focus:ring-[#00A991] cursor-pointer flex-shrink-0"
                             />
                         </div>
                         {formData.is_selected_package && (
@@ -999,9 +998,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                         <p className="text-sm text-[#6B6B6B]">Нет доступных услуг для упаковки.</p>
                                     </div>
                                 ) : (
-                                    <div className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-2xl p-4 sm:p-6 shadow-lg space-y-4">
-                                        <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Детали услуг упаковки</h3>
-                                        <div className="space-y-3">
+                                    <div className="bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg space-y-3 sm:space-y-4">
+                                        <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-3 sm:mb-4">Детали услуг упаковки</h3>
+                                        <div className="space-y-2 sm:space-y-3">
                                             {formData.services.map((service, index) => {
                                                 const serviceData = prices.find((p) => String(p.id) === service.service_id)
                                                 const isGazelleFrom = serviceData?.type === "GAZELLE_FROM"
@@ -1009,15 +1008,15 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                 const isGazelle = isGazelleFrom || isGazelleTo || serviceData?.type === "GAZELLE"
                                                 return (
                                                     <div key={index} className="space-y-3">
-                                                        <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-white bg-white/10 px-4 py-3">
-                                                            <div className="flex-1 min-w-[200px]">
+                                                        <div className="flex flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 rounded-2xl sm:rounded-3xl border border-white bg-white/10 px-3 sm:px-4 py-3">
+                                                            <div className="flex-1 min-w-0 w-full sm:min-w-[180px] sm:w-auto">
                                                                 <Label className="text-xs text-white/90 mb-1 block">Услуга</Label>
                                                                 <Select
                                                                     value={service.service_id}
                                                                     onValueChange={(val) => !isGazelle && updateService(index, "service_id", val)}
                                                                     disabled={isGazelle}
                                                                 >
-                                                                    <SelectTrigger className="h-10 text-sm rounded-3xl bg-white/10 border-white text-white" disabled={isGazelle}>
+                                                                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white min-w-0" disabled={isGazelle}>
                                                                         <SelectValue placeholder={getServiceTypeName(service.type)} />
                                                                     </SelectTrigger>
                                                                     <SelectContent>
@@ -1038,7 +1037,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                                     </SelectContent>
                                                                 </Select>
                                                             </div>
-                                                            <div className="w-24">
+                                                            <div className="w-20 sm:w-24 min-w-0 flex-shrink-0">
                                                                 <Label className="text-xs text-white/90 mb-1 block">Кол-во</Label>
                                                                 <Input
                                                                     type="number"
@@ -1048,18 +1047,18 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                                         !isGazelle && updateService(index, "count", Number.parseInt(e.target.value) || 1)
                                                                     }
                                                                     disabled={isGazelle}
-                                                                    className="h-10 text-sm rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70"
+                                                                    className="h-9 sm:h-10 text-sm rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70 min-w-0"
                                                                 />
                                                             </div>
                                                             {/* Итоговая цена для GAZELLE_FROM (только для ADMIN или MANAGER) */}
                                                             {(isGazelleFrom && (user.role === "ADMIN" || user.role === "MANAGER")) && (
-                                                                <div className="w-32">
+                                                                <div className="w-24 sm:w-32 min-w-0 flex-shrink-0">
                                                                     <Label className="text-xs text-white/90 mb-1 block">Итог (₸)</Label>
                                                                     <Input
                                                                         type="number"
                                                                         value={totalPrice}
                                                                         onChange={(e) => setTotalPrice(e.target.value ? Number(e.target.value) : "")}
-                                                                        className="h-10 text-sm rounded-3xl bg-white/10 border-white text-white"
+                                                                        className="h-9 sm:h-10 text-sm rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white min-w-0"
                                                                     />
                                                                 </div>
                                                             )}
@@ -1068,7 +1067,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => !isGazelle && removeService(index)}
-                                                                className={`${isGazelle ? "invisible" : "text-white hover:bg-white/20"} h-10 w-10 rounded-3xl`}
+                                                                className={`${isGazelle ? "invisible" : "text-white hover:bg-white/20"} h-9 w-9 sm:h-10 sm:w-10 rounded-2xl sm:rounded-3xl flex-shrink-0`}
                                                             >
                                                                 <Trash2 className="w-4 h-4" />
                                                             </Button>
@@ -1076,8 +1075,8 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                         
                                                         {/* Поле адреса для GAZELLE_TO */}
                                                         {isGazelleTo && (
-                                                            <div className="pl-4">
-                                                                <Label className="block text-xs sm:text-sm text-white/90 mb-2">
+                                                            <div className="pl-0 sm:pl-2 lg:pl-4 min-w-0">
+                                                                <Label className="block text-xs sm:text-sm text-white/90 mb-1 sm:mb-2">
                                                                     Адрес доставки вещей
                                                                 </Label>
                                                                 <Input
@@ -1085,7 +1084,6 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                                     value={movingAddressTo}
                                                                     onChange={(e) => {
                                                                         setMovingAddressTo(e.target.value);
-                                                                        // Обновляем адрес в moving_order
                                                                         const updatedMovingOrders = formData.moving_orders.map(mo =>
                                                                             mo.status === 'PENDING' && mo.direction === 'TO_CLIENT' 
                                                                                 ? { ...mo, address: e.target.value }
@@ -1094,7 +1092,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                                         setFormData(prev => ({ ...prev, moving_orders: updatedMovingOrders }));
                                                                     }}
                                                                     placeholder="Например: г. Алматы, Абая 25"
-                                                                    className="h-12 text-sm rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70 focus:ring-2 focus:ring-white/50"
+                                                                    className="h-11 sm:h-12 text-sm rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white placeholder:text-white/70 focus:ring-2 focus:ring-white/50 min-w-0"
                                                                 />
                                                             </div>
                                                         )}
@@ -1106,9 +1104,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={addService}
-                                                className="flex items-center gap-2 text-sm w-full sm:w-auto bg-white/10 border-dashed border-white text-white hover:bg-white/20 rounded-3xl"
+                                                className="flex items-center justify-center gap-2 text-xs sm:text-sm w-full sm:w-auto h-10 sm:h-auto bg-white/10 border-dashed border-white text-white hover:bg-white/20 rounded-2xl sm:rounded-3xl"
                                             >
-                                                <Plus className="w-4 h-4" /> Добавить услугу
+                                                <Plus className="w-4 h-4 flex-shrink-0" /> Добавить услугу
                                             </Button>
                                         </div>
                                     </div>
@@ -1118,7 +1116,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     </div>
 
 
-                    <div>
+                    <div className="min-w-0">
                         <RentalPeriodSelect
                             value={months.toString()}
                             onChange={(value) => setMonths(Number(value))}
@@ -1130,17 +1128,17 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 </div>
 
                 {error && (
-                    <div className="px-6 sm:px-8 text-sm text-red-600 bg-red-50 border-t border-red-200 py-4 rounded-b-3xl">
+                    <div className="flex-shrink-0 px-4 sm:px-6 lg:px-8 text-xs sm:text-sm text-red-600 bg-red-50 border-t border-red-200 py-3 sm:py-4 rounded-b-2xl sm:rounded-b-3xl">
                         {error}
                     </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row gap-3 px-6 sm:px-8 py-6 border-t border-[#d7dbe6]">
+                <div className="flex flex-shrink-0 flex-col sm:flex-row gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-[#d7dbe6]">
                     <Button
                         variant="outline"
                         onClick={onCancel}
                         disabled={isSubmitting}
-                        className="flex-1 h-12 text-base order-2 sm:order-1 bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-3xl"
+                        className="flex-1 w-full sm:w-auto h-11 sm:h-12 text-sm sm:text-base order-2 sm:order-1 bg-white border border-[#d7dbe6] text-[#273655] hover:bg-gray-50 rounded-2xl sm:rounded-3xl"
                     >
                         Отмена
                     </Button>
@@ -1150,7 +1148,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                             isSubmitting ||
                             totalVolume > parseFloat(storage_available_volume)
                         }
-                        className="flex-1 h-12 text-base bg-gradient-to-r from-[#26B3AB] to-[#104D4A] hover:opacity-90 text-white order-1 sm:order-2 rounded-3xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 w-full sm:w-auto h-11 sm:h-12 text-sm sm:text-base bg-gradient-to-r from-[#26B3AB] to-[#104D4A] hover:opacity-90 text-white order-1 sm:order-2 rounded-2xl sm:rounded-3xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (
                             <>
