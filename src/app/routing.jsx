@@ -127,6 +127,8 @@ const Routing = memo(() => {
     { path: "/personal-account/manager/users/:userId", element: <UserProfile /> },
     { path: "/personal-account/admin/warehouses/:warehouseId", element: <WarehouseData /> },
     { path: "/personal-account/manager/warehouses/:warehouseId", element: <WarehouseData /> },
+    { path: "/personal-account/admin/warehouses", element: <WarehouseData /> },
+    { path: "/personal-account/manager/warehouses", element: <WarehouseData /> },
     { path: "/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
     { path: "/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
     { path: "/personal-account/courier/order/:orderId", element: <CourierRequestOrder /> },

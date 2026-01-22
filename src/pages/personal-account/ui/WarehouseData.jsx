@@ -653,6 +653,12 @@ const WarehouseData = () => {
 
   // Загрузка данных склада
   useEffect(() => {
+    // Если warehouseId не передан, не загружаем склад
+    if (!warehouseId) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchWarehouse = async () => {
       try {
         setIsLoading(true);
@@ -1054,7 +1060,136 @@ const WarehouseData = () => {
     );
   }
 
-  if (error || !warehouse) {
+  // Если склад не выбран или не найден, показываем карточки складов
+  if ((!warehouseId || !warehouse) && !error && !isLoading) {
+    const getStatusDisplay = (status) => {
+      return status === 'AVAILABLE' ? 'Активный' : 'Неактивный';
+    };
+
+    const getStatusBadge = (status) => {
+      if (status === 'AVAILABLE') {
+        return 'bg-green-100 text-green-800 border border-green-200';
+      }
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
+    };
+
+    const getCardStyle = (status) => {
+      return status === 'AVAILABLE' 
+        ? 'border-green-200 hover:border-green-300 hover:shadow-lg' 
+        : 'border-gray-200 hover:border-gray-300 hover:shadow-md opacity-75';
+    };
+
+    const formatTime = (timeString) => {
+      if (!timeString) return timeString;
+      return timeString.substring(0, 5); // Берем только HH:MM
+    };
+
+    const handleCardClick = (id) => {
+      const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
+      navigate(`/personal-account/${basePath}/warehouses/${id}`);
+    };
+
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Header />
+        <div className="flex flex-1">
+          <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
+          <main className="flex-1 p-6">
+            <div className="max-w-7xl mx-auto space-y-8">
+              {/* Заголовок */}
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold text-gray-900">Управление складами</h1>
+                <p className="text-gray-600">Просматривайте и управляйте всеми складами в системе</p>
+              </div>
+
+              {/* Список складов */}
+              {allWarehouses.length === 0 ? (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-12 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Склады не найдены</h3>
+                    <p className="text-gray-600">В системе пока нет ни одного склада</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {allWarehouses.map((warehouseItem) => (
+                    <div 
+                      key={warehouseItem.id} 
+                      className={`group bg-white rounded-xl border shadow-sm cursor-pointer transition-all duration-200 ${getCardStyle(warehouseItem.status)}`}
+                      onClick={() => handleCardClick(warehouseItem.id)}
+                    >
+                      <div className="p-6">
+                        {/* Заголовок карточки */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(warehouseItem.status)}`}>
+                            <div className={`w-2 h-2 rounded-full mr-2 ${warehouseItem.status === 'AVAILABLE' ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                            {getStatusDisplay(warehouseItem.status)}
+                          </div>
+                        </div>
+
+                        {/* Основная информация */}
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#273655] transition-colors">
+                            {warehouseItem.name}
+                          </h3>
+                          
+                          <div className="space-y-2 text-sm text-gray-600">
+                            <div className="flex items-start">
+                              <svg className="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span className="line-clamp-2">{warehouseItem?.address}</span>
+                            </div>
+                            
+                            <div className="flex items-center">
+                              <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>{formatTime(warehouseItem.work_start)} - {formatTime(warehouseItem.work_end)}</span>
+                            </div>
+                          </div>
+
+                          {/* Статистика боксов */}
+                          {warehouseItem.storage && (
+                            <div className="pt-3 border-t border-gray-100">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">Всего {warehouseItem.type === "CLOUD" ? 'мест:' : 'боксов:' }</span>
+                                <span className="font-medium text-gray-900">{warehouseItem.type === "CLOUD" ? warehouseItem.storage[0].total_volume : warehouseItem.storage.length}</span>
+                              </div>
+                              {warehouseItem.storage.filter && (
+                                <div className="flex items-center justify-between text-sm mt-1">
+                                  <span className="text-gray-600">Свободно:</span>
+                                  <span className="font-medium text-green-600">
+                                    {warehouseItem.type === "CLOUD" ? warehouseItem.storage[0].available_volume : warehouseItem.storage.filter(s => s.status === 'VACANT').length}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Индикатор hover */}
+                        <div className="absolute inset-0 rounded-xl ring-2 ring-[#273655] ring-opacity-0 group-hover:ring-opacity-20 transition-all duration-200 pointer-events-none"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Если есть ошибка загрузки, показываем сообщение об ошибке
+  if (error) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
@@ -1070,7 +1205,7 @@ const WarehouseData = () => {
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
-                  <p className="text-gray-600 mb-6">{error || 'Склад не найден'}</p>
+                  <p className="text-gray-600 mb-6">{error}</p>
                   <div className="flex justify-center space-x-4">
                     <button
                       onClick={handleBackToList}
@@ -2118,40 +2253,6 @@ const WarehouseData = () => {
                   // Для INDIVIDUAL складов
                   <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-6">
                     <div className="space-y-6">
-                      {/* Блок выбора склада */}
-                      {allWarehouses.length > 0 && (
-                        <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-                          <div className="mb-4 flex items-start justify-between gap-3">
-                            <div>
-                              <h3 className="text-xl font-bold text-[#273655]">
-                                Выберите склад
-                              </h3>
-                            </div>
-                            <InfoHint
-                              description={
-                                <span>
-                                  Укажите удобную локацию, чтобы посмотреть схему склада, доступные боксы и свободные места в режиме реального времени.
-                                </span>
-                              }
-                              ariaLabel="Подробнее о выборе склада"
-                            />
-                          </div>
-                          <div className="relative w-full">
-                            <Dropdown
-                              items={allWarehouses.filter(w => w.type !== 'CLOUD')}
-                              value={warehouse?.id}
-                              onChange={(_, item) => handleWarehouseChange(item.id)}
-                              placeholder="Выбрать склад"
-                              searchable={false}
-                              getKey={(w) => w.id}
-                              getLabel={(w) => w.name}
-                              getDescription={(w) => w.address}
-                              className="bg-[#273655] text-white border-0"
-                              popoverProps={{ className: "p-0" }}
-                            />
-                          </div>
-                        </div>
-                      )}
 
                       {/* Блок с картой-схемой склада */}
                       <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
