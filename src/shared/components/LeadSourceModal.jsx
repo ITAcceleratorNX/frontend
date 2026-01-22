@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { X } from 'lucide-react';
 
@@ -22,8 +22,44 @@ const LEAD_SOURCES = [
 const STORAGE_KEY = 'extraspace_lead_source';
 const STORAGE_SHOWN_KEY = 'extraspace_lead_source_shown';
 
+// Кэш для предзагруженных изображений
+const imageCache = new Map();
+
+// Функция предзагрузки изображений
+const preloadImages = () => {
+  LEAD_SOURCES.forEach((source) => {
+    if (!imageCache.has(source.icon)) {
+      const img = new Image();
+      img.src = source.icon;
+      img.loading = 'eager';
+      imageCache.set(source.icon, img);
+    }
+  });
+};
+
+// Предзагрузка изображений при первом импорте модуля
+if (typeof window !== 'undefined') {
+  // Предзагружаем сразу при загрузке модуля
+  preloadImages();
+  
+  // Также предзагружаем через link preload в head
+  if (document.head) {
+    LEAD_SOURCES.forEach((source) => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = source.icon;
+      link.crossOrigin = 'anonymous';
+      if (!document.querySelector(`link[href="${source.icon}"]`)) {
+        document.head.appendChild(link);
+      }
+    });
+  }
+}
+
 export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
   const [selectedSource, setSelectedSource] = useState(null);
+  const preloadTimeoutRef = useRef(null);
 
   const handleSelect = (source) => {
     setSelectedSource(source);
@@ -40,6 +76,42 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
       onOpenChange(false);
     }, 300);
   };
+
+  // Предзагрузка изображений при открытии модального окна
+  useEffect(() => {
+    if (open) {
+      // Предзагружаем все изображения сразу
+      preloadImages();
+      
+      // Дополнительная проверка загрузки изображений для оптимизации
+      const checkImagesLoaded = () => {
+        LEAD_SOURCES.forEach((source) => {
+          const cached = imageCache.get(source.icon);
+          if (!cached || !cached.complete) {
+            // Если изображение еще не загружено, создаем новый объект Image
+            const img = new Image();
+            img.src = source.icon;
+            img.loading = 'eager';
+            imageCache.set(source.icon, img);
+          }
+        });
+      };
+      
+      checkImagesLoaded();
+    } else {
+      // Очищаем таймер при закрытии
+      if (preloadTimeoutRef.current) {
+        clearTimeout(preloadTimeoutRef.current);
+        preloadTimeoutRef.current = null;
+      }
+    }
+    
+    return () => {
+      if (preloadTimeoutRef.current) {
+        clearTimeout(preloadTimeoutRef.current);
+      }
+    };
+  }, [open]);
 
   // Если пользователь закрыл модальное окно без выбора, помечаем как показанное
   const handleClose = () => {
@@ -140,11 +212,24 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
                     md:w-16 md:h-16 
                     lg:w-20 lg:h-20
                     flex items-center justify-center
+                    relative
                   ">
                     <img 
                       src={Icon} 
                       alt={source.label}
                       className="w-full h-full object-contain"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      onError={(e) => {
+                        console.error(`Ошибка загрузки иконки ${source.label}:`, Icon);
+                        e.target.style.display = 'none';
+                      }}
+                      onLoad={() => {
+                        if (import.meta.env.DEV) {
+                          console.log(`✅ Иконка ${source.label} загружена:`, Icon);
+                        }
+                      }}
                     />
                   </div>
                   <span className="
@@ -195,11 +280,24 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
                     md:w-16 md:h-16 
                     lg:w-20 lg:h-20
                     flex items-center justify-center
+                    relative
                   ">
                     <img 
                       src={Icon} 
                       alt={source.label}
                       className="w-full h-full object-contain"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      onError={(e) => {
+                        console.error(`Ошибка загрузки иконки ${source.label}:`, Icon);
+                        e.target.style.display = 'none';
+                      }}
+                      onLoad={() => {
+                        if (import.meta.env.DEV) {
+                          console.log(`✅ Иконка ${source.label} загружена:`, Icon);
+                        }
+                      }}
                     />
                   </div>
                   <span className="

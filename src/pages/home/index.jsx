@@ -28,6 +28,13 @@ import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
+// Импортируем иконки для предзагрузки
+import SiteIcon from '@/assets/lead-source-icons/site.svg';
+import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.svg';
+import TelegramIcon from '@/assets/lead-source-icons/telegram.svg';
+import InstagramIcon from '@/assets/lead-source-icons/instagram.svg';
+import TiktokIcon from '@/assets/lead-source-icons/tiktok.svg';
+import AdsIcon from '@/assets/lead-source-icons/ads.svg';
 import DatePicker from "../../shared/ui/DatePicker";
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import sumkaImg from '../../assets/cloud-tariffs/sumka.png';
@@ -708,8 +715,27 @@ const HomePage = memo(() => {
     }
   }, [cloudPricePreview, cloudPromoCode, cloudPromoDiscountPercent]);
 
-  // Показываем модальное окно источника лида при первом посещении
+  // Предзагрузка изображений для опросника и показ модального окна источника лида
   useEffect(() => {
+    // Предзагружаем изображения опросника сразу при загрузке страницы
+    if (typeof window !== 'undefined' && shouldShowLeadSourceModal()) {
+      // Предзагружаем все иконки опросника
+      const icons = [SiteIcon, WhatsappIcon, TelegramIcon, InstagramIcon, TiktokIcon, AdsIcon];
+      icons.forEach((icon) => {
+        const img = new Image();
+        img.src = icon;
+        img.loading = 'eager';
+        // Добавляем preload link в head для еще более ранней загрузки
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = icon;
+        if (!document.querySelector(`link[href="${icon}"]`)) {
+          document.head.appendChild(link);
+        }
+      });
+    }
+    
     if (!isAuthenticated && shouldShowLeadSourceModal()) {
       // Небольшая задержка для лучшего UX
       const timer = setTimeout(() => {
