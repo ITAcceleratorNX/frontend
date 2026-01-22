@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 // Импортируем иконки из Figma
 import SiteIcon from '@/assets/lead-source-icons/site.svg';
 import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.svg';
-import TelegramIcon from '@/assets/lead-source-icons/telegram.svg';
+import TwoGisIcon from '@/assets/2gis.png';
 import InstagramIcon from '@/assets/lead-source-icons/instagram.svg';
 import TiktokIcon from '@/assets/lead-source-icons/tiktok.svg';
 import AdsIcon from '@/assets/lead-source-icons/ads.svg';
@@ -13,7 +13,7 @@ import AdsIcon from '@/assets/lead-source-icons/ads.svg';
 const LEAD_SOURCES = [
   { value: 'site', label: 'Сайт', icon: SiteIcon },
   { value: 'whatsapp', label: 'WhatsApp', icon: WhatsappIcon },
-  { value: 'telegram', label: 'Telegram', icon: TelegramIcon },
+  { value: '2gis', label: '2ГИС', icon: TwoGisIcon },
   { value: 'instagram', label: 'Instagram', icon: InstagramIcon },
   { value: 'tiktok', label: 'TikTok', icon: TiktokIcon },
   { value: 'ads', label: 'Реклама', icon: AdsIcon },
@@ -182,7 +182,7 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
 
         {/* Options Grid */}
         <div className="flex flex-col gap-4 sm:gap-5 w-full">
-          {/* First row: Сайт, WhatsApp, Telegram */}
+          {/* First row: Сайт, WhatsApp, 2ГИС */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 w-full">
             {LEAD_SOURCES.slice(0, 3).map((source) => {
               const Icon = source.icon;

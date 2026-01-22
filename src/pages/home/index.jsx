@@ -23,7 +23,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, CreditCard } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
@@ -31,7 +31,7 @@ import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/sha
 // Импортируем иконки для предзагрузки
 import SiteIcon from '@/assets/lead-source-icons/site.svg';
 import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.svg';
-import TelegramIcon from '@/assets/lead-source-icons/telegram.svg';
+import TwoGisIcon from '@/assets/2gis.png';
 import InstagramIcon from '@/assets/lead-source-icons/instagram.svg';
 import TiktokIcon from '@/assets/lead-source-icons/tiktok.svg';
 import AdsIcon from '@/assets/lead-source-icons/ads.svg';
@@ -720,7 +720,7 @@ const HomePage = memo(() => {
     // Предзагружаем изображения опросника сразу при загрузке страницы
     if (typeof window !== 'undefined' && shouldShowLeadSourceModal()) {
       // Предзагружаем все иконки опросника
-      const icons = [SiteIcon, WhatsappIcon, TelegramIcon, InstagramIcon, TiktokIcon, AdsIcon];
+      const icons = [SiteIcon, WhatsappIcon, TwoGisIcon, InstagramIcon, TiktokIcon, AdsIcon];
       icons.forEach((icon) => {
         const img = new Image();
         img.src = icon;
@@ -2245,6 +2245,87 @@ const HomePage = memo(() => {
             }
           }
         `}</style>
+      </section>
+
+      {/* Инструкция по бронированию (только для мобильной версии) */}
+      <section className="w-full bg-gradient-to-r from-[#E0F2FE] to-white py-8 px-4 md:hidden">
+        <div className="max-w-md mx-auto">
+          <h2 className="text-2xl font-bold text-[#273655] mb-6 text-center">
+            Простой процесс бронирования бокса
+          </h2>
+          <div className="space-y-4">
+            {/* Верхний ряд: 3 карточки */}
+            <div className="grid grid-cols-3 gap-4">
+              {/* Шаг 1 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <Box className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">1</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Забронируйте бокс
+                </p>
+              </div>
+
+              {/* Шаг 2 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <UserCircle className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">2</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Подтверждение от менеджера
+                </p>
+              </div>
+
+              {/* Шаг 3 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <MessageSquare className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">3</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Подпишите договор по СМС
+                </p>
+              </div>
+            </div>
+
+            {/* Нижний ряд: 2 карточки */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Шаг 4 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <Globe className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">4</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Оплатите онлайн или по СМС
+                </p>
+              </div>
+
+              {/* Шаг 5 */}
+              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
+                <div className="w-20 h-20 flex items-center justify-center mb-2">
+                  <Truck className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
+                  <span className="text-white font-bold text-sm">5</span>
+                </div>
+                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
+                  Назначьте доставку
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Отступ с фоном хэдера */}
