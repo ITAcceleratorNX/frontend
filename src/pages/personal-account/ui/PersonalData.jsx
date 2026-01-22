@@ -97,41 +97,45 @@ const PersonalData = memo(() => {
 
   // Функция для парсинга адреса из строки в отдельные компоненты
   const parseAddress = (addressStr) => {
-    if (!addressStr) return { street: '', house: '', apartment: '' };
+    if (!addressStr) return { street: '', house: '', floor: '', apartment: '' };
     
-    // Пытаемся распарсить адрес формата "г. Алматы, ул. Примерная, д. 123, кв. 456"
+    // Пытаемся распарсить адрес формата "г. Алматы, ул. Примерная, д. 123, эт. 5, кв. 456"
     const parts = addressStr.split(',').map(p => p.trim());
     let street = '';
     let house = '';
+    let floor = '';
     let apartment = '';
     
     for (const part of parts) {
       if (part.startsWith('д.') || part.match(/^д\.?\s*/)) {
         house = part.replace(/^д\.?\s*/, '').trim();
+      } else if (part.startsWith('эт.') || part.match(/^эт\.?\s*/)) {
+        floor = part.replace(/^эт\.?\s*/, '').trim();
       } else if (part.startsWith('кв.') || part.match(/^кв\.?\s*/)) {
         apartment = part.replace(/^кв\.?\s*/, '').trim();
       } else if (!part.startsWith('г.') && !part.startsWith('г ')) {
-        // Улица - это все, что не город, дом или квартира
+        // Улица - это все, что не город, дом, этаж или квартира
         street = part.replace(/^ул\.?\s*/, '').trim();
       }
     }
     
     // Если парсинг не удался, пытаемся использовать весь адрес как улицу
-    if (!street && !house && !apartment) {
+    if (!street && !house && !floor && !apartment) {
       // Убираем "г. Алматы," если есть
       street = addressStr.replace(/^г\.?\s*Алматы,?\s*/i, '').trim();
     }
     
-    return { street, house, apartment };
+    return { street, house, floor, apartment };
   };
 
   // Функция для объединения адреса из компонентов в строку
-  const combineAddress = (street, house, apartment) => {
+  const combineAddress = (street, house, floor, apartment) => {
     const parts = [];
     if (street.trim()) parts.push(street.trim());
     if (house.trim()) parts.push(`д. ${house.trim()}`);
+    if (floor.trim()) parts.push(`эт. ${floor.trim()}`);
     if (apartment.trim()) parts.push(`кв. ${apartment.trim()}`);
-    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
+    return parts.length > 0 ? parts.join(', ') : '';
   };
 
   // Используем мемоизацию для defaultValues, чтобы предотвратить повторное создание объекта
@@ -144,6 +148,7 @@ const PersonalData = memo(() => {
       iin: user?.iin || '',
       addressStreet: parsedAddress.street,
       addressHouse: parsedAddress.house,
+      addressFloor: parsedAddress.floor,
       addressApartment: parsedAddress.apartment,
       bday: user?.bday || ''
     };
@@ -167,6 +172,7 @@ const PersonalData = memo(() => {
         iin: user.iin || '',
         addressStreet: parsedAddress.street,
         addressHouse: parsedAddress.house,
+        addressFloor: parsedAddress.floor,
         addressApartment: parsedAddress.apartment,
         bday: user.bday || ''
       });
@@ -223,6 +229,7 @@ const PersonalData = memo(() => {
     const combinedAddress = combineAddress(
       formData.addressStreet || '',
       formData.addressHouse || '',
+      formData.addressFloor || '',
       formData.addressApartment || ''
     );
 
@@ -240,11 +247,13 @@ const PersonalData = memo(() => {
     const currentAddress = combineAddress(
       formData.addressStreet || '',
       formData.addressHouse || '',
+      formData.addressFloor || '',
       formData.addressApartment || ''
     );
     const defaultAddress = combineAddress(
       defaultValues.addressStreet || '',
       defaultValues.addressHouse || '',
+      defaultValues.addressFloor || '',
       defaultValues.addressApartment || ''
     );
     
@@ -436,11 +445,8 @@ const PersonalData = memo(() => {
           {/* Заголовок секции */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Профиль</h2>
-            <p className="text-[#A2A2A2] mb-2">
-              Просмотрите и обновите данные вашей учетной записи
-            </p>
             <p className="text-[#A2A2A2]">
-              Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.
+              Просмотрите и обновите данные вашей учетной записи
             </p>
           </div>
 
@@ -536,6 +542,15 @@ const PersonalData = memo(() => {
                       disabled={!isEditing}
                       {...register('addressHouse', { required: 'Дом обязателен для заполнения' })}
                       error={errors.addressHouse?.message}
+                      className="bg-white rounded-lg flex-1"
+                      labelClassName="font-sf-pro-text text-[#000000]"
+                    />
+                    <Input
+                      label="Этаж"
+                      placeholder="Этаж"
+                      disabled={!isEditing}
+                      {...register('addressFloor')}
+                      error={errors.addressFloor?.message}
                       className="bg-white rounded-lg flex-1"
                       labelClassName="font-sf-pro-text text-[#000000]"
                     />

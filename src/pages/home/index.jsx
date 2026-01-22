@@ -106,6 +106,7 @@ const HomePage = memo(() => {
   const [cloudVolumeDirect, setCloudVolumeDirect] = useState(1); // Прямой ввод объема для тарифов
   const [movingStreetFrom, setMovingStreetFrom] = useState("");
   const [movingHouseFrom, setMovingHouseFrom] = useState("");
+  const [movingFloorFrom, setMovingFloorFrom] = useState("");
   const [movingApartmentFrom, setMovingApartmentFrom] = useState("");
   const [movingPickupDate, setMovingPickupDate] = useState(() => {
     const today = new Date();
@@ -114,6 +115,7 @@ const HomePage = memo(() => {
   });
   const [cloudStreetFrom, setCloudStreetFrom] = useState("");
   const [cloudHouseFrom, setCloudHouseFrom] = useState("");
+  const [cloudFloorFrom, setCloudFloorFrom] = useState("");
   const [cloudApartmentFrom, setCloudApartmentFrom] = useState("");
   
   // Функция для формирования полного адреса из отдельных полей
@@ -121,18 +123,20 @@ const HomePage = memo(() => {
     const parts = [];
     if (movingStreetFrom.trim()) parts.push(movingStreetFrom.trim());
     if (movingHouseFrom.trim()) parts.push(`д. ${movingHouseFrom.trim()}`);
+    if (movingFloorFrom.trim()) parts.push(`эт. ${movingFloorFrom.trim()}`);
     if (movingApartmentFrom.trim()) parts.push(`кв. ${movingApartmentFrom.trim()}`);
-    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
-  }, [movingStreetFrom, movingHouseFrom, movingApartmentFrom]);
+    return parts.length > 0 ? parts.join(', ') : '';
+  }, [movingStreetFrom, movingHouseFrom, movingFloorFrom, movingApartmentFrom]);
   
   // Функция для формирования полного адреса облачного хранения из отдельных полей
   const getCloudPickupAddress = useMemo(() => {
     const parts = [];
     if (cloudStreetFrom.trim()) parts.push(cloudStreetFrom.trim());
     if (cloudHouseFrom.trim()) parts.push(`д. ${cloudHouseFrom.trim()}`);
+    if (cloudFloorFrom.trim()) parts.push(`эт. ${cloudFloorFrom.trim()}`);
     if (cloudApartmentFrom.trim()) parts.push(`кв. ${cloudApartmentFrom.trim()}`);
-    return parts.length > 0 ? `г. Алматы, ${parts.join(', ')}` : '';
-  }, [cloudStreetFrom, cloudHouseFrom, cloudApartmentFrom]);
+    return parts.length > 0 ? parts.join(', ') : '';
+  }, [cloudStreetFrom, cloudHouseFrom, cloudFloorFrom, cloudApartmentFrom]);
   
   // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
   const [movingOrders, setMovingOrders] = useState([]);
@@ -1444,6 +1448,7 @@ const HomePage = memo(() => {
     if (activeStorageTab !== "CLOUD") {
       setCloudStreetFrom("");
       setCloudHouseFrom("");
+      setCloudFloorFrom("");
       setCloudApartmentFrom("");
       return;
     }
@@ -2387,6 +2392,7 @@ const HomePage = memo(() => {
                         } else {
                           setMovingStreetFrom("");
                           setMovingHouseFrom("");
+                          setMovingFloorFrom("");
                           setMovingApartmentFrom("");
                         }
                       }}
@@ -2434,6 +2440,16 @@ const HomePage = memo(() => {
                                 setSubmitError(null);
                               }}
                               placeholder="Дом"
+                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            />
+                            <input
+                              type="text"
+                              value={movingFloorFrom}
+                              onChange={(e) => {
+                                setMovingFloorFrom(e.target.value);
+                                setSubmitError(null);
+                              }}
+                              placeholder="Этаж"
                               className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                             />
                             <input
@@ -3171,6 +3187,16 @@ const HomePage = memo(() => {
                         />
                         <input
                           type="text"
+                          value={cloudFloorFrom}
+                          onChange={(e) => {
+                            setCloudFloorFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Этаж"
+                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        />
+                        <input
+                          type="text"
                           value={cloudApartmentFrom}
                           onChange={(e) => {
                             setCloudApartmentFrom(e.target.value);
@@ -3266,6 +3292,16 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                           placeholder="Дом"
+                          className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
+                        />
+                        <input
+                          type="text"
+                          value={cloudFloorFrom}
+                          onChange={(e) => {
+                            setCloudFloorFrom(e.target.value);
+                            setSubmitError(null);
+                          }}
+                          placeholder="Этаж"
                           className="h-12 flex-1 px-4 text-base border-0 rounded-3xl bg-white focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:bg-white min-w-0"
                         />
                         <input
