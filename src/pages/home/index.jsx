@@ -1971,17 +1971,17 @@ const HomePage = memo(() => {
 
       <div className="flex-1 relative overflow-hidden bg-gradient-to-r bg-[#FFF] -mt-16 pt-16">
         {/* Декоративные элементы на фоне - начинаются от самого верха страницы */}
-        <div className="absolute inset-0 pointer-events-none overflow-visible z-0">
-          {/* Большой круг слева */}
-          <div className="absolute top-20 -left-20 w-96 h-96 bg-[#00A991] opacity-10 rounded-full blur-3xl"></div>
-          {/* Средний круг справа */}
-          <div className="absolute top-1/2 -right-32 w-80 h-80 bg-[#00A991] opacity-10 rounded-full blur-3xl"></div>
-          {/* Маленький круг в центре */}
-          <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-[#00A991] opacity-10 rounded-full blur-2xl"></div>
-          {/* Дополнительные декоративные круги */}
-          <div className="absolute bottom-20 left-1/4 w-48 h-48 bg-[#00A991] opacity-10 rounded-full blur-2xl"></div>
-          <div className="absolute top-1/3 left-1/2 w-56 h-56 bg-[#00A991] opacity-10 rounded-full blur-2xl"></div>
-        </div>
+        {/*<div className="absolute inset-0 pointer-events-none overflow-visible z-0">*/}
+        {/*  /!* Большой круг слева *!/*/}
+        {/*  <div className="absolute top-20 -left-20 w-96 h-96 bg-[#00A991] opacity-10 rounded-full blur-3xl"></div>*/}
+        {/*  /!* Средний круг справа *!/*/}
+        {/*  <div className="absolute top-1/2 -right-32 w-80 h-80 bg-[#00A991] opacity-10 rounded-full blur-3xl"></div>*/}
+        {/*  /!* Маленький круг в центре *!/*/}
+        {/*  <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-[#00A991] opacity-10 rounded-full blur-2xl"></div>*/}
+        {/*  /!* Дополнительные декоративные круги *!/*/}
+        {/*  <div className="absolute bottom-20 left-1/4 w-48 h-48 bg-[#00A991] opacity-10 rounded-full blur-2xl"></div>*/}
+        {/*  <div className="absolute top-1/3 left-1/2 w-56 h-56 bg-[#00A991] opacity-10 rounded-full blur-2xl"></div>*/}
+        {/*</div>*/}
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Левая часть - текст */}
