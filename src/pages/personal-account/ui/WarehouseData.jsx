@@ -135,7 +135,7 @@ const WarehouseData = () => {
   const [megaSelectedMap, setMegaSelectedMap] = useState(1);
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const mapRef = useRef(null);
-  
+
   // Проверка, является ли пользователь менеджером или админом
   const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
@@ -1074,16 +1074,19 @@ const WarehouseData = () => {
                   setIsLoadingPendingOrder(true);
                   try {
                     const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                    if (order) {
-                      setPendingOrder(order);
-                      setIsPendingOrderModalOpen(true);
-                    } else {
-                      setPreviewStorage(storage);
-                    }
+                    setPendingOrder(order);
+                    setIsPendingOrderModalOpen(true);
+                    setIsMapModalOpen(false);
                   } catch (error) {
-                    console.error('Ошибка при загрузке заказа:', error);
-                    setPreviewStorage(storage);
+                    if (error.response?.status === 404) {
+                      setPendingOrder(null);
+                      setIsPendingOrderModalOpen(true);
+                      setIsMapModalOpen(false);
+                    } else {
+                      console.error('Ошибка при загрузке заказа:', error);
+                    }
                   } finally {
+                    setPreviewStorage(storage);
                     setIsLoadingPendingOrder(false);
                   }
                 } else {
@@ -1092,8 +1095,8 @@ const WarehouseData = () => {
               }}
               selectedStorage={previewStorage}
               selectedMap={
-                selectedWarehouse?.name?.toLowerCase().includes('mega') 
-                  ? megaSelectedMap 
+                selectedWarehouse?.name?.toLowerCase().includes('mega')
+                  ? megaSelectedMap
                   : komfortSelectedMap
               }
               onMapChange={(mapNumber) => {
@@ -1170,8 +1173,8 @@ const WarehouseData = () => {
     };
 
     const getCardStyle = (status) => {
-      return status === 'AVAILABLE' 
-        ? 'border-green-200 hover:border-green-300 hover:shadow-lg' 
+      return status === 'AVAILABLE'
+        ? 'border-green-200 hover:border-green-300 hover:shadow-lg'
         : 'border-gray-200 hover:border-gray-300 hover:shadow-md opacity-75';
     };
 
@@ -1214,8 +1217,8 @@ const WarehouseData = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {allWarehouses.map((warehouseItem) => (
-                    <div 
-                      key={warehouseItem.id} 
+                    <div
+                      key={warehouseItem.id}
                       className={`group bg-white rounded-xl border shadow-sm cursor-pointer transition-all duration-200 ${getCardStyle(warehouseItem.status)}`}
                       onClick={() => handleCardClick(warehouseItem.id)}
                     >
@@ -1233,7 +1236,7 @@ const WarehouseData = () => {
                           <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#273655] transition-colors">
                             {warehouseItem.name}
                           </h3>
-                          
+
                           <div className="space-y-2 text-sm text-gray-600">
                             <div className="flex items-start">
                               <svg className="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1242,7 +1245,7 @@ const WarehouseData = () => {
                               </svg>
                               <span className="line-clamp-2">{warehouseItem?.address}</span>
                             </div>
-                            
+
                             <div className="flex items-center">
                               <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2351,7 +2354,7 @@ const WarehouseData = () => {
                   // Для INDIVIDUAL складов - как на главной странице
                   <div className="grid grid-cols-1 lg:grid-cols-[50%_1fr] gap-6">
                     {/* Левая панель - Карта склада с градиентом */}
-                    <div className="rounded-2xl h-[70vh] min-h-[400px] flex flex-col" style={{ 
+                    <div className="rounded-2xl h-[70vh] min-h-[400px] flex flex-col" style={{
                       background: 'linear-gradient(to bottom, #00A991 0%, #31876D 100%)',
                       padding: '20px',
                       borderRadius: '20px',
@@ -2382,7 +2385,7 @@ const WarehouseData = () => {
                             popoverProps={{ className: "p-0" }}
                           />
                         </div>
-                        
+
                         {/* Кнопки управления зумом */}
                         <div className="flex gap-2 flex-shrink-0">
                           <button
@@ -2409,7 +2412,7 @@ const WarehouseData = () => {
                           </button>
                         </div>
                       </div>
-                      
+
                       {/* Компонент карты */}
                       <div className="flex-1 w-full h-full" style={{ minHeight: 0, minWidth: 0, position: 'relative', zIndex: 0 }}>
                         <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
@@ -2432,7 +2435,7 @@ const WarehouseData = () => {
                               {getStatusDisplay(selectedWarehouse.status)}
                             </div>
                           </div>
-                          
+
                           <div className="space-y-3 text-sm text-gray-600">
                             {selectedWarehouse.address && (
                               <div className="flex items-start">
@@ -2443,7 +2446,7 @@ const WarehouseData = () => {
                                 <span>{selectedWarehouse.address}</span>
                               </div>
                             )}
-                            
+
                             <div className="flex items-center">
                               <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2456,7 +2459,7 @@ const WarehouseData = () => {
                                 <div>
                                   <div className="text-xs text-gray-500 mb-1">Всего {selectedWarehouse.type === "CLOUD" ? 'мест' : 'боксов'}</div>
                                   <div className="text-lg font-bold text-[#273655]">
-                                    {selectedWarehouse.type === "CLOUD" 
+                                    {selectedWarehouse.type === "CLOUD"
                                       ? selectedWarehouse.storage[0]?.total_volume || 0
                                       : selectedWarehouse.storage.length}
                                   </div>
@@ -2464,7 +2467,7 @@ const WarehouseData = () => {
                                 <div>
                                   <div className="text-xs text-gray-500 mb-1">Свободно</div>
                                   <div className="text-lg font-bold text-green-600">
-                                    {selectedWarehouse.type === "CLOUD" 
+                                    {selectedWarehouse.type === "CLOUD"
                                       ? selectedWarehouse.storage[0]?.available_volume || 0
                                       : selectedWarehouse.storage.filter(s => s.status === 'VACANT').length}
                                   </div>
@@ -3351,24 +3354,25 @@ const WarehouseData = () => {
                       isFullscreen={true}
                       onBoxSelect={async (storage) => {
                         // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
-                        if (storage?.status === 'PENDING' && isAdminOrManager) {
+                        if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
                           setIsLoadingPendingOrder(true);
                           try {
                             const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                            if (order) {
-                              setPendingOrder(order);
-                              setIsPendingOrderModalOpen(true);
-                              setIsMapModalOpen(false); // Закрываем модальное окно карты
-                            } else {
-                              // Если заказа нет, просто выбираем бокс
-                              setPreviewStorage(storage);
-                            }
+                            setPendingOrder(order);
+                            setIsPendingOrderModalOpen(true);
+                            setIsMapModalOpen(false);
                           } catch (error) {
-                            console.error('Ошибка при загрузке заказа:', error);
-                            // В случае ошибки все равно выбираем бокс
-                            setPreviewStorage(storage);
+                            if (error.response.status === 404) {
+                              setPendingOrder(null);
+                              setIsPendingOrderModalOpen(true);
+                              setIsMapModalOpen(false);
+                            } else {
+                              console.error('Ошибка при загрузке заказа:', error);
+                            }
+
                           } finally {
                             setIsLoadingPendingOrder(false);
+                            setPreviewStorage(storage);
                           }
                         } else {
                           // Для обычных боксов просто выбираем
@@ -3418,20 +3422,19 @@ const WarehouseData = () => {
                           setIsLoadingPendingOrder(true);
                           try {
                             const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                            if (order) {
-                              setPendingOrder(order);
-                              setIsPendingOrderModalOpen(true);
-                              setIsMapModalOpen(false); // Закрываем модальное окно карты
-                            } else {
-                              // Если заказа нет, просто выбираем бокс
-                              setPreviewStorage(storage);
-                            }
+                            setPendingOrder(order);
+                            setIsPendingOrderModalOpen(true);
+                            setIsMapModalOpen(false);
                           } catch (error) {
-                            console.error('Ошибка при загрузке заказа:', error);
-                            // В случае ошибки все равно выбираем бокс
-                            setPreviewStorage(storage);
+                            if (error.response.status === 404) {
+                              setPendingOrder(null);
+                              setIsPendingOrderModalOpen(true);
+                            } else {
+                              console.error('Ошибка при загрузке заказа:', error);
+                            }
                           } finally {
                             setIsLoadingPendingOrder(false);
+                            setPreviewStorage(storage);
                           }
                         } else {
                           // Для обычных боксов просто выбираем
@@ -3469,6 +3472,7 @@ const WarehouseData = () => {
         <PendingOrderModal
           isOpen={isPendingOrderModalOpen}
           order={pendingOrder}
+          storageId={previewStorage?.id}
           onClose={() => {
             setIsPendingOrderModalOpen(false);
             setPendingOrder(null);
