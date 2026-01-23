@@ -129,5 +129,18 @@ export const usersApi = {
       console.error('Ошибка при загрузке курьеров:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Обновление настроек пользователя (включая auto_pay)
+  updateUserSettings: async (settings) => {
+    try {
+      console.log('Отправка запроса на обновление настроек пользователя:', settings);
+      const response = await api.put('/users/me', settings);
+      console.log('Настройки пользователя успешно обновлены:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении настроек пользователя:', error.response?.data || error.message);
+      throw error;
+    }
   }
 }; 

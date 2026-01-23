@@ -6,8 +6,13 @@ import PaymentCard from './PaymentCard';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { useNavigate } from 'react-router-dom';
-import { List, Zap, FileText, HelpCircle } from 'lucide-react';
+import { List, Zap, FileText, HelpCircle, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
+import { Switch } from '../../../components/ui/switch';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersApi } from '../../../shared/api/usersApi';
+import { toast } from 'react-toastify';
+import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import instImage from '../../../assets/inst.png';
 
 const PAYMENT_FILTER_OPTIONS = [
@@ -17,10 +22,38 @@ const PAYMENT_FILTER_OPTIONS = [
 ];
 
 const UserPayments = ({ embeddedMobile = false }) => {
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Мутация для обновления auto_pay
+  const updateAutoPayMutation = useMutation({
+    mutationFn: async (autoPay) => {
+      return await usersApi.updateUserSettings({ auto_pay: autoPay });
+    },
+    onSuccess: (data, autoPay) => {
+      // Обновляем кеш пользователя
+      queryClient.invalidateQueries({ queryKey: [USER_QUERY_KEY] });
+      refetchUser();
+      toast.success(autoPay ? 'Автооплата включена' : 'Автооплата выключена', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    },
+    onError: (error) => {
+      console.error('Ошибка при обновлении автооплаты:', error);
+      toast.error('Не удалось обновить настройки автооплаты', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    }
+  });
+
+  const handleAutoPayToggle = (checked) => {
+    updateAutoPayMutation.mutate(checked);
+  };
 
   // Получение платежей пользователя
   const {
@@ -71,6 +104,29 @@ const UserPayments = ({ embeddedMobile = false }) => {
       <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
         <div className={embeddedMobile ? 'flex flex-wrap items-center justify-between gap-2 mb-2 min-[360px]:mb-3' : 'mb-4'}>
           <h2 className="text-base min-[360px]:text-2xl sm:text-3xl font-semibold text-[#363636] min-w-0 flex-1">Платежи</h2>
+          {user?.recurrent_token && (
+            <div className={`${embeddedMobile ? 'w-full mt-2' : 'flex items-center gap-3'} bg-white border border-[#DFDFDF] rounded-xl p-3 ${embeddedMobile ? '' : 'ml-auto'}`}>
+              <div className="flex items-center gap-2 flex-1">
+                <CreditCard className="w-4 h-4 text-[#00A991]" />
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-700">Автоматическая оплата</span>
+                  {(user?.pan_masked || user?.holder) && (
+                    <span className="text-xs text-gray-500 mt-0.5">
+                      {user?.pan_masked && `Карта: ${user.pan_masked}`}
+                      {user?.pan_masked && user?.holder && ' • '}
+                      {user?.holder && `Владелец: ${user.holder}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Switch
+                checked={user?.auto_pay || false}
+                onCheckedChange={handleAutoPayToggle}
+                disabled={updateAutoPayMutation.isPending}
+                className="bg-gray-300 data-[state=checked]:bg-[#00A991]"
+              />
+            </div>
+          )}
           {embeddedMobile && (
             <Select value={activeFilter} onValueChange={setActiveFilter}>
               <SelectTrigger className="w-[100px] min-[360px]:w-[120px] min-[400px]:w-[130px] h-8 min-[360px]:h-9 bg-white border border-[#00A991]/70 rounded-xl flex items-center gap-1.5 flex-shrink-0 text-gray-700 shadow-none [&>svg]:text-[#00A991]">
