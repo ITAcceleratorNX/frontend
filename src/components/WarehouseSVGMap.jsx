@@ -22,11 +22,21 @@ const WarehouseSVGMap = React.forwardRef(({
   const getPanBoundsRef = useRef(null);
   const constrainPanRef = useRef(null);
   const touchStartRef = useRef(null);
+  const isMobileRef = useRef(false);
 
   const warehouseName = warehouse?.name || '';
   
   // Отслеживаем текущий key SVG (должно быть после определения warehouseName и selectedMap)
   const svgKeyRef = useRef(`${warehouseName}-${selectedMap}`);
+
+  // Детект мобильного устройства
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      isMobileRef.current =
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0;
+    }
+  }, []);
 
   // Определяем размеры и данные в зависимости от склада
   const getWarehouseConfig = (overrideName = null, overrideSelectedMap = null) => {
@@ -300,7 +310,7 @@ const WarehouseSVGMap = React.forwardRef(({
   // Проверка выбранного бокса
   const isBoxSelected = useCallback((boxName) => {
     if (!selectedStorage) return false;
-    return selectedStorage.name.toLowerCase() === boxName.toLowerCase();
+    return selectedStorage?.name === boxName;
   }, [selectedStorage]);
 
   // Проверка занятости
@@ -389,7 +399,7 @@ const WarehouseSVGMap = React.forwardRef(({
             
             const startZoom = panZoomRef.current.getZoom();
             const startPan = panZoomRef.current.getPan();
-            const targetZoom = 2.0;
+            const targetZoom = isMobileRef.current ? 1.6 : 2.0;
             
             const viewportCenterX = containerWidth / 2;
             const viewportCenterY = containerHeight / 2;
@@ -494,16 +504,21 @@ const WarehouseSVGMap = React.forwardRef(({
         panEnabled: true,
         controlIconsEnabled: false,
         zoomEnabled: true,
-        dblClickZoomEnabled: true,
-        mouseWheelZoomEnabled: true,
-        preventMouseEventsDefault: true,
-        zoomScaleSensitivity: 0.2,
+        dblClickZoomEnabled: !isMobileRef.current,
+        mouseWheelZoomEnabled: !isMobileRef.current,
+        preventMouseEventsDefault: !isMobileRef.current,
+        zoomScaleSensitivity: isMobileRef.current ? 0.08 : 0.2,
         minZoom: zoomLimits.minZoom,
         maxZoom: zoomLimits.maxZoom,
         fit: false,
         contain: false,
         center: false,
         refreshRate: 60,
+        beforeMouseDown: (e) => {
+          // На мобилке разрешаем native touch
+          if (isMobileRef.current) return true;
+          return e.button === 0;
+        },
         beforePan: (oldPan, newPan) => {
           if (!getPanBoundsRef.current) {
             return { x: newPan.x, y: newPan.y };
@@ -600,16 +615,21 @@ const WarehouseSVGMap = React.forwardRef(({
         panEnabled: true,
         controlIconsEnabled: false,
         zoomEnabled: true,
-        dblClickZoomEnabled: true,
-        mouseWheelZoomEnabled: true,
-        preventMouseEventsDefault: true,
-        zoomScaleSensitivity: 0.2,
+        dblClickZoomEnabled: !isMobileRef.current,
+        mouseWheelZoomEnabled: !isMobileRef.current,
+        preventMouseEventsDefault: !isMobileRef.current,
+        zoomScaleSensitivity: isMobileRef.current ? 0.08 : 0.2,
         minZoom: zoomLimits.minZoom,
         maxZoom: zoomLimits.maxZoom,
         fit: false,
         contain: false,
         center: false,
         refreshRate: 60,
+        beforeMouseDown: (e) => {
+          // На мобилке разрешаем native touch
+          if (isMobileRef.current) return true;
+          return e.button === 0;
+        },
         beforePan: (oldPan, newPan) => {
           if (!getPanBoundsRef.current) {
             return { x: newPan.x, y: newPan.y };
@@ -1024,7 +1044,8 @@ const WarehouseSVGMap = React.forwardRef(({
           cursor: 'grab',
           transform: 'rotateX(30deg)',
           transformStyle: 'preserve-3d',
-          transformOrigin: 'center center'
+          transformOrigin: 'center center',
+          touchAction: 'none'
         }}
         onMouseDown={(e) => {
           if (e.target.tagName === 'svg' || e.target.classList.contains('box-rect') || e.target.classList.contains('box-polygon')) {
@@ -1114,8 +1135,6 @@ const WarehouseSVGMap = React.forwardRef(({
                         
                         // Если движение было небольшое и быстрое - это клик
                         if (deltaX < 10 && deltaY < 10 && deltaTime < 300) {
-                          e.preventDefault();
-                          e.stopPropagation();
                           handleBoxClick(box.name, e);
                         }
                         touchStartRef.current = null;
@@ -1158,8 +1177,6 @@ const WarehouseSVGMap = React.forwardRef(({
                         
                         // Если движение было небольшое и быстрое - это клик
                         if (deltaX < 10 && deltaY < 10 && deltaTime < 300) {
-                          e.preventDefault();
-                          e.stopPropagation();
                           handleBoxClick(box.name, e);
                         }
                         touchStartRef.current = null;
@@ -1185,7 +1202,7 @@ const WarehouseSVGMap = React.forwardRef(({
                 </text>
                 
                 {/* Информация при hover */}
-                {hoveredId === box.name && boxData && (
+                {(hoveredId === box.name || isBoxSelected(box?.name)) && boxData && (
                   <text
                     x={centerX}
                     y={centerY + 22}
