@@ -14,18 +14,29 @@ const InfoWarehouses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  // Загрузка складов при монтировании
+  // Загрузка складов при монтировании и автоматическое перенаправление на первый склад
   useEffect(() => {
     const fetchWarehouses = async () => {
       try {
         setIsLoading(true);
         setError(null);
         const data = await warehouseApi.getAllWarehouses();
-        setWarehouses(Array.isArray(data) ? data : []);
-        setFilteredWarehouses(Array.isArray(data) ? data : []);
+        const warehousesArray = Array.isArray(data) ? data : [];
+        setWarehouses(warehousesArray);
+        setFilteredWarehouses(warehousesArray);
         
         if (import.meta.env.DEV) {
           console.log('Склады загружены для панели управления:', data);
+        }
+
+        // Автоматически перенаправляем на первый склад
+        if (warehousesArray.length > 0) {
+          const firstWarehouse = warehousesArray.find(w => w.type !== 'CLOUD') || warehousesArray[0];
+          if (firstWarehouse) {
+            const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
+            navigate(`/personal-account/${basePath}/warehouses/${firstWarehouse.id}`, { replace: true });
+            return; // Выходим, чтобы не показывать карточки
+          }
         }
       } catch (error) {
         console.error('Ошибка при загрузке складов:', error);
@@ -39,7 +50,7 @@ const InfoWarehouses = () => {
     };
 
     fetchWarehouses();
-  }, []);
+  }, [navigate, user?.role]);
 
   // Фильтрация складов
   useEffect(() => {

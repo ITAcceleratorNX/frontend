@@ -13,6 +13,10 @@ const getStorageTypeText = (type) => {
   return type;
 };
 
+const getVolumeUnit = (storageType) => {
+  return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
+};
+
 const formatDate = (dateString) => {
   if (!dateString) return 'Не указана';
   try {
@@ -170,8 +174,8 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
         <div className="flex-1 min-w-0 overflow-hidden">
           <h3 className={`font-bold mb-2 truncate ${embeddedMobile ? 'text-base min-[360px]:text-lg' : 'text-2xl'}`}>Заказ №{order.id}</h3>
           <p className="text-xs text-white/90 mb-1">Создан: {formatDate(order.created_at)}</p>
-          <p className="text-sm text-white/90">Тип: {getStorageTypeText(order.storage_type)}</p>
-          <p className="text-sm text-white/90">Объем: {order.volume} м³</p>
+          <p className="text-sm text-white/90 mb-1">Тип: {getStorageTypeText(order.storage?.storage_type || order.storage_type || 'INDIVIDUAL')}</p>
+          <p className="text-sm text-white/90">Объем: {order.total_volume || order.volume} {getVolumeUnit(order.storage?.storage_type || order.storage_type || 'INDIVIDUAL')}</p>
         </div>
         
         {/* Белый квадрат с идентификатором бокса */}
