@@ -128,6 +128,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
 
   // Используем мемоизацию для defaultValues с форматированным телефоном
   const defaultValues = useMemo(() => ({
+    name: user?.name || '',
     bin_iin: user?.bin_iin || '',
     company_name: user?.company_name || '',
     bik: user?.bik || '',
@@ -154,6 +155,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   useEffect(() => {
     if (user) {
       reset({
+        name: user.name || '',
         bin_iin: user.bin_iin || '',
         company_name: user.company_name || '',
         bik: user.bik || '',
@@ -209,6 +211,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   const onSubmit = async (formData) => {
     // Нормализуем телефон перед отправкой
     const normalizedData = {
+      name: formData.name,
       bin_iin: formData.bin_iin,
       company_name: formData.company_name,
       bik: formData.bik,
@@ -292,6 +295,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
     if (isEditing) {
       // При отмене сбрасываем на текущие данные пользователя с форматированным телефоном
       reset({
+        name: user?.name || '',
         bin_iin: user?.bin_iin || '',
         company_name: user?.company_name || '',
         bik: user?.bik || '',
@@ -435,10 +439,10 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className={`font-semibold text-[#363636] break-words ${embeddedMobile ? 'text-sm min-[360px]:text-base' : 'text-lg mb-2'}`}>
-              {user?.company_name || 'Организация'}
+              {user?.name || user?.company_name || 'Организация'}
             </h3>
             <p className={`text-[#999] break-words ${embeddedMobile ? 'text-xs min-[360px]:text-xs leading-snug' : 'text-sm'}`}>
-              {desc2}
+              {user?.company_name && user?.name ? user.company_name : desc2}
             </p>
           </div>
         </div>
@@ -453,7 +457,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Добро пожаловать в Extra Space!</h1>
-              <p className="text-lg text-gray-600">Привет, {user?.company_name || 'Организация'}. Добро пожаловать.</p>
+              <p className="text-lg text-gray-600">Привет, {user?.name || user?.company_name || 'Организация'}. Добро пожаловать.</p>
             </div>
             <button
               onClick={() => navigate('/personal-account', { state: { activeSection: 'personal' } })}
@@ -475,6 +479,21 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
             <div className={`grid gap-3 min-[360px]:gap-4 mb-4 min-[360px]:mb-6 ${embeddedMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {/* Левая колонка */}
               <div className="space-y-4">
+                <Input
+                  label="ФИО"
+                  placeholder="Введите ФИО"
+                  disabled={!isEditing}
+                  {...register('name', {
+                    required: 'ФИО обязательно для заполнения',
+                    minLength: {
+                      value: 2,
+                      message: 'ФИО должно содержать минимум 2 символа'
+                    }
+                  })}
+                  error={errors.name?.message}
+                  className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
+                  labelClassName={embeddedMobile ? 'font-sf-pro-text text-[#363636] font-semibold' : 'font-sf-pro-text text-[#000000]'}
+                />
                 <Input
                   label="БИН/ИИН"
                   placeholder="Введите БИН/ИИН"

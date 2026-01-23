@@ -545,7 +545,7 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0, embeddedMobile = f
       </div>
 
       {/* Договоры */}
-      {order.contracts && order.contracts.length > 0 && (
+      {Array.isArray(order?.contracts) && order.contracts?.document_id && (
         <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}>
           <p className="text-white/90 text-sm mb-2">Договоры:</p>
           

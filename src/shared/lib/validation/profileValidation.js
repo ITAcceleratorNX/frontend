@@ -1,11 +1,18 @@
-// Константы для валидации
-export const REQUIRED_PROFILE_FIELDS = [
+// Константы для валидации для INDIVIDUAL пользователей
+export const REQUIRED_PROFILE_FIELDS_INDIVIDUAL = [
   { key: 'name', label: 'Имя и фамилия', validator: 'text' },
   { key: 'email', label: 'Электронная почта', validator: 'email' },
   { key: 'phone', label: 'Номер телефона', validator: 'phone' },
   { key: 'iin', label: 'ИИН', validator: 'iin' },
   { key: 'address', label: 'Адрес', validator: 'text' },
   { key: 'bday', label: 'Дата рождения', validator: 'date' }
+];
+
+// Константы для валидации для LEGAL пользователей (только базовые поля, остальные заполняются при регистрации)
+export const REQUIRED_PROFILE_FIELDS_LEGAL = [
+  { key: 'name', label: 'ФИО', validator: 'text' },
+  { key: 'email', label: 'Электронная почта', validator: 'email' },
+  { key: 'phone', label: 'Номер телефона', validator: 'phone' }
 ];
 
 // Валидаторы для конкретных типов полей
@@ -46,10 +53,16 @@ export const validateUserProfile = (user) => {
     };
   }
 
+  // Определяем тип пользователя и выбираем соответствующие поля для валидации
+  const userType = user.user_type || 'INDIVIDUAL';
+  const requiredFields = userType === 'LEGAL' 
+    ? REQUIRED_PROFILE_FIELDS_LEGAL 
+    : REQUIRED_PROFILE_FIELDS_INDIVIDUAL;
+
   const missingFields = [];
   const invalidFields = [];
 
-  REQUIRED_PROFILE_FIELDS.forEach(field => {
+  requiredFields.forEach(field => {
     const value = user[field.key];
     const validator = validators[field.validator];
     
@@ -63,7 +76,11 @@ export const validateUserProfile = (user) => {
     }
   });
 
-  const isValid = missingFields.length === 0 && invalidFields.length === 0;
+  // Проверяем верификацию телефона
+  const isPhoneVerified = user.phone_verified === true;
+  const phoneNotVerified = !isPhoneVerified && user.phone;
+
+  const isValid = missingFields.length === 0 && invalidFields.length === 0 && isPhoneVerified;
   
   let message = 'Профиль заполнен полностью';
   if (!isValid) {
@@ -74,6 +91,9 @@ export const validateUserProfile = (user) => {
     if (invalidFields.length > 0) {
       errors.push(`Некорректно заполнены: ${invalidFields.join(', ')}`);
     }
+    if (phoneNotVerified) {
+      errors.push('Номер телефона не верифицирован');
+    }
     message = errors.join('. ');
   }
 
@@ -81,6 +101,7 @@ export const validateUserProfile = (user) => {
     isValid,
     missingFields,
     invalidFields,
+    phoneNotVerified,
     message
   };
 };

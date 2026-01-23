@@ -26,6 +26,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/pop
 import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import { toast } from "react-toastify";
+import { validateUserProfile } from "../../shared/lib/validation/profileValidation";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 // Импортируем иконки для предзагрузки
@@ -947,6 +948,108 @@ const HomePage = memo(() => {
     ];
   }, []);
 
+  // Функция для перевода ошибок бэкенда на понятный язык
+  const translateBackendError = useCallback((error, errorData) => {
+    const message = errorData?.message || errorData?.error || error.message || "";
+    const status = error.response?.status;
+    const code = errorData?.code;
+
+    // Ошибки валидации профиля
+    if (status === 400 && (
+      message.includes('profile') || 
+      message.includes('Profile') ||
+      message.includes('user data') ||
+      message.includes('User data') ||
+      message.includes('не заполнен') ||
+      message.includes('не заполнены') ||
+      message.includes('отсутствуют') ||
+      message.includes('required') ||
+      message.includes('missing') ||
+      code === 'PROFILE_INCOMPLETE' ||
+      code === 'USER_DATA_INCOMPLETE'
+    )) {
+      return {
+        userMessage: 'Пожалуйста, заполните все данные в личном кабинете перед оформлением заказа.',
+        shouldRedirect: true,
+        redirectPath: '/personal-account',
+        redirectState: { activeSection: 'personal', message: 'Заполните данные профиля и подтвердите номер телефона.' }
+      };
+    }
+
+    // Ошибки валидации данных
+    if (status === 400 && (
+      message.includes('validation') ||
+      message.includes('Validation') ||
+      message.includes('invalid') ||
+      message.includes('Invalid') ||
+      message.includes('некорректно') ||
+      message.includes('неверный')
+    )) {
+      return {
+        userMessage: 'Проверьте правильность введенных данных и попробуйте снова.',
+        shouldRedirect: false
+      };
+    }
+
+    // Ошибки телефона
+    if (status === 400 && (
+      message.includes('Phone number must be verified') ||
+      message.includes('phone number') ||
+      message.includes('телефон') ||
+      code === 'PHONE_NOT_VERIFIED'
+    )) {
+      return {
+        userMessage: 'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
+        shouldRedirect: true,
+        redirectPath: '/personal-account',
+        redirectState: { activeSection: 'personal' }
+      };
+    }
+
+    // Ошибки лимита заказов
+    if (status === 403 && (
+      message.includes('максимальное количество боксов') ||
+      message.includes('MAX_ORDERS_LIMIT_REACHED') ||
+      code === 'MAX_ORDERS_LIMIT_REACHED'
+    )) {
+      return {
+        userMessage: 'Достигнут лимит активных заказов. Пожалуйста, свяжитесь с нами для увеличения лимита.',
+        shouldRedirect: false
+      };
+    }
+
+    // Ошибки авторизации
+    if (status === 401) {
+      return {
+        userMessage: 'Сессия истекла. Пожалуйста, войдите снова.',
+        shouldRedirect: true,
+        redirectPath: '/login'
+      };
+    }
+
+    // Ошибки доступа
+    if (status === 403) {
+      return {
+        userMessage: 'У вас нет доступа для выполнения этого действия.',
+        shouldRedirect: false
+      };
+    }
+
+    // Ошибки сервера
+    if (status >= 500) {
+      return {
+        userMessage: 'Произошла ошибка на сервере. Пожалуйста, попробуйте позже или свяжитесь с поддержкой.',
+        shouldRedirect: false
+      };
+    }
+
+    // Общая ошибка
+    return {
+      userMessage: message || 'Не удалось создать заказ. Пожалуйста, проверьте данные и попробуйте снова.',
+      shouldRedirect: false
+    };
+  }, []);
+
   const handleCreateIndividualOrder = useCallback(async () => {
     if (isSubmittingOrder) return;
 
@@ -959,6 +1062,45 @@ const HomePage = memo(() => {
     if (!isUserRole) {
       toast.error("Создание заказа доступно только клиентам с ролью USER.");
       return;
+    }
+
+    // Проверка профиля перед отправкой заказа
+    if (user) {
+      const profileValidation = validateUserProfile(user);
+      if (!profileValidation.isValid) {
+        // Формируем сообщение в зависимости от типа ошибки
+        let errorTitle = 'Необходимо заполнить профиль';
+        let errorMessage = profileValidation.message;
+        
+        // Если проблема только в верификации телефона
+        if (profileValidation.phoneNotVerified && 
+            profileValidation.missingFields.length === 0 && 
+            profileValidation.invalidFields.length === 0) {
+          errorTitle = 'Необходимо верифицировать телефон';
+          errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
+        }
+        
+        toast.error(
+          <div>
+            <div><strong>{errorTitle}</strong></div>
+            <div style={{ marginTop: 5 }}>
+              {errorMessage}
+            </div>
+          </div>,
+          {
+            autoClose: 5000,
+            position: 'top-center'
+          }
+        );
+        setTimeout(() => {
+          navigate("/personal-account", { 
+            state: { 
+              activeSection: "personal",
+            }
+          });
+        }, 2000);
+        return;
+      }
     }
 
     if (!selectedWarehouse || !previewStorage) {
@@ -1171,44 +1313,40 @@ const HomePage = memo(() => {
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
       const errorData = error.response?.data;
-      const message = errorData?.message || errorData?.error || error.message || "Не удалось создать заказ. Попробуйте позже.";
-
-      // Проверяем, не верифицирован ли телефон
-      const isPhoneNotVerified = error.response?.status === 400 && (
-          message.includes('Phone number must be verified') ||
-          message.includes('phone number') ||
-          errorData?.code === 'PHONE_NOT_VERIFIED'
-      );
       
-      if (isPhoneNotVerified) {
-        toast.error(
-          <div>
-            <div><strong>Телефон не верифицирован</strong></div>
-            <div style={{ marginTop: 5 }}>
-              Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.
-            </div>
-          </div>,
-          {
-            autoClose: 5000,
-          }
-        );
+      // Переводим ошибку на понятный язык
+      const translatedError = translateBackendError(error, errorData);
+
+      // Показываем понятное сообщение об ошибке
+      toast.error(
+        <div>
+          <div><strong>Ошибка при создании заказа</strong></div>
+          <div style={{ marginTop: 5 }}>
+            {translatedError.userMessage}
+          </div>
+        </div>,
+        {
+          autoClose: 5000,
+          position: "top-center"
+        }
+      );
+
+      // Если нужно перенаправить пользователя
+      if (translatedError.shouldRedirect) {
         setTimeout(() => {
-          navigate("/personal-account", { state: { activeSection: "personal" } });
+          navigate(translatedError.redirectPath, { 
+            state: translatedError.redirectState || {} 
+          });
         }, 2000);
         setIsSubmittingOrder(false);
         return;
       }
 
-      // Проверяем, достигнут ли лимит активных заказов
-      const isMaxOrdersError = error.response?.status === 403 && (
-          message.includes('максимальное количество боксов') ||
-          message.includes('MAX_ORDERS_LIMIT_REACHED') ||
-          errorData?.error?.includes('максимальное количество боксов') ||
-          errorData?.message?.includes('максимальное количество боксов')
-      );
-
-      if (isMaxOrdersError) {
-        // Показываем модал обратного звонка вместо обычной ошибки
+      // Обработка лимита заказов (показываем модал обратного звонка)
+      if (error.response?.status === 403 && (
+        translatedError.userMessage.includes('лимит') ||
+        errorData?.code === 'MAX_ORDERS_LIMIT_REACHED'
+      )) {
         setCallbackModalContext('max_orders_limit');
         openCallbackModal('max_orders_limit');
         setSubmitError(null);
@@ -1216,11 +1354,7 @@ const HomePage = memo(() => {
         return;
       }
 
-      setSubmitError(message);
-      toast.error(message, {
-        position: "top-right",
-        autoClose: 5000,
-      });
+      setSubmitError(translatedError.userMessage);
     } finally {
       setIsSubmittingOrder(false);
     }
@@ -1245,6 +1379,9 @@ const HomePage = memo(() => {
     movingOrders,
     individualBookingStartDate,
     promoCode,
+    user,
+    validateUserProfile,
+    translateBackendError,
   ]);
 
   const handleCreateCloudOrder = useCallback(async () => {
@@ -1259,6 +1396,45 @@ const HomePage = memo(() => {
     if (!isUserRole) {
       toast.error("Создание заказа доступно только клиентам с ролью USER.");
       return;
+    }
+
+    // Проверка профиля перед отправкой заказа
+    if (user) {
+      const profileValidation = validateUserProfile(user);
+      if (!profileValidation.isValid) {
+        // Формируем сообщение в зависимости от типа ошибки
+        let errorTitle = 'Необходимо заполнить профиль';
+        let errorMessage = profileValidation.message;
+        
+        // Если проблема только в верификации телефона
+        if (profileValidation.phoneNotVerified && 
+            profileValidation.missingFields.length === 0 && 
+            profileValidation.invalidFields.length === 0) {
+          errorTitle = 'Необходимо верифицировать телефон';
+          errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
+        }
+        
+        toast.error(
+          <div>
+            <div><strong>{errorTitle}</strong></div>
+            <div style={{ marginTop: 5 }}>
+              {errorMessage}
+            </div>
+          </div>,
+          {
+            autoClose: 5000,
+            position: 'top-center'
+          }
+        );
+        setTimeout(() => {
+          navigate("/personal-account", { 
+            state: { 
+              activeSection: "personal",
+            }
+          });
+        }, 2000);
+        return;
+      }
     }
 
     if (!cloudStorage?.id) {
@@ -1393,18 +1569,40 @@ const HomePage = memo(() => {
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);
       const errorData = error.response?.data;
-      const message = errorData?.message || errorData?.error || error.message || "Не удалось создать заказ. Попробуйте позже.";
+      
+      // Переводим ошибку на понятный язык
+      const translatedError = translateBackendError(error, errorData);
 
-      // Проверяем, достигнут ли лимит активных заказов
-      const isMaxOrdersError = error.response?.status === 403 && (
-          message.includes('максимальное количество боксов') ||
-          message.includes('MAX_ORDERS_LIMIT_REACHED') ||
-          errorData?.error?.includes('максимальное количество боксов') ||
-          errorData?.message?.includes('максимальное количество боксов')
+      // Показываем понятное сообщение об ошибке
+      toast.error(
+        <div>
+          <div><strong>Ошибка при создании заказа</strong></div>
+          <div style={{ marginTop: 5 }}>
+            {translatedError.userMessage}
+          </div>
+        </div>,
+        {
+          autoClose: 5000,
+          position: "top-center"
+        }
       );
 
-      if (isMaxOrdersError) {
-        // Показываем модал обратного звонка вместо обычной ошибки
+      // Если нужно перенаправить пользователя
+      if (translatedError.shouldRedirect) {
+        setTimeout(() => {
+          navigate(translatedError.redirectPath, { 
+            state: translatedError.redirectState || {} 
+          });
+        }, 2000);
+        setIsSubmittingOrder(false);
+        return;
+      }
+
+      // Обработка лимита заказов (показываем модал обратного звонка)
+      if (error.response?.status === 403 && (
+        translatedError.userMessage.includes('лимит') ||
+        errorData?.code === 'MAX_ORDERS_LIMIT_REACHED'
+      )) {
         setCallbackModalContext('max_orders_limit');
         openCallbackModal('max_orders_limit');
         setSubmitError(null);
@@ -1412,11 +1610,7 @@ const HomePage = memo(() => {
         return;
       }
 
-      setSubmitError(message);
-      toast.error(message, {
-        position: "top-right",
-        autoClose: 5000,
-      });
+      setSubmitError(translatedError.userMessage);
     } finally {
       setIsSubmittingOrder(false);
     }
@@ -1439,6 +1633,9 @@ const HomePage = memo(() => {
     warehouseApi,
     toast,
     cloudPromoCode,
+    user,
+    validateUserProfile,
+    translateBackendError,
   ]);
 
   const handleIndividualBookingClick = useCallback(() => {

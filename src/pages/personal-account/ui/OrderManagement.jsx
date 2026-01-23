@@ -596,7 +596,7 @@ const OrderManagement = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium">{order.user?.name || 'Не указано'}</span>
+                          <span className="font-medium">{order.user?.name || order.user.company_name || ''}</span>
                           <span className="text-sm text-gray-500">{order.user?.phone || order.user?.email || ''}</span>
                         </div>
                       </TableCell>
