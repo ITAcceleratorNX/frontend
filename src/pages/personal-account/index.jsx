@@ -163,7 +163,7 @@ const PersonalAccountPage = memo(() => {
         {!isMobile && (
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         )}
-        <main className={`flex-1 ${activeNav === 'orders' ? 'px-0 py-0' : 'px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6'} max-w-full mx-auto bg-gray-50`}>
+        <main className={`flex-1 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 max-w-full mx-auto bg-gray-50`}>
           {isMobile && (
             <MobileSidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           )}
