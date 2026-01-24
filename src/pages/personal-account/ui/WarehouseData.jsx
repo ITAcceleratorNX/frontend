@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
-import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
 import WarehouseCanvasViewer from '../../../shared/components/WarehouseCanvasViewer';
 import WarehouseSVGMap from '../../../components/WarehouseSVGMap';
@@ -1131,7 +1130,6 @@ const WarehouseData = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           <main className="flex-1 p-6">
@@ -1175,7 +1173,6 @@ const WarehouseData = () => {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           <main className="flex-1 p-6">
@@ -1220,7 +1217,6 @@ const WarehouseData = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
       <div className="flex flex-1">
         <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         <main className="flex-1 p-6">

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { toast } from 'react-toastify';
-import { Mail, Phone, Building2, MapPin, ChevronDown, RefreshCw } from 'lucide-react';
+import { Mail, Phone, Building2, MapPin, ChevronDown, RefreshCw, User } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
 import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
@@ -79,6 +79,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
     formState: { errors },
   } = useForm({
     defaultValues: {
+      name: '',
       bin_iin: '',
       company_name: '',
       bik: '',
@@ -247,6 +248,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       
       // Формируем данные для регистрации юридического лица
       const legalEntityData = {
+        name: data.name,
         bin_iin: data.bin_iin,
         company_name: data.company_name,
         bik: data.bik,
@@ -401,6 +403,34 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                   {errors.bin_iin && (
                     <p className="text-xs sm:text-sm text-red-500 mt-1">
                       {errors.bin_iin.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* ФИО */}
+                <div className="flex flex-col gap-[6px] w-full">
+                  <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
+                    <User className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
+                    ФИО
+                  </label>
+                  <input
+                    type="text"
+                    className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
+                      errors.name ? 'border-red-400 bg-red-50' : 'bg-white'
+                    } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
+                    placeholder="Введите ФИО"
+                    disabled={isLoading}
+                    {...register('name', {
+                      required: 'ФИО обязательно',
+                      minLength: {
+                        value: 2,
+                        message: 'ФИО должно содержать минимум 2 символа'
+                      }
+                    })}
+                  />
+                  {errors.name && (
+                    <p className="text-xs sm:text-sm text-red-500 mt-1">
+                      {errors.name.message}
                     </p>
                   )}
                 </div>

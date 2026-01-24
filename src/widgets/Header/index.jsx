@@ -217,7 +217,7 @@ export const Header = memo(() => {
           </div>
 
           {isMobileMenuOpen && (
-              <div className="md:hidden absolute top-16 left-0 right-0 bg-gradient-to-r from-[#E0F2FE] to-white shadow-md z-40 py-4 px-6 space-y-4">
+              <div className="md:hidden absolute top-16 left-0 right-0 bg-[#FFF] shadow-md z-40 py-4 px-6 space-y-4">
                 <div className="flex items-center gap-4 justify-center pt-4">
                   <button
                     onClick={handleWhatsAppClick}
