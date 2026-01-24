@@ -916,7 +916,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                       <span>Создание аккаунта...</span>
                     </div>
                   ) : (
-                    <span>Сформировать счёт</span>
+                    <span>Зарегистрироваться</span>
                   )}
                 </button>
                 
