@@ -248,7 +248,7 @@ export const LoginForm = () => {
                   <div className="relative">
                     <input
                       type="text"
-                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[14px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none ${
+                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[16px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none ${
                         errors.login ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isSubmitting ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="user@gmail.com или 87001234567"
@@ -297,7 +297,7 @@ export const LoginForm = () => {
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
-                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[14px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none focus:border-[#26B3AB] ${
+                      className={`w-full h-[52px] sm:h-[56px] lg:h-[60px] px-4 sm:px-5 pr-12 sm:pr-14 border border-[#DFDFDF] rounded-[25px] text-[16px] sm:text-[15px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none focus:border-[#26B3AB] ${
                         errors.password ? 'border-red-400 bg-red-50' : 'bg-white'
                       } ${isSubmitting ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="Введите пароль"

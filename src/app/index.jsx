@@ -54,6 +54,25 @@ const App = memo(() => {
     console.log('Рендеринг корневого компонента App');
   }
   
+  // Сбрасываем масштаб viewport при загрузке приложения на мобильных устройствах
+  useEffect(() => {
+    const resetViewportZoom = () => {
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        const originalContent = viewport.getAttribute('content');
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+        setTimeout(() => {
+          viewport.setAttribute('content', originalContent || 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+        }, 50);
+      }
+    };
+    
+    // Сбрасываем масштаб при загрузке
+    resetViewportZoom();
+    setTimeout(resetViewportZoom, 100);
+    setTimeout(resetViewportZoom, 300);
+  }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
