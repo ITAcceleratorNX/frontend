@@ -1084,18 +1084,7 @@ const HomePage = memo(() => {
           errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
         }
         
-        toast.error(
-          <div>
-            <div><strong>{errorTitle}</strong></div>
-            <div style={{ marginTop: 5 }}>
-              {errorMessage}
-            </div>
-          </div>,
-          {
-            autoClose: 5000,
-            position: 'top-center'
-          }
-        );
+        toast.error(errorMessage);
         setTimeout(() => {
           navigate("/personal-account", { 
             state: { 
@@ -1322,18 +1311,7 @@ const HomePage = memo(() => {
       const translatedError = translateBackendError(error, errorData);
 
       // Показываем понятное сообщение об ошибке
-      toast.error(
-        <div>
-          <div><strong>Ошибка при создании заказа</strong></div>
-          <div style={{ marginTop: 5 }}>
-            {translatedError.userMessage}
-          </div>
-        </div>,
-        {
-          autoClose: 5000,
-          position: "top-center"
-        }
-      );
+      toast.error(translatedError.userMessage);
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
@@ -1418,18 +1396,7 @@ const HomePage = memo(() => {
           errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
         }
         
-        toast.error(
-          <div>
-            <div><strong>{errorTitle}</strong></div>
-            <div style={{ marginTop: 5 }}>
-              {errorMessage}
-            </div>
-          </div>,
-          {
-            autoClose: 5000,
-            position: 'top-center'
-          }
-        );
+        toast.error(errorMessage);
         setTimeout(() => {
           navigate("/personal-account", { 
             state: { 
@@ -1578,18 +1545,7 @@ const HomePage = memo(() => {
       const translatedError = translateBackendError(error, errorData);
 
       // Показываем понятное сообщение об ошибке
-      toast.error(
-        <div>
-          <div><strong>Ошибка при создании заказа</strong></div>
-          <div style={{ marginTop: 5 }}>
-            {translatedError.userMessage}
-          </div>
-        </div>,
-        {
-          autoClose: 5000,
-          position: "top-center"
-        }
-      );
+      toast.error(translatedError.userMessage);
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
