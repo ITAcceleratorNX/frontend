@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, CreditCard, Truck, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -9,6 +9,8 @@ import UserDelivery from './UserDelivery';
 import PersonalData from './PersonalData';
 import PersonalDataLegal from './PersonalDataLegal';
 import MobileNotificationsView from './MobileNotificationsView';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
+import instImage from '../../../assets/inst.png';
 import clsx from 'clsx';
 
 const TABS = [
@@ -20,6 +22,7 @@ const TABS = [
 const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'orders' }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isInstructionOpen, setIsInstructionOpen] = useState(false);
 
   const handleBookClick = () => navigate('/');
   const isOrdersSection = ['orders', 'payments', 'delivery'].includes(activeNav);
@@ -48,7 +51,7 @@ const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'ord
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f5f5] overflow-x-hidden">
-      <PersonalAccountMobileHeader setActiveNav={setActiveNav} />
+      <PersonalAccountMobileHeader setActiveNav={setActiveNav} onInstructionClick={() => setIsInstructionOpen(true)} />
       <div className="pt-14 min-[360px]:pt-16" />
 
       <div className="flex-1 px-3 min-[400px]:px-4 py-3 min-[360px]:py-4 min-w-0">
@@ -111,6 +114,18 @@ const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'ord
           </>
         )}
       </div>
+      
+      {/* Модальное окно с инструкцией */}
+      <Dialog open={isInstructionOpen} onOpenChange={setIsInstructionOpen}>
+        <DialogContent className="max-w-[98vw] max-h-[90vh] overflow-y-auto p-4">
+          <DialogHeader>
+            <DialogTitle>Инструкция</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center w-full">
+            <img src={instImage} alt="Инструкция" className="w-full h-auto" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 });

@@ -2281,7 +2281,7 @@ const HomePage = memo(() => {
       <section className="w-full bg-[#FFF] pb-6 overflow-hidden relative">
         <div className="flex animate-scroll">
           {/* Первый набор элементов */}
-          <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0">
+          <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
               <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
@@ -2308,7 +2308,7 @@ const HomePage = memo(() => {
             </div>
           </div>
           {/* Дублируем для бесконечной прокрутки */}
-          <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
+          <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0 ml-8 sm:ml-24 md:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
               <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
@@ -2377,7 +2377,7 @@ const HomePage = memo(() => {
           }
           @media (max-width: 640px) {
             .animate-scroll {
-              animation: scroll 30s linear infinite;
+              animation: scroll 8s linear infinite;
             }
           }
         `}</style>
@@ -3448,14 +3448,6 @@ const HomePage = memo(() => {
                     Заказать обратный звонок
                   </button>
 
-                  {/* Кнопка бронирования - для десктопа */}
-                  <button
-                    onClick={handleCloudBookingClick}
-                    disabled={!isCloudFormReady || isSubmittingOrder}
-                    className="hidden lg:block w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-6"
-                  >
-                    {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
-                  </button>
                 </div>
 
                 {/* Правая колонка - Бронирование и услуги (только для десктопа) */}
@@ -3537,6 +3529,15 @@ const HomePage = memo(() => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Кнопка бронирования - для десктопа */}
+                  <button
+                    onClick={handleCloudBookingClick}
+                    disabled={!isCloudFormReady || isSubmittingOrder}
+                    className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                  >
+                    {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
+                  </button>
                   
                   {/* Кнопка обратного звонка */}
                   <button
@@ -3825,7 +3826,7 @@ const HomePage = memo(() => {
       <section className="w-full bg-[#FFF] pb-6 overflow-hidden relative">
         <div className="flex animate-scroll">
           {/* Первый набор элементов */}
-          <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0">
+          <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
               <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
@@ -3852,7 +3853,7 @@ const HomePage = memo(() => {
             </div>
           </div>
           {/* Дублируем для бесконечной прокрутки */}
-          <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
+          <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0 ml-8 sm:ml-24 md:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
               <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
@@ -3879,7 +3880,7 @@ const HomePage = memo(() => {
             </div>
           </div>
           {/* Третий набор для более плавного перехода */}
-          <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
+          <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0 ml-8 sm:ml-24 md:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
               <Box size={24} className="text-gray-500" strokeWidth={1.5} />
               <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
@@ -3921,7 +3922,7 @@ const HomePage = memo(() => {
           }
           @media (max-width: 640px) {
             .animate-scroll {
-              animation: scroll 30s linear infinite;
+              animation: scroll 8s linear infinite;
             }
           }
         `}</style>

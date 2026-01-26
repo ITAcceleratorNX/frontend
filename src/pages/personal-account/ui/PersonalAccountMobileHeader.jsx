@@ -4,8 +4,9 @@ import { useUnreadNotificationsCount } from '../../../shared/lib/hooks/use-notif
 import extraspaceLogo from '../../../assets/photo_2025-10-08_12-29-41-removebg-preview.png';
 import NotificationIcon from './icons/NotificationIcon';
 import PersonAccountIcon from './icons/PersonAccountIcon';
+import { HelpCircle } from 'lucide-react';
 
-const PersonalAccountMobileHeader = memo(({ setActiveNav }) => {
+const PersonalAccountMobileHeader = memo(({ setActiveNav, onInstructionClick }) => {
   const navigate = useNavigate();
   const unreadCount = useUnreadNotificationsCount();
 
@@ -33,6 +34,17 @@ const PersonalAccountMobileHeader = memo(({ setActiveNav }) => {
         </button>
 
         <div className="flex items-center gap-2 min-[360px]:gap-3 flex-shrink-0">
+          {onInstructionClick && (
+            <button
+              type="button"
+              onClick={onInstructionClick}
+              className="p-1.5 min-[360px]:p-2 rounded-full text-[#00A991] hover:text-[#009882] hover:bg-[#00A991]/10 transition-colors"
+              aria-label="Инструкция"
+              title="Инструкция"
+            >
+              <HelpCircle className="w-5 h-5 min-[360px]:w-6 min-[360px]:h-6 flex-shrink-0" />
+            </button>
+          )}
           <button
             type="button"
             onClick={handleBellClick}
