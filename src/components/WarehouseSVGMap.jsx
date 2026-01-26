@@ -5,6 +5,7 @@ import megaTowersLayoutData2 from '../assets/mega-towers-2-storage.json';
 import mainWarehouseLayoutData from '../assets/Main_Individual_storage.json';
 import komfortLayoutData1 from '../assets/ZHK_Komfort_storage.json';
 import komfortLayoutData2 from '../assets/second_ZHK_Komfort_storage.json';
+import exitIcon from '../assets/exit.png';
 
 const WarehouseSVGMap = React.forwardRef(({ 
   warehouse,
@@ -1218,6 +1219,73 @@ const WarehouseSVGMap = React.forwardRef(({
               </g>
             );
           })}
+          
+          {/* Входные группы для карты Есентай */}
+          {(warehouseName?.toLowerCase().includes('есентай') || warehouseName?.toLowerCase().includes('esentai')) && (
+            <>
+              {/* Первый вход: Top-Center - между блоками 37 и 38 */}
+              <image
+                x={600 - 25}
+                y={5}
+                width={50}
+                height={50}
+                href={exitIcon}
+                style={{ pointerEvents: 'none' }}
+              />
+              {/* Второй вход: Top-Right - над блоком 1 */}
+              <image
+                x={1093}
+                y={5}
+                width={40}
+                height={40}
+                href={exitIcon}
+                style={{ pointerEvents: 'none' }}
+              />
+            </>
+          )}
+          
+          {/* Входные группы для карты Mega Tower Almaty ярус 1 */}
+          {(warehouseName?.toLowerCase().includes('mega') && selectedMap === 1) && (
+            <>
+              {/* Вход: Top-Right - на правой стене, справа от блока 1 */}
+              <image
+                x={1150}
+                y={120}
+                width={50}
+                height={50}
+                href={exitIcon}
+                style={{ pointerEvents: 'none' }}
+              />
+            </>
+          )}
+          
+          {/* Входные группы для карты Комфорт сити */}
+          {(warehouseName?.toLowerCase().includes('комфорт') || warehouseName?.toLowerCase().includes('komfort')) && (
+            <>
+              {/* Ярус 1: между блоками 102 и 152 */}
+              {selectedMap === 1 && (
+                <image
+                  x={867}
+                  y={544}
+                  width={40}
+                  height={40}
+                  href={exitIcon}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
+              {/* Ярус 2: между блоками 103 и 153 */}
+              {selectedMap === 2 && (
+                <image
+                  x={867}
+                  y={544}
+                  width={40}
+                  height={40}
+                  href={exitIcon}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
+            </>
+          )}
         </g>
       </svg>
     </div>
