@@ -203,6 +203,7 @@ const HomePage = memo(() => {
   const [promoError, setPromoError] = useState("");
   const [promoSuccess, setPromoSuccess] = useState(false);
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  const [showPromoInput, setShowPromoInput] = useState(false);
   // Состояние для промокода (облачное хранение)
   const [cloudPromoCode, setCloudPromoCode] = useState("");
   const [cloudPromoCodeInput, setCloudPromoCodeInput] = useState("");
@@ -211,6 +212,7 @@ const HomePage = memo(() => {
   const [cloudPromoError, setCloudPromoError] = useState("");
   const [cloudPromoSuccess, setCloudPromoSuccess] = useState(false);
   const [isValidatingCloudPromo, setIsValidatingCloudPromo] = useState(false);
+  const [showCloudPromoInput, setShowCloudPromoInput] = useState(false);
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -639,6 +641,7 @@ const HomePage = memo(() => {
     setPromoDiscountPercent(0);
     setPromoError("");
     setPromoSuccess(false);
+    setShowPromoInput(false);
   }, []);
 
   // Функция применения промокода для облачного хранения
@@ -696,6 +699,7 @@ const HomePage = memo(() => {
     setCloudPromoDiscountPercent(0);
     setCloudPromoError("");
     setCloudPromoSuccess(false);
+    setShowCloudPromoInput(false);
   }, []);
 
   // Пересчитываем скидку при изменении общей суммы (индивидуальное хранение)
@@ -1206,7 +1210,7 @@ const HomePage = memo(() => {
       };
 
       // Добавляем промокод, если он применен
-      if (promoCode) {
+      if (promoSuccess && promoCode) {
         orderData.promo_code = promoCode;
       }
 
@@ -1527,7 +1531,7 @@ const HomePage = memo(() => {
       };
 
       // Добавляем промокод, если он применен
-      if (cloudPromoCode) {
+      if (cloudPromoSuccess && cloudPromoCode) {
         orderData.promo_code = cloudPromoCode;
       }
 
@@ -2887,63 +2891,94 @@ const HomePage = memo(() => {
                             
                             {/* Промокод */}
                             <div className="mt-4 mb-3">
-                              <label className="block text-sm font-medium text-[#273655] mb-2">
-                                Промокод
-                              </label>
-                              <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                  <input
-                                    type="text"
-                                    value={promoCodeInput}
-                                    onChange={(e) => {
-                                      setPromoCodeInput(e.target.value.toUpperCase());
-                                      setPromoError("");
-                                    }}
-                                    placeholder="Введите промокод"
-                                    disabled={promoSuccess || isValidatingPromo}
-                                    className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
-                                      promoSuccess 
-                                        ? "border-green-500 bg-green-50" 
-                                        : promoError 
-                                          ? "border-red-500 bg-red-50" 
-                                          : "border-gray-300"
-                                    } disabled:bg-gray-100`}
-                                  />
-                                  {promoSuccess && (
-                                    <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-                                  )}
-                                </div>
-                                {promoSuccess ? (
-                                  <button
-                                    type="button"
-                                    onClick={handleRemovePromoCode}
-                                    className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={handleApplyPromoCode}
-                                    disabled={isValidatingPromo || !promoCodeInput.trim()}
-                                    className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                  >
-                                    {isValidatingPromo ? (
-                                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                                    ) : (
-                                      <Check className="w-4 h-4" />
-                                    )}
-                                  </button>
-                                )}
-                              </div>
-                              {promoError && (
-                                <p className="text-xs text-red-600 mt-1">{promoError}</p>
+                              {!showPromoInput && !promoSuccess && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPromoInput(true)}
+                                  className="text-sm text-[#31876D] hover:text-[#276b57] underline cursor-pointer"
+                                >
+                                  Промокод
+                                </button>
                               )}
-                              {promoSuccess && (
-                                <p className="text-xs text-green-600 mt-1">
-                                  Промокод <strong>{promoCode}</strong> применен! Скидка {promoDiscountPercent}%
-                                </p>
+                              {(showPromoInput || promoSuccess) && (
+                                <>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-medium text-[#273655]">
+                                      Промокод
+                                    </label>
+                                    {!promoSuccess && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setShowPromoInput(false);
+                                          setPromoCodeInput("");
+                                          setPromoError("");
+                                        }}
+                                        className="text-xs text-gray-500 hover:text-gray-700 underline"
+                                      >
+                                        Скрыть
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row gap-2">
+                                    <div className="relative flex-1">
+                                      <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                      <input
+                                        type="text"
+                                        value={promoCodeInput}
+                                        onChange={(e) => {
+                                          setPromoCodeInput(e.target.value.toUpperCase());
+                                          setPromoError("");
+                                        }}
+                                        placeholder="Введите промокод"
+                                        disabled={promoSuccess || isValidatingPromo}
+                                        className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
+                                          promoSuccess 
+                                            ? "border-green-500 bg-green-50" 
+                                            : promoError 
+                                              ? "border-red-500 bg-red-50" 
+                                              : "border-gray-300"
+                                        } disabled:bg-gray-100`}
+                                      />
+                                      {promoSuccess && (
+                                        <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                                      )}
+                                    </div>
+                                    {promoSuccess ? (
+                                      <button
+                                        type="button"
+                                        onClick={handleRemovePromoCode}
+                                        className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm whitespace-nowrap"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={handleApplyPromoCode}
+                                        disabled={isValidatingPromo || !promoCodeInput.trim()}
+                                        className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                                      >
+                                        {isValidatingPromo ? (
+                                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                                        ) : (
+                                          <>
+                                            <span className="sm:hidden">Применить</span>
+                                            <Check className="hidden sm:block w-4 h-4" />
+                                          </>
+                                        )}
+                                      </button>
+                                    )}
+                                  </div>
+                                  {promoError && (
+                                    <p className="text-xs text-red-600 mt-1">{promoError}</p>
+                                  )}
+                                  {promoSuccess && (
+                                    <p className="text-xs text-green-600 mt-1">
+                                      Промокод <strong>{promoCode}</strong> применен! Скидка {promoDiscountPercent}%
+                                    </p>
+                                  )}
+                                </>
                               )}
                             </div>
 
@@ -3246,63 +3281,94 @@ const HomePage = memo(() => {
 
                       {/* Промокод для облачного хранения */}
                       <div className="mt-4 mb-4 pt-4 border-t border-gray-200">
-                        <label className="block text-sm font-medium text-[#273655] mb-2">
-                          Промокод
-                        </label>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                              type="text"
-                              value={cloudPromoCodeInput}
-                              onChange={(e) => {
-                                setCloudPromoCodeInput(e.target.value.toUpperCase());
-                                setCloudPromoError("");
-                              }}
-                              placeholder="Введите промокод"
-                              disabled={cloudPromoSuccess || isValidatingCloudPromo}
-                              className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
-                                cloudPromoSuccess 
-                                  ? "border-green-500 bg-green-50" 
-                                  : cloudPromoError 
-                                    ? "border-red-500 bg-red-50" 
-                                    : "border-gray-300"
-                              } disabled:bg-gray-100`}
-                            />
-                            {cloudPromoSuccess && (
-                              <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-                            )}
-                          </div>
-                          {cloudPromoSuccess ? (
-                            <button
-                              type="button"
-                              onClick={handleRemoveCloudPromoCode}
-                              className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={handleApplyCloudPromoCode}
-                              disabled={isValidatingCloudPromo || !cloudPromoCodeInput.trim()}
-                              className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                            >
-                              {isValidatingCloudPromo ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                              ) : (
-                                <Check className="w-4 h-4" />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                        {cloudPromoError && (
-                          <p className="text-xs text-red-600 mt-1">{cloudPromoError}</p>
+                        {!showCloudPromoInput && !cloudPromoSuccess && (
+                          <button
+                            type="button"
+                            onClick={() => setShowCloudPromoInput(true)}
+                            className="text-sm text-[#31876D] hover:text-[#276b57] underline cursor-pointer"
+                          >
+                            Промокод
+                          </button>
                         )}
-                        {cloudPromoSuccess && (
-                          <p className="text-xs text-green-600 mt-1">
-                            Промокод <strong>{cloudPromoCode}</strong> применен! Скидка {cloudPromoDiscountPercent}%
-                          </p>
+                        {(showCloudPromoInput || cloudPromoSuccess) && (
+                          <>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-sm font-medium text-[#273655]">
+                                Промокод
+                              </label>
+                              {!cloudPromoSuccess && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowCloudPromoInput(false);
+                                    setCloudPromoCodeInput("");
+                                    setCloudPromoError("");
+                                  }}
+                                  className="text-xs text-gray-500 hover:text-gray-700 underline"
+                                >
+                                  Скрыть
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <div className="relative flex-1">
+                                <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                  type="text"
+                                  value={cloudPromoCodeInput}
+                                  onChange={(e) => {
+                                    setCloudPromoCodeInput(e.target.value.toUpperCase());
+                                    setCloudPromoError("");
+                                  }}
+                                  placeholder="Введите промокод"
+                                  disabled={cloudPromoSuccess || isValidatingCloudPromo}
+                                  className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:border-[#273655] ${
+                                    cloudPromoSuccess 
+                                      ? "border-green-500 bg-green-50" 
+                                      : cloudPromoError 
+                                        ? "border-red-500 bg-red-50" 
+                                        : "border-gray-300"
+                                  } disabled:bg-gray-100`}
+                                />
+                                {cloudPromoSuccess && (
+                                  <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                                )}
+                              </div>
+                              {cloudPromoSuccess ? (
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveCloudPromoCode}
+                                  className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm whitespace-nowrap"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={handleApplyCloudPromoCode}
+                                  disabled={isValidatingCloudPromo || !cloudPromoCodeInput.trim()}
+                                  className="px-3 py-2 bg-[#31876D] text-white rounded-lg hover:bg-[#276b57] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                                >
+                                  {isValidatingCloudPromo ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                                  ) : (
+                                    <>
+                                      <span className="sm:hidden">Применить</span>
+                                      <Check className="hidden sm:block w-4 h-4" />
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                            {cloudPromoError && (
+                              <p className="text-xs text-red-600 mt-1">{cloudPromoError}</p>
+                            )}
+                            {cloudPromoSuccess && (
+                              <p className="text-xs text-green-600 mt-1">
+                                Промокод <strong>{cloudPromoCode}</strong> применен! Скидка {cloudPromoDiscountPercent}%
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
 
