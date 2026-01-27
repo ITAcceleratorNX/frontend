@@ -173,7 +173,7 @@ const AllUsers = () => {
       setUsers(updatedUsers);
       setFilteredUsers(updatedUsers);
       
-      toast.success('Пользователь успешно удален');
+      toast.success('Клиент успешно удален');
       closeDeleteModal();
     } catch (error) {
       console.error('Ошибка при удалении пользователя:', error);
@@ -195,7 +195,7 @@ const AllUsers = () => {
     const roleMap = {
       'ADMIN': 'Администратор',
       'MANAGER': 'Менеджер', 
-      'USER': 'Пользователь',
+      'USER': 'Клиент',
       'COURIER': 'Курьер'
     };
     return roleMap[role] || role;
@@ -369,7 +369,7 @@ const AllUsers = () => {
               <option value="">Все роли</option>
               <option value="ADMIN">Администратор</option>
               <option value="MANAGER">Менеджер</option>
-              <option value="USER">Пользователь</option>
+              <option value="USER">Клиент</option>
               <option value="COURIER">Курьер</option>
             </select>
           </div>
@@ -403,7 +403,7 @@ const AllUsers = () => {
             <thead className="bg-gray-50/50">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Пользователь
+                  Клиент
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Контакты
@@ -455,7 +455,7 @@ const AllUsers = () => {
                       >
                         <option value="ADMIN">Администратор</option>
                         <option value="MANAGER">Менеджер</option>
-                        <option value="USER">Пользователь</option>
+                        <option value="USER">Клиент</option>
                         <option value="COURIER">Курьер</option>
                       </select>
                     ) : (
