@@ -30,12 +30,12 @@ import { validateUserProfile } from "../../shared/lib/validation/profileValidati
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 // Импортируем иконки для предзагрузки
-import SiteIcon from '@/assets/lead-source-icons/site.png';
-import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.png';
-import TwoGisIcon from '@/assets/lead-source-icons/2gis.png';
-import InstagramIcon from '@/assets/lead-source-icons/instagram.png';
-import TiktokIcon from '@/assets/lead-source-icons/tiktok.png';
-import AdsIcon from '@/assets/lead-source-icons/ads.png';
+import SiteIcon from '@/assets/lead-source-icons/site.webp';
+import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.webp';
+import TwoGisIcon from '@/assets/lead-source-icons/2gis.webp';
+import InstagramIcon from '@/assets/lead-source-icons/instagram.webp';
+import TiktokIcon from '@/assets/lead-source-icons/tiktok.webp';
+import AdsIcon from '@/assets/lead-source-icons/ads.webp';
 import DatePicker from "../../shared/ui/DatePicker";
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import sumkaImg from '../../assets/cloud-tariffs/sumka.png';
