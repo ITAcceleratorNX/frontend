@@ -166,12 +166,12 @@ export const authApi = {
     }
   },
 
-  // Восстановление пароля
-  restorePassword: async (phone, unique_code, password) => {
+  // Восстановление пароля (универсально по телефону или email)
+  restorePassword: async (login, unique_code, password) => {
     try {
-      console.log(`Отправка запроса на восстановление пароля для: ${phone}`);
+      console.log(`Отправка запроса на восстановление пароля для: ${login}`);
       const response = await api.post('/auth/restore-password', { 
-        phone, 
+        login, 
         unique_code, 
         password 
       });

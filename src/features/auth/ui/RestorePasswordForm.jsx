@@ -10,9 +10,23 @@ import loginLogo from '../../../assets/login-logo-66f0b4.png'
 
 // Схема валидации с Yup
 const validationSchema = Yup.object({
-  phone: Yup.string()
-    .matches(/^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/, 'Неверный формат телефона')
-    .required('Телефон обязателен'),
+  login: Yup.string()
+    .required('Телефон или email обязателен')
+    .test('is-valid-login', 'Введите корректный телефон или email', (value) => {
+      if (!value) return false
+
+      const trimmed = value.trim()
+
+      // Проверка email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (emailRegex.test(trimmed)) {
+        return true
+      }
+
+      // Проверка телефона (формат +7 ...)
+      const phoneRegex = /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/
+      return phoneRegex.test(trimmed)
+    }),
   unique_code: Yup.string()
     .matches(/^\d{6}$/, 'Код должен содержать ровно 6 цифр')
     .required('Уникальный код обязателен'),
@@ -32,6 +46,24 @@ export const RestorePasswordForm = () => {
   const [codeSent, setCodeSent] = useState(false)
   const [timer, setTimer] = useState(0)
   const [isResendingCode, setIsResendingCode] = useState(false)
+
+  // Определение типа ввода (email или телефон)
+  const detectInputType = (input) => {
+    if (!input || typeof input !== 'string') {
+      return null
+    }
+
+    const trimmed = input.trim()
+
+    if (trimmed.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      return emailRegex.test(trimmed) ? 'email' : null
+    }
+
+    const cleaned = trimmed.replace(/[\s\-\(\)]/g, '')
+    const phoneRegex = /^\+?[0-9]{10,15}$/
+    return phoneRegex.test(cleaned) ? 'phone' : null
+  }
 
   // Таймер для повторной отправки кода
   useEffect(() => {
@@ -96,16 +128,30 @@ export const RestorePasswordForm = () => {
     return formatted;
   };
 
-  // Отправка кода на телефон
-  const sendCode = async (phone) => {
-    if (!phone) {
-      toast.error('Введите номер телефона для отправки кода')
+  // Отправка кода на телефон или email
+  const sendCode = async (login) => {
+    if (!login) {
+      toast.error('Введите телефон или email для отправки кода')
+      return false
+    }
+
+    const inputType = detectInputType(login)
+
+    if (!inputType) {
+      toast.error('Введите корректный телефон или email')
       return false
     }
 
     setIsResendingCode(true)
     try {
-      const response = await authApi.checkPhoneForRestore(phone)
+      let response
+
+      if (inputType === 'email') {
+        response = await authApi.checkEmailForRestore(login.trim())
+      } else {
+        // phone
+        response = await authApi.checkPhoneForRestore(login)
+      }
       
       if (response.user_exists) {
         setCodeSent(true)
@@ -114,10 +160,14 @@ export const RestorePasswordForm = () => {
         } else {
           setTimer(60) // 60 секунд до повторной отправки
         }
-        toast.success('Код отправлен. Проверьте SMS')
+        toast.success(inputType === 'email'
+          ? 'Код отправлен. Проверьте email'
+          : 'Код отправлен. Проверьте SMS')
         return true
       } else {
-        toast.error('Пользователь с таким телефоном не найден')
+        toast.error(inputType === 'email'
+          ? 'Пользователь с таким email не найден'
+          : 'Пользователь с таким телефоном не найден')
         return false
       }
     } catch (error) {
@@ -142,7 +192,7 @@ export const RestorePasswordForm = () => {
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     setIsLoading(true)
     try {
-      await authApi.restorePassword(values.phone, values.unique_code, values.password)
+      await authApi.restorePassword(values.login, values.unique_code, values.password)
       
       toast.success('Пароль успешно восстановлен!')
       
@@ -150,7 +200,7 @@ export const RestorePasswordForm = () => {
       setTimeout(() => {
         navigate('/login', { 
           state: { 
-            phone: values.phone,
+            login: values.login,
             message: 'Пароль восстановлен. Войдите с новым паролем.' 
           } 
         })
@@ -220,8 +270,8 @@ export const RestorePasswordForm = () => {
                 </h1>
                 <p className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-center text-[#5C5C5C] w-full max-w-[340px]">
                   {!codeSent 
-                    ? 'Введите номер телефона для получения кода восстановления'
-                    : 'Введите код из SMS и новый пароль'
+                    ? 'Введите телефон или email для получения кода восстановления'
+                    : 'Введите код и новый пароль'
                   }
                 </p>
               </div>
@@ -230,7 +280,7 @@ export const RestorePasswordForm = () => {
             {/* Форма восстановления */}
             <Formik
               initialValues={{
-                phone: '',
+                login: '',
                 unique_code: '',
                 password: '',
                 confirmPassword: ''
@@ -239,36 +289,43 @@ export const RestorePasswordForm = () => {
               onSubmit={handleSubmit}
             >
               {({ values, isSubmitting, setFieldValue }) => {
-                const handlePhoneChange = (e) => {
-                  const formatted = formatPhoneNumber(e.target.value);
-                  setFieldValue('phone', formatted);
+                const handleLoginChange = (e) => {
+                  const value = e.target.value
+                  const inputType = detectInputType(value)
+
+                  if (inputType === 'phone') {
+                    const formatted = formatPhoneNumber(value)
+                    setFieldValue('login', formatted)
+                  } else {
+                    setFieldValue('login', value)
+                  }
                 };
 
                 return (
                   <Form className="flex flex-col gap-[22px] w-full">
                     {/* Поля ввода */}
                     <div className="flex flex-col gap-[20px] w-full">
-                      {/* Phone поле */}
+                      {/* Поле для телефона или email */}
                       <div className="flex flex-col gap-[6px] w-full">
                         <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
                           <Phone className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
-                          Телефон
+                          Телефон или email
                         </label>
                         <div className="flex gap-[8px] w-full">
                           <Field
-                            name="phone"
-                            type="tel"
+                            name="login"
+                            type="text"
                             className="flex-1 min-w-0 h-[48px] sm:h-[52px] lg:h-[56px] px-3 sm:px-4 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] outline-none bg-white"
-                            placeholder="+7 (___) ___-__-__"
+                            placeholder="Телефон или email"
                             disabled={isLoading || isSubmitting}
-                            onChange={handlePhoneChange}
+                            onChange={handleLoginChange}
                           />
                           
                           {/* Кнопка отправки/переотправки кода */}
                           <button
                             type="button"
-                            onClick={() => sendCode(values.phone)}
-                            disabled={!values.phone || timer > 0 || isResendingCode || isLoading}
+                            onClick={() => sendCode(values.login)}
+                            disabled={!values.login || timer > 0 || isResendingCode || isLoading}
                             className="h-[48px] sm:h-[52px] lg:h-[56px] px-3 sm:px-4 bg-gradient-to-br from-[#26B3AB] to-[#104D4A] text-[#F5F5F5] rounded-[25px] text-[12px] sm:text-[13px] font-medium leading-[1.19] hover:opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 flex-shrink-0"
                           >
                             {isResendingCode ? (
@@ -280,7 +337,7 @@ export const RestorePasswordForm = () => {
                             <span className="sm:hidden">{timer > 0 ? `${timer}с` : 'Код'}</span>
                           </button>
                         </div>
-                        <ErrorMessage name="phone" component="div" className="text-xs sm:text-sm text-red-500 mt-1" />
+                        <ErrorMessage name="login" component="div" className="text-xs sm:text-sm text-red-500 mt-1" />
                       </div>
 
                       {/* Проверочный код */}
