@@ -18,14 +18,12 @@ import {
   useUnlockStorage
 } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
-import OrderCard from './OrderCard';
 import OrderDetailView from './OrderDetailView';
 import OrderDeleteModal from "./OrderDeleteModal";
 import {toast} from "react-toastify";
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import {useNavigate} from "react-router-dom";
 import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
-import { paymentsApi } from '../../../shared/api/paymentsApi';
 
 // Функция для расчета месяцев аренды
 const calculateRentalMonths = (startDate, endDate) => {
@@ -77,23 +75,6 @@ const OrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
-  const [depositPrice, setDepositPrice] = useState(0);
-
-  // Загружаем цену депозита
-  useEffect(() => {
-    const fetchDepositPrice = async () => {
-      try {
-        const prices = await paymentsApi.getPrices();
-        const deposit = prices.find(p => p.type === 'DEPOSIT');
-        if (deposit) {
-          setDepositPrice(Number(deposit.price) || 0);
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки цены депозита:', error);
-      }
-    };
-    fetchDepositPrice();
-  }, []);
 
   // Функция для расчёта суммы услуг заказа
   const getOrderServicesTotal = (order) => {
@@ -617,7 +598,7 @@ const OrderManagement = () => {
                       <TableCell className="font-medium">
                         {(() => {
                           const servicesTotal = getOrderServicesTotal(order);
-                          const totalBeforeDiscount = Number(order.total_price) + servicesTotal + depositPrice;
+                          const totalBeforeDiscount = Number(order.total_price) + servicesTotal;
                           const discountAmount = Number(order.discount_amount || 0);
                           const totalPrice = Math.max(0, totalBeforeDiscount - discountAmount);
                           
@@ -744,7 +725,6 @@ const OrderManagement = () => {
               isOpen={!!modalData}
               order={modalData.order}
               onClose={() => closeModal()}
-              depositPrice={depositPrice}
           />
       )}
 
@@ -775,7 +755,6 @@ const OrderManagement = () => {
                 isLoading={isMutating}
                 onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
                 onUnlockStorage={statusFilter === 'RETURN' ? handleUnlockStorage : undefined}
-                depositPrice={depositPrice}
               />
             </div>
           )}

@@ -174,7 +174,6 @@ const HomePage = memo(() => {
   const [isServicesLoading, setIsServicesLoading] = useState(false);
   const [servicesError, setServicesError] = useState(null);
   const [services, setServices] = useState([]);
-  const [depositPrice, setDepositPrice] = useState(0); // Цена депозита
   const [gazelleService, setGazelleService] = useState(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -272,12 +271,6 @@ const HomePage = memo(() => {
       setIsServicesLoading(true);
       setServicesError(null);
       const pricesData = await paymentsApi.getPrices();
-      
-      // Находим и сохраняем цену депозита
-      const depositService = pricesData.find((price) => price.type === "DEPOSIT");
-      if (depositService) {
-        setDepositPrice(Number(depositService.price) || 0);
-      }
       
       const filteredPrices = pricesData.filter((price) => {
         const excludedTypes = [
@@ -563,17 +556,16 @@ const HomePage = memo(() => {
     const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
     const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
     const serviceTotal = serviceSummary.total;
-    // combinedTotal включает аренду + услуги + депозит
-    const combinedTotal = (baseTotal || 0) + serviceTotal + depositPrice;
+    // combinedTotal включает аренду + услуги
+    const combinedTotal = (baseTotal || 0) + serviceTotal;
 
     return {
       baseMonthly,
       baseTotal,
       serviceTotal,
-      depositPrice,
       combinedTotal,
     };
-  }, [pricePreview, serviceSummary.total, depositPrice]);
+  }, [pricePreview, serviceSummary.total]);
 
   // Расчет итоговой суммы с учетом промокода (индивидуальное хранение)
   const finalIndividualTotal = useMemo(() => {
@@ -583,9 +575,9 @@ const HomePage = memo(() => {
 
   // Расчет итоговой суммы с учетом промокода (облачное хранение)
   const finalCloudTotal = useMemo(() => {
-    const total = (cloudPricePreview?.total || 0) + depositPrice;
+    const total = (cloudPricePreview?.total || 0);
     return Math.max(0, total - cloudPromoDiscount);
-  }, [cloudPricePreview, cloudPromoDiscount, depositPrice]);
+  }, [cloudPricePreview, cloudPromoDiscount]);
 
   // Функция применения промокода для индивидуального хранения
   const handleApplyPromoCode = useCallback(async () => {
@@ -651,8 +643,7 @@ const HomePage = memo(() => {
       return;
     }
 
-    // Включаем депозит в общую сумму для валидации промокода
-    const totalAmount = (cloudPricePreview?.total || 0) + depositPrice;
+    const totalAmount = (cloudPricePreview?.total || 0);
     if (totalAmount <= 0) {
       setCloudPromoError("Сначала выберите тариф и срок аренды");
       return;
@@ -689,7 +680,7 @@ const HomePage = memo(() => {
     } finally {
       setIsValidatingCloudPromo(false);
     }
-  }, [cloudPromoCodeInput, cloudPricePreview, depositPrice]);
+  }, [cloudPromoCodeInput, cloudPricePreview]);
 
   // Функция удаления промокода для облачного хранения
   const handleRemoveCloudPromoCode = useCallback(() => {

@@ -19,7 +19,7 @@ const getStorageTypeText = (type) => {
   return type || 'Не указано';
 };
 
-const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn, onUnlockStorage, depositPrice = 0 }) => {
+const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn, onUnlockStorage}) => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
@@ -36,7 +36,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
   };
 
   const servicesTotal = getServicesTotal();
-  const totalBeforeDiscount = Number(order.total_price) + servicesTotal + Number(depositPrice);
+  const totalBeforeDiscount = Number(order.total_price) + servicesTotal;
   const discountAmount = Number(order.discount_amount || 0);
   const totalPrice = Math.max(0, totalBeforeDiscount - discountAmount);
 
@@ -184,13 +184,6 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
             <>
               <Separator className="bg-gray-300" />
               <InfoRow label="Стоимость услуг" value={formatPrice(servicesTotal)} />
-            </>
-          )}
-          {/* Депозит */}
-          {depositPrice > 0 && (
-            <>
-              <Separator className="bg-gray-300" />
-              <InfoRow label="Депозит" value={formatPrice(depositPrice)} />
             </>
           )}
           {/* Промокод */}

@@ -56,13 +56,12 @@ const getVolumeUnit = (storageType) => {
   return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
 };
 
-const UserOrderCard = ({ order, onPayOrder, depositPrice = 0, embeddedMobile = false }) => {
+const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   const navigate = useNavigate();
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
   const [isCancelExtendDialogOpen, setIsCancelExtendDialogOpen] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState("1");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isItemsExpanded, setIsItemsExpanded] = useState(false);
   const [downloadingItemId, setDownloadingItemId] = useState(null);
@@ -258,40 +257,6 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0, embeddedMobile = f
     openCancelSurvey();
   };
 
-// --- Moving statuses helpers (JS) ---
-  const MOVING_STATUS_TEXT = {
-    PENDING:  'Ожидает забора',
-    COURIER_ASSIGNED: 'Курьер назначен',
-    COURIER_IN_TRANSIT: 'Курьер в пути',
-    COURIER_AT_CLIENT: 'Курьер у клиента',
-    IN_PROGRESS:   'В пути',
-    DELIVERED:     'Доставлено',
-    FINISHED: 'Завершено',
-    CANCELLED:     'Отменено',
-  };
-
-  function getMovingStatusText(s, direction) {
-    const baseText = MOVING_STATUS_TEXT[s] || s;
-    if (s === 'PENDING') {
-      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
-    }
-    if (s === 'IN_PROGRESS') {
-      return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
-    }
-    if (s === 'DELIVERED') {
-      return direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад';
-    }
-    return baseText;
-  }
-
-  function getMovingStatusBadgeClass(s) {
-    if (s === 'CANCELLED') return 'bg-red-100 text-red-700 border border-red-200';
-    if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-100 text-green-700 border border-green-200';
-    if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-100 text-blue-700 border border-blue-200';
-    if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-100 text-amber-800 border border-amber-200';
-    return 'bg-gray-100 text-gray-700 border border-gray-200';
-  }
-
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
     try {
@@ -324,57 +289,15 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0, embeddedMobile = f
     return total;
   }, 0)
 
-  // Функция для получения изображения и названия тарифа по tariff_type
-  const getTariffInfo = (tariffType) => {
-    if (!tariffType || tariffType === 'CUSTOM') return { image: null, name: 'Свои габариты' };
-    
-    const tariffMap = {
-      'CLOUD_TARIFF_SUMKA': { image: sumkaImg, name: 'Хранения сумки / коробки вещей' },
-      'CLOUD_TARIFF_SHINA': { image: shinaImg, name: 'Шины' },
-      'CLOUD_TARIFF_MOTORCYCLE': { image: motorcycleImg, name: 'Хранение мотоцикла' },
-      'CLOUD_TARIFF_BICYCLE': { image: bicycleImg, name: 'Хранение велосипед' },
-      'CLOUD_TARIFF_SUNUK': { image: sunukImg, name: 'Сундук до 1 м³' },
-      'CLOUD_TARIFF_FURNITURE': { image: furnitureImg, name: 'Шкаф до 2 м³' },
-      'CLOUD_TARIFF_SKLAD': { image: skladImg, name: 'Кладовка до 3 м³' },
-      'CLOUD_TARIFF_GARAZH': { image: garazhImg, name: 'Гараж до 9м³' }
-    };
-    
-    return tariffMap[tariffType] || { image: null, name: 'Свои габариты' };
-  };
-
-  // Расчет количества месяцев
-  const calculateMonths = () => {
-    if (!order.start_date || !order.end_date) return 0;
-    try {
-      const start = new Date(order.start_date);
-      const end = new Date(order.end_date);
-      const yearsDiff = end.getFullYear() - start.getFullYear();
-      const monthsDiff = end.getMonth() - start.getMonth();
-      const daysDiff = end.getDate() - start.getDate();
-      let totalMonths = yearsDiff * 12 + monthsDiff;
-      if (daysDiff > 15) {
-        totalMonths += 1;
-      }
-      return Math.max(1, totalMonths);
-    } catch (error) {
-      return 0;
-    }
-  };
-
-  const months = calculateMonths();
   // total_price - это стоимость аренды (без скидки)
-  // discount_amount - это скидка от полной суммы (аренда + услуги + депозит)
-  // Исходная цена без скидки = аренда + услуги + депозит
-  const originalPrice = Number(order.total_price) + Number(totalPriceOfServices) + Number(depositPrice);
+  // discount_amount - это скидка от полной суммы (аренда + услуги)
+  // Исходная цена без скидки = аренда + услуги
+  const originalPrice = Number(order.total_price) + Number(totalPriceOfServices);
   // Итоговая цена = исходная цена - скидка
   const discountAmount = Number(order.discount_amount || 0);
   const totalPrice = Math.max(0, originalPrice - discountAmount);
   const hasPromoDiscount = discountAmount > 0;
-  
-  // Проверяем, есть ли услуга доставки (GAZELLE_FROM)
-  const hasDeliveryService = order.services && order.services.some(service => 
-    service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO'
-  );
+
 
   // Функция для получения иконки услуги по типу
   const getServiceIcon = (type) => {
@@ -441,15 +364,6 @@ const UserOrderCard = ({ order, onPayOrder, depositPrice = 0, embeddedMobile = f
     }
   };
 
-
-  const canPay = order.status === 'PROCESSING' && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED';
-
-  // Проверяем наличие дополнительных услуг (включая новый массив services)
-  const hasAdditionalServices = order.is_selected_moving || order.is_selected_package || (order.services && order.services.length > 0);
-
-  // Определяем стили карточки в зависимости от статуса
-  const isPendingExtension = order.extension_status === 'PENDING';
-  
   // Определяем фон карточки: зеленый градиент для активных/оплаченных, серый для неоплаченных/в обработке
   const getCardBackground = () => {
     if (order.status === 'ACTIVE') {
@@ -1039,8 +953,6 @@ const CancelSurveyModal = ({
     onSubmit(selfPickupDate || null);
   };
 
-  // Проверка валидности для кнопки подтверждения
-  const isSelfPickupValid = pickupMethod === 'self' && selfPickupDate;
   const isSubmitDisabled = isSubmitting || (needsPickupMethod && (!pickupMethod || (pickupMethod === 'self' && !selfPickupDate)));
 
   return (

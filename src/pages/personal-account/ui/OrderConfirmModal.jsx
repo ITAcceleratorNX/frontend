@@ -16,7 +16,7 @@ import { useApproveOrder } from '../../../shared/lib/hooks/use-orders';
 import { getCargoMarkText } from '../../../shared/lib/types/orders';
 import {toast} from "react-toastify";
 
-const OrderConfirmModal = ({ isOpen, order, onClose, depositPrice = 0 }) => {
+const OrderConfirmModal = ({ isOpen, order, onClose }) => {
   const approveOrderMutation = useApproveOrder();
 
   // Функция для получения иконки услуги по типу
@@ -140,21 +140,19 @@ const OrderConfirmModal = ({ isOpen, order, onClose, depositPrice = 0 }) => {
     }, 0);
   };
 
-  // Общая сумма: аренда + услуги + депозит - скидка
+  // Общая сумма: аренда + услуги - скидка
   const getTotalPrice = () => {
     const basePrice = parseFloat(order.total_price) || 0;
     const servicesPrice = getServicesTotal();
-    const deposit = parseFloat(depositPrice) || 0;
     const discount = parseFloat(order.discount_amount) || 0;
-    return Math.max(0, basePrice + servicesPrice + deposit - discount);
+    return Math.max(0, basePrice + servicesPrice - discount);
   };
   
   // Сумма до скидки
   const getTotalBeforeDiscount = () => {
     const basePrice = parseFloat(order.total_price) || 0;
     const servicesPrice = getServicesTotal();
-    const deposit = parseFloat(depositPrice) || 0;
-    return basePrice + servicesPrice + deposit;
+    return basePrice + servicesPrice;
   };
 
   if (!isOpen || !order) return null;
@@ -298,14 +296,6 @@ const OrderConfirmModal = ({ isOpen, order, onClose, depositPrice = 0 }) => {
                     <span className="text-lg font-bold text-amber-600">{formatPrice(getServicesTotal())} ₸</span>
                   </div>
                 </>
-              )}
-              
-              {/* Депозит */}
-              {depositPrice > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Депозит:</span>
-                  <span className="text-lg font-bold text-[#1e2c4f]">{formatPrice(depositPrice)} ₸</span>
-                </div>
               )}
               
               <Separator />

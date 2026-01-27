@@ -1,17 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useUserOrders } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import { useAuth } from '../../../shared/context/AuthContext';
 import UserOrderCard from './UserOrderCard';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { Switch } from '../../../components/ui/switch';
-import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { List, Zap, CheckCircle, Star, FileText, HelpCircle } from 'lucide-react';
-import { paymentsApi } from '../../../shared/api/paymentsApi';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import instImage from '../../../assets/inst.png';
 
@@ -27,8 +22,6 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const [depositPrice, setDepositPrice] = useState(0);
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
 
   // Получение заказов пользователя
@@ -42,25 +35,6 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
       console.error('Ошибка загрузки заказов:', error);
     }
   });
-
-  // Загружаем цену депозита
-  useEffect(() => {
-    const fetchDepositPrice = async () => {
-      try {
-        const prices = await paymentsApi.getPrices();
-        const deposit = prices.find(p => p.type === 'DEPOSIT');
-        if (deposit) {
-          setDepositPrice(Number(deposit.price) || 0);
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки цены депозита:', error);
-      }
-    };
-    fetchDepositPrice();
-  }, []);
-
-  // Получение уведомлений
-  const { notifications = [] } = useNotifications();
 
   // Фильтрация заказов
   const filteredOrders = useMemo(() => {
@@ -80,17 +54,6 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
     }
   }, [orders, activeFilter]);
 
-  // Фильтрация уведомлений
-  const filteredNotifications = useMemo(() => {
-    if (!notifications) return [];
-    
-    if (showUnreadOnly) {
-      return notifications.filter(n => !n.is_read);
-    }
-    
-    return notifications;
-  }, [notifications, showUnreadOnly]);
-
   // Статистика заказов
   const stats = useMemo(() => {
     const total = orders.length;
@@ -100,40 +63,6 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
     
     return { total, approved, unpaid, paid };
   }, [orders]);
-
-  // Форматирование даты для уведомлений
-  const formatNotificationDate = (dateString) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      if (date.toDateString() === today.toDateString()) {
-        return 'Сегодня';
-      } else if (date.toDateString() === yesterday.toDateString()) {
-        return 'Вчера';
-      } else {
-        return format(date, 'd MMMM yyyy г.', { locale: ru });
-      }
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  // Группировка уведомлений по дате
-  const groupedNotifications = useMemo(() => {
-    const groups = {};
-    filteredNotifications.forEach(notification => {
-      const date = formatNotificationDate(notification.created_at);
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(notification);
-    });
-    return groups;
-  }, [filteredNotifications]);
 
   const handlePayOrder = (order) => {
     if (onPayOrder) {
@@ -235,7 +164,6 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
             <UserOrderCard
               key={order.id}
               order={order}
-              depositPrice={depositPrice}
               onPayOrder={handlePayOrder}
               embeddedMobile={embeddedMobile}
             />

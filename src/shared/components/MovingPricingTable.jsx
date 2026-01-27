@@ -12,8 +12,8 @@ const MovingPricingTable = () => {
         setIsLoading(true);
         setError(null);
         const data = await paymentsApi.getPrices();
-        // Фильтруем только элементы с id >= 5 и исключаем DEPOSIT
-        const filteredPrices = data.filter(price => price.id >= 5 && price.type !== 'DEPOSIT');
+        // Фильтруем только элементы с id >= 5
+        const filteredPrices = data.filter(price => price.id >= 5);
         setPrices(filteredPrices);
 
         if (import.meta.env.DEV) {
