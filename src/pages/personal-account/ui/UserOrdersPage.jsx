@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useUserOrders } from '../../../shared/lib/hooks/use-orders';
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -9,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { List, Zap, CheckCircle, Star, FileText, HelpCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import instImage from '../../../assets/inst.png';
+import { ordersApi } from '../../../shared/api/ordersApi';
+import { toast } from 'react-toastify';
 
 const ORDER_FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },
@@ -35,6 +38,43 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
       console.error('Ошибка загрузки заказов:', error);
     }
   });
+
+  // Получение доставок для проверки необходимости выбора времени
+  const { data: deliveries = [] } = useQuery({
+    queryKey: ['userDeliveries'],
+    queryFn: ordersApi.getUserDeliveries,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
+
+  // Показываем подсказку после успешной оплаты, если нужно выбрать время доставки
+  const hasShownDeliveryToastRef = useRef(false);
+
+  const hasDeliveriesNeedingTime = useMemo(() => {
+    if (!deliveries || !deliveries.length) return false;
+
+    const allowedStatuses = ['PENDING', 'COURIER_ASSIGNED'];
+
+    return deliveries.some((delivery) => {
+      const order = delivery.order;
+
+      return (
+        order?.payment_status === 'PAID' &&
+        order?.contract_status === 'SIGNED' &&
+        allowedStatuses.includes(delivery.status) &&
+        !delivery.delivery_time_interval
+      );
+    });
+  }, [deliveries]);
+
+  useEffect(() => {
+    if (hasDeliveriesNeedingTime && !hasShownDeliveryToastRef.current) {
+      hasShownDeliveryToastRef.current = true;
+      toast.info('Выберите время доставки');
+    }
+  }, [hasDeliveriesNeedingTime]);
 
   // Фильтрация заказов
   const filteredOrders = useMemo(() => {

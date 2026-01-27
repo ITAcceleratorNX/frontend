@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
+import { useSSENotifications } from '../shared/lib/hooks/useSSENotifications';
 
 // Полностью отключаем рефетчинг при фокусе окна
 focusManager.setEventListener(() => {
@@ -47,6 +48,14 @@ const NotificationContainer = memo(() => (
 
 NotificationContainer.displayName = 'NotificationContainer';
 
+// Компонент для инициализации SSE уведомлений
+const SSEProvider = memo(() => {
+  useSSENotifications();
+  return null;
+});
+
+SSEProvider.displayName = 'SSEProvider';
+
 // Основной компонент приложения с мемоизацией
 const App = memo(() => {
   // Применяем шрифт Montserrat ко всему приложению через Tailwind класс font-sans
@@ -80,6 +89,7 @@ const App = memo(() => {
           <ScrollToTop />
           <div className="font-sans">
             <ResponseInterceptor />
+            <SSEProvider />
             <Routing />
             <NotificationContainer />
           </div>
