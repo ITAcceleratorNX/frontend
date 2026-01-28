@@ -22,7 +22,7 @@ import {
   FileX
 } from 'lucide-react';
 import { ordersApi } from '../../../shared/api/ordersApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { useCancelOrder } from '../../../shared/lib/hooks/use-orders';
 import {warehouseApi as storageApi} from "../../.././../src/shared/api/warehouseApi.js";
 
@@ -211,7 +211,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
     try {
       if (storageId) {
         await storageApi.resetStorageInfo(storageId);
-        toast.success('Бокс успешно разбронирован');
+        showSuccessToast('Бокс успешно разбронирован');
       }
       if (onUnbook) {
         await onUnbook(order?.id);
@@ -219,7 +219,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
       onClose();
     } catch (error) {
       console.error('Ошибка при принудительном разбронировании:', error);
-      toast.error(
+      showErrorToast(
         error?.response?.data?.message ||
         'Не удалось разбронировать бокс. Попробуйте позже.'
       );
@@ -238,7 +238,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
     setIsConfirmDialogOpen(false);
     try {
       await ordersApi.deleteOrder(order?.id);
-      toast.success('Бокс успешно разбронирован');
+      showSuccessToast('Бокс успешно разбронирован');
       if (onUnbook) {
         await onUnbook(order?.id);
       }
@@ -248,7 +248,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
       const errorMessage = error.response?.data?.message ||
                           error.response?.data?.error ||
                           'Не удалось разбронировать бокс. Попробуйте позже.';
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
     }
   };
 

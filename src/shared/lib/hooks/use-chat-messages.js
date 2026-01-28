@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useChatStore, PAGINATION } from '../../../entities/chat/model';
 import { chatApi } from '../../api/chatApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../toast';
 
 export const useChatMessages = (chatId) => {
   const {
@@ -60,7 +60,7 @@ export const useChatMessages = (chatId) => {
       return true;
     } catch (error) {
       console.error('ChatMessages: Ошибка при загрузке сообщений:', error);
-      toast.error('Не удалось загрузить сообщения');
+      showErrorToast('Не удалось загрузить сообщения');
       return false;
     } finally {
       setIsLoadingMessages(false);
@@ -109,7 +109,7 @@ export const useChatMessages = (chatId) => {
       // Очищаем кеш для этого чата
       messagesCache.current.clear();
       
-      toast.success('Сообщения очищены');
+      showSuccessToast('Сообщения очищены');
       
       if (import.meta.env.DEV) {
         console.log('ChatMessages: Сообщения очищены для чата:', chatId);
@@ -118,7 +118,7 @@ export const useChatMessages = (chatId) => {
       return true;
     } catch (error) {
       console.error('ChatMessages: Ошибка при очистке сообщений:', error);
-      toast.error('Не удалось очистить сообщения');
+      showErrorToast('Не удалось очистить сообщения');
       return false;
     }
   }, [chatId, setMessages, setHasMoreMessages]);

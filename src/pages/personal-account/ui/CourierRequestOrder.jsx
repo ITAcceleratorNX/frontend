@@ -35,7 +35,7 @@ import {
   Edit,
   AlertTriangle
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast, toastCourierStatus } from '../../../shared/lib/toast';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 import EditLocationModal from './EditLocationModal';
 
@@ -70,10 +70,10 @@ const CourierRequestOrder = () => {
       
       setOrder(prev => ({ ...prev, issue_status: issueStatus }));
       setIsIssueModalOpen(false);
-      toast.success('Проблемная ситуация отмечена');
+      showSuccessToast('Проблемная ситуация отмечена');
     } catch (err) {
       console.error('Ошибка при обновлении проблемного статуса:', err);
-      toast.error('Ошибка при обновлении статуса');
+      showErrorToast('Ошибка при обновлении статуса');
     } finally {
       setIsUpdating(false);
     }
@@ -94,7 +94,7 @@ const CourierRequestOrder = () => {
       } catch (err) {
         console.error('Ошибка при загрузке заказа:', err);
         setError('Не удалось загрузить данные заказа');
-        toast.error('Ошибка загрузки заказа');
+        showErrorToast('Ошибка загрузки заказа');
       } finally {
         setIsLoading(false);
       }
@@ -131,26 +131,26 @@ const CourierRequestOrder = () => {
       setIsUpdating(true);
 
       if (order.status === 'DELIVERED' || order.status === 'FINISHED') {
-        toast.info('Завершённые заказы нельзя изменить');
+        toastCourierStatus('Завершённые заказы нельзя изменить');
         return;
       }
 
       let newStatus;
        if (order.status === 'PENDING') {
         newStatus = 'COURIER_ASSIGNED';
-        toast.success('Заказ принят в работу');
+        toastCourierStatus('Заказ принят в работу');
       } else if (order.status === 'COURIER_ASSIGNED') {
         newStatus = 'COURIER_IN_TRANSIT';
-        toast.success('Курьер в пути');
+        toastCourierStatus('Курьер в пути к клиенту');
       } else if (order.status === 'COURIER_IN_TRANSIT') {
         newStatus = 'COURIER_AT_CLIENT';
-        toast.success('Статус обновлен: Курьер у клиента');
+        toastCourierStatus('Статус обновлен: Курьер у клиента');
       } else if (order.status === 'COURIER_AT_CLIENT') {
         newStatus = 'IN_PROGRESS';
-        toast.success('Статус обновлен: В пути');
+        toastCourierStatus('Статус обновлен: Курьер едет на склад');
       } else if (order.status === 'IN_PROGRESS') {
         newStatus = 'DELIVERED';
-        toast.success('Заказ завершён');
+        toastCourierStatus('Заказ завершён');
       } else {
         return;
       }
@@ -163,7 +163,7 @@ const CourierRequestOrder = () => {
       setOrder(prev => ({ ...prev, status: newStatus }));
     } catch (err) {
       console.error('Ошибка при обновлении заказа:', err);
-      toast.error('Ошибка при изменении статуса заказа');
+      showErrorToast('Ошибка при изменении статуса заказа');
     } finally {
       setIsUpdating(false);
     }

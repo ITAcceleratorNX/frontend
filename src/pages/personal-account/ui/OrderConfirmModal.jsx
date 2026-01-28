@@ -14,7 +14,7 @@ import { Separator } from '../../../components/ui/separator';
 import { CheckCircle, Package, Tag } from 'lucide-react';
 import { useApproveOrder } from '../../../shared/lib/hooks/use-orders';
 import { getCargoMarkText } from '../../../shared/lib/types/orders';
-import {toast} from "react-toastify";
+import { showErrorToast } from '../../../shared/lib/toast';
 
 const OrderConfirmModal = ({ isOpen, order, onClose }) => {
   const approveOrderMutation = useApproveOrder();
@@ -95,7 +95,7 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
       console.error('Ошибка при подтверждении заказа:', error);
 
       // Показываем ошибку пользователю
-      toast.error('Не удалось подтвердить заказ. Пожалуйста, попробуйте позже.', {
+      showErrorToast('Не удалось подтвердить заказ. Пожалуйста, попробуйте позже.', {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,

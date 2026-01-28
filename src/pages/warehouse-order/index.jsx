@@ -1,7 +1,7 @@
 // src/pages/warehouse-order/index.jsx
 import React, {useState, useEffect, memo, useCallback} from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { showSuccessToast, showErrorToast } from "../../shared/lib/toast";
 import { Header } from "../../widgets";
 import Footer from "../../widgets/Footer";
 import { warehouseApi } from "../../shared/api/warehouseApi";
@@ -255,7 +255,7 @@ const WarehouseOrderPage = memo(() => {
           }
         } catch (error) {
           console.error("Ошибка при загрузке цен услуг:", error);
-          toast.error("Не удалось загрузить цены услуг");
+          showErrorToast("Не удалось загрузить цены услуг");
         } finally {
           setIsPricesLoading(false);
         }
@@ -616,7 +616,7 @@ const WarehouseOrderPage = memo(() => {
         setPromoDiscountPercent(result.discount_percent);
         setPromoSuccess(true);
         setPromoError("");
-        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
       } else {
         setPromoError(result.error || "Недействительный промокод");
         setPromoCode("");
@@ -765,18 +765,9 @@ const WarehouseOrderPage = memo(() => {
 
       console.log(result);
 
-      toast.success(
-          <div>
-            <div><strong>Заказ успешно создан!</strong></div>
-            <div style={{ marginTop: 5 }}>
-              СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заказа менеджером.
-              <br />
-              Оплата будет доступна сразу после подписания договора.
-            </div>
-          </div>,
-          {
-            autoClose: 4000,
-          }
+      showSuccessToast(
+        'СМС от TrustMe для подписания договора придёт после подтверждения заказа менеджером. Оплата будет доступна сразу после подписания договора.',
+        { autoClose: 4000 }
       );
       setTimeout(() => {
         navigate("/personal-account", { state: { activeSection: "payments" } });
@@ -794,16 +785,9 @@ const WarehouseOrderPage = memo(() => {
       );
       
       if (isPhoneNotVerified) {
-        toast.error(
-          <div>
-            <div><strong>Телефон не верифицирован</strong></div>
-            <div style={{ marginTop: 5 }}>
-              Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.
-            </div>
-          </div>,
-          {
-            autoClose: 5000,
-          }
+        showErrorToast(
+          'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
+          { autoClose: 5000 }
         );
         setTimeout(() => {
           navigate("/personal-account", { state: { activeSection: "personal" } });
@@ -828,14 +812,7 @@ const WarehouseOrderPage = memo(() => {
       }
       
       setError(errorMessage);
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showErrorToast(errorMessage, { autoClose: 5000 });
     } finally {
       setIsSubmitting(false);
     }

@@ -11,7 +11,7 @@ import { List, Zap, CheckCircle, Star, FileText, HelpCircle } from 'lucide-react
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import instImage from '../../../assets/inst.png';
 import { ordersApi } from '../../../shared/api/ordersApi';
-import { toast } from 'react-toastify';
+import { toastNeedDeliveryTime } from '../../../shared/lib/toast';
 
 const ORDER_FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },
@@ -72,7 +72,7 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
   useEffect(() => {
     if (hasDeliveriesNeedingTime && !hasShownDeliveryToastRef.current) {
       hasShownDeliveryToastRef.current = true;
-      toast.info('Выберите время доставки');
+      toastNeedDeliveryTime('Выберите время доставки');
     }
   }, [hasDeliveriesNeedingTime]);
 

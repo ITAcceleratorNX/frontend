@@ -4,7 +4,7 @@ import { Input } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../lib/toast';
 import api from '@/shared/api/axios.js';
 
 export const DISPLAY_PHONE = '+7 778 391-14-25';
@@ -102,12 +102,12 @@ const CallbackRequestModal = ({
     event.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error('Введите имя');
+      showErrorToast('Введите имя');
       return;
     }
 
     if (!validatePhone(formData.phone)) {
-      toast.error('Введите номер в формате +7 777 777 77 77');
+      showErrorToast('Введите номер в формате +7 777 777 77 77');
       return;
     }
 
@@ -118,7 +118,7 @@ const CallbackRequestModal = ({
       const response = await api.post('/submit-lead', payload);
 
       if (response?.data?.success) {
-        toast.success('Заявка отправлена! Мы свяжемся с вами в ближайшее время.');
+        showSuccessToast('Заявка отправлена! Мы свяжемся с вами в ближайшее время.');
         setFormData({ name: '', phone: '' });
         if (typeof window !== 'undefined') {
           localStorage.removeItem('prep_storage_type');
@@ -132,7 +132,7 @@ const CallbackRequestModal = ({
       }
     } catch (error) {
       console.error('Не удалось отправить заявку', error);
-      toast.error('Не удалось отправить данные. Попробуйте позже.');
+      showErrorToast('Не удалось отправить данные. Попробуйте позже.');
     } finally {
       setIsSubmitting(false);
     }

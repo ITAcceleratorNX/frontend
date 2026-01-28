@@ -25,7 +25,7 @@ import {
   User,
   Building
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showErrorToast, toastCourierStatus } from '../../../shared/lib/toast';
 
 const columns = [
   { 
@@ -67,37 +67,37 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
            id: order.movingOrderId,
            status: 'COURIER_ASSIGNED',
          });
-         toast.success('Заказ принят в работу');
+         toastCourierStatus('Заказ принят в работу');
        } else if (order.status === 'COURIER_ASSIGNED') {
          await api.put(`/moving/${order.movingOrderId}`, {
            id: order.movingOrderId,
            status: 'COURIER_IN_TRANSIT',
          });
-         toast.success('Курьер в пути');
+         toastCourierStatus('Курьер в пути к клиенту');
        } else if (order.status === 'COURIER_IN_TRANSIT') {
          await api.put(`/moving/${order.movingOrderId}`, {
            id: order.movingOrderId,
            status: 'COURIER_AT_CLIENT',
          });
-         toast.success('Статус обновлен: Курьер у клиента');
+         toastCourierStatus('Статус обновлен: Курьер у клиента');
        } else if (order.status === 'COURIER_AT_CLIENT') {
          await api.put(`/moving/${order.movingOrderId}`, {
            id: order.movingOrderId,
            status: 'IN_PROGRESS',
          });
-         toast.success('Статус обновлен: В пути к складу');
+         toastCourierStatus('Статус обновлен: Курьер едет на склад');
        } else if (order.status === 'IN_PROGRESS') {
          await api.put(`/moving/${order.movingOrderId}`, {
            id: order.movingOrderId,
            status: 'DELIVERED',
          });
-         toast.success('Заказ завершён');
+         toastCourierStatus('Заказ завершён');
        }
       // Убираем возможность удаления для завершённых заказов
       onStatusChange();
     } catch (error) {
       console.error('Ошибка при изменении статуса заказа:', error);
-      toast.error('Ошибка при изменении статуса заказа');
+      showErrorToast('Ошибка при изменении статуса заказа');
     }
   };
 
@@ -324,7 +324,7 @@ const CourierRequest = () => {
     } catch (err) {
       console.error('Ошибка при загрузке заказов:', err);
       setError('Не удалось загрузить заказы. Попробуйте позже.');
-      toast.error('Ошибка загрузки заказов');
+      showErrorToast('Ошибка загрузки заказов');
     } finally {
       setIsLoading(false);
     }
@@ -342,7 +342,7 @@ const CourierRequest = () => {
       });
     } catch (err) {
       console.error('Ошибка при загрузке завершённых заказов:', err);
-      toast.error('Ошибка загрузки завершённых заказов');
+      showErrorToast('Ошибка загрузки завершённых заказов');
     } finally {
       setIsDeliveredLoading(false);
     }

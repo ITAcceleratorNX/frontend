@@ -1,4 +1,11 @@
+import React from 'react';
 import { toast } from 'react-toastify';
+import ToastMessage from '../../components/ToastMessage';
+import {
+  showErrorToast,
+  showInfoToast,
+  showSuccessToast,
+} from '../toast';
 
 // Кеш для предотвращения дублирования toast уведомлений
 const toastCache = new Set();
@@ -13,13 +20,19 @@ const showToastWithCache = (message, type = 'error', options = {}) => {
   }
   
   toastCache.add(cacheKey);
-  
+
   // Удаляем из кеша через указанное время
   setTimeout(() => {
     toastCache.delete(cacheKey);
   }, CACHE_DURATION);
   
-  toast[type](message, options);
+  if (type === 'success') {
+    showSuccessToast(message, options);
+  } else if (type === 'info') {
+    showInfoToast(message, options);
+  } else {
+    showErrorToast(message, options);
+  }
 };
 
 // Специальные функции для ошибок чата
@@ -32,11 +45,11 @@ export const showChatServerError = () => {
 };
 
 export const showPaymentSuccess = (amount) => {
-  toast.success(`Платеж на сумму ${amount}₸ успешно проведен!`);
+  showSuccessToast(`Платеж на сумму ${amount}₸ успешно проведен!`);
 };
 
 export const showPaymentError = (error) => {
-  toast.error(`Ошибка при проведении платежа: ${error.message}`);
+  showErrorToast(`Ошибка при проведении платежа: ${error.message}`);
 };
 
 export const showOrderStatusUpdate = (status) => {
@@ -47,58 +60,77 @@ export const showOrderStatusUpdate = (status) => {
     INACTIVE: 'деактивирован',
   };
   
-  toast.success(`Статус заказа изменен на "${statusTexts[status]}"`);
+  showSuccessToast(`Статус заказа изменен на "${statusTexts[status]}"`);
 };
 
 export const showOrderDeleteSuccess = () => {
-  toast.success('Заказ успешно удален');
+  showSuccessToast('Заказ успешно удален');
 };
 
 export const showPaymentCreated = () => {
-  toast.success('Ссылка для оплаты создана! Переходим к оплате...');
+  showSuccessToast('Ссылка для оплаты создана! Переходим к оплате...');
 };
 
 export const showPaymentCanceled = () => {
-  toast.info('Оплата отменена');
+  showInfoToast('Оплата отменена');
 };
 
 export const showOrderLoadError = () => {
-  toast.error('Ошибка при загрузке заказов');
+  showErrorToast('Ошибка при загрузке заказов');
 };
 
 export const showPaymentLoadError = () => {
-  toast.error('Ошибка при загрузке платежей');
+  showErrorToast('Ошибка при загрузке платежей');
 };
 
 export const showGenericError = (message = 'Произошла ошибка') => {
-  toast.error(message);
+  showErrorToast(message);
 };
 
 export const showGenericSuccess = (message = 'Операция выполнена успешно') => {
-  toast.success(message);
+  showSuccessToast(message);
 };
 
 export const showLoading = (message = 'Загрузка...') => {
-  return toast.loading(message);
+  return toast.loading(
+    ({ closeToast }) =>
+      React.createElement(ToastMessage, {
+        type: 'loading',
+        title: 'Загрузка',
+        message,
+        onClose: closeToast,
+      }),
+    {
+      position: 'top-right',
+      hideProgressBar: true,
+      closeButton: false,
+      autoClose: false,
+    }
+  );
 };
 
 export const updateToast = (toastId, message, type = 'success') => {
   toast.update(toastId, {
-    render: message,
+    render: ({ closeToast }) =>
+      React.createElement(ToastMessage, {
+        type,
+        message,
+        onClose: closeToast,
+      }),
     type,
     isLoading: false,
-    autoClose: 3000
+    autoClose: 5000,
   });
 }; 
 
 export const showExtendOrderSuccess = () => {
-  toast.success('Заказ успешно продлен', { autoClose: 3000 });
+  showSuccessToast('Заказ успешно продлен', { autoClose: 3000 });
 };
 
 export const showCancelExtensionSuccess = () => {
-  toast.success('Продление заказа отменено', { autoClose: 3000 });
+  showSuccessToast('Продление заказа отменено', { autoClose: 3000 });
 };
 
 export const showExtendOrderError = () => {
-  toast.error('Ошибка при обработке продления заказа', { autoClose: 3000 });
+  showErrorToast('Ошибка при обработке продления заказа', { autoClose: 3000 });
 }; 

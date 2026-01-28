@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { NOTIFICATION_QUERY_KEYS } from './use-notifications';
-import { toast } from 'react-toastify';
+import { showInfoToast } from '../toast';
 
 // Функция для получения базового URL API
 const getApiBaseUrl = () => {
@@ -61,9 +61,8 @@ export const useSSENotifications = () => {
           if (data.type === 'notification' && data.data) {
             const notification = data.data;
 
-            // Показываем toast уведомление
-            toast.info(notification.title || 'Новое уведомление', {
-              position: 'top-right',
+            // Показываем toast уведомление по новому дизайну (синяя "i")
+            showInfoToast(notification.title || 'Новое уведомление', {
               autoClose: 5000,
             });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, UserPlus, X, User, Mail, Phone, MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import { usersApi } from '../api/usersApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../lib/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -36,7 +36,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
       setSearchResults(results);
     } catch (error) {
       console.error('Ошибка при поиске пользователей:', error);
-      toast.error('Не удалось выполнить поиск пользователей');
+      showErrorToast('Не удалось выполнить поиск пользователей');
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -135,7 +135,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
         bday: formData.bday.trim(),
       });
       
-      toast.success('Пользователь успешно создан. Клиент сможет войти через Google OAuth.');
+      showSuccessToast('Пользователь успешно создан. Клиент сможет войти через Google OAuth.');
       onUserSelect(newUser);
       onClose();
     } catch (error) {
@@ -143,7 +143,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
       const errorMessage = error.response?.data?.details?.[0]?.message || 
                           error.response?.data?.error || 
                           'Не удалось создать пользователя';
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setIsCreating(false);
     }

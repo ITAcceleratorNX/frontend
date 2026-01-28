@@ -1,3 +1,5 @@
+import { showErrorToast } from '../toast';
+
 // Константы для валидации для INDIVIDUAL пользователей
 export const REQUIRED_PROFILE_FIELDS_INDIVIDUAL = [
   { key: 'name', label: 'Имя и фамилия', validator: 'text' },
@@ -108,20 +110,14 @@ export const validateUserProfile = (user) => {
 
 // Утилита для проверки профиля с редиректом (используется в хуке)
 export const createProfileValidator = () => {
-  const validateAndRedirect = (user, navigate, toast) => {
+  const validateAndRedirect = (user, navigate) => {
     const validation = validateUserProfile(user);
     
     if (!validation.isValid) {
-      // Показываем сообщение пользователю
-      toast.error(
+      showErrorToast(
         'Пожалуйста, заполните все данные в личном кабинете перед оформлением заказа бокса.',
-        {
-          duration: 4000,
-          position: 'top-center'
-        }
+        { autoClose: 4000 }
       );
-      
-      // Перенаправляем в личный кабинет
       navigate('/personal-account');
       return false;
     }

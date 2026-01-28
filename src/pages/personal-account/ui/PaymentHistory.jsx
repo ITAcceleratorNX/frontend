@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
@@ -21,24 +21,18 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
         // Открываем страницу оплаты в новом окне/вкладке
         window.open(data.payment_page_url, '_blank');
         
-        toast.success('Перенаправляем на страницу ручной оплаты...', {
-          position: "top-right",
-          autoClose: 3000,
-        });
+        showSuccessToast('Перенаправляем на страницу ручной оплаты...', { autoClose: 3000 });
         
         // Обновляем данные
         onRefetch();
       } else {
-        toast.error('Ошибка: не получен URL для ручной оплаты');
+        showErrorToast('Ошибка: не получен URL для ручной оплаты');
       }
     },
     onError: (error) => {
       console.error('Ошибка создания ручной оплаты:', error);
       const errorMessage = error.response?.data?.message || 'Ошибка при создании ручной оплаты';
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-      });
+      showErrorToast(errorMessage, { autoClose: 5000 });
     }
   });
 
@@ -56,18 +50,12 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
         window.URL.revokeObjectURL(fileUrl);
       }, 1000);
       
-      toast.success('PDF-чек открыт в новой вкладке', {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      showSuccessToast('PDF-чек открыт в новой вкладке', { autoClose: 3000 });
     },
     onError: (error) => {
       console.error('Ошибка при получении PDF-чека:', error);
       const errorMessage = error.response?.data?.message || 'Ошибка при получении PDF-чека';
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-      });
+      showErrorToast(errorMessage, { autoClose: 5000 });
     }
   });
 

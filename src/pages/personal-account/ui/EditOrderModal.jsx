@@ -11,7 +11,7 @@ import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { toast } from "react-toastify"
+import { showSuccessToast, showErrorToast } from "../../../shared/lib/toast"
 import { useUpdateOrder } from "@/shared/lib/hooks/useUpdateOrder"
 import { paymentsApi } from "@/shared/api/paymentsApi"
 import dayjs from "dayjs";
@@ -283,7 +283,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 }
             } catch (err) {
                 console.error("Ошибка при загрузке цен:", err)
-                toast.error("Не удалось загрузить список услуг")
+                showErrorToast("Не удалось загрузить список услуг")
             } finally {
                 setIsPricesLoading(false)
             }
@@ -635,12 +635,12 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
             console.log("📤 Отправка обновления заказа:", payload);
 
             await updateOrderMutation.mutateAsync(payload)
-            toast.success("Заказ успешно обновлён!", { autoClose: 3000 })
+            showSuccessToast("Заказ успешно обновлён!", { autoClose: 3000 })
             onSuccess()
         } catch (err) {
             const message = err.response?.data?.message || "Не удалось обновить заказ"
             setError(message)
-            toast.error(message, { autoClose: 5000 })
+            showErrorToast(message, { autoClose: 5000 })
         } finally {
             setIsSubmitting(false)
         }

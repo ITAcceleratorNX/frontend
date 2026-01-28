@@ -4,7 +4,7 @@ import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
 import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { toast } from 'react-toastify';
+import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 
 // Компонент модального окна подтверждения удаления
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName, isDeleting }) => {
@@ -106,12 +106,12 @@ const UserProfile = () => {
         setSelectedUser(user);
         
         if (!user) {
-          toast.error('Пользователь не найден');
+          showErrorToast('Пользователь не найден');
           handleBackToUsers();
         }
       } catch (error) {
         console.error('Ошибка при загрузке пользователей:', error);
-        toast.error('Не удалось загрузить данные пользователя');
+        showErrorToast('Не удалось загрузить данные пользователя');
       } finally {
         setLoading(false);
       }
@@ -125,7 +125,7 @@ const UserProfile = () => {
   // Обновление роли пользователя (только для ADMIN)
   const handleRoleUpdate = async (newRole) => {
     if (!isAdmin || !selectedUser) {
-      toast.error('Только администратор может изменять роли пользователей');
+      showErrorToast('Только администратор может изменять роли пользователей');
       return;
     }
 
@@ -136,10 +136,10 @@ const UserProfile = () => {
       // Обновляем локальное состояние
       setSelectedUser(prev => ({ ...prev, role: newRole }));
       
-      toast.success('Роль пользователя успешно обновлена');
+      showSuccessToast('Роль пользователя успешно обновлена');
     } catch (error) {
       console.error('Ошибка при обновлении роли:', error);
-      toast.error('Не удалось обновить роль пользователя');
+      showErrorToast('Не удалось обновить роль пользователя');
     } finally {
       setIsUpdatingRole(false);
     }
@@ -148,12 +148,12 @@ const UserProfile = () => {
   // Обновление разрешения на превышение лимита заказов (для MANAGER и ADMIN)
   const handleOrderLimitPermissionUpdate = async (canExceed) => {
     if (!isAdminOrManager || !selectedUser) {
-      toast.error('Только менеджер или администратор может изменять разрешения');
+      showErrorToast('Только менеджер или администратор может изменять разрешения');
       return;
     }
 
     if (selectedUser.role !== 'USER') {
-      toast.error('Разрешение может быть установлено только для пользователей с ролью USER');
+      showErrorToast('Разрешение может быть установлено только для пользователей с ролью USER');
       return;
     }
 
@@ -164,14 +164,14 @@ const UserProfile = () => {
       // Обновляем локальное состояние
       setSelectedUser(prev => ({ ...prev, can_exceed_order_limit: canExceed }));
       
-      toast.success(
+      showSuccessToast(
         canExceed 
           ? 'Разрешение на аренду более 2 боксов предоставлено' 
           : 'Разрешение на аренду более 2 боксов отозвано'
       );
     } catch (error) {
       console.error('Ошибка при обновлении разрешения:', error);
-      toast.error('Не удалось обновить разрешение');
+      showErrorToast('Не удалось обновить разрешение');
     } finally {
       setIsUpdatingOrderLimit(false);
     }
@@ -241,7 +241,7 @@ const UserProfile = () => {
   // Подтверждение удаления пользователя
   const confirmDeleteUser = async () => {
     if (!isAdmin || !selectedUser) {
-      toast.error('Только администратор может удалять пользователей');
+      showErrorToast('Только администратор может удалять пользователей');
       return;
     }
 
@@ -250,7 +250,7 @@ const UserProfile = () => {
       
       await usersApi.deleteUser(selectedUser.id);
       
-      toast.success('Пользователь успешно удален');
+      showSuccessToast('Пользователь успешно удален');
       closeDeleteModal();
       
       // Перенаправляем обратно к списку пользователей
@@ -259,7 +259,7 @@ const UserProfile = () => {
       }, 1000);
     } catch (error) {
       console.error('Ошибка при удалении пользователя:', error);
-      toast.error('Не удалось удалить пользователя');
+      showErrorToast('Не удалось удалить пользователя');
       setDeleteModal(prev => ({ ...prev, isDeleting: false }));
     }
   };
@@ -509,7 +509,7 @@ const UserProfile = () => {
                             onClick={() => {
                               // TODO: Добавить функционал просмотра заказов пользователя
                               console.log('Просмотр заказов пользователя:', selectedUser.id);
-                              toast.info('Функция в разработке');
+                                showInfoToast('Функция в разработке');
                             }}
                           >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -523,7 +523,7 @@ const UserProfile = () => {
                             onClick={() => {
                               // TODO: Добавить функционал просмотра платежей пользователя
                               console.log('Просмотр платежей пользователя:', selectedUser.id);
-                              toast.info('Функция в разработке');
+                              showInfoToast('Функция в разработке');
                             }}
                           >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

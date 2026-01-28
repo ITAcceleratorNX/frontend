@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useChatStore, USER_ROLES } from '../../../entities/chat/model';
 import { chatApi } from '../../api/chatApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../toast';
 
 export const useManagerChats = () => {
   const { user } = useAuth();
@@ -80,7 +80,7 @@ export const useManagerChats = () => {
         errorMessage = 'Нет доступа. Войдите в систему заново.';
       }
       
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
       return false;
     } finally {
       setIsLoadingChats(false);
@@ -108,7 +108,7 @@ export const useManagerChats = () => {
   // Принятие чата
   const acceptChat = useCallback(async (chatId) => {
     if (!isManager) {
-      toast.error('Недостаточно прав');
+      showErrorToast('Недостаточно прав');
       return false;
     }
     
@@ -128,7 +128,7 @@ export const useManagerChats = () => {
       return true;
     } catch (error) {
       console.error('ManagerChats: Ошибка при принятии чата:', error);
-      toast.error('Не удалось принять чат');
+      showErrorToast('Не удалось принять чат');
       return false;
     } finally {
       setIsLoading(false);
@@ -138,7 +138,7 @@ export const useManagerChats = () => {
   // Закрытие чата
   const closeChat = useCallback(async (chatId) => {
     if (!isManager) {
-      toast.error('Недостаточно прав');
+      showErrorToast('Недостаточно прав');
       return false;
     }
     
@@ -154,7 +154,7 @@ export const useManagerChats = () => {
       // Перезагружаем список чатов с принудительным обновлением
       await loadChats(true);
       
-      toast.success('Чат закрыт');
+      showSuccessToast('Чат закрыт');
       
       if (import.meta.env.DEV) {
         console.log('ManagerChats: Чат закрыт:', chatId);
@@ -163,7 +163,7 @@ export const useManagerChats = () => {
       return true;
     } catch (error) {
       console.error('ManagerChats: Ошибка при закрытии чата:', error);
-      toast.error('Не удалось закрыть чат');
+      showErrorToast('Не удалось закрыть чат');
       return false;
     } finally {
       setIsLoading(false);
@@ -173,7 +173,7 @@ export const useManagerChats = () => {
   // Смена менеджера
   const changeManager = useCallback(async (chatId, newManagerId) => {
     if (!isManager) {
-      toast.error('Недостаточно прав');
+      showErrorToast('Недостаточно прав');
       return false;
     }
     
@@ -184,7 +184,7 @@ export const useManagerChats = () => {
       // Перезагружаем список чатов с принудительным обновлением
       await loadChats(true);
       
-      toast.success('Менеджер изменен');
+      showSuccessToast('Менеджер изменен');
       
       if (import.meta.env.DEV) {
         console.log('ManagerChats: Менеджер изменен для чата:', chatId, 'новый менеджер:', newManagerId);
@@ -193,7 +193,7 @@ export const useManagerChats = () => {
       return true;
     } catch (error) {
       console.error('ManagerChats: Ошибка при смене менеджера:', error);
-      toast.error('Не удалось сменить менеджера');
+      showErrorToast('Не удалось сменить менеджера');
       return false;
     } finally {
       setIsLoading(false);
@@ -203,7 +203,7 @@ export const useManagerChats = () => {
   // Очистка сообщений чата
   const clearChatMessages = useCallback(async (chatId) => {
     if (!isManager) {
-      toast.error('Недостаточно прав');
+      showErrorToast('Недостаточно прав');
       return false;
     }
     
@@ -211,7 +211,7 @@ export const useManagerChats = () => {
       setIsLoading(true);
       await chatApi.clearMessages(chatId);
       
-      toast.success('Сообщения очищены');
+      showSuccessToast('Сообщения очищены');
       
       if (import.meta.env.DEV) {
         console.log('ManagerChats: Сообщения очищены для чата:', chatId);
@@ -220,7 +220,7 @@ export const useManagerChats = () => {
       return true;
     } catch (error) {
       console.error('ManagerChats: Ошибка при очистке сообщений:', error);
-      toast.error('Не удалось очистить сообщения');
+      showErrorToast('Не удалось очистить сообщения');
       return false;
     } finally {
       setIsLoading(false);

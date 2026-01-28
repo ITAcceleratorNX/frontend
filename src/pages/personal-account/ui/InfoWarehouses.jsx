@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { toast } from 'react-toastify';
+import { showErrorToast } from '../../../shared/lib/toast';
 
 const InfoWarehouses = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const InfoWarehouses = () => {
       } catch (error) {
         console.error('Ошибка при загрузке складов:', error);
         setError('Не удалось загрузить список складов. Попробуйте позже.');
-        toast.error('Ошибка загрузки складов');
+        showErrorToast('Ошибка загрузки складов');
         setWarehouses([]);
         setFilteredWarehouses([]);
       } finally {

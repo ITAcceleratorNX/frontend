@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { promoApi } from '../../../shared/api/promoApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { 
   Plus, 
   Edit2, 
@@ -53,7 +53,7 @@ const PromoCodeManagement = () => {
     } catch (err) {
       console.error('Ошибка при загрузке промокодов:', err);
       setError('Не удалось загрузить промокоды');
-      toast.error('Не удалось загрузить промокоды');
+      showErrorToast('Не удалось загрузить промокоды');
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +120,7 @@ const PromoCodeManagement = () => {
       setPromoStats(stats);
     } catch (err) {
       console.error('Ошибка при загрузке статистики:', err);
-      toast.error('Не удалось загрузить статистику');
+      showErrorToast('Не удалось загрузить статистику');
     } finally {
       setIsLoadingStats(false);
     }
@@ -131,12 +131,12 @@ const PromoCodeManagement = () => {
     e.preventDefault();
     
     if (!formData.code.trim()) {
-      toast.error('Введите код промокода');
+      showErrorToast('Введите код промокода');
       return;
     }
     
     if (!formData.discount_percent || Number(formData.discount_percent) <= 0 || Number(formData.discount_percent) > 100) {
-      toast.error('Процент скидки должен быть от 0.01 до 100');
+      showErrorToast('Процент скидки должен быть от 0.01 до 100');
       return;
     }
 
@@ -157,10 +157,10 @@ const PromoCodeManagement = () => {
 
       if (selectedPromo) {
         await promoApi.update(selectedPromo.id, payload);
-        toast.success('Промокод обновлен');
+        showSuccessToast('Промокод обновлен');
       } else {
         await promoApi.create(payload);
-        toast.success('Промокод создан');
+        showSuccessToast('Промокод создан');
       }
 
       setIsModalOpen(false);
@@ -168,7 +168,7 @@ const PromoCodeManagement = () => {
     } catch (err) {
       console.error('Ошибка при сохранении промокода:', err);
       const message = err.response?.data?.error || err.message || 'Не удалось сохранить промокод';
-      toast.error(message);
+      showErrorToast(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -179,15 +179,15 @@ const PromoCodeManagement = () => {
     try {
       if (promo.is_active) {
         await promoApi.deactivate(promo.id);
-        toast.success('Промокод деактивирован');
+        showSuccessToast('Промокод деактивирован');
       } else {
         await promoApi.activate(promo.id);
-        toast.success('Промокод активирован');
+        showSuccessToast('Промокод активирован');
       }
       fetchPromoCodes();
     } catch (err) {
       console.error('Ошибка при изменении статуса промокода:', err);
-      toast.error('Не удалось изменить статус промокода');
+      showErrorToast('Не удалось изменить статус промокода');
     }
   };
 

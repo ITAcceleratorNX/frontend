@@ -14,7 +14,7 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Separator } from '../../../components/ui/separator';
 import { CheckCircle, Info, Package } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showErrorToast } from '../../../shared/lib/toast';
 
 const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -103,7 +103,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
       }
     } catch (error) {
       console.error('Ошибка создания платежа:', error);
-      toast.error('Ошибка при обработке платежа', { autoClose: 2000 });
+      showErrorToast('Ошибка при обработке платежа', { autoClose: 2000 });
     } finally {
       setIsProcessing(false);
     }

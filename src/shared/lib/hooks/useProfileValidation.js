@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { showErrorToast } from '../toast';
 import { useAuth } from '../../context/AuthContext';
 import { validateUserProfile } from '../validation/profileValidation';
 import { isProfileValidationRequired } from '../routes/protectedRoutes';
@@ -50,12 +50,9 @@ export const useProfileValidation = (options = {}) => {
       console.log('Профиль пользователя неполный:', validation.message);
       
       // Показываем уведомление
-      toast.error(
+      showErrorToast(
         'Пожалуйста, заполните все данные в личном кабинете перед оформлением заказа бокса.',
-        {
-          autoClose: 4000,
-          position: 'top-center'
-        }
+        { autoClose: 4000 }
       );
       
       // Перенаправляем в личный кабинет
@@ -95,12 +92,9 @@ export const useProfileValidation = (options = {}) => {
     const validation = validateProfile();
     
     if (!validation.isValid) {
-      toast.error(
+      showErrorToast(
         'Пожалуйста, заполните все данные в личном кабинете перед продолжением.',
-        {
-          autoClose: 4000,
-          position: 'top-center'
-        }
+        { autoClose: 4000 }
       );
       
       navigate(customRedirectTo, { 

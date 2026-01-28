@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
-import { toast } from 'react-toastify';
+import { showSuccessToast } from '../../../shared/lib/toast';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 
 const getStorageTypeText = (type) => {
@@ -150,7 +150,7 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
             <button
               onClick={() => {
                 window.open(payment.payment_page_url, '_blank');
-                toast.success('Перенаправляем на страницу оплаты...', {
+                showSuccessToast('Перенаправляем на страницу оплаты...', {
                   position: "top-right",
                   autoClose: 3000,
                 });

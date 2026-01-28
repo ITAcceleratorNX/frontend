@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Send, Users, Mail, MessageSquare, Search, X, Check, User, ChevronDown, Loader2 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../../shared/lib/toast';
 
 const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) => {
   const [title, setTitle] = useState('');
@@ -28,12 +28,12 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
-      toast.error('Заполните все обязательные поля');
+      showErrorToast('Заполните все обязательные поля');
       return;
     }
 
     if (!sendToAll && selectedUsers.length === 0) {
-      toast.error('Выберите получателей уведомления');
+      showErrorToast('Выберите получателей уведомления');
       return;
     }
     
@@ -60,9 +60,9 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
       setSearchTerm('');
       setIsEmail(false);
       setIsSms(false);
-      toast.success('Уведомление успешно отправлено!');
+      showSuccessToast('Уведомление успешно отправлено!');
     } catch (error) {
-      toast.error('Ошибка при отправке уведомления');
+      showErrorToast('Ошибка при отправке уведомления');
       console.error('Send notification error:', error);
     } finally {
       setIsLoading(false);

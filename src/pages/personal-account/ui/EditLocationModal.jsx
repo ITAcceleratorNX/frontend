@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Loader2, MapPin } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { api } from '../../../shared/api/axios';
 
 const EditLocationModal = ({ isOpen, onClose, item, onLocationUpdated }) => {
@@ -15,7 +15,7 @@ const EditLocationModal = ({ isOpen, onClose, item, onLocationUpdated }) => {
     e.preventDefault();
     
     if (!location.trim()) {
-      toast.error('Введите местоположение');
+      showErrorToast('Введите местоположение');
       return;
     }
 
@@ -25,17 +25,17 @@ const EditLocationModal = ({ isOpen, onClose, item, onLocationUpdated }) => {
         physical_location: location.trim()
       });
       
-      toast.success('Местоположение успешно обновлено');
+      showSuccessToast('Местоположение успешно обновлено');
       onLocationUpdated(response.data.orderItem);
       onClose();
     } catch (error) {
       console.error('Ошибка при обновлении местоположения:', error);
       if (error.response?.status === 404) {
-        toast.error('Товар не найден');
+        showErrorToast('Товар не найден');
       } else if (error.response?.status === 403) {
-        toast.error('Нет доступа для изменения этого товара');
+        showErrorToast('Нет доступа для изменения этого товара');
       } else {
-        toast.error('Ошибка при обновлении местоположения');
+        showErrorToast('Ошибка при обновлении местоположения');
       }
     } finally {
       setIsLoading(false);

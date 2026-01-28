@@ -1,7 +1,7 @@
 import {useQuery, useMutation, useQueryClient, useInfiniteQuery} from '@tanstack/react-query';
 import { notificationApi } from '../../api/notificationApi';
 import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../toast';
 import { useMemo, useRef } from 'react';
 
 // Query keys для уведомлений
@@ -87,12 +87,12 @@ export const useSendNotification = () => {
       const now = Date.now();
       if (now - lastToastTimeRef.current > 500) {
         lastToastTimeRef.current = now;
-        toast.success('Уведомление успешно отправлено!');
+        showSuccessToast('Уведомление успешно отправлено!');
       }
     },
     onError: (error) => {
       console.error('Error sending notification:', error);
-      toast.error('Ошибка при отправке уведомления');
+      showErrorToast('Ошибка при отправке уведомления');
     }
   });
 };
@@ -136,7 +136,7 @@ export const useMarkAsRead = () => {
       if (context?.previousData && context?.queryKey) {
         queryClient.setQueryData(context.queryKey, context.previousData);
       }
-      toast.error('Ошибка при пометке уведомления как прочитанного');
+      showErrorToast('Ошибка при пометке уведомления как прочитанного');
     },
     onSettled: (data, error, notificationId, context) => {
       // Перезапрашиваем данные после мутации

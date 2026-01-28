@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast'
 import { EyeIcon, EyeOffIcon, Phone, Lock, RefreshCw } from 'lucide-react'
 import { authApi } from '../../../shared/api/auth'
 import '../styles/auth-forms.css'
@@ -131,14 +131,14 @@ export const RestorePasswordForm = () => {
   // Отправка кода на телефон или email
   const sendCode = async (login) => {
     if (!login) {
-      toast.error('Введите телефон или email для отправки кода')
+      showErrorToast('Введите телефон или email для отправки кода')
       return false
     }
 
     const inputType = detectInputType(login)
 
     if (!inputType) {
-      toast.error('Введите корректный телефон или email')
+      showErrorToast('Введите корректный телефон или email')
       return false
     }
 
@@ -160,12 +160,12 @@ export const RestorePasswordForm = () => {
         } else {
           setTimer(60) // 60 секунд до повторной отправки
         }
-        toast.success(inputType === 'email'
+        showSuccessToast(inputType === 'email'
           ? 'Код отправлен. Проверьте email'
           : 'Код отправлен. Проверьте SMS')
         return true
       } else {
-        toast.error(inputType === 'email'
+        showErrorToast(inputType === 'email'
           ? 'Пользователь с таким email не найден'
           : 'Пользователь с таким телефоном не найден')
         return false
@@ -176,11 +176,11 @@ export const RestorePasswordForm = () => {
       if (error.response?.status === 429) {
         const remainingSeconds = error.response?.data?.remainingSeconds || 60
         setTimer(remainingSeconds)
-        toast.error(error.response?.data?.error || 'Подождите перед повторной отправкой')
+        showErrorToast(error.response?.data?.error || 'Подождите перед повторной отправкой')
       } else if (error.response?.data?.message) {
-        toast.error(error.response.data.message)
+        showErrorToast(error.response.data.message)
       } else {
-        toast.error('Произошла ошибка при отправке кода')
+        showErrorToast('Произошла ошибка при отправке кода')
       }
       return false
     } finally {
@@ -194,7 +194,7 @@ export const RestorePasswordForm = () => {
     try {
       await authApi.restorePassword(values.login, values.unique_code, values.password)
       
-      toast.success('Пароль успешно восстановлен!')
+      showSuccessToast('Пароль успешно восстановлен!')
       
       // Перенаправляем на страницу логина через 2 секунды
       setTimeout(() => {
@@ -225,12 +225,12 @@ export const RestorePasswordForm = () => {
           })
           
           const messages = Object.values(errorMessage).join(', ')
-          toast.error(messages)
+          showErrorToast(messages)
         } else {
-          toast.error(errorMessage)
+          showErrorToast(errorMessage)
         }
       } else {
-        toast.error('Произошла ошибка при восстановлении пароля')
+        showErrorToast('Произошла ошибка при восстановлении пароля')
       }
     } finally {
       setIsLoading(false)

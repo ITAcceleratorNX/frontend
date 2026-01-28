@@ -3,7 +3,8 @@ import { Menu as ReactMenu, MenuButton, MenuItem } from '@szhsin/react-menu';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { showLoading, updateToast } from '../../../shared/lib/utils/notifications';
+import { showErrorToast } from '../../../shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
@@ -119,7 +120,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
 
     if (key === 'logout') {
       try {
-        const logoutToast = toast.loading("Выполняется выход из системы...");
+        const logoutToast = showLoading("Выполняется выход из системы...");
         
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -133,12 +134,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
         if (isProd) {
           const logoutUrl = 'https://api.extraspace.kz/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
           
-          toast.update(logoutToast, {
-            render: "Выход выполнен успешно!", 
-            type: "success", 
-            isLoading: false,
-            autoClose: 2000
-          });
+          updateToast(logoutToast, "Выход выполнен успешно!", "success");
           
           setTimeout(() => {
             window.location.href = logoutUrl;
@@ -153,12 +149,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
             console.log('Ошибка при запросе на выход:', error);
           }
           
-          toast.update(logoutToast, {
-            render: "Выход выполнен успешно!", 
-            type: "success", 
-            isLoading: false,
-            autoClose: 2000
-          });
+          updateToast(logoutToast, "Выход выполнен успешно!", "success");
           
           setTimeout(() => {
             navigate('/');
@@ -174,7 +165,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
         queryClient.setQueryData([USER_QUERY_KEY], null);
         queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
         
-        toast.error("Произошла ошибка при выходе, но вы были успешно разлогинены");
+        showErrorToast("Произошла ошибка при выходе, но вы были успешно разлогинены");
         
         setTimeout(() => {
           navigate('/');

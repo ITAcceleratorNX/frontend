@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { showErrorToast } from '../toast';
 import { authApi } from '../../api/auth';
 import { validateUserProfile } from '../validation/profileValidation';
 
@@ -27,7 +27,7 @@ export const useProfileCheck = () => {
   // Функция для проверки профиля с редиректом
   const validateAndRedirect = (customToastMessage) => {
     if (!user) {
-      toast.error('Необходимо войти в систему');
+      showErrorToast('Необходимо войти в систему');
       navigate('/auth');
       return false;
     }
@@ -36,10 +36,7 @@ export const useProfileCheck = () => {
       const message = customToastMessage || 
         'Пожалуйста, заполните все данные в личном кабинете перед оформлением заказа бокса.';
       
-      toast.error(message, {
-        duration: 4000,
-        position: 'top-center'
-      });
+      showErrorToast(message, { autoClose: 4000 });
       
       navigate('/personal-account');
       return false;
@@ -95,7 +92,7 @@ export const useAuthCheck = () => {
 
   const requireAuth = (redirectPath = '/auth') => {
     if (!authStatus?.isAuthenticated) {
-      toast.error('Необходимо войти в систему');
+      showErrorToast('Необходимо войти в систему');
       navigate(redirectPath);
       return false;
     }

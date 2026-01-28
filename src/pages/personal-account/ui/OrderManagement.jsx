@@ -20,7 +20,7 @@ import {
 import { showOrderLoadError } from '../../../shared/lib/utils/notifications';
 import OrderDetailView from './OrderDetailView';
 import OrderDeleteModal from "./OrderDeleteModal";
-import {toast} from "react-toastify";
+import { showErrorToast } from '../../../shared/lib/toast';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import {useNavigate} from "react-router-dom";
 import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
@@ -187,7 +187,7 @@ const OrderManagement = () => {
       await deleteOrder.mutateAsync(orderId);
     } catch (error) {
       console.error(error);
-      toast.error('Ошибка', {
+      showErrorToast('Ошибка', {
         duration: 2000,
         position: 'top-right',
         description: error.message,
@@ -242,7 +242,7 @@ const OrderManagement = () => {
       // selectedOrder обновится автоматически через useEffect при изменении данных
     } catch (error) {
       console.error(error);
-      toast.error('Ошибка', {
+      showErrorToast('Ошибка', {
         duration: 2000,
         position: 'top-right',
         description: error.response?.data?.message || error.message,
@@ -265,7 +265,7 @@ const OrderManagement = () => {
       }
     } catch (error) {
       console.error(error);
-      toast.error('Ошибка', {
+      showErrorToast('Ошибка', {
         duration: 2000,
         position: 'top-right',
         description: error.response?.data?.message || error.message,

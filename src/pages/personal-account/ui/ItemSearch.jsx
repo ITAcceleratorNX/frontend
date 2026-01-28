@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Package, MapPin, User, Phone, Truck, Clock, Edit } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
@@ -70,7 +70,7 @@ const ItemSearch = () => {
   // Обработчик поиска
   const handleSearch = async () => {
     if (!itemId.trim()) {
-      toast.error('Введите ID вещи для поиска');
+      showErrorToast('Введите ID вещи для поиска');
       return;
     }
 
@@ -79,7 +79,7 @@ const ItemSearch = () => {
       const result = await ordersApi.searchItemById(itemId.trim());
       setSearchResult(result);
       setIsSearched(true);
-      if(result) toast.success('Вещь найдена!');
+      if(result) showSuccessToast('Вещь найдена!');
     } catch (error) {
       console.error('Ошибка при поиске вещи:', error);
       setSearchResult(null);
@@ -88,7 +88,7 @@ const ItemSearch = () => {
       if (error.response?.status === 404) {
         // Error handled via Alert component
       } else {
-        toast.error('Произошла ошибка при поиске вещи');
+        showErrorToast('Произошла ошибка при поиске вещи');
       }
     } finally {
       setIsLoading(false);

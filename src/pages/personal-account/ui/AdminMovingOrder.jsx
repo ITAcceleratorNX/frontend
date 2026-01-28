@@ -24,7 +24,7 @@ import {
   Download,
   Edit
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showErrorToast } from '../../../shared/lib/toast';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 import EditLocationModal from './EditLocationModal';
 
@@ -53,7 +53,7 @@ const AdminMovingOrder = () => {
       } catch (err) {
         console.error('Ошибка при загрузке заказа:', err);
         setError('Не удалось загрузить данные заказа');
-        toast.error('Ошибка загрузки заказа');
+        showErrorToast('Ошибка загрузки заказа');
       } finally {
         setIsLoading(false);
       }

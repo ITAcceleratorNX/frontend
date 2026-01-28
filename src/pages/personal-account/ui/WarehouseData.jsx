@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
@@ -737,7 +737,7 @@ const WarehouseData = () => {
       } catch (error) {
         console.error('Ошибка при загрузке склада:', error);
         setError('Не удалось загрузить данные склада. Попробуйте позже.');
-        toast.error('Ошибка загрузки данных склада');
+        showErrorToast('Ошибка загрузки данных склада');
       } finally {
         setIsLoading(false);
       }
@@ -877,7 +877,7 @@ const WarehouseData = () => {
 
       // Проверяем, есть ли что отправлять
       if (Object.keys(updateData).length === 0) {
-        toast.info('Нет изменений для сохранения');
+        showInfoToast('Нет изменений для сохранения');
         setIsSaving(false);
         return;
       }
@@ -931,7 +931,7 @@ const WarehouseData = () => {
       
       setInitialFormData(updatedInitialData);
       
-      toast.success('Данные склада успешно обновлены');
+      showSuccessToast('Данные склада успешно обновлены');
       
       if (import.meta.env.DEV) {
         console.log('Склад успешно обновлен:', updateData);
@@ -955,16 +955,16 @@ const WarehouseData = () => {
             if (d.path) return `${d.path.join('.')}: ${d.message || 'Invalid value'}`;
             return JSON.stringify(d);
           }).join(', ');
-          toast.error(`Ошибка валидации: ${errorMessages}`);
+          showErrorToast(`Ошибка валидации: ${errorMessages}`);
         } else if (error.response?.data?.message) {
-          toast.error(`Ошибка: ${error.response.data.message}`);
+          showErrorToast(`Ошибка: ${error.response.data.message}`);
         } else if (error.response?.data?.error) {
-          toast.error(`Ошибка: ${error.response.data.error}`);
+          showErrorToast(`Ошибка: ${error.response.data.error}`);
         } else {
-          toast.error('Ошибка валидации данных. Проверьте введенные значения.');
+          showErrorToast('Ошибка валидации данных. Проверьте введенные значения.');
         }
       } else {
-        toast.error('Не удалось обновить данные склада. Попробуйте позже.');
+        showErrorToast('Не удалось обновить данные склада. Попробуйте позже.');
       }
     } finally {
       setIsSaving(false);
@@ -2014,22 +2014,22 @@ const WarehouseData = () => {
                         className="w-full h-[56px] text-base font-semibold"
                         onClick={async () => {
                           if (isAdminOrManager && !selectedClientUser) {
-                            toast.error('Выберите клиента для создания заказа');
+                            showErrorToast('Выберите клиента для создания заказа');
                             return;
                           }
 
                           if (!warehouse?.storage?.[0]) {
-                            toast.error('Склад не имеет доступных мест для хранения');
+                            showErrorToast('Склад не имеет доступных мест для хранения');
                             return;
                           }
 
                           if (!cloudVolume || cloudVolume <= 0) {
-                            toast.error('Укажите габариты вещей для расчета объема');
+                            showErrorToast('Укажите габариты вещей для расчета объема');
                             return;
                           }
 
                           if (!cloudPickupAddress.trim()) {
-                            toast.error('Укажите адрес забора вещей');
+                            showErrorToast('Укажите адрес забора вещей');
                             return;
                           }
 
@@ -2158,13 +2158,8 @@ const WarehouseData = () => {
 
                             await warehouseApi.createOrder(orderData);
 
-                            toast.success(
-                              <div>
-                                <div><strong>Заказ успешно создан!</strong></div>
-                                <div style={{ marginTop: 5 }}>
-                                  СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заказа менеджером.
-                                </div>
-                              </div>,
+                            showSuccessToast(
+                              'Заказ успешно создан! СМС от TrustMe для подписания договора придёт после подтверждения заказа менеджером.',
                               { autoClose: 4000 }
                             );
 
@@ -2188,16 +2183,9 @@ const WarehouseData = () => {
                             );
                             
                             if (isPhoneNotVerified) {
-                              toast.error(
-                                <div>
-                                  <div><strong>Телефон не верифицирован</strong></div>
-                                  <div style={{ marginTop: 5 }}>
-                                    Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.
-                                  </div>
-                                </div>,
-                                {
-                                  autoClose: 5000,
-                                }
+                              showErrorToast(
+                                'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
+                                { autoClose: 5000 }
                               );
                               setTimeout(() => {
                                 navigate('/personal-account', { state: { activeSection: 'personal' } });
@@ -2207,7 +2195,7 @@ const WarehouseData = () => {
                             }
                             
                             setOrderError(errorMessage);
-                            toast.error(errorMessage);
+                            showErrorToast(errorMessage);
                           } finally {
                             setIsCreatingOrder(false);
                           }
@@ -2873,22 +2861,22 @@ const WarehouseData = () => {
                         className="w-full h-[56px] text-base font-semibold"
                         onClick={async () => {
                           if (isAdminOrManager && !selectedClientUser) {
-                            toast.error('Выберите клиента для создания заказа');
+                            showErrorToast('Выберите клиента для создания заказа');
                             return;
                           }
 
                           if (!previewStorage) {
-                            toast.error('Выберите бокс на схеме склада');
+                            showErrorToast('Выберите бокс на схеме склада');
                             return;
                           }
 
                           if (!monthsNumber || monthsNumber <= 0) {
-                            toast.error('Выберите срок аренды');
+                            showErrorToast('Выберите срок аренды');
                             return;
                           }
 
                           if (includeMoving && !movingAddressFrom.trim()) {
-                            toast.error('Укажите адрес забора вещей');
+                            showErrorToast('Укажите адрес забора вещей');
                             return;
                           }
 
@@ -2943,7 +2931,7 @@ const WarehouseData = () => {
                                 return serviceId === gazelleId;
                               });
                               if (!hasGazelle) {
-                                toast.error('Добавьте хотя бы одну услугу для упаковки');
+                                showErrorToast('Добавьте хотя бы одну услугу для упаковки');
                                 setIsCreatingOrder(false);
                                 return;
                               }
@@ -3049,7 +3037,7 @@ const WarehouseData = () => {
                                 
                                 if (!returnAddress) {
                                   console.error("❌ Адрес для возврата не указан!");
-                                  toast.error('Укажите адрес доставки вещей для услуги "Газель - возврат вещей"');
+                                  showErrorToast('Укажите адрес доставки вещей для услуги "Газель - возврат вещей"');
                                   setIsCreatingOrder(false);
                                   return;
                                 }
@@ -3105,13 +3093,8 @@ const WarehouseData = () => {
 
                             const result = await warehouseApi.createOrder(orderData);
 
-                            toast.success(
-                              <div>
-                                <div><strong>Заказ успешно создан!</strong></div>
-                                <div style={{ marginTop: 5 }}>
-                                  СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заказа менеджером.
-                                </div>
-                              </div>,
+                            showSuccessToast(
+                              'Заказ успешно создан! СМС от TrustMe для подписания договора придёт после подтверждения заказа менеджером.',
                               { autoClose: 4000 }
                             );
 
@@ -3135,16 +3118,9 @@ const WarehouseData = () => {
                             );
                             
                             if (isPhoneNotVerified) {
-                              toast.error(
-                                <div>
-                                  <div><strong>Телефон не верифицирован</strong></div>
-                                  <div style={{ marginTop: 5 }}>
-                                    Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.
-                                  </div>
-                                </div>,
-                                {
-                                  autoClose: 5000,
-                                }
+                              showErrorToast(
+                                'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
+                                { autoClose: 5000 }
                               );
                               setTimeout(() => {
                                 navigate('/personal-account', { state: { activeSection: 'personal' } });
@@ -3154,7 +3130,7 @@ const WarehouseData = () => {
                             }
                             
                             setOrderError(errorMessage);
-                            toast.error(errorMessage);
+                            showErrorToast(errorMessage);
                           } finally {
                             setIsCreatingOrder(false);
                           }

@@ -1,0 +1,97 @@
+.Toastify__toast-container {
+  padding: 0;
+}
+
+.Toastify__toast-container--top-right {
+  top: 24px;
+  right: 24px;
+}
+
+.Toastify__toast {
+  padding: 0;
+  margin-bottom: 12px;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+.Toastify__toast-body {
+  padding: 0;
+  margin: 0;
+}
+
+.Toastify__toast-body > div {
+  width: 100%;
+}
+
+/* Базовый fallback-дизайн для старых toast.*, где не используется ToastMessage */
+.Toastify__toast-body > div:not(.ea-toast) {
+  box-sizing: border-box;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 16px rgba(16, 11, 39, 0.08);
+  font-family: 'SF Pro Text', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Цвета по типам для fallback-тостов */
+.Toastify__toast--success .Toastify__toast-body > div:not(.ea-toast) {
+  background: #F6FFF9;
+  border: 1px solid #48C1B5;
+  color: #27303A;
+}
+
+.Toastify__toast--error .Toastify__toast-body > div:not(.ea-toast) {
+  background: #FFF5F3;
+  border: 1px solid #F4B0A1;
+  color: #27303A;
+}
+
+.Toastify__toast--info .Toastify__toast-body > div:not(.ea-toast) {
+  background: #F5F9FF;
+  border: 1px solid #9DC0EE;
+  color: #27303A;
+}
+
+.Toastify__close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1.5px solid #979FA9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #979FA9;
+  opacity: 1;
+}
+
+.Toastify__close-button > svg {
+  width: 10px;
+  height: 10px;
+}
+
+.Toastify__close-button:hover {
+  background-color: #f3f4f6;
+}
+
+.Toastify__progress-bar {
+  /* Используем стандартный стиль библиотеки, линия скрыта через hideProgressBar */
+}
+
+.Toastify__toast--success .ea-toast {
+  /* уже стилизовано в Tailwind-классах компонента */
+}
+
+.Toastify__toast--error .ea-toast {
+  /* уже стилизовано в Tailwind-классах компонента */
+}
+
+.Toastify__toast--info .ea-toast {
+  /* уже стилизовано в Tailwind-классах компонента */
+}
+

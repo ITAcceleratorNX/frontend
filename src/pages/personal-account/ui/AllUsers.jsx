@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 
 // Компонент модального окна подтверждения удаления
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName, isDeleting }) => {
@@ -99,7 +99,7 @@ const AllUsers = () => {
       setFilteredUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Ошибка при загрузке пользователей:', error);
-      toast.error('Не удалось загрузить список пользователей');
+      showErrorToast('Не удалось загрузить список пользователей');
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,7 @@ const AllUsers = () => {
   // Обновление роли пользователя (только для ADMIN)
   const handleRoleUpdate = async (userId, newRole) => {
     if (!isAdmin) {
-      toast.error('Только администратор может изменять роли пользователей');
+      showErrorToast('Только администратор может изменять роли пользователей');
       return;
     }
 
@@ -127,10 +127,10 @@ const AllUsers = () => {
       setUsers(updatedUsers);
       setFilteredUsers(updatedUsers);
       
-      toast.success('Роль пользователя успешно обновлена');
+      showSuccessToast('Роль пользователя успешно обновлена');
     } catch (error) {
       console.error('Ошибка при обновлении роли:', error);
-      toast.error('Не удалось обновить роль пользователя');
+      showErrorToast('Не удалось обновить роль пользователя');
     } finally {
       setIsUpdatingRole(null);
     }
@@ -159,7 +159,7 @@ const AllUsers = () => {
   // Подтверждение удаления пользователя
   const confirmDeleteUser = async () => {
     if (!isAdmin || !deleteModal.user) {
-      toast.error('Только администратор может удалять пользователей');
+      showErrorToast('Только администратор может удалять пользователей');
       return;
     }
 
@@ -173,11 +173,11 @@ const AllUsers = () => {
       setUsers(updatedUsers);
       setFilteredUsers(updatedUsers);
       
-      toast.success('Клиент успешно удален');
+      showSuccessToast('Клиент успешно удален');
       closeDeleteModal();
     } catch (error) {
       console.error('Ошибка при удалении пользователя:', error);
-      toast.error('Не удалось удалить пользователя');
+      showErrorToast('Не удалось удалить пользователя');
       setDeleteModal(prev => ({ ...prev, isDeleting: false }));
     }
   };

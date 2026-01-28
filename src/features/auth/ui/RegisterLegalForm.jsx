@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast, toastValidationError } from '../../../shared/lib/toast';
 import { Mail, Phone, Building2, MapPin, ChevronDown, RefreshCw, User } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
@@ -184,13 +184,13 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
     const phone = getValues('phone');
     
     if (!phone) {
-      toast.error('Введите номер телефона для отправки кода');
+      showErrorToast('Введите номер телефона для отправки кода');
       return;
     }
 
     const phoneRegex = /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/;
     if (!phoneRegex.test(phone)) {
-      toast.error('Введите корректный номер телефона');
+      showErrorToast('Введите корректный номер телефона');
       return;
     }
 
@@ -205,13 +205,13 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
         } else {
           setTimer(60);
         }
-        toast.success('Код отправлен на ваш телефон');
+        showSuccessToast('Код отправлен на ваш телефон');
       } else {
         if (result.remainingSeconds) {
           setTimer(result.remainingSeconds);
-          toast.error(result.error || 'Подождите перед повторной отправкой');
+          showErrorToast(result.error || 'Подождите перед повторной отправкой');
         } else {
-          toast.error(result.error || 'Ошибка при отправке кода');
+          showErrorToast(result.error || 'Ошибка при отправке кода');
         }
       }
     } catch (error) {
@@ -219,9 +219,9 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       if (error.response?.status === 429) {
         const remainingSeconds = error.response?.data?.remainingSeconds || 60;
         setTimer(remainingSeconds);
-        toast.error(error.response?.data?.error || 'Подождите перед повторной отправкой');
+        showErrorToast(error.response?.data?.error || 'Подождите перед повторной отправкой');
       } else {
-        toast.error('Произошла ошибка при отправке кода');
+        showErrorToast('Произошла ошибка при отправке кода');
       }
     } finally {
       setIsResendingCode(false);
@@ -238,7 +238,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       // Проверяем, совпадают ли пароли
       if (data.password !== data.confirm_password) {
         setServerError('Пароли не совпадают');
-        toast.error('Пароли не совпадают');
+        showErrorToast('Пароли не совпадают');
         setIsLoading(false);
         return;
       }
@@ -277,12 +277,12 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       console.log('RegisterLegalForm: Ответ от регистрации:', result);
       
       if (result.success) {
-        toast.success('Регистрация прошла успешно! Теперь вы можете войти в систему.');
+        showSuccessToast('Регистрация прошла успешно! Теперь вы можете войти в систему.');
         navigate('/login', { state: { phone: data.phone } });
       } else {
         const errorMessage = result.error || 'Ошибка при регистрации. Пожалуйста, попробуйте снова.';
         setServerError(errorMessage);
-        toast.error(errorMessage);
+        showErrorToast(errorMessage);
       }
     } catch (error) {
       console.error('RegisterLegalForm: Ошибка при регистрации:', error);
@@ -291,7 +291,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
         if (error.response.status === 409) {
           const message = 'Пользователь с таким номером телефона уже существует';
           setServerError(message);
-          toast.error(message);
+          showErrorToast(message);
           return;
         }
         
@@ -299,18 +299,18 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
           if (typeof error.response.data.message === 'object') {
             const messages = Object.values(error.response.data.message).join(', ');
             setServerError(messages);
-            toast.error(messages);
+            showErrorToast(messages);
           } else {
             setServerError(error.response.data.message);
-            toast.error(error.response.data.message);
+            showErrorToast(error.response.data.message);
           }
         } else {
           setServerError('Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.');
-          toast.error('Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.');
+          showErrorToast('Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.');
         }
       } else {
         setServerError('Ошибка соединения с сервером. Пожалуйста, проверьте интернет-соединение.');
-        toast.error('Ошибка соединения с сервером. Пожалуйста, проверьте интернет-соединение.');
+        showErrorToast('Ошибка соединения с сервером. Пожалуйста, проверьте интернет-соединение.');
       }
     } finally {
       setIsLoading(false);

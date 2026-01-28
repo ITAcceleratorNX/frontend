@@ -13,7 +13,8 @@ import icon10 from '../../../assets/10.svg';
 import icon11 from '../../../assets/11.svg';
 import icon12 from '../../../assets/12.svg';
 import icon13 from '../../../assets/13.svg';
-import { toast } from 'react-toastify';
+import { showLoading, updateToast } from '../../../shared/lib/utils/notifications';
+import { showErrorToast } from '../../../shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -158,7 +159,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
     if (key === 'logout') {
       try {
         // Показываем уведомление о начале процесса выхода
-        const logoutToast = toast.loading("Выполняется выход из системы...");
+        const logoutToast = showLoading("Выполняется выход из системы...");
         
         // Очищаем куки и данные пользователя
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -178,12 +179,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
           const logoutUrl = 'https://api.extraspace.kz/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
           
           // Обновляем уведомление
-          toast.update(logoutToast, {
-            render: "Выход выполнен успешно!", 
-            type: "success", 
-            isLoading: false,
-            autoClose: 2000
-          });
+          updateToast(logoutToast, "Выход выполнен успешно!", "success");
           
           // Делаем небольшую задержку перед перенаправлением
           setTimeout(() => {
@@ -203,12 +199,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
           }
           
           // Обновляем уведомление
-          toast.update(logoutToast, {
-            render: "Выход выполнен успешно!", 
-            type: "success", 
-            isLoading: false,
-            autoClose: 2000
-          });
+          updateToast(logoutToast, "Выход выполнен успешно!", "success");
           
           // Перенаправляем пользователя на главную страницу
           setTimeout(() => {
@@ -227,7 +218,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
         
         // Показываем уведомление об ошибке
-        toast.error("Произошла ошибка при выходе, но вы были успешно разлогинены");
+        showErrorToast("Произошла ошибка при выходе, но вы были успешно разлогинены");
         
         // При неожиданной ошибке также перенаправляем на главную
         setTimeout(() => {

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../compo
 import { Switch } from '../../../components/ui/switch';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '../../../shared/api/usersApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import instImage from '../../../assets/inst.png';
 
@@ -37,17 +37,11 @@ const UserPayments = ({ embeddedMobile = false }) => {
       // Обновляем кеш пользователя
       queryClient.invalidateQueries({ queryKey: [USER_QUERY_KEY] });
       refetchUser();
-      toast.success(autoPay ? 'Автооплата включена' : 'Автооплата выключена', {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      showSuccessToast(autoPay ? 'Автооплата включена' : 'Автооплата выключена', { autoClose: 3000 });
     },
     onError: (error) => {
       console.error('Ошибка при обновлении автооплаты:', error);
-      toast.error('Не удалось обновить настройки автооплаты', {
-        position: "top-right",
-        autoClose: 5000,
-      });
+      showErrorToast('Не удалось обновить настройки автооплаты', { autoClose: 5000 });
     }
   });
 

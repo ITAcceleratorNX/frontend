@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccessToast, showErrorToast } from '../toast';
 import { useProfileCheck } from './useProfileCheck';
 
 // Пример API для заказа бокса (нужно будет создать отдельно)
@@ -31,12 +31,12 @@ export const useBoxOrder = () => {
   const orderMutation = useMutation({
     mutationFn: orderBoxApi.createOrder,
     onSuccess: (data) => {
-      toast.success('Заказ бокса успешно создан!');
+      showSuccessToast('Заказ бокса успешно создан!');
       // Обновляем кэш заказов
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
     onError: (error) => {
-      toast.error(`Ошибка при создании заказа: ${error.message}`);
+      showErrorToast(`Ошибка при создании заказа: ${error.message}`);
     }
   });
 

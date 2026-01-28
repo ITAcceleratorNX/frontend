@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { EyeIcon, EyeOffIcon, Lock, Key, RefreshCw, X } from 'lucide-react';
 import { authApi } from '../../../shared/api/auth';
 import { Button } from '../../../components/ui/button';
@@ -52,7 +52,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
                 // Отправка кода на email
               const sendCode = async () => {
                 if (!userEmail) {
-                  toast.error('Email пользователя не найден');
+                  showErrorToast('Email пользователя не найден');
                   return false;
                 }
 
@@ -64,19 +64,19 @@ const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
                   if (response.user_exists) {
                     setCodeSent(true);
                     setTimer(60); // 60 секунд до повторной отправки
-                    toast.success('Код отправлен. Проверьте почту');
+                    showSuccessToast('Код отправлен. Проверьте почту');
                     return true;
                   } else {
-                    toast.error('Пользователь с таким email не найден');
+                    showErrorToast('Пользователь с таким email не найден');
                     return false;
                   }
                 } catch (error) {
                   console.error('Ошибка при отправке кода:', error);
 
                   if (error.response?.data?.message) {
-                    toast.error(error.response.data.message);
+                    showErrorToast(error.response.data.message);
                   } else {
-                    toast.error('Произошла ошибка при отправке кода');
+                    showErrorToast('Произошла ошибка при отправке кода');
                   }
                   return false;
                 } finally {
@@ -91,7 +91,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
     try {
       await authApi.changePassword(userEmail, values.unique_code, values.password);
       
-      toast.success('Пароль успешно изменен!');
+      showSuccessToast('Пароль успешно изменен!');
       
       // Закрываем модалку через 2 секунды
       setTimeout(() => {
@@ -118,12 +118,12 @@ const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
                        });
                        
                        const messages = Object.values(errorMessage).join(', ');
-                       toast.error(messages);
+                       showErrorToast(messages);
                      } else {
-                       toast.error(errorMessage);
+                       showErrorToast(errorMessage);
                      }
                   } else {
-                    toast.error('Произошла ошибка при изменении пароля');
+                    showErrorToast('Произошла ошибка при изменении пароля');
                   }
                 } finally {
                   setIsLoading(false);

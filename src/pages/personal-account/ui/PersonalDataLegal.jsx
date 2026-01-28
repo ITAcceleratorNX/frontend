@@ -1,6 +1,6 @@
 import React, { useEffect, useState, memo, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import Input from '../../../shared/ui/Input';
@@ -183,14 +183,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   // Показываем сообщение валидации, если пользователь пришёл с проверки профиля
   useEffect(() => {
     if (location.state?.message) {
-      toast.warning(location.state.message, {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showInfoToast(location.state.message, { autoClose: 5000 });
       setIsEditing(true);
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -248,7 +241,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
     });
 
     if (!hasChanges) {
-      toast.info('Данные не изменились');
+      showInfoToast('Данные не изменились');
       setIsEditing(false);
       return;
     }
@@ -270,19 +263,19 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
         // Сбрасываем форму с новыми данными
         reset(formData);
 
-        toast.success('Данные успешно обновлены');
+        showSuccessToast('Данные успешно обновлены');
         setIsEditing(false);
       }
     } catch (error) {
       console.error('Ошибка при обновлении данных пользователя:', error);
 
       if (error.response && error.response.status === 401) {
-        toast.error('Сессия истекла. Пожалуйста, войдите снова.');
+        showErrorToast('Сессия истекла. Пожалуйста, войдите снова.');
         navigate('/login');
       } else if (error.response && error.response.status === 400) {
-        toast.error('Ошибка валидации данных. Проверьте введенные данные.');
+        showErrorToast('Ошибка валидации данных. Проверьте введенные данные.');
       } else {
-        toast.error('Не удалось обновить данные профиля');
+        showErrorToast('Не удалось обновить данные профиля');
       }
     } finally {
       setSaving(false);
@@ -324,7 +317,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   const handleSendVerificationCode = async () => {
     const phoneFormatted = formValues.phone || user?.phone;
     if (!phoneFormatted) {
-      toast.error('Пожалуйста, укажите номер телефона');
+      showErrorToast('Пожалуйста, укажите номер телефона');
       return;
     }
 
@@ -333,7 +326,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
     try {
       setSendingCode(true);
       await usersApi.sendPhoneVerificationCode(phone);
-      toast.success('Код подтверждения отправлен на ваш телефон');
+      showSuccessToast('Код подтверждения отправлен на ваш телефон');
       setIsPhoneVerificationModalOpen(true);
     } catch (error) {
       const errorData = error.response?.data;
@@ -341,7 +334,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
       
       if (error.response?.status === 429 && errorData?.code === 'RATE_LIMIT_EXCEEDED') {
         const remainingSeconds = errorData?.remainingSeconds || 60;
-        toast.error(
+        showErrorToast(
           <div>
             <div><strong>Слишком много запросов</strong></div>
             <div style={{ marginTop: 5 }}>
@@ -353,7 +346,7 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
           }
         );
       } else {
-        toast.error(errorMessage);
+        showErrorToast(errorMessage);
       }
     } finally {
       setSendingCode(false);
@@ -364,12 +357,12 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   const handleVerifyPhone = async () => {
     const phone = formValues.phone || user?.phone;
     if (!phone) {
-      toast.error('Пожалуйста, укажите номер телефона');
+      showErrorToast('Пожалуйста, укажите номер телефона');
       return;
     }
 
     if (!verificationCode || verificationCode.length !== 6) {
-      toast.error('Введите 6-значный код подтверждения');
+      showErrorToast('Введите 6-значный код подтверждения');
       return;
     }
 
@@ -383,13 +376,13 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
         phone_verified: true
       });
 
-      toast.success('Телефон успешно верифицирован');
+      showSuccessToast('Телефон успешно верифицирован');
       setIsPhoneVerificationModalOpen(false);
       setVerificationCode('');
       refetchUser();
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Неверный код подтверждения';
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setVerifying(false);
     }

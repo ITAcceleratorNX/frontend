@@ -17,7 +17,7 @@ import { Label } from '../../../components/ui/label';
 import { List, Zap, Truck, Edit, Clock, HelpCircle } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { ordersApi } from '../../../shared/api/ordersApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import DeliveryCard from './DeliveryCard';
 import instImage from '../../../assets/inst.png';
 
@@ -66,14 +66,14 @@ const UserDelivery = ({ embeddedMobile = false }) => {
     const updateDeliveryMutation = useMutation({
         mutationFn: ({ movingOrderId, data }) => ordersApi.updateDelivery(movingOrderId, data),
         onSuccess: () => {
-            toast.success('Доставка успешно обновлена!');
+            showSuccessToast('Доставка успешно обновлена!');
             queryClient.invalidateQueries({ queryKey: ['userDeliveries'] });
             setEditModalOpen(false);
             setSelectedDelivery(null);
         },
         onError: (error) => {
             console.error('Ошибка при обновлении доставки:', error);
-            toast.error('Не удалось обновить доставку');
+            showErrorToast('Не удалось обновить доставку');
         }
     });
 

@@ -25,7 +25,12 @@ import {
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
 import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
-import { toast } from "react-toastify";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showInfoToast,
+  toastOrderRequestSent,
+} from "../../shared/lib/toast";
 import { validateUserProfile } from "../../shared/lib/validation/profileValidation";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
@@ -605,7 +610,7 @@ const HomePage = memo(() => {
         setPromoDiscountPercent(result.discount_percent);
         setPromoSuccess(true);
         setPromoError("");
-        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
       } else {
         setPromoError(result.error || "Недействительный промокод");
         setPromoCode("");
@@ -660,9 +665,9 @@ const HomePage = memo(() => {
         setCloudPromoCode(cloudPromoCodeInput.trim());
         setCloudPromoDiscount(result.discount_amount);
         setCloudPromoDiscountPercent(result.discount_percent);
-        setCloudPromoSuccess(true);
-        setCloudPromoError("");
-        toast.success(`Промокод применен! Скидка ${result.discount_percent}%`);
+      setCloudPromoSuccess(true);
+      setCloudPromoError("");
+      showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
       } else {
         setCloudPromoError(result.error || "Недействительный промокод");
         setCloudPromoCode("");
@@ -1049,13 +1054,13 @@ const HomePage = memo(() => {
     if (isSubmittingOrder) return;
 
     if (!isAuthenticated) {
-      toast.info("Авторизуйтесь, чтобы оформить заказ.");
+      showInfoToast("Авторизуйтесь, чтобы оформить заказ.");
       navigate("/login", { state: { from: "/" } });
       return;
     }
 
     if (!isUserRole) {
-      toast.error("Создание заказа доступно только клиентам с ролью USER.");
+      showErrorToast("Создание заказа доступно только клиентам с ролью USER.");
       return;
     }
 
@@ -1075,7 +1080,7 @@ const HomePage = memo(() => {
           errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
         }
         
-        toast.error(errorMessage);
+        showErrorToast(errorMessage);
         setTimeout(() => {
           navigate("/personal-account", { 
             state: { 
@@ -1273,21 +1278,8 @@ const HomePage = memo(() => {
 
       await warehouseApi.createOrder(orderData);
 
-      toast.success(
-        <div>
-          <div>
-            <strong>Заявка отправлена!</strong>
-          </div>
-          <div style={{ marginTop: 5 }}>
-            СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заявки менеджером.
-            <br />
-            Оплата будет доступна сразу после подписания договора.
-          </div>
-        </div>,
-        {
-          autoClose: 4000,
-        }
-      );
+      // Новый тост по дизайну: зелёная галочка + текст о TrustMe и оплате
+      toastOrderRequestSent();
 
       // Обновляем кэш заказов и ждём завершения, затем навигация
       setTimeout(async () => {
@@ -1302,7 +1294,7 @@ const HomePage = memo(() => {
       const translatedError = translateBackendError(error, errorData);
 
       // Показываем понятное сообщение об ошибке
-      toast.error(translatedError.userMessage);
+      showErrorToast(translatedError.userMessage);
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
@@ -1361,13 +1353,13 @@ const HomePage = memo(() => {
     if (isSubmittingOrder) return;
 
     if (!isAuthenticated) {
-      toast.info("Авторизуйтесь, чтобы оформить заказ.");
+      showInfoToast("Авторизуйтесь, чтобы оформить заказ.");
       navigate("/login", { state: { from: "/" } });
       return;
     }
 
     if (!isUserRole) {
-      toast.error("Создание заказа доступно только клиентам с ролью USER.");
+      showErrorToast("Создание заказа доступно только клиентам с ролью USER.");
       return;
     }
 
@@ -1387,7 +1379,7 @@ const HomePage = memo(() => {
           errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
         }
         
-        toast.error(errorMessage);
+        showErrorToast(errorMessage);
         setTimeout(() => {
           navigate("/personal-account", { 
             state: { 
@@ -1507,20 +1499,9 @@ const HomePage = memo(() => {
 
       await warehouseApi.createOrder(orderData);
 
-      toast.success(
-        <div>
-          <div>
-            <strong>Заявка отправлена!</strong>
-          </div>
-          <div style={{ marginTop: 5 }}>
-            Ожидайте подтверждения Менеджера
-            <br />
-            СМС от <strong>TrustMe</strong> для подписания договора придёт после подтверждения заявки менеджером.
-          </div>
-        </div>,
-        {
-          autoClose: 4000,
-        }
+      showSuccessToast(
+        'Ожидайте подтверждения менеджера. СМС от TrustMe для подписания договора придёт после подтверждения заявки.',
+        { autoClose: 4000 }
       );
 
       // Обновляем кэш заказов и ждём завершения, затем навигация
@@ -1536,7 +1517,7 @@ const HomePage = memo(() => {
       const translatedError = translateBackendError(error, errorData);
 
       // Показываем понятное сообщение об ошибке
-      toast.error(translatedError.userMessage);
+      showErrorToast(translatedError.userMessage);
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
@@ -1582,7 +1563,6 @@ const HomePage = memo(() => {
     gazelleService,
     ensureServiceOptions,
     warehouseApi,
-    toast,
     cloudPromoCode,
     user,
     validateUserProfile,

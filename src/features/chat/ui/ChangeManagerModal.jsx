@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect } from 'react';
 import { X, Users, ArrowRight, Check } from 'lucide-react';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import { chatApi } from '../../../shared/api/chatApi';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 
 const ChangeManagerModal = memo(({ 
   isOpen, 
@@ -31,7 +31,7 @@ const ChangeManagerModal = memo(({
         setManagers(data || []);
       } catch (error) {
         console.error('Ошибка загрузки менеджеров:', error);
-        toast.error('Не удалось загрузить список менеджеров');
+        showErrorToast('Не удалось загрузить список менеджеров');
       } finally {
         setIsLoading(false);
       }
@@ -49,13 +49,13 @@ const ChangeManagerModal = memo(({
       await chatApi.changeManager(chat.id, selectedManagerId);
       
       const selectedManager = managers.find(m => m.id === selectedManagerId);
-      toast.success(`Менеджер изменен на ${selectedManager?.name || selectedManager?.email || 'Неизвестно'}`);
+      showSuccessToast(`Менеджер изменен на ${selectedManager?.name || selectedManager?.email || 'Неизвестно'}`);
       
       onManagerChanged?.(selectedManagerId, selectedManager);
       onClose();
     } catch (error) {
       console.error('Ошибка смены менеджера:', error);
-      toast.error('Не удалось сменить менеджера');
+      showErrorToast('Не удалось сменить менеджера');
     } finally {
       setIsChanging(false);
     }

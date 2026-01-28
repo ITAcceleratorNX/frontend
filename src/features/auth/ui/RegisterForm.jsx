@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { toast } from 'react-toastify';
+import {
+  toastAuthSuccess,
+  toastValidationError,
+  showErrorToast,
+} from '../../../shared/lib/toast';
 import { EyeIcon, EyeOffIcon, Phone, Lock, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
@@ -129,14 +133,14 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
     const phone = getValues('phone');
     
     if (!phone) {
-      toast.error('Введите номер телефона для отправки кода');
+      toastValidationError('Введите номер телефона для отправки кода');
       return;
     }
 
     // Простая валидация телефона (минимум 10 цифр после +7)
     const phoneRegex = /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/;
     if (!phoneRegex.test(phone)) {
-      toast.error('Введите корректный номер телефона');
+      toastValidationError('Введите корректный номер телефона');
       return;
     }
 
@@ -151,13 +155,13 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
         } else {
           setTimer(60); // 60 секунд до повторной отправки
         }
-        toast.success('Код отправлен на ваш телефон');
+        toastAuthSuccess('Код отправлен на ваш телефон');
       } else {
         if (result.remainingSeconds) {
           setTimer(result.remainingSeconds);
-          toast.error(result.error || 'Подождите перед повторной отправкой');
+          showErrorToast(result.error || 'Подождите перед повторной отправкой');
         } else {
-          toast.error(result.error || 'Ошибка при отправке кода');
+          showErrorToast(result.error || 'Ошибка при отправке кода');
         }
       }
     } catch (error) {
@@ -165,9 +169,9 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
       if (error.response?.status === 429) {
         const remainingSeconds = error.response?.data?.remainingSeconds || 60;
         setTimer(remainingSeconds);
-        toast.error(error.response?.data?.error || 'Подождите перед повторной отправкой');
+          showErrorToast(error.response?.data?.error || 'Подождите перед повторной отправкой');
       } else {
-        toast.error('Произошла ошибка при отправке кода');
+          showErrorToast('Произошла ошибка при отправке кода');
       }
     } finally {
       setIsResendingCode(false);
@@ -184,7 +188,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
       // Проверяем, совпадают ли пароли
       if (data.password !== data.confirm_password) {
         setServerError('Пароли не совпадают');
-        toast.error('Пароли не совпадают');
+        toastValidationError('Пароли не совпадают');
         setIsLoading(false);
         return;
       }
@@ -199,7 +203,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
       
       if (result.success) {
         // В случае успешной регистрации показываем уведомление
-        toast.success('Регистрация прошла успешно! Теперь вы можете войти в систему.');
+        toastAuthSuccess('Регистрация прошла успешно! Теперь вы можете войти в систему.');
         
         // Перенаправляем на страницу входа с передачей phone
         navigate('/login', { state: { phone: data.phone } });
@@ -207,7 +211,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
         // Отображаем ошибку, полученную от сервера
         const errorMessage = result.error || 'Ошибка при регистрации. Пожалуйста, попробуйте снова.';
         setServerError(errorMessage);
-        toast.error(errorMessage);
+        showErrorToast(errorMessage);
       }
     } catch (error) {
       console.error('RegisterForm: Ошибка при регистрации:', error);
@@ -217,7 +221,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
         if (error.response.status === 409) {
           const message = 'Пользователь с таким email уже существует';
           setServerError(message);
-          toast.error(message);
+          showErrorToast(message);
           return;
         }
         
@@ -226,21 +230,21 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
             // Если сообщение об ошибке - объект с несколькими ошибками
             const messages = Object.values(error.response.data.message).join(', ');
             setServerError(messages);
-            toast.error(messages);
+            showErrorToast(messages);
           } else {
             // Если сообщение об ошибке - строка
             setServerError(error.response.data.message);
-            toast.error(error.response.data.message);
+            showErrorToast(error.response.data.message);
           }
         } else {
           // Если нет конкретного сообщения об ошибке
           setServerError('Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.');
-          toast.error('Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.');
+          showErrorToast('Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.');
         }
       } else {
         // Общая ошибка
         setServerError('Ошибка соединения с сервером. Пожалуйста, проверьте интернет-соединение.');
-        toast.error('Ошибка соединения с сервером. Пожалуйста, проверьте интернет-соединение.');
+        showErrorToast('Ошибка соединения с сервером. Пожалуйста, проверьте интернет-соединение.');
       }
     } finally {
       setIsLoading(false);
@@ -275,7 +279,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
         window.location.href = error.response.headers.location;
       } else {
         console.error('Ошибка при регистрации через Google:', error);
-        toast.error('Не удалось выполнить регистрацию через Google');
+        showErrorToast('Не удалось выполнить регистрацию через Google');
       }
     }
   };

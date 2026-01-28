@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { toast } from 'react-toastify';
+import {
+  toastAuthSuccess,
+  showErrorToast,
+} from '../../../shared/lib/toast';
 import { EyeIcon, EyeOffIcon, Mail, Lock } from 'lucide-react';
 import '../styles/auth-forms.css';
 import api from '../../../shared/api/axios';
@@ -55,7 +58,7 @@ export const LoginForm = () => {
     
     // Показываем сообщение о восстановлении пароля, если оно есть
     if (location.state?.message) {
-      toast.success(location.state.message);
+      toastAuthSuccess(location.state.message);
     }
   }, [location, setValue]);
 
@@ -71,7 +74,7 @@ export const LoginForm = () => {
       
       if (result.success) {
         console.log('LoginForm: Успешный вход, перенаправляем на главную');
-        toast.success('Вход выполнен успешно!');
+        toastAuthSuccess('Вход выполнен успешно!');
         
         // Инвалидируем кеш пользователя для принудительного обновления после входа
         queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
@@ -90,7 +93,7 @@ export const LoginForm = () => {
         }, 100);
       } else {
         setServerError(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
-        toast.error(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
+        showErrorToast(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
       }
     } catch (error) {
       console.error('LoginForm: Ошибка при входе:', error);
@@ -144,7 +147,7 @@ export const LoginForm = () => {
       }
       
       setServerError(errorMessage);
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -169,7 +172,7 @@ export const LoginForm = () => {
         window.location.href = error.response.headers.location;
       } else {
         console.error('Ошибка при авторизации через Google:', error);
-        toast.error('Не удалось выполнить вход через Google');
+        showErrorToast('Не удалось выполнить вход через Google');
       }
     }
   };

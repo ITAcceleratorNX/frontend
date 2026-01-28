@@ -33,7 +33,7 @@ import {
   User,
   Building
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 // --- Moving statuses helpers ---
 const MOVING_STATUS_TEXT = {
   PENDING:   'Ожидает забора',
@@ -278,7 +278,7 @@ const ManagerMoving = () => {
     } catch (err) {
       console.error('Ошибка при загрузке заказов:', err);
       setError('Не удалось загрузить заказы. Попробуйте позже.');
-      toast.error('Ошибка загрузки заказов');
+      showErrorToast('Ошибка загрузки заказов');
     } finally {
       setIsLoading(false);
     }
@@ -296,7 +296,7 @@ const ManagerMoving = () => {
       });
     } catch (err) {
       console.error('Ошибка при загрузке завершённых заказов:', err);
-      toast.error('Ошибка загрузки завершённых заказов');
+      showErrorToast('Ошибка загрузки завершённых заказов');
     } finally {
       setIsDeliveredLoading(false);
     }
@@ -310,7 +310,7 @@ const ManagerMoving = () => {
       setCouriers(data || []);
     } catch (err) {
       console.error('Ошибка при загрузке курьеров:', err);
-      toast.error('Ошибка загрузки списка курьеров');
+      showErrorToast('Ошибка загрузки списка курьеров');
     } finally {
       setIsLoadingCouriers(false);
     }
@@ -336,13 +336,13 @@ const ManagerMoving = () => {
         status: 'COURIER_ASSIGNED'
       });
       
-      toast.success('Курьер успешно назначен');
+      showSuccessToast('Курьер успешно назначен');
       setCourierModalOpen(false);
       setSelectedOrder(null);
       fetchOrders(); // Обновляем список заказов
     } catch (error) {
       console.error('Ошибка при назначении курьера:', error);
-      toast.error('Не удалось назначить курьера');
+      showErrorToast('Не удалось назначить курьера');
     } finally {
       setIsAssigning(false);
     }

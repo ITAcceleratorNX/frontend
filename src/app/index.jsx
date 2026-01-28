@@ -6,6 +6,7 @@ import Routing from './routing';
 import './styles/global.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import '../shared/styles/toast.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
@@ -34,14 +35,15 @@ const queryClient = new QueryClient({
 const NotificationContainer = memo(() => (
   <ToastContainer
     position="top-right"
-    autoClose={3000}
-    hideProgressBar={false}
-    newestOnTop={true}
+    autoClose={5000}
+    hideProgressBar
     closeOnClick
-    rtl={false}
-    pauseOnFocusLoss
+    newestOnTop
+    closeButton={false}
+    icon={false}
     draggable
-    pauseOnHover
+    pauseOnHover={false}
+    pauseOnFocusLoss={false}
     theme="light"
   />
 ));

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '../toast';
 import { showChatConnectionError, showChatServerError } from '../utils/notifications';
 
 export const useWebSocket = () => {
@@ -68,7 +68,7 @@ export const useWebSocket = () => {
         setSocket(newSocket);
         
         if (reconnectAttempts.current > 0) {
-          toast.success('Подключение к чату восстановлено');
+          showSuccessToast('Подключение к чату восстановлено');
         }
       };
       
@@ -107,7 +107,7 @@ export const useWebSocket = () => {
           }
           setIsReconnecting(false);
         } else if (reconnectAttempts.current >= maxReconnectAttempts) {
-          toast.error('Не удалось восстановить соединение с чатом');
+          showErrorToast('Не удалось восстановить соединение с чатом');
           setIsReconnecting(false);
         }
       };
@@ -135,13 +135,13 @@ export const useWebSocket = () => {
         console.error('WebSocket: Ошибка соединения', error);
         isConnectingRef.current = false;
         // Убираем показ ошибки при первой попытке подключения
-        // toast.error('Ошибка подключения к чату. Проверьте соединение с интернетом.');
+        // showErrorToast('Ошибка подключения к чату. Проверьте соединение с интернетом.');
       };
       
     } catch (error) {
       console.error('WebSocket: Ошибка создания соединения', error);
       isConnectingRef.current = false;
-      toast.error('Не удалось создать соединение с чатом');
+      showErrorToast('Не удалось создать соединение с чатом');
     }
   }, [isAuthenticated, user?.id]);
 
@@ -157,14 +157,14 @@ export const useWebSocket = () => {
         return true;
       } catch (error) {
         console.error('WebSocket: Ошибка отправки сообщения', error);
-        toast.error('Не удалось отправить сообщение');
+        showErrorToast('Не удалось отправить сообщение');
         return false;
       }
     } else {
       if (import.meta.env.DEV) {
         console.log('WebSocket: Соединение не готово для отправки сообщений');
       }
-      toast.error('Нет соединения с сервером');
+      showErrorToast('Нет соединения с сервером');
       return false;
     }
   }, []);

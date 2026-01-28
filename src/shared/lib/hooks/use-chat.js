@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useWebSocket } from './use-websocket';
 import { useUserChat } from './use-user-chat';
 import { useChatStore, WS_MESSAGE_TYPES, CHAT_STATUS, USER_ROLES } from '../../../entities/chat/model';
-import { toast } from 'react-toastify';
+import { showInfoToast, showSuccessToast, showErrorToast } from '../toast';
 
 export const useChat = () => {
   const { user, isAuthenticated } = useAuth();
@@ -85,7 +85,7 @@ export const useChat = () => {
     switch (data.type) {
       case WS_MESSAGE_TYPES.WAITING_FOR_MANAGER:
         setChatStatus(CHAT_STATUS.PENDING);
-        toast.info(data.message || 'Создаем чат...');
+        showInfoToast(data.message || 'Создаем чат...');
         break;
 
       case WS_MESSAGE_TYPES.CHAT_ACCEPTED:
@@ -98,7 +98,7 @@ export const useChat = () => {
           setManagerName(data.managerName);
         }
         setChatStatus(CHAT_STATUS.ACTIVE);
-        toast.success(data.message || 'Менеджер подключен к чату');
+        showSuccessToast(data.message || 'Менеджер подключен к чату');
 
         // Инвалидируем кеш чата пользователя
         import('../../api/chatApi').then(({ chatApi }) => {
@@ -118,8 +118,8 @@ export const useChat = () => {
           if (data.managerName) {
             setManagerName(data.managerName);
           }
-          setChatStatus(CHAT_STATUS.ACTIVE);
-          toast.success(`Вам назначен чат #${data.chatId}`);
+        setChatStatus(CHAT_STATUS.ACTIVE);
+        showSuccessToast(`Вам назначен чат #${data.chatId}`);
         }
 
         // Инвалидируем кеши
@@ -225,12 +225,12 @@ export const useChat = () => {
 
             // Показываем уведомление
             if (user?.role === USER_ROLES.USER && !data.message.is_from_user) {
-              toast.info('Новое сообщение от менеджера');
+              showInfoToast('Новое сообщение от менеджера');
             } else if (user?.role === USER_ROLES.MANAGER && data.message.is_from_user) {
               if (isActiveChat) {
-                toast.info('Новое сообщение от пользователя');
+                showInfoToast('Новое сообщение от пользователя');
               } else {
-                toast.info(`Новое сообщение в чате #${messageChatId}`);
+                showInfoToast(`Новое сообщение в чате #${messageChatId}`);
               }
             }
           } else {
@@ -265,7 +265,7 @@ export const useChat = () => {
             userId: data.userId,
             timestamp: Date.now()
           });
-          toast.info(`Новый чат от пользователя ${data.userId}`);
+          showInfoToast(`Новый чат от пользователя ${data.userId}`);
 
           // Инвалидируем кеш ожидающих чатов
           import('../../api/chatApi').then(({ chatApi }) => {
@@ -276,7 +276,7 @@ export const useChat = () => {
 
       case WS_MESSAGE_TYPES.CHAT_CLOSED:
         setChatStatus(CHAT_STATUS.CLOSED);
-        toast.info('Чат завершен');
+        showInfoToast('Чат завершен');
 
         // Инвалидируем кеш чата пользователя
         import('../../api/chatApi').then(({ chatApi }) => {
@@ -318,12 +318,12 @@ export const useChat = () => {
   // Начать новый чат
   const startChat = useCallback(() => {
     if (!isConnected) {
-      toast.error('Нет соединения с сервером');
+      showErrorToast('Нет соединения с сервером');
       return false;
     }
 
     if (!user?.id) {
-      toast.error('Пользователь не авторизован');
+      showErrorToast('Пользователь не авторизован');
       return false;
     }
 
@@ -349,12 +349,12 @@ export const useChat = () => {
     }
 
     if (!isConnected) {
-      toast.error('Нет соединения с сервером');
+      showErrorToast('Нет соединения с сервером');
       return false;
     }
 
     if (!activeChat?.id) {
-      toast.error('Чат не активен');
+      showErrorToast('Чат не активен');
       return false;
     }
 
@@ -390,7 +390,7 @@ export const useChat = () => {
     if (!success) {
       // Если отправка не удалась, удаляем временное сообщение
       // TODO: Реализовать логику удаления временного сообщения
-      toast.error('Не удалось отправить сообщение');
+      showErrorToast('Не удалось отправить сообщение');
     }
 
     return success;
@@ -460,12 +460,12 @@ export const useChat = () => {
   // Принять чат (для менеджеров)
   const acceptChat = useCallback((chatId) => {
     if (user?.role !== USER_ROLES.MANAGER) {
-      toast.error('Недостаточно прав');
+      showErrorToast('Недостаточно прав');
       return false;
     }
 
     if (!isConnected) {
-      toast.error('Нет соединения с сервером');
+      showErrorToast('Нет соединения с сервером');
       return false;
     }
 
