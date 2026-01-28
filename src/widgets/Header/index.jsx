@@ -11,7 +11,8 @@ import extraspaceLogo from '../../assets/photo_2025-10-08_12-29-41-removebg-prev
 // Константы для контактов
 const PHONE_NUMBER = '+7 778 391 1425';
 const PHONE_LINK = 'tel:+77783911425';
-const WHATSAPP_LINK = 'https://api.whatsapp.com/send/?phone=77783911425&text&type=phone_number&app_absent=0';
+const WHATSAPP_MESSAGE = encodeURIComponent('Здравствуйте! Хочу забронировать бокс.');
+const WHATSAPP_LINK = `https://api.whatsapp.com/send/?phone=77783911425&text=${WHATSAPP_MESSAGE}&type=phone_number&app_absent=0`;
 const INSTAGRAM_LINK = 'https://www.instagram.com/extraspace.kz?igsh=b3JucXd4YjF3dmw0';
 
 // Мемоизированный компонент Header
@@ -160,12 +161,6 @@ export const Header = memo(() => {
                   className={getNavLinkClass}
                 >
                   Главная
-                </NavLink> */}
-                {/* <NavLink
-                  to="/cloud-storage"
-                  className={getNavLinkClass}
-                >
-                  Облачное хранение
                 </NavLink> */}
                 {/* <NavLink
                   to="/moving"

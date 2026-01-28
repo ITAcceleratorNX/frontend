@@ -5,7 +5,9 @@ import {TEL_LINK} from "/src/shared/components/CallbackRequestModal.jsx";
 const ChatButton = memo(({ className = '', position = 'fixed' }) => {
   const handleClick = () => {
     if (typeof window !== 'undefined') {
-      window.open(`https://wa.me/${TEL_LINK.substring(5)}`, '_blank', 'noopener,noreferrer');
+      const phoneNumber = TEL_LINK.substring(5); // Убираем "tel:" префикс
+      const message = encodeURIComponent('Здравствуйте! Хочу забронировать бокс.');
+      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank', 'noopener,noreferrer');
     }
   };
 

@@ -5,7 +5,8 @@ import { UserLock, BookText } from 'lucide-react';
 import {DISPLAY_PHONE, TEL_LINK} from "/src/shared/components/CallbackRequestModal.jsx";
 import extraspaceLogo from '../../assets/photo_2025-10-08_12-29-41-removebg-preview.png';
 
-const WHATSAPP_LINK = 'https://api.whatsapp.com/send/?phone=77783911425&text&type=phone_number&app_absent=0';
+const WHATSAPP_MESSAGE = encodeURIComponent('Здравствуйте! Хочу забронировать бокс.');
+const WHATSAPP_LINK = `https://api.whatsapp.com/send/?phone=77783911425&text=${WHATSAPP_MESSAGE}&type=phone_number&app_absent=0`;
 const INSTAGRAM_LINK = 'https://www.instagram.com/extraspace.kz?igsh=b3JucXd4YjF3dmw0';
 const PHONE_NUMBER = '+7 778 391-14-25';
 

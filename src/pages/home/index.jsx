@@ -2157,7 +2157,44 @@ const HomePage = memo(() => {
                   className="flex transition-transform duration-500 ease-in-out"
                   style={{ transform: `translateX(-${currentCardIndex * 100}%)` }}
                 >
-                  {/* Блок 1: Облачное хранение */}
+                  {/* Блок 1: Индивидуальное хранение */}
+                  <div className="min-w-full px-2">
+                    <div className="bg-[#00A991] rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+                      <div className="bg-[#00A991] px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6 flex justify-center">
+                        <img
+                          src={ininvImg}
+                          alt="Индивидуальное хранение"
+                          className="w-11/12 h-64 sm:h-72 md:h-80 object-cover rounded-2xl"
+                        />
+                      </div>
+                      <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
+                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
+                        Индивидуальное хранение
+                        </h3>
+                        <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
+                          Ваш личный закрытый бокс. Только вы имеете доступ — как мини-склад под ключ.
+                        </p>
+                        <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Полная приватность</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>Круглосуточный доступ</span>
+                          </li>
+                        </ul>
+                        <button
+                          onClick={() => openCallbackModal('callback')}
+                          className="w-full bg-white text-[#00A991] font-semibold py-3 md:py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-base md:text-lg mt-auto"
+                        >
+                          Подробнее
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Блок 2: Облачное хранение */}
                   <div className="min-w-full px-2">
                     <div className="bg-[#00A991] rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
                       <div className="bg-[#00A991] px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6 flex justify-center">
@@ -2191,51 +2228,7 @@ const HomePage = memo(() => {
                           </li>
                         </ul>
                         <button
-                          onClick={() => {
-                            setActiveStorageTab("CLOUD");
-                            setTimeout(() => {
-                              if (tabsSectionRef.current) {
-                                tabsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }
-                            }, 100);
-                          }}
-                          className="w-full bg-white text-[#00A991] font-semibold py-3 md:py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-base md:text-lg mt-auto"
-                        >
-                          Подробнее
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Блок 2: Индивидуальное хранение */}
-                  <div className="min-w-full px-2">
-                    <div className="bg-[#00A991] rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
-                      <div className="bg-[#00A991] px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6 flex justify-center">
-                        <img
-                          src={ininvImg}
-                          alt="Индивидуальное хранение"
-                          className="w-11/12 h-64 sm:h-72 md:h-80 object-cover rounded-2xl"
-                        />
-                      </div>
-                      <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                        Индивидуальное хранение
-                        </h3>
-                        <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                          Ваш личный закрытый бокс. Только вы имеете доступ — как мини-склад под ключ.
-                        </p>
-                        <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>Полная приватность</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>Круглосуточный доступ</span>
-                          </li>
-                        </ul>
-                        <button
-                          onClick={handleHeroBookingClick}
+                          onClick={() => openCallbackModal('callback')}
                           className="w-full bg-white text-[#00A991] font-semibold py-3 md:py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-base md:text-lg mt-auto"
                         >
                           Подробнее
