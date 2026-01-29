@@ -10,12 +10,20 @@ import InstagramIcon from '@/assets/lead-source-icons/instagram.webp';
 import TiktokIcon from '@/assets/lead-source-icons/tiktok.webp';
 import AdsIcon from '@/assets/lead-source-icons/ads.webp';
 
+// Telegram SVG icon (inline, white color for dark background)
+const TelegramIcon = () => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+    <path d="M24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C35.04 44 44 35.04 44 24C44 12.96 35.04 4 24 4ZM33.56 16.36L30.2 32.2C29.96 33.32 29.28 33.6 28.32 33.04L23.32 29.36L20.92 31.68C20.64 31.96 20.4 32.2 19.84 32.2L20.2 27.08L29.56 18.6C29.96 18.24 29.48 18.04 28.96 18.4L17.32 25.8L12.4 24.24C11.28 23.88 11.24 23.08 12.6 22.52L32.12 15.16C33.04 14.8 33.84 15.4 33.56 16.36Z" fill="white"/>
+  </svg>
+);
+
 const LEAD_SOURCES = [
   { value: 'site', label: 'Сайт', icon: SiteIcon },
   { value: 'whatsapp', label: 'WhatsApp', icon: WhatsappIcon },
   { value: '2gis', label: '2ГИС', icon: TwoGisIcon },
   { value: 'instagram', label: 'Instagram', icon: InstagramIcon },
   { value: 'tiktok', label: 'TikTok', icon: TiktokIcon },
+  { value: 'telegram', label: 'Telegram', icon: 'telegram' },
   { value: 'ads', label: 'Реклама', icon: AdsIcon },
 ];
 
@@ -25,9 +33,10 @@ const STORAGE_SHOWN_KEY = 'extraspace_lead_source_shown';
 // Кэш для предзагруженных изображений
 const imageCache = new Map();
 
-// Функция предзагрузки изображений
+// Функция предзагрузки изображений (пропускаем telegram - у него inline SVG)
 const preloadImages = () => {
   LEAD_SOURCES.forEach((source) => {
+    if (source.icon === 'telegram') return; // Skip telegram SVG
     if (!imageCache.has(source.icon)) {
       const img = new Image();
       img.src = source.icon;
@@ -42,9 +51,10 @@ if (typeof window !== 'undefined') {
   // Предзагружаем сразу при загрузке модуля
   preloadImages();
   
-  // Также предзагружаем через link preload в head
+  // Также предзагружаем через link preload в head (пропускаем telegram)
   if (document.head) {
     LEAD_SOURCES.forEach((source) => {
+      if (source.icon === 'telegram') return; // Skip telegram SVG
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
@@ -83,9 +93,10 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
       // Предзагружаем все изображения сразу
       preloadImages();
       
-      // Дополнительная проверка загрузки изображений для оптимизации
+      // Дополнительная проверка загрузки изображений для оптимизации (пропускаем telegram)
       const checkImagesLoaded = () => {
         LEAD_SOURCES.forEach((source) => {
+          if (source.icon === 'telegram') return; // Skip telegram SVG
           const cached = imageCache.get(source.icon);
           if (!cached || !cached.complete) {
             // Если изображение еще не загружено, создаем новый объект Image
@@ -182,11 +193,12 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
 
         {/* Options Grid */}
         <div className="flex flex-col gap-4 sm:gap-5 w-full">
-          {/* First row: Сайт, WhatsApp, 2ГИС */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 w-full">
-            {LEAD_SOURCES.slice(0, 3).map((source) => {
+          {/* First row: Сайт, WhatsApp, 2ГИС, Telegram */}
+          <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full">
+            {LEAD_SOURCES.slice(0, 4).map((source) => {
               const Icon = source.icon;
               const isSelected = selectedSource?.value === source.value;
+              const isTelegram = source.value === 'telegram';
               
               return (
                 <button
@@ -195,50 +207,54 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
                   className={`
                     flex flex-col items-center justify-center 
                     gap-1.5 sm:gap-2
-                    p-3 sm:p-4 md:p-5 lg:p-8
-                    rounded-[25px]
+                    p-2.5 sm:p-3 md:p-4 lg:p-6
+                    rounded-[20px] sm:rounded-[25px]
                     transition-all duration-200
                     bg-gradient-to-b from-[#26B3AB] to-[#00A991]
                     hover:opacity-90
                     active:opacity-80
                     ${isSelected ? 'ring-2 ring-[#363636] ring-offset-2' : ''}
                     w-full
-                    min-h-[100px] sm:min-h-[120px] md:min-h-[140px] lg:min-h-[160px]
+                    min-h-[90px] sm:min-h-[110px] md:min-h-[130px] lg:min-h-[150px]
                   `}
                 >
                   <div className="
-                    w-10 h-10 
-                    sm:w-14 sm:h-14 
-                    md:w-16 md:h-16 
-                    lg:w-20 lg:h-20
+                    w-8 h-8 
+                    sm:w-12 sm:h-12 
+                    md:w-14 md:h-14 
+                    lg:w-16 lg:h-16
                     flex items-center justify-center
                     relative
                   ">
-                    <img 
-                      src={Icon} 
-                      alt={source.label}
-                      className="w-full h-full object-contain"
-                      loading="eager"
-                      fetchPriority="high"
-                      decoding="async"
-                      onError={(e) => {
-                        console.error(`Ошибка загрузки иконки ${source.label}:`, Icon);
-                        e.target.style.display = 'none';
-                      }}
-                      onLoad={() => {
-                        if (import.meta.env.DEV) {
-                          console.log(`✅ Иконка ${source.label} загружена:`, Icon);
-                        }
-                      }}
-                    />
+                    {isTelegram ? (
+                      <TelegramIcon />
+                    ) : (
+                      <img 
+                        src={Icon} 
+                        alt={source.label}
+                        className="w-full h-full object-contain"
+                        loading="eager"
+                        fetchPriority="high"
+                        decoding="async"
+                        onError={(e) => {
+                          console.error(`Ошибка загрузки иконки ${source.label}:`, Icon);
+                          e.target.style.display = 'none';
+                        }}
+                        onLoad={() => {
+                          if (import.meta.env.DEV) {
+                            console.log(`✅ Иконка ${source.label} загружена:`, Icon);
+                          }
+                        }}
+                      />
+                    )}
                   </div>
                   <span className="
                     font-sf-pro-text 
                     font-medium 
-                    text-xs 
-                    sm:text-sm 
-                    md:text-base 
-                    lg:text-lg 
+                    text-[10px]
+                    sm:text-xs 
+                    md:text-sm 
+                    lg:text-base 
                     leading-[1.4] 
                     text-[#F5F5F5]
                     text-center
@@ -251,8 +267,8 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
           </div>
 
           {/* Second row: Instagram, TikTok, Реклама */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 w-full">
-            {LEAD_SOURCES.slice(3, 6).map((source) => {
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full">
+            {LEAD_SOURCES.slice(4, 7).map((source) => {
               const Icon = source.icon;
               const isSelected = selectedSource?.value === source.value;
               
@@ -263,22 +279,22 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
                   className={`
                     flex flex-col items-center justify-center 
                     gap-1.5 sm:gap-2
-                    p-3 sm:p-4 md:p-5 lg:p-8
-                    rounded-[25px]
+                    p-2.5 sm:p-3 md:p-4 lg:p-6
+                    rounded-[20px] sm:rounded-[25px]
                     transition-all duration-200
                     bg-gradient-to-b from-[#26B3AB] to-[#00A991]
                     hover:opacity-90
                     active:opacity-80
                     ${isSelected ? 'ring-2 ring-[#363636] ring-offset-2' : ''}
                     w-full
-                    min-h-[100px] sm:min-h-[120px] md:min-h-[140px] lg:min-h-[160px]
+                    min-h-[90px] sm:min-h-[110px] md:min-h-[130px] lg:min-h-[150px]
                   `}
                 >
                   <div className="
-                    w-10 h-10 
-                    sm:w-14 sm:h-14 
-                    md:w-16 md:h-16 
-                    lg:w-20 lg:h-20
+                    w-8 h-8 
+                    sm:w-12 sm:h-12 
+                    md:w-14 md:h-14 
+                    lg:w-16 lg:h-16
                     flex items-center justify-center
                     relative
                   ">
@@ -303,10 +319,10 @@ export const LeadSourceModal = ({ open, onOpenChange, onSelect }) => {
                   <span className="
                     font-sf-pro-text 
                     font-medium 
-                    text-xs 
-                    sm:text-sm 
-                    md:text-base 
-                    lg:text-lg 
+                    text-[10px]
+                    sm:text-xs 
+                    md:text-sm 
+                    lg:text-base 
                     leading-[1.4] 
                     text-[#F5F5F5]
                     text-center

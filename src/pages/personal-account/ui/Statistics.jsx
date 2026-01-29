@@ -67,6 +67,7 @@ const LEAD_SOURCE_OPTIONS = [
   { value: '2gis', label: '2gis' },
   { value: 'instagram', label: 'Instagram' },
   { value: 'tiktok', label: 'TikTok' },
+  { value: 'telegram', label: 'Telegram' },
   { value: 'ads', label: 'Реклама' },
 ];
 

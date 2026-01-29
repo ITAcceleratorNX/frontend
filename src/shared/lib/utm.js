@@ -9,7 +9,7 @@ const VISITOR_ID_MAX_AGE_DAYS = 365;
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 const UTM_STORAGE_KEY = 'extraspace_utm_params';
 
-const VALID_LEAD_SOURCES = ['site', 'whatsapp', '2gis', 'instagram', 'tiktok', 'ads'];
+const VALID_LEAD_SOURCES = ['site', 'whatsapp', '2gis', 'instagram', 'tiktok', 'ads', 'telegram'];
 
 /** Normalize utm_source to our lead_source enum */
 const UTM_SOURCE_TO_LEAD = {
@@ -28,7 +28,8 @@ const UTM_SOURCE_TO_LEAD = {
   yandex: 'ads',
   facebook: 'ads',
   vk: 'ads',
-  telegram: 'ads',
+  telegram: 'telegram',
+  tg: 'telegram',
 };
 
 /**
