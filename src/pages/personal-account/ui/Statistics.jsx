@@ -11,6 +11,8 @@ const INITIAL_FILTERS = {
   paymentStatus: 'all',
   contractStatus: 'all',
   leadSource: 'all',
+  utmMedium: 'all',
+  utmCampaign: 'all',
 };
 
 const PERIOD_OPTIONS = [
@@ -403,6 +405,20 @@ const useStatisticsData = (filters) => {
     retry: 2,
   });
 
+  const { data: utmStatsData, isLoading: isUtmStatsLoading } = useQuery({
+    queryKey: ['statistics', 'utm-stats', filters],
+    queryFn: () => statisticsApi.getUtmStats(filters),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  const { data: utmFilterOptions } = useQuery({
+    queryKey: ['statistics', 'utm-filter-options'],
+    queryFn: () => statisticsApi.getUtmFilterOptions(),
+    staleTime: 30 * 60 * 1000, // кеш на 30 минут
+    retry: 2,
+  });
+
   const { data: cancelReasonsData, isLoading: isCancelReasonsLoading } = useQuery({
     queryKey: ['statistics', 'cancel-reasons', filters],
     queryFn: () => statisticsApi.getCancelReasons(filters),
@@ -412,7 +428,7 @@ const useStatisticsData = (filters) => {
 
   return useMemo(() => {
     const isLoading =
-      isSummaryLoading || isChartLoading || isLeadSourcesLoading || isCancelReasonsLoading;
+      isSummaryLoading || isChartLoading || isLeadSourcesLoading || isCancelReasonsLoading || isUtmStatsLoading;
 
     // Если данные загружаются, возвращаем пустые данные
     if (isLoading || !summaryData || !lineChartData || !leadSourcesData || !cancelReasonsData) {
@@ -420,6 +436,8 @@ const useStatisticsData = (filters) => {
         summary: [],
         lineChartData: { labels: [], datasets: [] },
         leadSources: [],
+        utmStats: { byMedium: [], byCampaign: [] },
+        utmFilterOptions: { utmMedium: [], utmCampaign: [] },
         cancelReasons: [],
         cancelReasonComments: [],
         tableRows: [],
@@ -504,6 +522,8 @@ const useStatisticsData = (filters) => {
       summary,
       lineChartData: lineChartData || { labels: [], datasets: [] },
       leadSources: normalizedLeadSources,
+      utmStats: utmStatsData || { byMedium: [], byCampaign: [] },
+      utmFilterOptions: utmFilterOptions || { utmMedium: [], utmCampaign: [] },
       cancelReasons,
       cancelReasonComments,
       tableRows,
@@ -513,11 +533,14 @@ const useStatisticsData = (filters) => {
     summaryData,
     lineChartData,
     leadSourcesData,
+    utmStatsData,
+    utmFilterOptions,
     cancelReasonsData,
     filters,
     isSummaryLoading,
     isChartLoading,
     isLeadSourcesLoading,
+    isUtmStatsLoading,
     isCancelReasonsLoading,
   ]);
 };
@@ -790,6 +813,8 @@ const Statistics = () => {
     summary,
     lineChartData,
     leadSources,
+    utmStats,
+    utmFilterOptions,
     cancelReasons,
     cancelReasonComments,
     tableRows,
@@ -1016,6 +1041,24 @@ const Statistics = () => {
               onChange={handleFilterChange('leadSource')}
               options={LEAD_SOURCE_OPTIONS}
             />
+            <FilterSelect
+              label="UTM Medium"
+              value={filters.utmMedium}
+              onChange={handleFilterChange('utmMedium')}
+              options={[
+                { value: 'all', label: 'Все medium' },
+                ...(utmFilterOptions?.utmMedium || []).map((m) => ({ value: m, label: m })),
+              ]}
+            />
+            <FilterSelect
+              label="UTM Campaign"
+              value={filters.utmCampaign}
+              onChange={handleFilterChange('utmCampaign')}
+              options={[
+                { value: 'all', label: 'Все campaign' },
+                ...(utmFilterOptions?.utmCampaign || []).map((c) => ({ value: c, label: c })),
+              ]}
+            />
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -1029,6 +1072,8 @@ const Statistics = () => {
                   paymentStatus: PAYMENT_STATUS_OPTIONS,
                   contractStatus: CONTRACT_STATUS_OPTIONS,
                   leadSource: LEAD_SOURCE_OPTIONS,
+                  utmMedium: [{ value: 'all', label: 'Все medium' }, ...(utmFilterOptions?.utmMedium || []).map((m) => ({ value: m, label: m }))],
+                  utmCampaign: [{ value: 'all', label: 'Все campaign' }, ...(utmFilterOptions?.utmCampaign || []).map((c) => ({ value: c, label: c }))],
                 };
 
                 const currentOption = optionMap[key]?.find((item) => item.value === value);
@@ -1146,6 +1191,79 @@ const Statistics = () => {
             )}
         </div>
       </div>
+      )}
+
+      {/* UTM Statistics Section */}
+      {!isStatisticsLoading && (utmStats?.byMedium?.length > 0 || utmStats?.byCampaign?.length > 0) && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* UTM Medium */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2 pb-4">
+              <h2 className="text-lg font-semibold text-slate-900">По UTM Medium</h2>
+              <p className="text-sm text-slate-500">
+                Распределение визитов по utm_medium (тип канала).
+              </p>
+            </div>
+            {utmStats?.byMedium?.length > 0 ? (
+              <div className="space-y-3">
+                {utmStats.byMedium.map((item) => {
+                  const total = utmStats.byMedium.reduce((acc, i) => acc + i.value, 0);
+                  const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
+                  return (
+                    <div key={item.key}>
+                      <div className="flex items-center justify-between text-sm font-medium text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-slate-700">{item.label}</span>
+                        </div>
+                        <span className="text-slate-900">{item.value} ({percent}%)</span>
+                      </div>
+                      <div className="mt-1.5 h-2 rounded-full bg-slate-100">
+                        <div className="h-2 rounded-full transition-all" style={{ width: `${Math.max(percent, 4)}%`, backgroundColor: item.color }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-slate-500">Нет данных по utm_medium</div>
+            )}
+          </div>
+
+          {/* UTM Campaign */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2 pb-4">
+              <h2 className="text-lg font-semibold text-slate-900">По UTM Campaign</h2>
+              <p className="text-sm text-slate-500">
+                Распределение визитов по utm_campaign (рекламная кампания).
+              </p>
+            </div>
+            {utmStats?.byCampaign?.length > 0 ? (
+              <div className="space-y-3">
+                {utmStats.byCampaign.map((item) => {
+                  const total = utmStats.byCampaign.reduce((acc, i) => acc + i.value, 0);
+                  const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
+                  return (
+                    <div key={item.key}>
+                      <div className="flex items-center justify-between text-sm font-medium text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-slate-700">{item.label}</span>
+                        </div>
+                        <span className="text-slate-900">{item.value} ({percent}%)</span>
+                      </div>
+                      <div className="mt-1.5 h-2 rounded-full bg-slate-100">
+                        <div className="h-2 rounded-full transition-all" style={{ width: `${Math.max(percent, 4)}%`, backgroundColor: item.color }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-slate-500">Нет данных по utm_campaign</div>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">

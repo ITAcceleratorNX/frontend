@@ -7,6 +7,7 @@ const VISITOR_ID_COOKIE = 'extraspace_visitor_id';
 const VISITOR_ID_MAX_AGE_DAYS = 365;
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+const UTM_STORAGE_KEY = 'extraspace_utm_params';
 
 const VALID_LEAD_SOURCES = ['site', 'whatsapp', '2gis', 'instagram', 'tiktok', 'ads'];
 
@@ -62,6 +63,43 @@ export function mapUtmSourceToLeadSource(utmSource) {
 export function hasUtmParams() {
   const params = getUtmParams();
   return Object.keys(params).length > 0;
+}
+
+/**
+ * Save UTM params to localStorage (called once on first visit with UTM)
+ * @param {Record<string, string>} params
+ */
+export function saveUtmParams(params) {
+  if (typeof localStorage === 'undefined' || !params) return;
+  const filtered = {};
+  UTM_KEYS.forEach((key) => {
+    if (params[key]) filtered[key] = params[key];
+  });
+  if (Object.keys(filtered).length > 0) {
+    localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(filtered));
+  }
+}
+
+/**
+ * Get stored UTM params from localStorage
+ * @returns {Record<string, string>}
+ */
+export function getStoredUtmParams() {
+  if (typeof localStorage === 'undefined') return {};
+  try {
+    const stored = localStorage.getItem(UTM_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Clear stored UTM params (call after registration if needed)
+ */
+export function clearStoredUtmParams() {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem(UTM_STORAGE_KEY);
 }
 
 /**

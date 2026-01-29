@@ -16,6 +16,8 @@ import {
   mapUtmSourceToLeadSource,
   getOrCreateVisitorId,
   cleanUrlFromUtm,
+  saveUtmParams,
+  getStoredUtmParams,
 } from '../shared/lib/utm';
 import { trackVisit } from '../shared/api/visitsApi';
 
@@ -95,13 +97,15 @@ const App = memo(() => {
     setTimeout(resetViewportZoom, 300);
   }, []);
 
-  // UTM: при первом заходе с UTM сохраняем lead_source и отправляем визит
+  // UTM: при первом заходе с UTM сохраняем lead_source и UTM-параметры, отправляем визит
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const utm = getUtmParams();
-    const utmSource = utm.utm_source;
-    if (utmSource) {
-      const leadSource = mapUtmSourceToLeadSource(utmSource);
+    const urlUtm = getUtmParams();
+    
+    // Если есть UTM в URL — сохраняем все параметры в localStorage
+    if (Object.keys(urlUtm).length > 0) {
+      saveUtmParams(urlUtm);
+      const leadSource = mapUtmSourceToLeadSource(urlUtm.utm_source);
       if (leadSource) {
         localStorage.setItem(LEAD_SOURCE_STORAGE_KEY, leadSource);
         localStorage.setItem(LEAD_SOURCE_SHOWN_KEY, 'true');
@@ -109,18 +113,21 @@ const App = memo(() => {
     }
     cleanUrlFromUtm();
 
+    // Для отправки используем сохранённые UTM (могли прийти раньше)
+    const storedUtm = getStoredUtmParams();
     const leadSource = localStorage.getItem(LEAD_SOURCE_STORAGE_KEY);
     const visitorId = getOrCreateVisitorId();
     const alreadySent = sessionStorage.getItem(VISIT_SENT_KEY);
+    
     if (leadSource && visitorId && !alreadySent) {
       trackVisit({
         visitor_id: visitorId,
         lead_source: leadSource,
-        ...(utm.utm_source && { utm_source: utm.utm_source }),
-        ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
-        ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
-        ...(utm.utm_content && { utm_content: utm.utm_content }),
-        ...(utm.utm_term && { utm_term: utm.utm_term }),
+        ...(storedUtm.utm_source && { utm_source: storedUtm.utm_source }),
+        ...(storedUtm.utm_medium && { utm_medium: storedUtm.utm_medium }),
+        ...(storedUtm.utm_campaign && { utm_campaign: storedUtm.utm_campaign }),
+        ...(storedUtm.utm_content && { utm_content: storedUtm.utm_content }),
+        ...(storedUtm.utm_term && { utm_term: storedUtm.utm_term }),
       }).then(() => {
         sessionStorage.setItem(VISIT_SENT_KEY, '1');
       }).catch(() => {});

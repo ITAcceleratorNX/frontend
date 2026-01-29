@@ -78,6 +78,40 @@ export const statisticsApi = {
     }
   },
 
+  // Получение статистики по UTM-параметрам
+  getUtmStats: async (filters = {}) => {
+    try {
+      if (isDevelopment) {
+        console.log('StatisticsAPI: Отправка запроса на получение UTM-статистики', filters);
+      }
+      const response = await api.get('/statistics/utm-stats', { params: filters });
+      if (isDevelopment) {
+        console.log('StatisticsAPI: Получена UTM-статистика:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('StatisticsAPI: Ошибка при получении UTM-статистики:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Получение уникальных значений UTM для фильтров
+  getUtmFilterOptions: async () => {
+    try {
+      if (isDevelopment) {
+        console.log('StatisticsAPI: Отправка запроса на получение UTM-опций фильтров');
+      }
+      const response = await api.get('/statistics/utm-filter-options');
+      if (isDevelopment) {
+        console.log('StatisticsAPI: Получены UTM-опции фильтров:', response.data);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('StatisticsAPI: Ошибка при получении UTM-опций фильтров:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Получение причин отмен
   getCancelReasons: async (filters = {}) => {
     try {
