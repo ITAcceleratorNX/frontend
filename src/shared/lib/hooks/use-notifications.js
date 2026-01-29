@@ -116,17 +116,25 @@ export const useMarkAsRead = () => {
       // Получаем предыдущие данные для отката
       const previousData = queryClient.getQueryData(queryKey);
       
-      // Оптимистично обновляем кеш
+      // Оптимистично обновляем кеш (USER/COURIER — массив; ADMIN/MANAGER — infinite: pages[].notifications)
       queryClient.setQueryData(queryKey, (oldData) => {
-        if (!oldData?.data) return oldData;
-        return {
-          ...oldData,
-          data: oldData.data.map(notification =>
-            notification.notification_id === notificationId
-              ? { ...notification, is_read: true }
-              : notification
-          )
-        };
+        if (Array.isArray(oldData)) {
+          return oldData.map((n) =>
+            (n.notification_id === notificationId || n.id === notificationId) ? { ...n, is_read: true } : n
+          );
+        }
+        if (oldData?.pages) {
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              notifications: (page.notifications || []).map((n) =>
+                (n.notification_id === notificationId || n.id === notificationId) ? { ...n, is_read: true } : n
+              ),
+            })),
+          };
+        }
+        return oldData;
       });
       
       return { previousData, queryKey };

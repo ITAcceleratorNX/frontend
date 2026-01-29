@@ -92,6 +92,11 @@ const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
               <p className={`text-sm leading-relaxed break-words break-all ${styles.contentClass}`}>
                 {notification.message}
               </p>
+              {notification.sender_id && notification.recipients?.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1.5">
+                  Кому: {notification.recipients.map((r) => r.name || r.email || `#${r.id}`).join(', ')}
+                </p>
+              )}
             </div>
             
             {/* Время и статус */}

@@ -13,13 +13,14 @@ const ManagerNotifications = () => {
 
   const {
     notifications,
-      total,
+    total,
     users,
     stats,
     isLoading,
     error,
     sendNotification,
     isSending,
+    markAsRead,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -279,11 +280,11 @@ const ManagerNotifications = () => {
                       if (!isSearchMode && displayData.notifications.length === index + 1) {
                         return (
                             <div ref={lastElementRef} key={n.notification_id}>
-                              <NotificationCard notification={n} />
+                              <NotificationCard notification={n} onMarkAsRead={markAsRead} />
                             </div>
                         );
                       } else {
-                        return <NotificationCard key={n.notification_id} notification={n} />;
+                        return <NotificationCard key={n.notification_id} notification={n} onMarkAsRead={markAsRead} />;
                       }
                     })
                   )}
