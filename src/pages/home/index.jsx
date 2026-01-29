@@ -34,6 +34,8 @@ import {
 import { validateUserProfile } from "../../shared/lib/validation/profileValidation";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
+import { getOrCreateVisitorId } from "@/shared/lib/utm";
+import { trackVisit } from "@/shared/api/visitsApi";
 // Импортируем иконки для предзагрузки
 import SiteIcon from '@/assets/lead-source-icons/site.webp';
 import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.webp';
@@ -3783,7 +3785,15 @@ const HomePage = memo(() => {
       <LeadSourceModal
         open={isLeadSourceModalOpen}
         onOpenChange={setIsLeadSourceModalOpen}
-        onSelect={saveLeadSource}
+        onSelect={(sourceValue) => {
+          saveLeadSource(sourceValue);
+          const visitorId = getOrCreateVisitorId();
+          if (visitorId) {
+            trackVisit({ visitor_id: visitorId, lead_source: sourceValue }).then(() => {
+              sessionStorage.setItem('extraspace_visit_sent', '1');
+            }).catch(() => {});
+          }
+        }}
       />
 
       {/* Анимированная бегущая строка с преимуществами перед футером */}

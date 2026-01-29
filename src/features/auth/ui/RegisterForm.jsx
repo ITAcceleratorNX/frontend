@@ -11,6 +11,7 @@ import { EyeIcon, EyeOffIcon, Phone, Lock, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
 import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
+import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
 import api from '../../../shared/api/axios';
 
@@ -193,11 +194,11 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
         return;
       }
       
-      // Получаем сохраненный источник лида
+      // Получаем сохраненный источник лида и visitor_id для связки с первым визитом
       const leadSource = getStoredLeadSource();
+      const visitorId = getOrCreateVisitorId();
       
-      // Отправляем данные регистрации через контекст
-      const result = await registerUser(data.phone, data.unique_code, data.password, leadSource);
+      const result = await registerUser(data.phone, data.unique_code, data.password, leadSource, visitorId);
       
       console.log('RegisterForm: Ответ от регистрации:', result);
       

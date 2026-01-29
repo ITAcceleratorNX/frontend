@@ -493,7 +493,7 @@ const useStatisticsData = (filters) => {
         formatCurrency(lineChartData.datasets?.[1]?.values?.[idx] || 0),
       ]),
       [],
-      ['Источник лидов', 'Доля'],
+      ['Источники трафика (первые визиты)', 'Доля'],
       ...normalizedLeadSources.map((item) => [item.label, `${item.value}%`]),
       [],
       ['Причины отмен', 'Количество', 'Доля'],
@@ -933,7 +933,7 @@ const Statistics = () => {
           <table>${summaryRows}</table>
           <h2>Динамика заявок и продаж</h2>
           <table>${dynamicsHeader}${dynamicsRows}</table>
-          <h2>Источники лидов</h2>
+          <h2>Источники трафика (первые визиты)</h2>
           <table>${leadRows}</table>
         </body>
       </html>
@@ -1011,7 +1011,7 @@ const Statistics = () => {
               options={CONTRACT_STATUS_OPTIONS}
             />
             <FilterSelect
-              label="Источник лида"
+              label="Источник трафика"
               value={filters.leadSource}
               onChange={handleFilterChange('leadSource')}
               options={LEAD_SOURCE_OPTIONS}
@@ -1118,9 +1118,9 @@ const Statistics = () => {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 pb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Источники лидов</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Источники трафика (первые визиты)</h2>
             <p className="text-sm text-slate-500">
-              Распределение лидов по каналам привлечения за выбранный период.
+              Распределение первых визитов по каналам привлечения за выбранный период.
             </p>
           </div>
             {leadSources && leadSources.length > 0 ? (

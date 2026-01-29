@@ -7,6 +7,7 @@ import { Mail, Phone, Building2, MapPin, ChevronDown, RefreshCw, User } from 'lu
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
 import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
+import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
 
 // Список регионов Казахстана
@@ -243,10 +244,9 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
         return;
       }
       
-      // Получаем сохраненный источник лида
       const leadSource = getStoredLeadSource();
+      const visitorId = getOrCreateVisitorId();
       
-      // Формируем данные для регистрации юридического лица
       const legalEntityData = {
         name: data.name,
         bin_iin: data.bin_iin,
@@ -262,16 +262,16 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
           office: data.office || '',
           postal_code: data.postal_code,
         },
-        email: data.email || null, // Email опционален, для закрывающих документов
+        email: data.email || null,
       };
       
-      // Отправляем данные регистрации через контекст (теперь с phone вместо email для верификации)
       const result = await registerLegalUser(
-        data.phone, 
-        data.unique_code, 
-        data.password, 
+        data.phone,
+        data.unique_code,
+        data.password,
         legalEntityData,
-        leadSource
+        leadSource,
+        visitorId
       );
       
       console.log('RegisterLegalForm: Ответ от регистрации:', result);

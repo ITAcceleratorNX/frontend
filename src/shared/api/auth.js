@@ -43,14 +43,15 @@ export const authApi = {
   },
 
   // Регистрация нового пользователя
-  register: async (phone, unique_code, password, lead_source = undefined) => {
+  register: async (phone, unique_code, password, lead_source = undefined, visitor_id = undefined) => {
     try {
       console.log(`Отправка запроса на регистрацию пользователя: ${phone}`, lead_source ? `с источником: ${lead_source}` : '');
-      const response = await api.post('/auth/register', { 
-        phone, 
-        unique_code, 
+      const response = await api.post('/auth/register', {
+        phone,
+        unique_code,
         password,
-        lead_source 
+        lead_source,
+        ...(visitor_id && { visitor_id }),
       });
       console.log('Успешная регистрация пользователя');
       return response.data;
@@ -61,16 +62,17 @@ export const authApi = {
   },
 
   // Регистрация юридического лица (верификация через SMS по номеру телефона)
-  registerLegal: async (phone, unique_code, password, legalData, lead_source = undefined) => {
+  registerLegal: async (phone, unique_code, password, legalData, lead_source = undefined, visitor_id = undefined) => {
     try {
       console.log(`Отправка запроса на регистрацию юридического лица: ${phone}`, lead_source ? `с источником: ${lead_source}` : '');
-      const response = await api.post('/auth/register-legal', { 
-        phone, 
-        unique_code, 
+      const response = await api.post('/auth/register-legal', {
+        phone,
+        unique_code,
         password,
         lead_source,
         user_type: 'LEGAL',
-        ...legalData
+        ...(visitor_id && { visitor_id }),
+        ...legalData,
       });
       console.log('Успешная регистрация юридического лица');
       return response.data;

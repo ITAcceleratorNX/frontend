@@ -11,6 +11,17 @@ import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
 import { useSSENotifications } from '../shared/lib/hooks/useSSENotifications';
+import {
+  getUtmParams,
+  mapUtmSourceToLeadSource,
+  getOrCreateVisitorId,
+  cleanUrlFromUtm,
+} from '../shared/lib/utm';
+import { trackVisit } from '../shared/api/visitsApi';
+
+const LEAD_SOURCE_STORAGE_KEY = 'extraspace_lead_source';
+const LEAD_SOURCE_SHOWN_KEY = 'extraspace_lead_source_shown';
+const VISIT_SENT_KEY = 'extraspace_visit_sent';
 
 // Полностью отключаем рефетчинг при фокусе окна
 focusManager.setEventListener(() => {
@@ -82,6 +93,38 @@ const App = memo(() => {
     resetViewportZoom();
     setTimeout(resetViewportZoom, 100);
     setTimeout(resetViewportZoom, 300);
+  }, []);
+
+  // UTM: при первом заходе с UTM сохраняем lead_source и отправляем визит
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const utm = getUtmParams();
+    const utmSource = utm.utm_source;
+    if (utmSource) {
+      const leadSource = mapUtmSourceToLeadSource(utmSource);
+      if (leadSource) {
+        localStorage.setItem(LEAD_SOURCE_STORAGE_KEY, leadSource);
+        localStorage.setItem(LEAD_SOURCE_SHOWN_KEY, 'true');
+      }
+    }
+    cleanUrlFromUtm();
+
+    const leadSource = localStorage.getItem(LEAD_SOURCE_STORAGE_KEY);
+    const visitorId = getOrCreateVisitorId();
+    const alreadySent = sessionStorage.getItem(VISIT_SENT_KEY);
+    if (leadSource && visitorId && !alreadySent) {
+      trackVisit({
+        visitor_id: visitorId,
+        lead_source: leadSource,
+        ...(utm.utm_source && { utm_source: utm.utm_source }),
+        ...(utm.utm_medium && { utm_medium: utm.utm_medium }),
+        ...(utm.utm_campaign && { utm_campaign: utm.utm_campaign }),
+        ...(utm.utm_content && { utm_content: utm.utm_content }),
+        ...(utm.utm_term && { utm_term: utm.utm_term }),
+      }).then(() => {
+        sessionStorage.setItem(VISIT_SENT_KEY, '1');
+      }).catch(() => {});
+    }
   }, []);
   
   return (
