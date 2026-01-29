@@ -723,100 +723,96 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
         {/* Таймер обратного отсчета до автоотмены */}
         <OrderCancelTimer order={order} />
 
-        {/* Кнопки продления заказа - показываются только если extension_status === CANCELED */}
+        {/* Кнопка продления заказа - показывается только если extension_status === PENDING */}
         {order.extension_status === "PENDING" && (
-          <div className="mt-4 flex gap-3 justify-end">
-            {/* Диалог для продления заказа */}
-            <Dialog open={isExtendDialogOpen} onOpenChange={setIsExtendDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="border-[#273655] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors"
-                >
-                  Продление заказа
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Продление заказа</DialogTitle>
-                  <DialogDescription>
-                    Выберите количество месяцев для продления вашего заказа
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="py-4">
-                  <div className="mb-4">
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Количество месяцев
-                    </label>
-                    <Select value={selectedMonths} onValueChange={setSelectedMonths}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Выберите количество месяцев" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[...Array(6)].map((_, i) => (
-                          <SelectItem key={i + 1} value={(i + 1).toString()}>
-                            {i + 1} {i + 1 === 1 ? 'месяц' : (i + 1 < 5 ? 'месяца' : 'месяцев')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <DialogFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsExtendDialogOpen(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button 
-                    className="bg-[#273655] hover:bg-[#1e2a4a]" 
-                    onClick={handleExtendOrder}
-                    disabled={extendOrderMutation.isPending}
-                  >
-                    {extendOrderMutation.isPending ? 'Обработка...' : 'Подтвердить'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+          <div className="mt-4 pt-4 border-t border-white/20">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1">
+                <p className="text-white/80 text-xs mb-1">Продление заказа</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Кнопка продления */}
+                <Dialog open={isExtendDialogOpen} onOpenChange={setIsExtendDialogOpen}>
+                  <DialogTrigger asChild>
+                    <button className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-full hover:bg-white/90 transition-colors">
+                      Продлить
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[380px] rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-bold text-[#273655]">Продление заказа</DialogTitle>
+                      <DialogDescription className="text-sm text-gray-500">
+                        Выберите количество месяцев
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="py-4">
+                      <Select value={selectedMonths} onValueChange={setSelectedMonths}>
+                        <SelectTrigger className="w-full h-11 rounded-xl border-gray-200">
+                          <SelectValue placeholder="Выберите срок" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[...Array(6)].map((_, i) => (
+                            <SelectItem key={i + 1} value={(i + 1).toString()}>
+                              {i + 1} {i + 1 === 1 ? 'месяц' : (i + 1 < 5 ? 'месяца' : 'месяцев')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <DialogFooter className="gap-2">
+                      <button 
+                        onClick={() => setIsExtendDialogOpen(false)}
+                        className="flex-1 h-10 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                      >
+                        Отмена
+                      </button>
+                      <button 
+                        onClick={handleExtendOrder}
+                        disabled={extendOrderMutation.isPending}
+                        className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#00A991] to-[#004743] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {extendOrderMutation.isPending ? 'Обработка...' : 'Подтвердить'}
+                      </button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
-            {/* Диалог для отмены продления */}
-            <Dialog open={isCancelExtendDialogOpen} onOpenChange={setIsCancelExtendDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
-                >
-                  Продление отменяется
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Отмена продления заказа</DialogTitle>
-                  <DialogDescription>
-                    Вы уверены, что хотите отменить продление заказа?
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <DialogFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsCancelExtendDialogOpen(false)}
-                  >
-                    Отмена
-                  </Button>
-                  <Button 
-                    variant="destructive"
-                    onClick={handleCancelExtension}
-                    disabled={extendOrderMutation.isPending}
-                  >
-                    {extendOrderMutation.isPending ? 'Обработка...' : 'Да, отменить'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                {/* Кнопка отмены продления */}
+                <Dialog open={isCancelExtendDialogOpen} onOpenChange={setIsCancelExtendDialogOpen}>
+                  <DialogTrigger asChild>
+                    <button className="text-white/70 text-xs font-medium hover:text-white transition-colors underline">
+                      Отменить
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[380px] rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-bold text-[#273655]">Отмена продления</DialogTitle>
+                      <DialogDescription className="text-sm text-gray-500">
+                        Вы уверены, что хотите отменить продление заказа?
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <DialogFooter className="gap-2 pt-4">
+                      <button 
+                        onClick={() => setIsCancelExtendDialogOpen(false)}
+                        className="flex-1 h-10 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                      >
+                        Нет, оставить
+                      </button>
+                      <button
+                        onClick={handleCancelExtension}
+                        disabled={extendOrderMutation.isPending}
+                        className="flex-1 h-10 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                      >
+                        {extendOrderMutation.isPending ? 'Обработка...' : 'Да, отменить'}
+                      </button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
           </div>
         )}
       </div>
