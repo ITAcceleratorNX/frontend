@@ -20,10 +20,12 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import {
   showSuccessToast,
@@ -86,6 +88,52 @@ const getServiceTypeName = (type) => {
       return "Аренда стеллажей";
     default:
       return "Услуга";
+  }
+};
+
+const getServiceTypeDescription = (type) => {
+  switch (type) {
+    case "LOADER":
+      return "Безопасный перенос и погрузка тяжёлых и габаритных предметов без риска травм.";
+    case "PACKER":
+      return "Профессионально упаковываем ваши вещи, экономя время и снижая риск повреждений.";
+    case "STRETCH_FILM":
+      return "Фиксирует и защищает мебель и коробки от пыли, влаги и царапин.";
+    case "BOX_SIZE":
+      return "Надёжно защищают вещи от повреждений, пыли и влаги при переезде и хранении.";
+    case "MARKER":
+      return "Позволяет подписать коробки и быстро находить нужные вещи без лишней суеты.";
+    case "BUBBLE_WRAP_1":
+      return "Эффективно защищает хрупкие предметы от ударов, сколов и тряски.";
+    case "BUBBLE_WRAP_2":
+      return "Идеально подходит для упаковки большого объёма вещей при переезде.";
+    case "RACK_RENTAL":
+      return "Обеспечивает удобное, аккуратное и организованное хранение вещей на складе.";
+    default:
+      return null;
+  }
+};
+
+const getServiceTypeIcon = (type) => {
+  switch (type) {
+    case "LOADER":
+      return Users;
+    case "PACKER":
+      return Package;
+    case "STRETCH_FILM":
+      return ScrollText;
+    case "BOX_SIZE":
+      return Box;
+    case "MARKER":
+      return PenLine;
+    case "BUBBLE_WRAP_1":
+      return Shield;
+    case "BUBBLE_WRAP_2":
+      return Shield;
+    case "RACK_RENTAL":
+      return Layers;
+    default:
+      return Package;
   }
 };
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
@@ -2654,60 +2702,118 @@ const HomePage = memo(() => {
                                   
                                   return (
                                     <div key={index} className="space-y-2">
-                                      <div className="flex flex-wrap items-center gap-2 rounded-3xl border border-white bg-white/10 px-3 py-2">
-                                        <Select
-                                          value={service.service_id}
-                                          onValueChange={(value) => updateServiceRow(index, "service_id", value)}
-                                        >
-                                          <SelectTrigger className="h-10 min-w-[180px] rounded-3xl border-0 bg-white/10 text-sm text-white">
-                                            <SelectValue placeholder="Услуга" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {availableOptions.length > 0 ? (
-                                              availableOptions.map((option) => {
-                                                const serviceName = getServiceTypeName(option.type);
-                                                if (!serviceName) return null;
-                                                return (
-                                                  <SelectItem key={option.id} value={String(option.id)}>
-                                                    {serviceName}
-                                                  </SelectItem>
-                                                );
-                                              }).filter(Boolean)
-                                            ) : (
-                                              <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
-                                                Нет доступных услуг
-                                              </div>
-                                            )}
-                                          </SelectContent>
-                                        </Select>
+                                      <div className="rounded-3xl border border-white bg-white/10 px-4 py-3">
+                                        {/* Верхняя строка с выбором и управлением */}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          {/* Иконка и селектор услуги */}
+                                          <div className="flex items-center gap-2">
+                                            {selectedOption && (() => {
+                                              const ServiceIcon = getServiceTypeIcon(selectedOption.type);
+                                              return (
+                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 shrink-0">
+                                                  <ServiceIcon className="h-4 w-4 text-white" />
+                                                </div>
+                                              );
+                                            })()}
+                                            <Select
+                                              value={service.service_id}
+                                              onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                            >
+                                              <SelectTrigger className="h-10 min-w-[180px] rounded-3xl border-0 bg-white/10 text-sm text-white">
+                                                <SelectValue placeholder="Услуга" />
+                                              </SelectTrigger>
+                                            <SelectContent>
+                                              {availableOptions.length > 0 ? (
+                                                <>
+                                                  {/* Услуги персонала */}
+                                                  {(() => {
+                                                    const staffServiceTypes = ['PACKER', 'LOADER', 'RACK_RENTAL'];
+                                                    const staffServices = availableOptions.filter(option => staffServiceTypes.includes(option.type));
+                                                    if (staffServices.length === 0) return null;
+                                                    return (
+                                                      <SelectGroup>
+                                                        <SelectLabel className="text-xs font-semibold text-[#00A991] uppercase tracking-wide">
+                                                          Услуги персонала
+                                                        </SelectLabel>
+                                                        {staffServices.map((option) => {
+                                                          const serviceName = getServiceTypeName(option.type);
+                                                          if (!serviceName) return null;
+                                                          return (
+                                                            <SelectItem key={option.id} value={String(option.id)}>
+                                                              {serviceName}
+                                                            </SelectItem>
+                                                          );
+                                                        })}
+                                                      </SelectGroup>
+                                                    );
+                                                  })()}
+                                                  {/* Упаковочные материалы */}
+                                                  {(() => {
+                                                    const materialTypes = ['BOX_SIZE', 'MARKER', 'BUBBLE_WRAP_1', 'BUBBLE_WRAP_2', 'STRETCH_FILM'];
+                                                    const materialServices = availableOptions.filter(option => materialTypes.includes(option.type));
+                                                    if (materialServices.length === 0) return null;
+                                                    return (
+                                                      <SelectGroup>
+                                                        <SelectLabel className="text-xs font-semibold text-[#00A991] uppercase tracking-wide mt-2">
+                                                          Упаковочные материалы
+                                                        </SelectLabel>
+                                                        {materialServices.map((option) => {
+                                                          const serviceName = getServiceTypeName(option.type);
+                                                          if (!serviceName) return null;
+                                                          return (
+                                                            <SelectItem key={option.id} value={String(option.id)}>
+                                                              {serviceName}
+                                                            </SelectItem>
+                                                          );
+                                                        })}
+                                                      </SelectGroup>
+                                                    );
+                                                  })()}
+                                                </>
+                                              ) : (
+                                                <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
+                                                  Нет доступных услуг
+                                                </div>
+                                              )}
+                                            </SelectContent>
+                                            </Select>
+                                          </div>
 
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-white/90">
-                                            Кол-во
-                                          </span>
-                                          <input
-                                            type="number"
-                                            min="1"
-                                            value={service.count}
-                                            onChange={(e) => updateServiceRow(index, "count", e.target.value)}
-                                            className="w-8 h-6 rounded-sm border border-white bg-transparent px-1 text-xs text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                                          />
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs text-white/90">
+                                              Кол-во
+                                            </span>
+                                            <input
+                                              type="number"
+                                              min="1"
+                                              value={service.count}
+                                              onChange={(e) => updateServiceRow(index, "count", e.target.value)}
+                                              className="w-8 h-6 rounded-sm border border-white bg-transparent px-1 text-xs text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                            />
+                                          </div>
+
+                                          {service.service_id && (
+                                            <span className="ml-auto text-xs text-white/90">
+                                              {unitPrice.toLocaleString()} ₸/шт.
+                                            </span>
+                                          )}
+
+                                          <button
+                                            type="button"
+                                            onClick={() => removeServiceRow(index)}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors"
+                                            aria-label="Удалить услугу"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </button>
                                         </div>
 
-                                        {service.service_id && (
-                                          <span className="ml-auto text-xs text-white/90">
-                                            {unitPrice.toLocaleString()} ₸/шт.
-                                          </span>
+                                        {/* Описание выбранной услуги */}
+                                        {selectedOption && getServiceTypeDescription(selectedOption.type) && (
+                                          <p className="mt-2 text-xs text-white/70 leading-relaxed border-t border-white/10 pt-2">
+                                            {getServiceTypeDescription(selectedOption.type)}
+                                          </p>
                                         )}
-
-                                        <button
-                                          type="button"
-                                          onClick={() => removeServiceRow(index)}
-                                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors"
-                                          aria-label="Удалить услугу"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </button>
                                       </div>
                                       
                                       {isGazelleToService && (
