@@ -150,6 +150,24 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
     setValue('phone', formatted, { shouldValidate: true });
   };
 
+  // Обработчик изменения БИН/ИИН - только цифры, максимум 12 символов
+  const handleBinIinChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+    setValue('bin_iin', value, { shouldValidate: true });
+  };
+
+  // Обработчик изменения БИК - латинские буквы и цифры, максимум 11 символов
+  const handleBikChange = (e) => {
+    const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 11);
+    setValue('bik', value, { shouldValidate: true });
+  };
+
+  // Обработчик изменения ИИК - латинские буквы и цифры, максимум 20 символов
+  const handleIikChange = (e) => {
+    const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
+    setValue('iik', value, { shouldValidate: true });
+  };
+
   // Автоматическое заполнение phone из location.state
   useEffect(() => {
     if (location.state?.phone) {
@@ -392,12 +410,14 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                     } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                     placeholder="Введите БИН/ИИН"
                     disabled={isLoading}
+                    maxLength={12}
                     {...register('bin_iin', {
                       required: 'БИН/ИИН обязателен',
                       pattern: {
                         value: /^\d{12}$/,
-                        message: 'БИН/ИИН должен содержать 12 цифр'
-                      }
+                        message: 'БИН/ИИН должен содержать ровно 12 цифр'
+                      },
+                      onChange: handleBinIinChange
                     })}
                   />
                   {errors.bin_iin && (
@@ -473,8 +493,14 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                       } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="БИК"
                       disabled={isLoading}
+                      maxLength={11}
                       {...register('bik', {
-                        required: 'БИК обязателен'
+                        required: 'БИК обязателен',
+                        pattern: {
+                          value: /^[A-Za-z0-9]{8}$|^[A-Za-z0-9]{11}$/,
+                          message: 'БИК должен содержать 8 или 11 символов (латинские буквы и цифры)'
+                        },
+                        onChange: handleBikChange
                       })}
                     />
                     {errors.bik && (
@@ -496,8 +522,14 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                       } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
                       placeholder="ИИК"
                       disabled={isLoading}
+                      maxLength={20}
                       {...register('iik', {
-                        required: 'ИИК обязателен'
+                        required: 'ИИК обязателен',
+                        pattern: {
+                          value: /^[A-Za-z0-9]{20}$/,
+                          message: 'ИИК должен содержать ровно 20 символов (латинские буквы и цифры)'
+                        },
+                        onChange: handleIikChange
                       })}
                     />
                     {errors.iik && (
