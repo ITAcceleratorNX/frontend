@@ -25,7 +25,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Minus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
 import { useAuth } from "../../shared/context/AuthContext";
 import {
   showSuccessToast,
@@ -2779,17 +2779,38 @@ const HomePage = memo(() => {
                                             </Select>
                                           </div>
 
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-xs text-white/90">
+                                          <div className="flex items-center gap-1 sm:gap-2">
+                                            <span className="text-xs text-white/90 hidden sm:inline">
                                               Кол-во
                                             </span>
-                                            <input
-                                              type="number"
-                                              min="1"
-                                              value={service.count}
-                                              onChange={(e) => updateServiceRow(index, "count", e.target.value)}
-                                              className="w-8 h-6 rounded-sm border border-white bg-transparent px-1 text-xs text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                                            />
+                                            <div className="flex items-center rounded-full border border-white/50 bg-white/10">
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const newCount = Math.max(1, Number(service.count) - 1);
+                                                  updateServiceRow(index, "count", newCount);
+                                                }}
+                                                disabled={Number(service.count) <= 1}
+                                                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-l-full text-white hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                aria-label="Уменьшить количество"
+                                              >
+                                                <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                                              </button>
+                                              <span className="min-w-[24px] sm:min-w-[32px] text-center text-xs sm:text-sm font-medium text-white">
+                                                {service.count}
+                                              </span>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const newCount = Number(service.count) + 1;
+                                                  updateServiceRow(index, "count", newCount);
+                                                }}
+                                                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-r-full text-white hover:bg-white/20 transition-colors"
+                                                aria-label="Увеличить количество"
+                                              >
+                                                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                                              </button>
+                                            </div>
                                           </div>
 
                                           {service.service_id && (

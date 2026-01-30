@@ -119,7 +119,7 @@ export const Header = memo(() => {
       return (
           <button
               onClick={handleStartAuth}
-              className="flex items-center justify-center bg-[#00A991] hover:bg-[#00A991]/90 text-white px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 shadow-sm hover:shadow-md"
+              className="flex items-center justify-center bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-[#D4FFFD] px-5 py-2 rounded-full font-medium text-sm transition-all duration-300 shadow-sm hover:shadow-md"
           >
             <span>Войти</span>
           </button>
