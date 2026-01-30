@@ -10,7 +10,6 @@ import RestorePasswordPage from '../pages/restore-password';
 import ChatPage from '../pages/chat';
 import AboutWarehouseRentalPage from '../pages/about-warehouse-rental';
 import OnlinePaymentPage from '../pages/online-payment';
-import OfferPage from '../pages/offer';
 import PrivacyPolicyPage from '../pages/privacy-policy';
 import PrivacyPolicy2Page from '../pages/privacy-policy2';
 import PublicOfferPage from '../pages/public-offer';
@@ -111,7 +110,6 @@ const Routing = memo(() => {
     { path: "/chat", element: <ChatPage /> },
     { path: "/about-warehouse-rental", element: <AboutWarehouseRentalPage /> },
     { path: "/online-payment", element: <OnlinePaymentPage /> },
-    { path: "/offer", element: <OfferPage /> },
     { path: "/privacy-policy", element: <PrivacyPolicyPage /> },
     { path: "/privacy-policy2", element: <PrivacyPolicy2Page /> },
     { path: "/public-offer", element: <PublicOfferPage /> },
