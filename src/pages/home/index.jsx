@@ -240,6 +240,7 @@ const HomePage = memo(() => {
   // Состояние для модалки предпросмотра платежей
   const [isPaymentPreviewOpen, setIsPaymentPreviewOpen] = useState(false);
   const [paymentPreviewType, setPaymentPreviewType] = useState(null); // 'INDIVIDUAL' или 'CLOUD'
+  const [selectedPaymentType, setSelectedPaymentType] = useState('MONTHLY'); // 'MONTHLY' или 'FULL'
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   // Состояние для цен услуг (для расчета процента скидки)
   const [servicePrices, setServicePrices] = useState({});
@@ -1104,7 +1105,7 @@ const HomePage = memo(() => {
     };
   }, []);
 
-  const handleCreateIndividualOrder = useCallback(async () => {
+  const handleCreateIndividualOrder = useCallback(async (paymentType = 'MONTHLY') => {
     if (isSubmittingOrder) return;
 
     if (!isAuthenticated) {
@@ -1246,6 +1247,7 @@ const HomePage = memo(() => {
         order_items: orderItems,
         is_selected_moving: includeMoving,
         is_selected_package: isPackageSelected,
+        payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
 
       // Добавляем промокод, если он применен
@@ -1411,7 +1413,7 @@ const HomePage = memo(() => {
     translateBackendError,
   ]);
 
-  const handleCreateCloudOrder = useCallback(async () => {
+  const handleCreateCloudOrder = useCallback(async (paymentType = 'MONTHLY') => {
     if (isSubmittingOrder) return;
 
     if (!isAuthenticated) {
@@ -1540,6 +1542,7 @@ const HomePage = memo(() => {
         is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
         moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudBookingStartDate),
         tariff_type: tariff_type, // Добавляем тип тарифа
+        payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
 
       // Добавляем промокод, если он применен
@@ -1652,7 +1655,10 @@ const HomePage = memo(() => {
   }, []);
 
   // Обработчик подтверждения бронирования из модалки предпросмотра платежей
-  const handlePaymentPreviewConfirm = useCallback(() => {
+  const handlePaymentPreviewConfirm = useCallback((paymentType) => {
+    // Сохраняем выбранный тип оплаты
+    setSelectedPaymentType(paymentType || 'MONTHLY');
+    
     // Если пользователь не авторизован - показываем модалку обратного звонка
     if (!isAuthenticated) {
       setIsPaymentPreviewOpen(false);
@@ -1663,9 +1669,9 @@ const HomePage = memo(() => {
     
     // Если авторизован - создаём заказ
     if (paymentPreviewType === 'INDIVIDUAL') {
-      handleCreateIndividualOrder();
+      handleCreateIndividualOrder(paymentType);
     } else if (paymentPreviewType === 'CLOUD') {
-      handleCreateCloudOrder();
+      handleCreateCloudOrder(paymentType);
     }
   }, [paymentPreviewType, handleCreateIndividualOrder, handleCreateCloudOrder, isAuthenticated, openCallbackModal]);
 

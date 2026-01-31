@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent } from '../../components/ui/dialog';
 import { Info } from 'lucide-react';
 
@@ -23,7 +23,10 @@ const getDaysInMonth = (year, month) => {
   return new Date(year, month, 0).getDate();
 };
 
-const generatePayments = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0) => {
+/**
+ * Генерирует платежи помесячно (MONTHLY)
+ */
+const generateMonthlyPayments = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0) => {
   if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
 
   const start = new Date(startDateStr);
@@ -124,6 +127,34 @@ const generatePayments = (startDateStr, monthsCount, totalPrice, extraServicesAm
   return result;
 };
 
+/**
+ * Генерирует один платёж на всю сумму (FULL)
+ */
+const generateFullPayment = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0) => {
+  if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
+
+  const start = new Date(startDateStr);
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + monthsCount);
+  
+  const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  
+  const totalAmount = Number(totalPrice) + Number(extraServicesAmount) - Number(discountAmount || 0);
+  const finalAmount = Math.max(0, Number(parseFloat(totalAmount).toFixed(2)));
+
+  return [{
+    id: 1,
+    month: start.getMonth() + 1,
+    year: start.getFullYear(),
+    amount: finalAmount,
+    daysToCharge: totalDays,
+    hasServices: extraServicesAmount > 0,
+    isFull: true,
+  }];
+};
+
 const PaymentPreviewModal = ({
   isOpen,
   onClose,
@@ -137,15 +168,27 @@ const PaymentPreviewModal = ({
   storageInfo = {},
   isSubmitting = false,
 }) => {
+  // Состояние для типа оплаты
+  const [paymentType, setPaymentType] = useState('MONTHLY');
+
+  // Генерируем платежи в зависимости от выбранного типа
   const payments = useMemo(() => {
-    return generatePayments(startDate, monthsCount, totalPrice, servicesTotal, discountAmount);
-  }, [startDate, monthsCount, totalPrice, servicesTotal, discountAmount]);
+    if (paymentType === 'FULL') {
+      return generateFullPayment(startDate, monthsCount, totalPrice, servicesTotal, discountAmount);
+    }
+    return generateMonthlyPayments(startDate, monthsCount, totalPrice, servicesTotal, discountAmount);
+  }, [startDate, monthsCount, totalPrice, servicesTotal, discountAmount, paymentType]);
 
   const calculatedTotal = useMemo(() => {
     return payments.reduce((sum, payment) => sum + payment.amount, 0);
   }, [payments]);
 
   const volumeUnit = storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
+
+  // Обработчик подтверждения - передаём тип оплаты
+  const handleConfirm = () => {
+    onConfirm(paymentType);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -170,6 +213,35 @@ const PaymentPreviewModal = ({
             </p>
           </div>
 
+          {/* Переключатель типа оплаты */}
+          <div className="mb-5">
+            <p className="text-sm font-medium text-[#273655] mb-3">Способ оплаты</p>
+            <div className="flex rounded-2xl bg-gray-100 p-1">
+              <button
+                type="button"
+                onClick={() => setPaymentType('MONTHLY')}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
+                  paymentType === 'MONTHLY'
+                    ? 'bg-white text-[#273655] shadow-sm'
+                    : 'text-gray-500 hover:text-[#273655]'
+                }`}
+              >
+                Ежемесячно
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentType('FULL')}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
+                  paymentType === 'FULL'
+                    ? 'bg-white text-[#273655] shadow-sm'
+                    : 'text-gray-500 hover:text-[#273655]'
+                }`}
+              >
+                Сразу всё
+              </button>
+            </div>
+          </div>
+
           {/* Список платежей */}
           <div className="space-y-2 mb-5">
             {payments.map((payment) => (
@@ -179,7 +251,10 @@ const PaymentPreviewModal = ({
               >
                 <div>
                   <p className="text-sm font-semibold text-[#273655]">
-                    {getMonthName(payment.month)} {payment.year}
+                    {payment.isFull 
+                      ? `Полная оплата (${monthsCount} мес.)`
+                      : `${getMonthName(payment.month)} ${payment.year}`
+                    }
                   </p>
                   <p className="text-xs text-gray-400">
                     {payment.daysToCharge} дн.{payment.hasServices ? ' + услуги' : ''}
@@ -204,7 +279,7 @@ const PaymentPreviewModal = ({
           {/* Кнопки */}
           <div className="space-y-2">
             <button
-              onClick={onConfirm}
+              onClick={handleConfirm}
               disabled={isSubmitting}
               className="w-full py-4 rounded-3xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
