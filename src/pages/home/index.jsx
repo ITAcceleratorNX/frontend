@@ -36,6 +36,7 @@ import {
 import { validateUserProfile } from "../../shared/lib/validation/profileValidation";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
+import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import { getOrCreateVisitorId } from "@/shared/lib/utm";
 import { trackVisit } from "@/shared/api/visitsApi";
 // Импортируем иконки для предзагрузки
@@ -236,6 +237,9 @@ const HomePage = memo(() => {
   const [callbackModalContext, setCallbackModalContext] = useState('callback');
   const [isLeadSourceModalOpen, setIsLeadSourceModalOpen] = useState(false);
   const { leadSource, saveLeadSource } = useLeadSource();
+  // Состояние для модалки предпросмотра платежей
+  const [isPaymentPreviewOpen, setIsPaymentPreviewOpen] = useState(false);
+  const [paymentPreviewType, setPaymentPreviewType] = useState(null); // 'INDIVIDUAL' или 'CLOUD'
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   // Состояние для цен услуг (для расчета процента скидки)
   const [servicePrices, setServicePrices] = useState({});
@@ -1328,6 +1332,10 @@ const HomePage = memo(() => {
 
       await warehouseApi.createOrder(orderData);
 
+      // Закрываем модалку предпросмотра платежей
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
+
       // Новый тост по дизайну: зелёная галочка + текст о TrustMe и оплате
       toastOrderRequestSent();
 
@@ -1348,6 +1356,8 @@ const HomePage = memo(() => {
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setTimeout(() => {
           navigate(translatedError.redirectPath, { 
             state: translatedError.redirectState || {} 
@@ -1362,6 +1372,8 @@ const HomePage = memo(() => {
         translatedError.userMessage.includes('лимит') ||
         errorData?.code === 'MAX_ORDERS_LIMIT_REACHED'
       )) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setCallbackModalContext('max_orders_limit');
         openCallbackModal('max_orders_limit');
         setSubmitError(null);
@@ -1549,6 +1561,10 @@ const HomePage = memo(() => {
 
       await warehouseApi.createOrder(orderData);
 
+      // Закрываем модалку предпросмотра платежей
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
+
       showSuccessToast(
         'Ожидайте подтверждения менеджера. СМС от TrustMe для подписания договора придёт после подтверждения заявки.',
         { autoClose: 4000 }
@@ -1571,6 +1587,8 @@ const HomePage = memo(() => {
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setTimeout(() => {
           navigate(translatedError.redirectPath, { 
             state: translatedError.redirectState || {} 
@@ -1585,6 +1603,8 @@ const HomePage = memo(() => {
         translatedError.userMessage.includes('лимит') ||
         errorData?.code === 'MAX_ORDERS_LIMIT_REACHED'
       )) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setCallbackModalContext('max_orders_limit');
         openCallbackModal('max_orders_limit');
         setSubmitError(null);
@@ -1620,20 +1640,42 @@ const HomePage = memo(() => {
   ]);
 
   const handleIndividualBookingClick = useCallback(() => {
-    if (!isAuthenticated) {
-      openCallbackModal('booking');
-      return;
-    }
-    handleCreateIndividualOrder();
-  }, [handleCreateIndividualOrder, isAuthenticated, openCallbackModal]);
+    // Всегда показываем модалку предпросмотра платежей
+    setPaymentPreviewType('INDIVIDUAL');
+    setIsPaymentPreviewOpen(true);
+  }, []);
 
   const handleCloudBookingClick = useCallback(() => {
+    // Всегда показываем модалку предпросмотра платежей
+    setPaymentPreviewType('CLOUD');
+    setIsPaymentPreviewOpen(true);
+  }, []);
+
+  // Обработчик подтверждения бронирования из модалки предпросмотра платежей
+  const handlePaymentPreviewConfirm = useCallback(() => {
+    // Если пользователь не авторизован - показываем модалку обратного звонка
     if (!isAuthenticated) {
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
       openCallbackModal('booking');
       return;
     }
-    handleCreateCloudOrder();
-  }, [handleCreateCloudOrder, isAuthenticated, openCallbackModal]);
+    
+    // Если авторизован - создаём заказ
+    if (paymentPreviewType === 'INDIVIDUAL') {
+      handleCreateIndividualOrder();
+    } else if (paymentPreviewType === 'CLOUD') {
+      handleCreateCloudOrder();
+    }
+  }, [paymentPreviewType, handleCreateIndividualOrder, handleCreateCloudOrder, isAuthenticated, openCallbackModal]);
+
+  // Закрытие модалки предпросмотра платежей
+  const handlePaymentPreviewClose = useCallback(() => {
+    if (!isSubmittingOrder) {
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
+    }
+  }, [isSubmittingOrder]);
 
   const handleHeroBookingClick = useCallback(() => {
     setActiveStorageTab("INDIVIDUAL");
@@ -3921,6 +3963,53 @@ const HomePage = memo(() => {
             }).catch(() => {});
           }
         }}
+      />
+
+      {/* Модалка предпросмотра платежей */}
+      <PaymentPreviewModal
+        isOpen={isPaymentPreviewOpen}
+        onClose={handlePaymentPreviewClose}
+        onConfirm={handlePaymentPreviewConfirm}
+        storageType={paymentPreviewType || 'INDIVIDUAL'}
+        monthsCount={
+          paymentPreviewType === 'CLOUD'
+            ? cloudMonthsNumber
+            : monthsNumber
+        }
+        startDate={
+          paymentPreviewType === 'CLOUD'
+            ? cloudBookingStartDate
+            : individualBookingStartDate
+        }
+        totalPrice={
+          paymentPreviewType === 'CLOUD'
+            ? (cloudPricePreview?.total || 0)
+            : costSummary.baseTotal || 0
+        }
+        servicesTotal={
+          paymentPreviewType === 'CLOUD'
+            ? 0
+            : serviceSummary.total || 0
+        }
+        discountAmount={
+          paymentPreviewType === 'CLOUD'
+            ? cloudPromoDiscount
+            : promoDiscount
+        }
+        storageInfo={
+          paymentPreviewType === 'CLOUD'
+            ? {
+                name: selectedTariff?.name || 'Облачное хранение',
+                volume: selectedTariff?.type === 'CUSTOM' 
+                  ? cloudVolumeDirect 
+                  : (selectedTariff?.volume || cloudVolumeDirect),
+              }
+            : {
+                name: previewStorage?.name || previewStorage?.display_name || `Бокс №${previewStorage?.id || ''}`,
+                volume: previewStorage?.square || previewStorage?.area,
+              }
+        }
+        isSubmitting={isSubmittingOrder}
       />
 
       {/* Анимированная бегущая строка с преимуществами перед футером */}
