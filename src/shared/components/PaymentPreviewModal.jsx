@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent } from '../../components/ui/dialog';
-import { Info } from 'lucide-react';
+import { Info, CreditCard, Calendar, Zap } from 'lucide-react';
 
 const getMonthName = (month) => {
   const months = [
@@ -266,6 +266,32 @@ const PaymentPreviewModal = ({
               </div>
             ))}
           </div>
+
+          {/* Информация о ежемесячных платежах */}
+          {paymentType === 'MONTHLY' && payments.length > 1 && (
+            <div className="mb-5 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+              <p className="text-sm font-semibold text-[#273655] mb-3">Как работают ежемесячные платежи</p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-gray-600">
+                    Платежи рассчитываются по дням и делятся по месяцам: первый — до конца месяца, далее — за полные месяцы, последний — за оставшиеся дни.                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CreditCard className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-gray-600">
+                    Первый платёж включает услуги (упаковка, перевозка), остальные — только аренда
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Zap className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-gray-600">
+                    <span className="font-medium text-[#273655]">Совет:</span> После первой оплаты вы можете подключить автооплату в разделе "Платежи", чтобы не пропустить следующие платежи
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Итого и кнопки - фиксированные внизу */}
