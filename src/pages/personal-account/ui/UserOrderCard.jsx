@@ -23,7 +23,7 @@ import { Button } from '../../../components/ui/button';
 import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
 import { useCreateMoving, useCreateAdditionalServicePayment } from '../../../shared/lib/hooks/use-payments';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Zap, CheckCircle, Star, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag } from 'lucide-react';
+import { Zap, CheckCircle, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag, CreditCard } from 'lucide-react';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
@@ -385,10 +385,16 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
             Активный
           </span>
         )}
-        {['APPROVED', 'PROCESSING'].includes(order.status) && (
+        {order.status === 'APPROVED' && order.contract_status !== 'SIGNED' && (
           <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
-            <CheckCircle className="w-4 h-4 text-gray-500" />
-            Подтверждено
+            <FileText className="w-4 h-4 text-gray-500" />
+            Ожидает договор
+          </span>
+        )}
+        {order.status === 'PROCESSING' && order.contract_status === 'SIGNED' && order.payment_status === 'UNPAID' && (
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
+            <CreditCard className="w-4 h-4 text-gray-500" />
+            Ожидает оплату
           </span>
         )}
         {['CANCELED', 'FINISHED'].includes(order.status) && (
@@ -397,21 +403,10 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
             В архиве
           </span>
         )}
-        {order.status === 'INACTIVE' && (
-          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
-            <Star className="w-4 h-4 text-gray-500" />
-            В обработке у менеджера
-          </span>
-        )}
-        {order.payment_status === 'PAID' && (
+        {order.status === 'ACTIVE' && order.payment_status === 'PAID' && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
             <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
             Оплачен
-          </span>
-        )}
-        {order.payment_status === 'UNPAID' && (
-          <span className="inline-flex items-center px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
-            Не оплачено
           </span>
         )}
       </div>
@@ -655,16 +650,6 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
         </>
       )}
 
-      {order.status === 'INACTIVE' && (
-        <div className="mb-8 flex justify-end">
-          <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="text-white text-sm font-medium hover:text-white/80 transition-colors underline"
-          >
-            Редактировать
-          </button>
-        </div>
-      )}
 
       {/* Итого и кнопки действий */}
       <div className={embeddedMobile ? 'mt-3 min-[360px]:mt-4' : 'mt-6'}>
@@ -688,8 +673,8 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           </div>
           
           <div className="flex flex-col items-end gap-2">
-            {/* Кнопка Оплатить - показывается после подтверждения менеджером (APPROVED или PROCESSING) и если не оплачено */}
-            {((order.status === 'PROCESSING' || order.status === 'ACTIVE') && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED') ? (
+            {/* Кнопка Оплатить - показывается когда договор подписан и не оплачено */}
+            {(['APPROVED', 'PROCESSING', 'ACTIVE'].includes(order.status) && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED') ? (
               <button
                 onClick={() => onPayOrder(order)}
                 className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-3xl hover:bg-white/90 transition-colors"
