@@ -1569,10 +1569,7 @@ const HomePage = memo(() => {
       setIsPaymentPreviewOpen(false);
       setPaymentPreviewType(null);
 
-      showSuccessToast(
-        'Ожидайте подтверждения менеджера. СМС от TrustMe для подписания договора придёт после подтверждения заявки.',
-        { autoClose: 4000 }
-      );
+      toastOrderRequestSent();
 
       // Обновляем кэш заказов и ждём завершения, затем навигация
       setTimeout(async () => {
