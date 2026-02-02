@@ -10,7 +10,7 @@ import PersonalData from './PersonalData';
 import PersonalDataLegal from './PersonalDataLegal';
 import MobileNotificationsView from './MobileNotificationsView';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import instImage from '../../../assets/inst.png';
+import instImage from '../../../assets/inst.webp';
 import clsx from 'clsx';
 
 const TABS = [

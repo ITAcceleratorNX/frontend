@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useNavigate } from 'react-router-dom';
 import { List, Zap, CheckCircle, Star, FileText, HelpCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import instImage from '../../../assets/inst.png';
+import instImage from '../../../assets/inst.webp';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { toastNeedDeliveryTime } from '../../../shared/lib/toast';
 

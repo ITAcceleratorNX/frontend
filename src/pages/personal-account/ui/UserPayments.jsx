@@ -13,7 +13,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '../../../shared/api/usersApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
-import instImage from '../../../assets/inst.png';
+import instImage from '../../../assets/inst.webp';
 
 const PAYMENT_FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },

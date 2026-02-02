@@ -40,6 +40,7 @@ import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import { getOrCreateVisitorId } from "@/shared/lib/utm";
 import { trackVisit } from "@/shared/api/visitsApi";
 // Импортируем иконки для предзагрузки
+import TelegramIcon from '@/assets/lead-source-icons/telegram.webp';
 import SiteIcon from '@/assets/lead-source-icons/site.webp';
 import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.webp';
 import TwoGisIcon from '@/assets/lead-source-icons/2gis.webp';
@@ -776,7 +777,7 @@ const HomePage = memo(() => {
     // Предзагружаем изображения опросника сразу при загрузке страницы
     if (typeof window !== 'undefined' && shouldShowLeadSourceModal()) {
       // Предзагружаем все иконки опросника
-      const icons = [SiteIcon, WhatsappIcon, TwoGisIcon, InstagramIcon, TiktokIcon, AdsIcon];
+      const icons = [SiteIcon, WhatsappIcon, TwoGisIcon, InstagramIcon, TiktokIcon, AdsIcon, TelegramIcon];
       icons.forEach((icon) => {
         const img = new Image();
         img.src = icon;

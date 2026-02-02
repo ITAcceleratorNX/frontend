@@ -9,13 +9,7 @@ import TwoGisIcon from '@/assets/lead-source-icons/2gis.webp';
 import InstagramIcon from '@/assets/lead-source-icons/instagram.webp';
 import TiktokIcon from '@/assets/lead-source-icons/tiktok.webp';
 import AdsIcon from '@/assets/lead-source-icons/ads.webp';
-
-// Telegram SVG icon (inline, white color for dark background)
-const TelegramIcon = () => (
-  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-    <path d="M24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C35.04 44 44 35.04 44 24C44 12.96 35.04 4 24 4ZM33.56 16.36L30.2 32.2C29.96 33.32 29.28 33.6 28.32 33.04L23.32 29.36L20.92 31.68C20.64 31.96 20.4 32.2 19.84 32.2L20.2 27.08L29.56 18.6C29.96 18.24 29.48 18.04 28.96 18.4L17.32 25.8L12.4 24.24C11.28 23.88 11.24 23.08 12.6 22.52L32.12 15.16C33.04 14.8 33.84 15.4 33.56 16.36Z" fill="white"/>
-  </svg>
-);
+import TelegramIcon from '@/assets/lead-source-icons/telegram.webp';
 
 const LEAD_SOURCES = [
   { value: 'site', label: 'Сайт', icon: SiteIcon },
@@ -23,7 +17,7 @@ const LEAD_SOURCES = [
   { value: '2gis', label: '2ГИС', icon: TwoGisIcon },
   { value: 'instagram', label: 'Instagram', icon: InstagramIcon },
   { value: 'tiktok', label: 'TikTok', icon: TiktokIcon },
-  { value: 'telegram', label: 'Telegram', icon: 'telegram' },
+  { value: 'telegram', label: 'Telegram', icon: TelegramIcon },
   { value: 'ads', label: 'Реклама', icon: AdsIcon },
 ];
 
