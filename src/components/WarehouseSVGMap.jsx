@@ -1069,6 +1069,9 @@ const WarehouseSVGMap = React.forwardRef(({
           <clipPath id="roundedExitSmallClip" clipPathUnits="objectBoundingBox">
             <rect x="0" y="0" width="1" height="1" rx="0.2" ry="0.2" />
           </clipPath>
+          <clipPath id="roundedExitTinyClip" clipPathUnits="objectBoundingBox">
+            <rect x="0" y="0" width="1" height="1" rx="0.2" ry="0.2" />
+          </clipPath>
         </defs>
         <g>
           {/* Адаптивная окантовка вокруг всех боксов */}
@@ -1244,12 +1247,12 @@ const WarehouseSVGMap = React.forwardRef(({
                 />
               </g>
               {/* Второй вход: Top-Right - над блоком 1 */}
-              <g clipPath="url(#roundedExitSmallClip)">
+              <g clipPath="url(#roundedExitTinyClip)">
                 <image
-                  x={1061}
-                  y={5}
-                  width={40}
-                  height={40}
+                  x={1068}
+                  y={4}
+                  width={32}
+                  height={32}
                   href={exitIcon}
                   style={{ pointerEvents: 'none' }}
                 />
