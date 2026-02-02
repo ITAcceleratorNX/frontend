@@ -15,6 +15,15 @@ import { Badge } from '../../../components/ui/badge';
 import { Separator } from '../../../components/ui/separator';
 import { CheckCircle, Info, Package } from 'lucide-react';
 import { showErrorToast } from '../../../shared/lib/toast';
+// Импортируем иконки дополнительных услуг
+import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
+import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
+import bubbleWrap10Icon from '../../../assets/Пузырчатая_плёнка_(10 м).png';
+import korobkiIcon from '../../../assets/коробки.png';
+import markerIcon from '../../../assets/маркер.png';
+import rackRentalIcon from '../../../assets/Аренда_стелажей.png';
+import uslugiMuveraIcon from '../../../assets/услуги_мувера.png';
+import uslugiUpakovkiIcon from '../../../assets/услуги_упаковки.png';
 
 const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,24 +38,27 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
       case 'DEPOSIT':
         return '💰'; // Залог
       case 'LOADER':
-        return '💪'; // Грузчик
+        return uslugiMuveraIcon; // Грузчик
       case 'PACKER':
-        return '📦'; // Упаковщик
+        return uslugiUpakovkiIcon; // Упаковщик
       case 'FURNITURE_SPECIALIST':
         return '🪑'; // Мебельщик
       case 'GAZELLE':
         return '🚚'; // Газель
       case 'STRETCH_FILM':
-        return '📜'; // Стрейч-пленка
+        return streychPlenkaIcon; // Стрейч-пленка
       case 'BOX_SIZE':
-        return '📦'; // Коробка
+        return korobkiIcon; // Коробка
       case 'MARKER':
-        return '🖊️'; // Маркер
+        return markerIcon; // Маркер
       case 'UTILITY_KNIFE':
         return '🔪'; // Канцелярский нож
       case 'BUBBLE_WRAP_1':
+        return bubbleWrap10Icon; // Воздушно-пузырчатая пленка 10м
       case 'BUBBLE_WRAP_2':
-        return '🛡️'; // Воздушно-пузырчатая пленка
+        return bubbleWrap100Icon; // Воздушно-пузырчатая пленка 100м
+      case 'RACK_RENTAL':
+        return rackRentalIcon; // Аренда стеллажей
       default:
         return '⚙️'; // Общая услуга
     }
@@ -230,10 +242,17 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-0 space-y-2">
-                  {order.services.map((service, index) => (
+                  {order.services.map((service, index) => {
+                    const serviceIcon = getServiceIcon(service.type);
+                    const isImage = typeof serviceIcon === 'string' && (serviceIcon.endsWith('.png') || serviceIcon.endsWith('.jpg') || serviceIcon.endsWith('.jpeg') || serviceIcon.endsWith('.webp'));
+                    return (
                     <div key={service.id || index} className="flex items-center justify-between bg-white rounded-lg p-2 border border-amber-200">
                 <div className="flex items-center gap-2">
-                        <span className="text-sm">{getServiceIcon(service.type)}</span>
+                        {isImage ? (
+                          <img src={serviceIcon} alt="" className="h-5 w-5 object-contain" />
+                        ) : (
+                          <span className="text-sm">{serviceIcon}</span>
+                        )}
                         <div className="flex-1">
                                 <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-gray-900">
@@ -258,7 +277,8 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 </div>
               )}
                   </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Итого по услугам */}
                   <div className="pt-2 border-t border-amber-200">

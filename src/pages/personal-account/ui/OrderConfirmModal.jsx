@@ -15,6 +15,15 @@ import { CheckCircle, Package, Tag } from 'lucide-react';
 import { useApproveOrder } from '../../../shared/lib/hooks/use-orders';
 import { getCargoMarkText } from '../../../shared/lib/types/orders';
 import { showErrorToast } from '../../../shared/lib/toast';
+// Импортируем иконки дополнительных услуг
+import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
+import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
+import bubbleWrap10Icon from '../../../assets/Пузырчатая_плёнка_(10 м).png';
+import korobkiIcon from '../../../assets/коробки.png';
+import markerIcon from '../../../assets/маркер.png';
+import rackRentalIcon from '../../../assets/Аренда_стелажей.png';
+import uslugiMuveraIcon from '../../../assets/услуги_мувера.png';
+import uslugiUpakovkiIcon from '../../../assets/услуги_упаковки.png';
 
 const OrderConfirmModal = ({ isOpen, order, onClose }) => {
   const approveOrderMutation = useApproveOrder();
@@ -25,24 +34,27 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
       case 'DEPOSIT':
         return '💰';
       case 'LOADER':
-        return '💪';
+        return uslugiMuveraIcon;
       case 'PACKER':
-        return '📦';
+        return uslugiUpakovkiIcon;
       case 'FURNITURE_SPECIALIST':
         return '🪑';
       case 'GAZELLE':
         return '🚚';
       case 'STRETCH_FILM':
-        return '📜';
+        return streychPlenkaIcon;
       case 'BOX_SIZE':
-        return '📦';
+        return korobkiIcon;
       case 'MARKER':
-        return '🖊️';
+        return markerIcon;
       case 'UTILITY_KNIFE':
         return '🔪';
       case 'BUBBLE_WRAP_1':
+        return bubbleWrap10Icon;
       case 'BUBBLE_WRAP_2':
-        return '🛡️';
+        return bubbleWrap100Icon;
+      case 'RACK_RENTAL':
+        return rackRentalIcon;
       default:
         return '⚙️';
     }
@@ -233,10 +245,17 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                 </div>
                 
                 <div className="space-y-2">
-                  {order.services.map((service, index) => (
+                  {order.services.map((service, index) => {
+                    const serviceIcon = getServiceIcon(service.type);
+                    const isImage = typeof serviceIcon === 'string' && (serviceIcon.endsWith('.png') || serviceIcon.endsWith('.jpg') || serviceIcon.endsWith('.jpeg') || serviceIcon.endsWith('.webp'));
+                    return (
                     <div key={service.id || index} className="flex items-center justify-between bg-white rounded-lg p-3 border border-amber-200">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{getServiceIcon(service.type)}</span>
+                        {isImage ? (
+                          <img src={serviceIcon} alt="" className="h-5 w-5 object-contain" />
+                        ) : (
+                          <span className="text-lg">{serviceIcon}</span>
+                        )}
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-900">
@@ -261,7 +280,8 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 
                 {/* Итого по услугам */}

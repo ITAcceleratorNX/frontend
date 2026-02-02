@@ -26,6 +26,15 @@ import {
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
 import { Truck, Package, X, Info, Plus, Minus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
+// Импортируем иконки дополнительных услуг
+import streychPlenkaIcon from "../../assets/стрейч_пленка.png";
+import bubbleWrap100Icon from "../../assets/Воздушно-пузырчатая_плёнка_(100 м).png";
+import bubbleWrap10Icon from "../../assets/Пузырчатая_плёнка_(10 м).png";
+import korobkiIcon from "../../assets/коробки.png";
+import markerIcon from "../../assets/маркер.png";
+import rackRentalIcon from "../../assets/Аренда_стелажей.png";
+import uslugiMuveraIcon from "../../assets/услуги_мувера.png";
+import uslugiUpakovkiIcon from "../../assets/услуги_упаковки.png";
 import { useAuth } from "../../shared/context/AuthContext";
 import {
   showSuccessToast,
@@ -119,23 +128,23 @@ const getServiceTypeDescription = (type) => {
 const getServiceTypeIcon = (type) => {
   switch (type) {
     case "LOADER":
-      return Users;
+      return uslugiMuveraIcon;
     case "PACKER":
-      return Package;
+      return uslugiUpakovkiIcon;
     case "STRETCH_FILM":
-      return ScrollText;
+      return streychPlenkaIcon;
     case "BOX_SIZE":
-      return Box;
+      return korobkiIcon;
     case "MARKER":
-      return PenLine;
+      return markerIcon;
     case "BUBBLE_WRAP_1":
-      return Shield;
+      return bubbleWrap10Icon;
     case "BUBBLE_WRAP_2":
-      return Shield;
+      return bubbleWrap100Icon;
     case "RACK_RENTAL":
-      return Layers;
+      return rackRentalIcon;
     default:
-      return Package;
+      return uslugiUpakovkiIcon;
   }
 };
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
@@ -2749,23 +2758,27 @@ const HomePage = memo(() => {
                                   return (
                                     <div key={index} className="space-y-2">
                                       <div className="rounded-3xl border border-white bg-white/10 px-4 py-3">
-                                        {/* Верхняя строка с выбором и управлением */}
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          {/* Иконка и селектор услуги */}
-                                          <div className="flex items-center gap-2">
-                                            {selectedOption && (() => {
-                                              const ServiceIcon = getServiceTypeIcon(selectedOption.type);
+                                        {/* Верхняя строка с иконкой, названием и ценой */}
+                                        <div className="flex items-center gap-3 mb-2">
+                                          {/* Иконка в белом округленном квадрате */}
+                                          <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 border border-white">
+                                            {selectedOption ? (() => {
+                                              const serviceIconSrc = getServiceTypeIcon(selectedOption.type);
                                               return (
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 shrink-0">
-                                                  <ServiceIcon className="h-4 w-4 text-white" />
-                                                </div>
+                                                <img src={serviceIconSrc} alt="" className="h-7 w-7 object-contain" />
                                               );
-                                            })()}
+                                            })() : (
+                                              <Package className="h-7 w-7 text-white" />
+                                            )}
+                                          </div>
+                                          
+                                          {/* Название услуги без рамок */}
+                                          <div className="flex-1 flex items-center gap-2">
                                             <Select
                                               value={service.service_id}
                                               onValueChange={(value) => updateServiceRow(index, "service_id", value)}
                                             >
-                                              <SelectTrigger className="h-10 min-w-[180px] rounded-3xl border-0 bg-white/10 text-sm text-white">
+                                              <SelectTrigger className="h-auto p-0 border-0 bg-transparent text-white font-medium hover:bg-transparent focus:ring-0 focus:ring-offset-0 [&>span]:text-white [&>svg]:text-white [&>svg]:ml-1 w-auto min-w-0">
                                                 <SelectValue placeholder="Услуга" />
                                               </SelectTrigger>
                                             <SelectContent>
@@ -2823,56 +2836,39 @@ const HomePage = memo(() => {
                                               )}
                                             </SelectContent>
                                             </Select>
-                                          </div>
-
-                                          <div className="flex items-center gap-1 sm:gap-2">
-                                            <span className="text-xs text-white/90 hidden sm:inline">
-                                              Кол-во
-                                            </span>
-                                            <div className="flex items-center rounded-full border border-white/50 bg-white/10">
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  const newCount = Math.max(1, Number(service.count) - 1);
-                                                  updateServiceRow(index, "count", newCount);
-                                                }}
-                                                disabled={Number(service.count) <= 1}
-                                                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-l-full text-white hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                                aria-label="Уменьшить количество"
-                                              >
-                                                <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
-                                              </button>
-                                              <span className="min-w-[24px] sm:min-w-[32px] text-center text-xs sm:text-sm font-medium text-white">
-                                                {service.count}
+                                            
+                                            {service.service_id && (
+                                              <span className="ml-auto text-xs text-white/90">
+                                                {unitPrice.toLocaleString()} ₸/шт.
                                               </span>
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  const newCount = Number(service.count) + 1;
-                                                  updateServiceRow(index, "count", newCount);
-                                                }}
-                                                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-r-full text-white hover:bg-white/20 transition-colors"
-                                                aria-label="Увеличить количество"
-                                              >
-                                                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                                              </button>
-                                            </div>
+                                            )}
+                                            
+                                            <button
+                                              type="button"
+                                              onClick={() => removeServiceRow(index)}
+                                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors shrink-0"
+                                              aria-label="Удалить услугу"
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </button>
                                           </div>
+                                        </div>
 
-                                          {service.service_id && (
-                                            <span className="ml-auto text-xs text-white/90">
-                                              {unitPrice.toLocaleString()} ₸/шт.
-                                            </span>
-                                          )}
-
-                                          <button
-                                            type="button"
-                                            onClick={() => removeServiceRow(index)}
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors"
-                                            aria-label="Удалить услугу"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </button>
+                                        {/* Нижняя строка с количеством */}
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs text-white/90">
+                                            Кол-во
+                                          </span>
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            value={service.count}
+                                            onChange={(e) => {
+                                              const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                                              updateServiceRow(index, "count", newCount);
+                                            }}
+                                            className="w-12 h-8 rounded-lg border border-white/50 bg-white/10 text-center text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                          />
                                         </div>
 
                                         {/* Описание выбранной услуги */}

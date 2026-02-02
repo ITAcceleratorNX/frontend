@@ -21,9 +21,19 @@ import {
 } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
 import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
-import { useCreateMoving, useCreateAdditionalServicePayment } from '../../../shared/lib/hooks/use-payments';
+import { useCreateMoving, useCreateAdditionalServicePayment, useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import { Zap, CheckCircle, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag, CreditCard } from 'lucide-react';
+import { showSuccessToast } from '../../../shared/lib/toast';
+// Импортируем иконки дополнительных услуг
+import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
+import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
+import bubbleWrap10Icon from '../../../assets/Пузырчатая_плёнка_(10 м).png';
+import korobkiIcon from '../../../assets/коробки.png';
+import markerIcon from '../../../assets/маркер.png';
+import rackRentalIcon from '../../../assets/Аренда_стелажей.png';
+import uslugiMuveraIcon from '../../../assets/услуги_мувера.png';
+import uslugiUpakovkiIcon from '../../../assets/услуги_упаковки.png';
 import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderError } from '../../../shared/lib/utils/notifications';
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
@@ -56,6 +66,14 @@ const getVolumeUnit = (storageType) => {
   return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
 };
 
+const getMonthName = (month) => {
+  const months = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+  ];
+  return months[month - 1] || month;
+};
+
 const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   const navigate = useNavigate();
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
@@ -72,6 +90,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   const [selectedCancelReason, setSelectedCancelReason] = useState('');
   const [cancelReasonComment, setCancelReasonComment] = useState('');
   const [cancelFormError, setCancelFormError] = useState('');
+  const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
 
   // Хук для работы с API продления заказа
   const extendOrderMutation = useExtendOrder();
@@ -79,6 +98,9 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   const downloadContractMutation = useDownloadContract();
   // Хук для отмены договора
   const cancelContractMutation = useCancelContract();
+  // Хуки для работы с платежами
+  const createManualPaymentMutation = useCreateManualPayment();
+  const downloadReceiptMutation = useDownloadPaymentReceipt();
 
   // Обработчик продления заказа
   const handleExtendOrder = async () => {
@@ -298,6 +320,136 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   const totalPrice = Math.max(0, originalPrice - discountAmount);
   const hasPromoDiscount = discountAmount > 0;
 
+  // Расчет месячной стоимости для ежемесячной оплаты
+  const isMonthlyPayment = order.payment_type === 'MONTHLY';
+  
+  // Отладочный вывод для проверки данных
+  if (import.meta.env.DEV && isMonthlyPayment) {
+    console.log('Order payment info:', {
+      payment_type: order.payment_type,
+      order_payment: order.order_payment,
+      total_price: order.total_price,
+      start_date: order.start_date,
+      end_date: order.end_date,
+      totalPrice,
+    });
+  }
+  
+  // Вычисляем месячную стоимость
+  let monthlyAmount = null;
+  if (isMonthlyPayment) {
+    // Сначала пытаемся взять из order_payment
+    if (order.order_payment && order.order_payment.length > 0) {
+      monthlyAmount = order.order_payment[0].amount;
+    } else if (order.start_date && order.end_date) {
+      // Если платежи еще не созданы, рассчитываем из общей стоимости и количества месяцев
+      try {
+        const startDate = new Date(order.start_date);
+        const endDate = new Date(order.end_date);
+        const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                          (endDate.getMonth() - startDate.getMonth());
+        
+        if (monthsDiff > 0) {
+          // Месячная стоимость = общая стоимость / количество месяцев
+          monthlyAmount = Math.round(totalPrice / monthsDiff);
+        }
+      } catch (error) {
+        console.error('Ошибка при расчете месячной стоимости:', error);
+      }
+    }
+  }
+
+  // Определяем текущий месяц и год для истории платежей
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  const payments = order.order_payment || [];
+  const currentPayment = payments.find(
+    (payment) => payment.month === currentMonth && payment.year === currentYear
+  );
+  const otherPayments = payments.filter(
+    (payment) => !(payment.month === currentMonth && payment.year === currentYear)
+  );
+
+  // Функции для работы с платежами
+  const handlePay = (payment) => {
+    if (payment.payment_page_url) {
+      window.open(payment.payment_page_url, '_blank');
+      return;
+    }
+    createManualPaymentMutation.mutate(payment.id);
+  };
+
+  const handleDownloadReceipt = (paymentId) => {
+    downloadReceiptMutation.mutate(paymentId);
+  };
+
+  // Компонент для рендеринга одного платежа
+  const renderPayment = (payment) => (
+    <div key={payment.id} className="flex items-center justify-between">
+      <div className="flex-1">
+        <p className="text-lg font-semibold mb-1">
+          {getMonthName(payment.month)} {payment.year}
+        </p>
+        <p className="text-2xl font-bold">{formatPrice(payment.amount)} 〒</p>
+      </div>
+      <div className="flex flex-col items-end gap-2">
+        {payment.status === 'PAID' ? (
+          <>
+            <button
+              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700"
+            >
+              Оплачено
+            </button>
+            <button
+              onClick={() => handleDownloadReceipt(payment.id)}
+              disabled={downloadReceiptMutation.isPending}
+              className="text-white/90 text-xs font-medium hover:text-white transition-colors underline"
+            >
+              Скачать PDF - чек
+            </button>
+          </>
+        ) : payment.status === 'MANUAL' ? (
+          <>
+            <button
+              onClick={() => handlePay(payment)}
+              disabled={createManualPaymentMutation.isLoading}
+              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
+            >
+              Оплатить
+            </button>
+          </>
+        ) : payment.status === 'UNPAID' && (order.status === 'PROCESSING' || order.status === 'ACTIVE') && payment.payment_page_url ? (
+          <>
+            <button
+              onClick={() => {
+                window.open(payment.payment_page_url, '_blank');
+                showSuccessToast('Перенаправляем на страницу оплаты...', {
+                  position: "top-right",
+                  autoClose: 3000,
+                });
+                window.location.reload();
+              }}
+              disabled={createManualPaymentMutation.isLoading}
+              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
+            >
+              Оплатить
+            </button>
+          </>
+        ) : payment.status === 'UNPAID' && (order.status === 'PROCESSING' || order.status === 'ACTIVE') ? (
+          <>
+            <button
+              onClick={() => handlePay(payment)}
+              disabled={createManualPaymentMutation.isLoading}
+              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
+            >
+              Оплатить
+            </button>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
 
   // Функция для получения иконки услуги по типу
   const getServiceIcon = (type) => {
@@ -305,24 +457,27 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
       case 'DEPOSIT':
         return '💰'; // Залог
       case 'LOADER':
-        return '💪'; // Грузчик
+        return uslugiMuveraIcon; // Грузчик
       case 'PACKER':
-        return '📦'; // Упаковщик
+        return uslugiUpakovkiIcon; // Упаковщик
       case 'FURNITURE_SPECIALIST':
         return '🪑'; // Мебельщик
       case 'GAZELLE':
         return '🚚'; // Газель
       case 'STRETCH_FILM':
-        return '📜'; // Стрейч-пленка
+        return streychPlenkaIcon; // Стрейч-пленка
       case 'BOX_SIZE':
-        return '📦'; // Коробка
+        return korobkiIcon; // Коробка
       case 'MARKER':
-        return '🖊️'; // Маркер
+        return markerIcon; // Маркер
       case 'UTILITY_KNIFE':
         return '🔪'; // Канцелярский нож
       case 'BUBBLE_WRAP_1':
+        return bubbleWrap10Icon; // Воздушно-пузырчатая пленка 10м
       case 'BUBBLE_WRAP_2':
-        return '🛡️'; // Воздушно-пузырчатая пленка
+        return bubbleWrap100Icon; // Воздушно-пузырчатая пленка 100м
+      case 'RACK_RENTAL':
+        return rackRentalIcon; // Аренда стеллажей
       // Старые типы для совместимости
       default:
         return '⚙️'; // Общая услуга
@@ -614,11 +769,15 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
                     <div className="flex items-start gap-2">
                       {service.type === 'GAZELLE' || service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO' ? (
                         <Truck className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                      ) : service.type === 'BOX_SIZE' ? (
-                        <Package className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <span className="text-lg">{getServiceIcon(service.type)}</span>
-                      )}
+                      ) : (() => {
+                        const serviceIcon = getServiceIcon(service.type);
+                        const isImage = typeof serviceIcon === 'string' && (serviceIcon.endsWith('.png') || serviceIcon.endsWith('.jpg') || serviceIcon.endsWith('.jpeg') || serviceIcon.endsWith('.webp'));
+                        return isImage ? (
+                          <img src={serviceIcon} alt="" className="h-5 w-5 object-contain mt-0.5 flex-shrink-0" />
+                        ) : (
+                          <span className="text-lg">{serviceIcon}</span>
+                        );
+                      })()}
                       <div className="flex-1">
                         <p className="text-[#737373] font-medium text-sm">
                           {service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO' 
@@ -650,6 +809,49 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
         </>
       )}
 
+      {/* История платежей - показывается только для ежемесячной оплаты */}
+      {isMonthlyPayment && (
+        <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-6'}>
+          <h4 className="text-[#D3D3D3] text-xs font-medium mb-4">Платежи по месяцам</h4>
+          <div className="space-y-4">
+            {/* Текущий платеж - всегда видимый */}
+            {currentPayment && renderPayment(currentPayment)}
+
+            {/* Остальные платежи - в expand/collapse */}
+            {otherPayments.length > 0 && (
+              <>
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => setIsPaymentsExpanded(!isPaymentsExpanded)}
+                    className="text-[#D3D3D3] text-xs font-medium hover:text-[#D3D3D3]/80 transition-colors flex items-center gap-2"
+                  >
+                    {isPaymentsExpanded ? (
+                      <>
+                        История платежи
+                        <ChevronUp className="w-3 h-3" />
+                      </>
+                    ) : (
+                      <>
+                        История платежи
+                        <ChevronDown className="w-3 h-3" />
+                      </>
+                    )}
+                  </button>
+                </div>
+                {isPaymentsExpanded && (
+                  <div className="space-y-4">
+                    {otherPayments.map((payment) => renderPayment(payment))}
+                  </div>
+                )}
+              </>
+            )}
+            {/* Если нет платежей, показываем сообщение */}
+            {payments.length === 0 && (
+              <p className="text-white/70 text-sm">Платежи будут созданы после подписания договора</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Итого и кнопки действий */}
       <div className={embeddedMobile ? 'mt-3 min-[360px]:mt-4' : 'mt-6'}>
@@ -669,6 +871,12 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
               </div>
             ) : (
               <p className={`text-white font-bold ${embeddedMobile ? 'text-xl min-[360px]:text-2xl' : 'text-3xl'}`}>{formatPrice(totalPrice)} 〒</p>
+            )}
+            {/* Отображение месячной стоимости для ежемесячной оплаты */}
+            {isMonthlyPayment && monthlyAmount !== null && monthlyAmount > 0 && (
+              <p className="text-white/80 text-sm mt-2">
+                В месяц: {formatPrice(monthlyAmount)} 〒
+              </p>
             )}
           </div>
           
