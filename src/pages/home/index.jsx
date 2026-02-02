@@ -3784,10 +3784,10 @@ const HomePage = memo(() => {
             Простой процесс бронирования бокса
           </h2>
           
-          {/* Мобильная версия: 3+2 карточки */}
+          {/* Мобильная версия: 2+2 карточки */}
           <div className="md:hidden space-y-4">
-            {/* Верхний ряд: 3 карточки */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Верхний ряд: 2 карточки */}
+            <div className="grid grid-cols-2 gap-4">
               {/* Шаг 1 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
@@ -3800,56 +3800,40 @@ const HomePage = memo(() => {
                   Забронируйте бокс
                 </p>
               </div>
-
               {/* Шаг 2 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <UserCircle className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">2</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Подтверждение от менеджера
-                </p>
-              </div>
-
-              {/* Шаг 3 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
                   <MessageSquare className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">3</span>
+                  <span className="text-white font-bold text-sm">2</span>
                 </div>
                 <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
                   Подпишите договор по СМС
                 </p>
               </div>
             </div>
-
             {/* Нижний ряд: 2 карточки */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Шаг 4 */}
+              {/* Шаг 3 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
                   <Globe className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">4</span>
+                  <span className="text-white font-bold text-sm">3</span>
                 </div>
                 <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
                   Оплатите онлайн или по СМС
                 </p>
               </div>
-
-              {/* Шаг 5 */}
+              {/* Шаг 4 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
                   <Truck className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">5</span>
+                  <span className="text-white font-bold text-sm">4</span>
                 </div>
                 <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
                   Назначьте доставку
@@ -3858,8 +3842,8 @@ const HomePage = memo(() => {
             </div>
           </div>
 
-          {/* Десктопная версия: все 5 карточек в один ряд */}
-          <div className="hidden md:grid md:grid-cols-5 gap-6 lg:gap-8">
+          {/* Десктопная версия: все 4 карточки в один ряд */}
+          <div className="hidden md:grid md:grid-cols-4 gap-6 lg:gap-8">
             {/* Шаг 1 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
@@ -3872,53 +3856,37 @@ const HomePage = memo(() => {
                 Забронируйте бокс
               </p>
             </div>
-
             {/* Шаг 2 */}
-            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
-              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
-                <UserCircle className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
-              </div>
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">2</span>
-              </div>
-              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
-                Подтверждение от менеджера
-              </p>
-            </div>
-
-            {/* Шаг 3 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
                 <MessageSquare className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
               </div>
               <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">3</span>
+                <span className="text-white font-bold text-base lg:text-lg">2</span>
               </div>
               <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
                 Подпишите договор по СМС
               </p>
             </div>
-
-            {/* Шаг 4 */}
+            {/* Шаг 3 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
                 <Globe className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
               </div>
               <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">4</span>
+                <span className="text-white font-bold text-base lg:text-lg">3</span>
               </div>
               <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
                 Оплатите онлайн или по СМС
               </p>
             </div>
-
-            {/* Шаг 5 */}
+            {/* Шаг 4 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
                 <Truck className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
               </div>
               <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">5</span>
+                <span className="text-white font-bold text-base lg:text-lg">4</span>
               </div>
               <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
                 Назначьте доставку
