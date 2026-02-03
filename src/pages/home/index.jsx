@@ -25,7 +25,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Minus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Minus, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from "../../assets/стрейч_пленка.png";
 import bubbleWrap100Icon from "../../assets/Воздушно-пузырчатая_плёнка_(100 м).png";
@@ -273,6 +273,7 @@ const HomePage = memo(() => {
   const [promoSuccess, setPromoSuccess] = useState(false);
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
   // Состояние для промокода (облачное хранение)
   const [cloudPromoCode, setCloudPromoCode] = useState("");
   const [cloudPromoCodeInput, setCloudPromoCodeInput] = useState("");
@@ -533,10 +534,12 @@ const HomePage = memo(() => {
         }
         const option = serviceOptions.find((item) => String(item.id) === String(service.service_id));
         const unitPrice = option?.price ?? PACKING_SERVICE_ESTIMATE;
-        const amount = unitPrice * service.count;
+        const count = Number(service.count) || 1;
+        const amount = unitPrice * count;
         total += amount;
+        const serviceName = option?.description || getServiceTypeName(option?.type) || "Услуга";
         breakdown.push({
-          label: option?.description || getServiceTypeName(option?.type) || "Услуга",
+          label: count > 1 ? `${serviceName} (${count} шт.)` : serviceName,
           amount,
         });
       });
@@ -2859,16 +2862,24 @@ const HomePage = memo(() => {
                                           <span className="text-xs text-white/90">
                                             Кол-во
                                           </span>
-                                          <input
-                                            type="number"
-                                            min="1"
-                                            value={service.count}
-                                            onChange={(e) => {
-                                              const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                                          <Select
+                                            value={String(service.count)}
+                                            onValueChange={(value) => {
+                                              const newCount = parseInt(value) || 1;
                                               updateServiceRow(index, "count", newCount);
                                             }}
-                                            className="w-12 h-8 rounded-lg border border-white/50 bg-white/10 text-center text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                                          />
+                                          >
+                                            <SelectTrigger className="w-16 h-8 rounded-lg border border-white/50 bg-white/10 text-sm text-white [&>span]:text-white [&>svg]:text-white">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {[1, 2, 3, 4, 5].map((num) => (
+                                                <SelectItem key={num} value={String(num)}>
+                                                  {num}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
                                         </div>
 
                                         {/* Описание выбранной услуги */}
@@ -2976,9 +2987,107 @@ const HomePage = memo(() => {
                           </div>
                         ) : (
                           <>
-                            <div className="text-sm text-gray-600">
-                              Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm text-gray-600">
+                                Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowOrderDetails(!showOrderDetails)}
+                                className="text-sm text-[#31876D] hover:text-[#276b57] flex items-center gap-1 underline"
+                              >
+                                {showOrderDetails ? (
+                                  <>
+                                    Скрыть подробности
+                                    <ChevronUp className="w-4 h-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    Показать полностью
+                                    <ChevronDown className="w-4 h-4" />
+                                  </>
+                                )}
+                              </button>
                             </div>
+
+                            {/* Детали заказа */}
+                            {showOrderDetails && (
+                              <div className="mt-4 space-y-4 border-t border-gray-200 pt-4">
+                                {/* Доставка */}
+                                {includeMoving && serviceSummary.breakdown.some(item => item.label.includes('Забор') || item.label.includes('Доставка')) && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-[#273655] mb-2">Доставка</h4>
+                                    <ul className="space-y-1 text-sm text-gray-600">
+                                      {serviceSummary.breakdown
+                                        .filter(item => item.label.includes('Забор') || item.label.includes('Доставка'))
+                                        .map((item, idx) => (
+                                          <li key={idx} className="flex justify-between">
+                                            <span>{item.label}</span>
+                                            <span className="font-medium">{item.amount.toLocaleString()} ₸</span>
+                                          </li>
+                                        ))}
+                                    </ul>
+                                    <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between text-sm font-semibold text-[#273655]">
+                                      <span>Итого доставка:</span>
+                                      <span>
+                                        {serviceSummary.breakdown
+                                          .filter(item => item.label.includes('Забор') || item.label.includes('Доставка'))
+                                          .reduce((sum, item) => sum + item.amount, 0)
+                                          .toLocaleString()} ₸
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Дополнительные услуги */}
+                                {includePacking && serviceSummary.breakdown.some(item => !item.label.includes('Забор') && !item.label.includes('Доставка')) && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-[#273655] mb-2">Дополнительные услуги</h4>
+                                    <ul className="space-y-1 text-sm text-gray-600">
+                                      {services
+                                        .filter(service => service?.service_id && service?.count && service.count > 0)
+                                        .map((service, idx) => {
+                                          const option = serviceOptions.find(item => String(item.id) === String(service.service_id));
+                                          if (!option) return null;
+                                          const unitPrice = option?.price ?? 0;
+                                          const count = Number(service.count) || 1;
+                                          const amount = unitPrice * count;
+                                          const serviceName = option?.description || getServiceTypeName(option?.type) || "Услуга";
+                                          
+                                          return (
+                                            <li key={idx} className="flex justify-between">
+                                              <span>{serviceName} – {count} шт х {unitPrice.toLocaleString()} ₸</span>
+                                              <span className="font-medium">= {amount.toLocaleString()} ₸</span>
+                                            </li>
+                                          );
+                                        })}
+                                    </ul>
+                                    <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between text-sm font-semibold text-[#273655]">
+                                      <span>Итого доп. услуги:</span>
+                                      <span>
+                                        {serviceSummary.breakdown
+                                          .filter(item => !item.label.includes('Забор') && !item.label.includes('Доставка'))
+                                          .reduce((sum, item) => sum + item.amount, 0)
+                                          .toLocaleString()} ₸
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Размер бокса */}
+                                {previewStorage && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-[#273655] mb-2">Бокс</h4>
+                                    <ul className="space-y-1 text-sm text-gray-600">
+                                      <li className="flex justify-between">
+                                        <span>Размер бокса:</span>
+                                        <span className="font-medium">{previewStorage.available_volume || previewStorage.volume || "—"} м²</span>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                             
                             {/* Промокод */}
                             <div className="mt-4 mb-3">
@@ -3091,6 +3200,11 @@ const HomePage = memo(() => {
                                 </span>
                               )}
                               {finalIndividualTotal?.toLocaleString() ?? "—"} ₸
+                              {previewStorage && (
+                                <span className="text-sm font-normal text-gray-600 ml-2">
+                                  ({previewStorage.available_volume || previewStorage.volume || "—"} м²)
+                                </span>
+                              )}
                             </div>
                             <div className="text-xs text-gray-500">
                               за {monthsNumber} {monthsNumber === 1 ? 'месяц' : monthsNumber < 5 ? 'месяца' : 'месяцев'}
