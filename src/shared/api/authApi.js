@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://api.extraspace.kz';
+const API_URL = 'http://localhost:8080';
 
 // Создаем настроенный экземпляр axios для всех запросов
 const axiosApi = axios.create({

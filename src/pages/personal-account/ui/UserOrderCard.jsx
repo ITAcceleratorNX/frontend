@@ -41,7 +41,7 @@ import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
-import { isOnlinePaymentEnabled } from '../../../shared/config/payment';
+import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -104,6 +104,8 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   // Хуки для работы с платежами
   const createManualPaymentMutation = useCreateManualPayment();
   const downloadReceiptMutation = useDownloadPaymentReceipt();
+  const { data: paymentSettings } = usePaymentSettings();
+  const isOnlinePaymentEnabled = paymentSettings?.online_payment_enabled;
 
   // Обработчик продления заказа
   const handleExtendOrder = async () => {

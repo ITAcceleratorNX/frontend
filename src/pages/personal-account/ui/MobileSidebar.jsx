@@ -134,7 +134,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
         const isProd = !import.meta.env.DEV;
         
         if (isProd) {
-          const logoutUrl = 'https://api.extraspace.kz/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
+          const logoutUrl = 'http://localhost:8080/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
           
           updateToast(logoutToast, "Выход выполнен успешно!", "success");
           

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCreatePayment } from '../../../shared/lib/hooks/use-payments';
 import { useGetPrices } from '../../../shared/lib/hooks/use-payments';
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
-import { isOnlinePaymentEnabled } from '../../../shared/config/payment';
+import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
 import { 
   Dialog, 
   DialogContent, 
@@ -32,6 +32,8 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
   const createPaymentMutation = useCreatePayment();
   const { data: prices } = useGetPrices();
+  const { data: paymentSettings } = usePaymentSettings();
+  const isOnlinePaymentEnabled = paymentSettings?.online_payment_enabled;
 
   const isCloud = order.storage.storage_type === "CLOUD";
 

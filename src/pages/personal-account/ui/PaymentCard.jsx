@@ -4,7 +4,7 @@ import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shar
 import { showSuccessToast } from '../../../shared/lib/toast';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
-import { isOnlinePaymentEnabled } from '../../../shared/config/payment';
+import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -53,6 +53,8 @@ const getMonthName = (month) => {
 const PaymentCard = ({ order, embeddedMobile = false }) => {
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
   const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
+  const { data: paymentSettings } = usePaymentSettings();
+  const isOnlinePaymentEnabled = paymentSettings?.online_payment_enabled;
 
   // Определяем текущий месяц и год
   const now = new Date();

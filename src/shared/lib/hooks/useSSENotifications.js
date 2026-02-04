@@ -7,7 +7,7 @@ import { showInfoToast } from '../toast';
 // Функция для получения базового URL API
 const getApiBaseUrl = () => {
   const isDevelopment = import.meta.env.DEV;
-  return isDevelopment ? '/api' : 'https://api.extraspace.kz';
+  return isDevelopment ? '/api' : 'http://localhost:8080';
 };
 
 /**

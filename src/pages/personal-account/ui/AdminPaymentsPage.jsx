@@ -27,7 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAdminPayments, useConfirmManualPayment } from '@/shared/lib/hooks/use-payments';
+import { Switch } from '@/components/ui/switch';
+import { useAdminPayments, useConfirmManualPayment, usePaymentSettings, useUpdatePaymentSettings } from '@/shared/lib/hooks/use-payments';
 import { useDeviceType } from '@/shared/lib/hooks/useWindowWidth';
 import { showOrderLoadError } from '@/shared/lib/utils/notifications';
 
@@ -160,9 +161,12 @@ const AdminPaymentsPage = () => {
     onError: () => showOrderLoadError(),
   });
   const confirmManual = useConfirmManualPayment();
+  const { data: paymentSettings, isLoading: settingsLoading } = usePaymentSettings();
+  const updateSettings = useUpdatePaymentSettings();
 
   const rows = data?.data ?? [];
   const meta = data?.meta ?? { total: 0, page: 1, pageSize: 20, totalPages: 1 };
+  const onlinePaymentEnabled = paymentSettings?.online_payment_enabled;
 
   const handleConfirmClick = (row) => {
     setConfirmRow(row);
@@ -175,6 +179,10 @@ const AdminPaymentsPage = () => {
       { onSettled: () => setConfirmModalOpen(false) }
     );
     setConfirmRow(null);
+  };
+
+  const handleOnlinePaymentToggle = (checked) => {
+    updateSettings.mutate({ online_payment_enabled: checked });
   };
 
   if (isLoading) {
@@ -218,6 +226,33 @@ const AdminPaymentsPage = () => {
         <h1 className="text-3xl font-bold text-[#273655] mb-2">Оплаты</h1>
         <p className="text-gray-600">Платежи по заказам. Подтверждение ручной оплаты.</p>
       </div>
+
+      <Card className="bg-white rounded-2xl border border-[#E0F2FE]">
+        <CardHeader>
+          <CardTitle className="text-[#273655]">Настройки оплаты</CardTitle>
+          <p className="text-sm text-[#8A8A8A]">Включение или отключение онлайн-оплаты (One Vision). При выключении клиенты видят контакты менеджера, оплату подтверждаете вручную в разделе ниже.</p>
+        </CardHeader>
+        <CardContent>
+          {settingsLoading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00A991] border-t-transparent" />
+              Загрузка настроек…
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-4">
+              <label htmlFor="online-payment-enabled" className="text-sm font-medium text-[#273655] cursor-pointer">
+                Онлайн-оплата включена
+              </label>
+              <Switch
+                id="online-payment-enabled"
+                checked={onlinePaymentEnabled}
+                onCheckedChange={handleOnlinePaymentToggle}
+                disabled={updateSettings.isPending}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="bg-white rounded-2xl border border-[#E0F2FE]">
         <CardHeader>
