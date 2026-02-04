@@ -20,6 +20,13 @@ export const paymentsApi = {
     }
   },
 
+  // Админ/менеджер: список order_payments с пагинацией и фильтрами
+  getAdminPayments: (params) => api.get('/payments/admin', { params }),
+
+  // Подтверждение ручной оплаты (админ/менеджер)
+  confirmManualPayment: (orderPaymentId, body = {}) =>
+    api.post(`/payments/${orderPaymentId}/confirm-manual`, body),
+
   // Получение всех оплат текущего пользователя
   getUserPayments: async () => {
     try {

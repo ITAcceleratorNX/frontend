@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useCreatePayment } from '../../../shared/lib/hooks/use-payments';
 import { useGetPrices } from '../../../shared/lib/hooks/use-payments';
+import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
+import { isOnlinePaymentEnabled } from '../../../shared/config/payment';
 import { 
   Dialog, 
   DialogContent, 
@@ -27,6 +29,7 @@ import uslugiUpakovkiIcon from '../../../assets/услуги_упаковки.pn
 
 const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
   const createPaymentMutation = useCreatePayment();
   const { data: prices } = useGetPrices();
 
@@ -99,6 +102,10 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   };
 
   const handleConfirmPayment = async () => {
+    if (!isOnlinePaymentEnabled) {
+      setIsPaymentDisabledModalOpen(true);
+      return;
+    }
     setIsProcessing(true);
 
     try {
@@ -165,6 +172,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   if (!isOpen) return null;
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogContent className="max-w-md w-full rounded-xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="space-y-1 pb-2">
@@ -374,6 +382,8 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <PaymentDisabledModal open={isPaymentDisabledModalOpen} onOpenChange={setIsPaymentDisabledModalOpen} />
+  </>
   );
 };
 

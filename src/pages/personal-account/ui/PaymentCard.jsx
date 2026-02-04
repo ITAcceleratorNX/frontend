@@ -3,6 +3,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { showSuccessToast } from '../../../shared/lib/toast';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
+import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
+import { isOnlinePaymentEnabled } from '../../../shared/config/payment';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -51,6 +53,7 @@ const getMonthName = (month) => {
 const PaymentCard = ({ order, embeddedMobile = false }) => {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
+  const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
 
   // Определяем текущий месяц и год
   const now = new Date();
@@ -99,6 +102,10 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
 
 
   const handlePay = (payment) => {
+    if (!isOnlinePaymentEnabled) {
+      setIsPaymentDisabledModalOpen(true);
+      return;
+    }
     if (payment.payment_page_url) {
       window.open(payment.payment_page_url, '_blank');
       return;
@@ -149,6 +156,10 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
           <>
             <button
               onClick={() => {
+                if (!isOnlinePaymentEnabled) {
+                  setIsPaymentDisabledModalOpen(true);
+                  return;
+                }
                 window.open(payment.payment_page_url, '_blank');
                 showSuccessToast('Перенаправляем на страницу оплаты...', {
                   position: "top-right",
@@ -219,6 +230,7 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
           )}
         </div>
       </div>
+      <PaymentDisabledModal open={isPaymentDisabledModalOpen} onOpenChange={setIsPaymentDisabledModalOpen} />
     </div>
   );
 };

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
+import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
+import { isOnlinePaymentEnabled } from '../../../shared/config/payment';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -10,6 +12,7 @@ import { Calendar, CreditCard, AlertCircle, CheckCircle, Clock, RefreshCw, Chevr
 
 const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
   const [expandedOrders, setExpandedOrders] = useState(new Set());
+  const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
 
   const createManualPaymentMutation = useMutation({
     mutationFn: paymentsApi.createManualPayment,
@@ -127,6 +130,10 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
   };
 
   const handleManualPayment = (orderPaymentId) => {
+    if (!isOnlinePaymentEnabled) {
+      setIsPaymentDisabledModalOpen(true);
+      return;
+    }
     createManualPaymentMutation.mutate(orderPaymentId);
   };
 
@@ -401,6 +408,7 @@ const PaymentHistory = ({ payments = [], isLoading, error, onRefetch }) => {
             )}
         </Card>
         ))}
+      <PaymentDisabledModal open={isPaymentDisabledModalOpen} onOpenChange={setIsPaymentDisabledModalOpen} />
     </div>
   );
 };
