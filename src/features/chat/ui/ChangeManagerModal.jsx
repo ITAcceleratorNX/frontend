@@ -24,7 +24,7 @@ const ChangeManagerModal = memo(({
       
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:8080/users/manager', {
+        const response = await fetch('https://api.extraspace.kz/users/manager', {
           credentials: 'include'
         });
         const data = await response.json();
