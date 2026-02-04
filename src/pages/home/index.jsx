@@ -2987,9 +2987,28 @@ const HomePage = memo(() => {
                           </div>
                         ) : (
                           <>
+                            {/* Общая стоимость */}
+                            <div className="text-lg font-bold text-[#273655] mb-2">
+                              Общая стоимость: {promoSuccess && promoDiscount > 0 && (
+                                <span className="text-sm text-gray-400 line-through mr-1">
+                                  {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
+                                </span>
+                              )}
+                              {finalIndividualTotal?.toLocaleString() ?? "—"} ₸
+                              {previewStorage && (
+                                <span className="text-sm font-normal text-gray-600 ml-2">
+                                  ({previewStorage.available_volume || previewStorage.volume || "—"} м²)
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 mb-4">
+                               
+                              {promoSuccess && ` (скидка ${promoDiscountPercent}%)`}
+                            </div>
+
                             <div className="flex items-center justify-between mb-2">
                               <div className="text-sm text-gray-600">
-                                Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
+                                Стоимость хранения в месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
                               </div>
                               <button
                                 type="button"
@@ -3016,20 +3035,9 @@ const HomePage = memo(() => {
                                 {/* Доставка */}
                                 {includeMoving && serviceSummary.breakdown.some(item => item.label.includes('Забор') || item.label.includes('Доставка')) && (
                                   <div>
-                                    <h4 className="text-sm font-bold text-[#273655] mb-2">Доставка</h4>
-                                    <ul className="space-y-1 text-sm text-gray-600">
-                                      {serviceSummary.breakdown
-                                        .filter(item => item.label.includes('Забор') || item.label.includes('Доставка'))
-                                        .map((item, idx) => (
-                                          <li key={idx} className="flex justify-between">
-                                            <span>{item.label}</span>
-                                            <span className="font-medium">{item.amount.toLocaleString()} ₸</span>
-                                          </li>
-                                        ))}
-                                    </ul>
-                                    <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between text-sm font-semibold text-[#273655]">
-                                      <span>Итого доставка:</span>
-                                      <span>
+                                    <div className="flex justify-between text-sm text-[#273655]">
+                                      <span className="font-bold">Доставка</span>
+                                      <span className="font-medium">
                                         {serviceSummary.breakdown
                                           .filter(item => item.label.includes('Забор') || item.label.includes('Доставка'))
                                           .reduce((sum, item) => sum + item.amount, 0)
@@ -3043,7 +3051,7 @@ const HomePage = memo(() => {
                                 {includePacking && serviceSummary.breakdown.some(item => !item.label.includes('Забор') && !item.label.includes('Доставка')) && (
                                   <div>
                                     <h4 className="text-sm font-bold text-[#273655] mb-2">Дополнительные услуги</h4>
-                                    <ul className="space-y-1 text-sm text-gray-600">
+                                    <ul className="space-y-1 text-sm text-[#273655]">
                                       {services
                                         .filter(service => service?.service_id && service?.count && service.count > 0)
                                         .map((service, idx) => {
@@ -3056,8 +3064,8 @@ const HomePage = memo(() => {
                                           
                                           return (
                                             <li key={idx} className="flex justify-between">
-                                              <span>{serviceName} – {count} шт х {unitPrice.toLocaleString()} ₸</span>
-                                              <span className="font-medium">= {amount.toLocaleString()} ₸</span>
+                                              <span>{serviceName} - {count} шт х {unitPrice.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₸</span>
+                                              <span className="font-medium"> {amount.toLocaleString('ru-RU')} ₸</span>
                                             </li>
                                           );
                                         })}
@@ -3068,7 +3076,7 @@ const HomePage = memo(() => {
                                         {serviceSummary.breakdown
                                           .filter(item => !item.label.includes('Забор') && !item.label.includes('Доставка'))
                                           .reduce((sum, item) => sum + item.amount, 0)
-                                          .toLocaleString()} ₸
+                                          .toLocaleString('ru-RU')} ₸
                                       </span>
                                     </div>
                                   </div>
@@ -3076,14 +3084,9 @@ const HomePage = memo(() => {
 
                                 {/* Размер бокса */}
                                 {previewStorage && (
-                                  <div>
-                                    <h4 className="text-sm font-bold text-[#273655] mb-2">Бокс</h4>
-                                    <ul className="space-y-1 text-sm text-gray-600">
-                                      <li className="flex justify-between">
-                                        <span>Размер бокса:</span>
-                                        <span className="font-medium">{previewStorage.available_volume || previewStorage.volume || "—"} м²</span>
-                                      </li>
-                                    </ul>
+                                  <div className="flex justify-between text-sm text-[#273655]">
+                                    <span>Размер бокса:</span>
+                                    <span className="font-medium">{previewStorage.available_volume || previewStorage.volume || "—"} м²</span>
                                   </div>
                                 )}
                               </div>
@@ -3192,24 +3195,6 @@ const HomePage = memo(() => {
                                 <span>-{promoDiscount.toLocaleString()} ₸</span>
                               </div>
                             )}
-
-                            <div className="text-lg font-bold text-[#273655]">
-                              Общая стоимость: {promoSuccess && promoDiscount > 0 && (
-                                <span className="text-sm text-gray-400 line-through mr-1">
-                                  {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
-                                </span>
-                              )}
-                              {finalIndividualTotal?.toLocaleString() ?? "—"} ₸
-                              {previewStorage && (
-                                <span className="text-sm font-normal text-gray-600 ml-2">
-                                  ({previewStorage.available_volume || previewStorage.volume || "—"} м²)
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              за {monthsNumber} {monthsNumber === 1 ? 'месяц' : monthsNumber < 5 ? 'месяца' : 'месяцев'}
-                              {promoSuccess && ` (скидка ${promoDiscountPercent}%)`}
-                            </div>
                           </>
                         )}
                       </div>

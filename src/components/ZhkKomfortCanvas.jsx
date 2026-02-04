@@ -83,6 +83,10 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
 
     // Функция получения статуса бокса по имени
     const getBoxStatus = (boxName) => {
+        // WC и пустые боксы всегда заняты и неактивны
+        if (!boxName || boxName.trim() === '' || boxName.toUpperCase() === 'WC') {
+            return 'OCCUPIED';
+        }
         const box = storageBoxes.find(storage =>
             storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
         );
@@ -115,6 +119,10 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
     };
 
     const handleBoxClick = (boxName) => {
+        // WC и пустые боксы не кликабельны
+        if (!boxName || boxName.trim() === '' || boxName.toUpperCase() === 'WC') {
+            return;
+        }
         const boxData = getBoxData(boxName);
         const status = getBoxStatus(boxName);
 
@@ -137,6 +145,10 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
     };
 
     const handleMouseEnter = (boxName) => {
+        // WC и пустые боксы не реагируют на hover
+        if (!boxName || boxName.trim() === '' || boxName.toUpperCase() === 'WC') {
+            return;
+        }
         const status = getBoxStatus(boxName);
         const boxData = getBoxData(boxName);
         // Теперь можно ховерить на любой бокс для просмотра информации
@@ -218,8 +230,11 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                 else if (status === 'VACANT') textColor = '#92400e';
                 else textColor = '#6b7280';
 
-                // Теперь все боксы кликабельны для просмотра информации о бронировании
-                const cursorStyle = 'pointer';
+                // WC и пустые боксы не кликабельны
+                const isWC = box.name.toUpperCase() === 'WC';
+                const isEmptyBox = !box.name || box.name.trim() === '';
+                const isInactive = isWC || isEmptyBox;
+                const cursorStyle = isInactive ? 'not-allowed' : 'pointer';
 
                 return (
                   <React.Fragment key={box.name}>
@@ -230,13 +245,13 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                         stroke={strokeColor}
                         strokeWidth={strokeWidth}
                         closed={true}
-                        onClick={() => handleBoxClick(box.name)}
-                        onTap={() => handleBoxClick(box.name)}
-                        onMouseEnter={() => handleMouseEnter(box.name)}
-                        onMouseLeave={handleMouseLeave}
-                        onTouchStart={() => handleMouseEnter(box.name)}
-                        onTouchEnd={handleMouseLeave}
-                        listening={true}
+                        onClick={isInactive ? undefined : () => handleBoxClick(box.name)}
+                        onTap={isInactive ? undefined : () => handleBoxClick(box.name)}
+                        onMouseEnter={isInactive ? undefined : () => handleMouseEnter(box.name)}
+                        onMouseLeave={isInactive ? undefined : handleMouseLeave}
+                        onTouchStart={isInactive ? undefined : () => handleMouseEnter(box.name)}
+                        onTouchEnd={isInactive ? undefined : handleMouseLeave}
+                        listening={!isInactive}
                         cursor={cursorStyle}
                       />
                     ) : (
@@ -249,13 +264,13 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                         stroke={strokeColor}
                         strokeWidth={strokeWidth}
                         cornerRadius={4}
-                        onClick={() => handleBoxClick(box.name)}
-                        onTap={() => handleBoxClick(box.name)}
-                        onMouseEnter={() => handleMouseEnter(box.name)}
-                        onMouseLeave={handleMouseLeave}
-                        onTouchStart={() => handleMouseEnter(box.name)}
-                        onTouchEnd={handleMouseLeave}
-                        listening={true}
+                        onClick={isInactive ? undefined : () => handleBoxClick(box.name)}
+                        onTap={isInactive ? undefined : () => handleBoxClick(box.name)}
+                        onMouseEnter={isInactive ? undefined : () => handleMouseEnter(box.name)}
+                        onMouseLeave={isInactive ? undefined : handleMouseLeave}
+                        onTouchStart={isInactive ? undefined : () => handleMouseEnter(box.name)}
+                        onTouchEnd={isInactive ? undefined : handleMouseLeave}
+                        listening={!isInactive}
                         cursor={cursorStyle}
                       />
                     )}
@@ -271,20 +286,22 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
                       />
                     )}
 
-                    <Text
-                      text={box.name}
-                      x={centerX}
-                      y={isOccupied ? centerY + 20 : centerY}
-                      fontSize={14}
-                      fontFamily="Montserrat, sans-serif"
-                      fontStyle="bold"
-                      fill={textColor}
-                      align="center"
-                      verticalAlign="middle"
-                      offsetX={0}
-                      offsetY={7}
-                      listening={false}
-                    />
+                    {!isEmptyBox && (
+                      <Text
+                        text={box.name}
+                        x={centerX}
+                        y={isOccupied ? centerY + 20 : centerY}
+                        fontSize={14}
+                        fontFamily="Montserrat, sans-serif"
+                        fontStyle="bold"
+                        fill={textColor}
+                        align="center"
+                        verticalAlign="middle"
+                        offsetX={0}
+                        offsetY={7}
+                        listening={false}
+                      />
+                    )}
 
                     {isHovered && boxData && (
                       <Text
