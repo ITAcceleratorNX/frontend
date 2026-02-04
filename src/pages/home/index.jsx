@@ -3002,13 +3002,13 @@ const HomePage = memo(() => {
                               )}
                             </div>
                             <div className="text-xs text-gray-500 mb-4">
-                              за {monthsNumber} {monthsNumber === 1 ? 'месяц' : monthsNumber < 5 ? 'месяца' : 'месяцев'}
+                               
                               {promoSuccess && ` (скидка ${promoDiscountPercent}%)`}
                             </div>
 
                             <div className="flex items-center justify-between mb-2">
                               <div className="text-sm text-gray-600">
-                                Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
+                                Стоимость хранения в месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
                               </div>
                               <button
                                 type="button"
@@ -3065,7 +3065,7 @@ const HomePage = memo(() => {
                                           return (
                                             <li key={idx} className="flex justify-between">
                                               <span>{serviceName} - {count} шт х {unitPrice.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₸</span>
-                                              <span className="font-medium">= {amount.toLocaleString('ru-RU')} ₸</span>
+                                              <span className="font-medium"> {amount.toLocaleString('ru-RU')} ₸</span>
                                             </li>
                                           );
                                         })}
