@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent } from '../../components/ui/dialog';
 import { Info, CreditCard, Calendar, Zap } from 'lucide-react';
+import instructionImage from '../../assets/int.jpg';
 
 const getMonthName = (month) => {
   const months = [
@@ -211,6 +212,15 @@ const PaymentPreviewModal = ({
             <p className="text-sm text-[#273655]">
               Все платежи будут доступны для оплаты в личном кабинете после подписания договора
             </p>
+          </div>
+
+          {/* Инструкция оплаты */}
+          <div className="mb-5">
+            <img 
+              src={instructionImage} 
+              alt="Инструкция по оплате" 
+              className="w-full h-auto rounded-2xl"
+            />
           </div>
 
           {/* Переключатель типа оплаты */}
