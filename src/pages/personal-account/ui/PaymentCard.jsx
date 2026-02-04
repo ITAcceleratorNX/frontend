@@ -51,7 +51,6 @@ const getMonthName = (month) => {
 };
 
 const PaymentCard = ({ order, embeddedMobile = false }) => {
-  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
   const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
 
@@ -81,25 +80,6 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
 
   const createManualPaymentMutation = useCreateManualPayment();
   const downloadReceiptMutation = useDownloadPaymentReceipt();
-
-  // Функция для получения изображения и названия тарифа по tariff_type
-  const getTariffInfo = (tariffType) => {
-    if (!tariffType || tariffType === 'CUSTOM') return { image: null, name: 'Свои габариты' };
-
-    const tariffMap = {
-      'CLOUD_TARIFF_SUMKA': { image: sumkaImg, name: 'Хранения сумки / коробки вещей' },
-      'CLOUD_TARIFF_SHINA': { image: shinaImg, name: 'Шины' },
-      'CLOUD_TARIFF_MOTORCYCLE': { image: motorcycleImg, name: 'Хранение мотоцикла' },
-      'CLOUD_TARIFF_BICYCLE': { image: bicycleImg, name: 'Хранение велосипед' },
-      'CLOUD_TARIFF_SUNUK': { image: sunukImg, name: 'Сундук до 1 м³' },
-      'CLOUD_TARIFF_FURNITURE': { image: furnitureImg, name: 'Шкаф до 2 м³' },
-      'CLOUD_TARIFF_SKLAD': { image: skladImg, name: 'Кладовка до 3 м³' },
-      'CLOUD_TARIFF_GARAZH': { image: garazhImg, name: 'Гараж до 9м³' }
-    };
-
-    return tariffMap[tariffType] || { image: null, name: 'Свои габариты' };
-  };
-
 
   const handlePay = (payment) => {
     if (!isOnlinePaymentEnabled) {
@@ -152,21 +132,10 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
               Оплатить
             </button>
           </>
-        ) : payment.status === 'UNPAID' && order.status === 'PROCESSING' && payment.payment_page_url ? (
+        ) : payment.status === 'UNPAID' && order.status === 'PROCESSING' ? (
           <>
             <button
-              onClick={() => {
-                if (!isOnlinePaymentEnabled) {
-                  setIsPaymentDisabledModalOpen(true);
-                  return;
-                }
-                window.open(payment.payment_page_url, '_blank');
-                showSuccessToast('Перенаправляем на страницу оплаты...', {
-                  position: "top-right",
-                  autoClose: 3000,
-                });
-                window.location.reload();
-              }}
+              onClick={() => handlePay(payment)}
               disabled={createManualPaymentMutation.isLoading}
               className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
             >
