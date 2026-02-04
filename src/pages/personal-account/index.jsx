@@ -13,6 +13,7 @@ import CourierRequest from './ui/CourierRequest';
 import CourierRequestOrder from './ui/CourierRequestOrder';
 import OrderManagement from './ui/OrderManagement';
 import UserPayments from './ui/UserPayments';
+import AdminPaymentsPage from './ui/AdminPaymentsPage';
 import UserDelivery from './ui/UserDelivery';
 import UserOrdersPage from './ui/UserOrdersPage';
 import ItemSearch from './ui/ItemSearch';
@@ -184,6 +185,7 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'courierrequests' && <CourierRequest />}
           {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
           {activeNav === 'payments' && <UserPayments />}
+          {(activeNav === 'adminpayments') && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <AdminPaymentsPage />}
           {activeNav === 'delivery' && <UserDelivery />}
           {activeNav === 'itemsearch' && <ItemSearch />}
           {activeNav === 'statistics' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <Statistics />}

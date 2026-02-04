@@ -40,6 +40,8 @@ import {useNavigate} from "react-router-dom";
 import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
+import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
+import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -91,6 +93,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   const [cancelReasonComment, setCancelReasonComment] = useState('');
   const [cancelFormError, setCancelFormError] = useState('');
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
+  const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
 
   // Хук для работы с API продления заказа
   const extendOrderMutation = useExtendOrder();
@@ -101,6 +104,8 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   // Хуки для работы с платежами
   const createManualPaymentMutation = useCreateManualPayment();
   const downloadReceiptMutation = useDownloadPaymentReceipt();
+  const { data: paymentSettings } = usePaymentSettings();
+  const isOnlinePaymentEnabled = paymentSettings?.online_payment_enabled;
 
   // Обработчик продления заказа
   const handleExtendOrder = async () => {
@@ -373,6 +378,10 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
 
   // Функции для работы с платежами
   const handlePay = (payment) => {
+    if (!isOnlinePaymentEnabled) {
+      setIsPaymentDisabledModalOpen(true);
+      return;
+    }
     if (payment.payment_page_url) {
       window.open(payment.payment_page_url, '_blank');
       return;
@@ -423,6 +432,10 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           <>
             <button
               onClick={() => {
+                if (!isOnlinePaymentEnabled) {
+                  setIsPaymentDisabledModalOpen(true);
+                  return;
+                }
                 window.open(payment.payment_page_url, '_blank');
                 showSuccessToast('Перенаправляем на страницу оплаты...', {
                   position: "top-right",
@@ -884,7 +897,13 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
             {/* Кнопка Оплатить - показывается когда договор подписан и не оплачено */}
             {(['APPROVED', 'PROCESSING', 'ACTIVE'].includes(order.status) && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED') ? (
               <button
-                onClick={() => onPayOrder(order)}
+                onClick={() => {
+                  if (!isOnlinePaymentEnabled) {
+                    setIsPaymentDisabledModalOpen(true);
+                    return;
+                  }
+                  onPayOrder(order);
+                }}
                 className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-3xl hover:bg-white/90 transition-colors"
               >
                 Оплатить
@@ -892,7 +911,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
             ) : null}
             
             {/* Кнопка Отменить заказ - показывается всегда, кроме активных оплаченных заказов */}
-            {!(['ACTIVE', 'CANCELED', 'FINISHED'].includes(order.status) && order.payment_status === 'PAID') ? (
+            {!(['ACTIVE', 'CANCELED', 'FINISHED'].includes(order.status)) ? (
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
                 className="text-white/80 text-xs font-medium hover:text-white transition-colors underline"
@@ -1042,6 +1061,8 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
         orderId={pendingCancelData?.orderId}
         orderDetails={contractDetails}
         isLoadingDetails={isLoadingDetails}
+        isOnlinePaymentEnabled={isOnlinePaymentEnabled}
+        onPaymentDisabled={() => setIsPaymentDisabledModalOpen(true)}
       />
 
       {/* Модальное окно задолженности */}
@@ -1069,6 +1090,8 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PaymentDisabledModal open={isPaymentDisabledModalOpen} onOpenChange={setIsPaymentDisabledModalOpen} />
     </div>
   );
 };
@@ -1087,6 +1110,8 @@ const CancelSurveyModal = ({
   orderId,
   orderDetails,
   isLoadingDetails,
+  isOnlinePaymentEnabled = true,
+  onPaymentDisabled,
 }) => {
   const [pickupMethod, setPickupMethod] = useState(null);
   const [deliveryDate, setDeliveryDate] = useState('');
@@ -1111,6 +1136,10 @@ const CancelSurveyModal = ({
 
   const handleDeliverySubmit = async () => {
     if (!deliveryDate) {
+      return;
+    }
+    if (!isOnlinePaymentEnabled) {
+      onPaymentDisabled?.();
       return;
     }
 

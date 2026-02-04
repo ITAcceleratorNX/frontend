@@ -13,6 +13,69 @@ export const PAYMENTS_QUERY_KEYS = {
   USER_PAYMENTS: 'user-payments',
   PAYMENT_DETAILS: 'payment-details',
   PRICES: 'prices',
+  ADMIN_PAYMENTS: 'admin-payments',
+  PAYMENT_SETTINGS: 'payment-settings',
+};
+
+/**
+ * Хук для админ/менеджера: список order_payments с пагинацией и фильтрами
+ */
+export const useAdminPayments = (page, filters = {}, options = {}) => {
+  return useQuery({
+    queryKey: [PAYMENTS_QUERY_KEYS.ADMIN_PAYMENTS, page, filters],
+    queryFn: () => paymentsApi.getAdminPayments({ page, limit: 20, ...filters }).then((r) => r.data),
+    staleTime: 2 * 60 * 1000,
+    ...options,
+  });
+};
+
+/**
+ * Хук для админ/менеджера: настройки оплаты (вкл/выкл онлайн-оплаты)
+ */
+export const usePaymentSettings = (options = {}) => {
+  return useQuery({
+    queryKey: [PAYMENTS_QUERY_KEYS.PAYMENT_SETTINGS],
+    queryFn: paymentsApi.getPaymentSettings,
+    staleTime: 1 * 60 * 1000,
+    ...options,
+  });
+};
+
+/**
+ * Мутация: обновление настроек оплаты (админ/менеджер)
+ */
+export const useUpdatePaymentSettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => paymentsApi.updatePaymentSettings(data),
+    onSuccess: (data) => {
+      queryClient.setQueryData([PAYMENTS_QUERY_KEYS.PAYMENT_SETTINGS], data);
+      showGenericSuccess('Настройки сохранены');
+    },
+    onError: (error) => {
+      const msg = error.response?.data?.message || error.response?.data?.error || 'Ошибка сохранения настроек';
+      showGenericError(msg);
+    },
+  });
+};
+
+/**
+ * Мутация: подтверждение ручной оплаты (админ/менеджер)
+ */
+export const useConfirmManualPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderPaymentId, ...body }) =>
+      paymentsApi.confirmManualPayment(orderPaymentId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.ADMIN_PAYMENTS] });
+      showGenericSuccess('Оплата подтверждена');
+    },
+    onError: (error) => {
+      const msg = error.response?.data?.message || error.response?.data?.error || 'Ошибка подтверждения оплаты';
+      showGenericError(msg);
+    },
+  });
 };
 
 /**
