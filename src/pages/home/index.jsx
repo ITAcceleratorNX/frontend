@@ -20,10 +20,21 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Trash2, ChevronLeft, ChevronRight, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Minus, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
+// Импортируем иконки дополнительных услуг
+import streychPlenkaIcon from "../../assets/стрейч_пленка.png";
+import bubbleWrap100Icon from "../../assets/Воздушно-пузырчатая_плёнка_(100 м).png";
+import bubbleWrap10Icon from "../../assets/Пузырчатая_плёнка_(10 м).png";
+import korobkiIcon from "../../assets/коробки.png";
+import markerIcon from "../../assets/маркер.png";
+import rackRentalIcon from "../../assets/Аренда_стелажей.png";
+import uslugiMuveraIcon from "../../assets/услуги_мувера.png";
+import uslugiUpakovkiIcon from "../../assets/услуги_упаковки.png";
 import { useAuth } from "../../shared/context/AuthContext";
 import {
   showSuccessToast,
@@ -34,9 +45,11 @@ import {
 import { validateUserProfile } from "../../shared/lib/validation/profileValidation";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
+import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import { getOrCreateVisitorId } from "@/shared/lib/utm";
 import { trackVisit } from "@/shared/api/visitsApi";
 // Импортируем иконки для предзагрузки
+import TelegramIcon from '@/assets/lead-source-icons/telegram.webp';
 import SiteIcon from '@/assets/lead-source-icons/site.webp';
 import WhatsappIcon from '@/assets/lead-source-icons/whatsapp.webp';
 import TwoGisIcon from '@/assets/lead-source-icons/2gis.webp';
@@ -86,6 +99,52 @@ const getServiceTypeName = (type) => {
       return "Аренда стеллажей";
     default:
       return "Услуга";
+  }
+};
+
+const getServiceTypeDescription = (type) => {
+  switch (type) {
+    case "LOADER":
+      return "Безопасный перенос и погрузка тяжёлых и габаритных предметов без риска травм.";
+    case "PACKER":
+      return "Профессионально упаковываем ваши вещи, экономя время и снижая риск повреждений.";
+    case "STRETCH_FILM":
+      return "Фиксирует и защищает мебель и коробки от пыли, влаги и царапин.";
+    case "BOX_SIZE":
+      return "Надёжно защищают вещи от повреждений, пыли и влаги при переезде и хранении.";
+    case "MARKER":
+      return "Позволяет подписать коробки и быстро находить нужные вещи без лишней суеты.";
+    case "BUBBLE_WRAP_1":
+      return "Эффективно защищает хрупкие предметы от ударов, сколов и тряски.";
+    case "BUBBLE_WRAP_2":
+      return "Идеально подходит для упаковки большого объёма вещей при переезде.";
+    case "RACK_RENTAL":
+      return "Обеспечивает удобное, аккуратное и организованное хранение вещей на складе.";
+    default:
+      return null;
+  }
+};
+
+const getServiceTypeIcon = (type) => {
+  switch (type) {
+    case "LOADER":
+      return uslugiMuveraIcon;
+    case "PACKER":
+      return uslugiUpakovkiIcon;
+    case "STRETCH_FILM":
+      return streychPlenkaIcon;
+    case "BOX_SIZE":
+      return korobkiIcon;
+    case "MARKER":
+      return markerIcon;
+    case "BUBBLE_WRAP_1":
+      return bubbleWrap10Icon;
+    case "BUBBLE_WRAP_2":
+      return bubbleWrap100Icon;
+    case "RACK_RENTAL":
+      return rackRentalIcon;
+    default:
+      return uslugiUpakovkiIcon;
   }
 };
 // Мемоизируем компонент HomePage для предотвращения лишних ререндеров
@@ -188,6 +247,10 @@ const HomePage = memo(() => {
   const [callbackModalContext, setCallbackModalContext] = useState('callback');
   const [isLeadSourceModalOpen, setIsLeadSourceModalOpen] = useState(false);
   const { leadSource, saveLeadSource } = useLeadSource();
+  // Состояние для модалки предпросмотра платежей
+  const [isPaymentPreviewOpen, setIsPaymentPreviewOpen] = useState(false);
+  const [paymentPreviewType, setPaymentPreviewType] = useState(null); // 'INDIVIDUAL' или 'CLOUD'
+  const [selectedPaymentType, setSelectedPaymentType] = useState('MONTHLY'); // 'MONTHLY' или 'FULL'
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   // Состояние для цен услуг (для расчета процента скидки)
   const [servicePrices, setServicePrices] = useState({});
@@ -210,6 +273,7 @@ const HomePage = memo(() => {
   const [promoSuccess, setPromoSuccess] = useState(false);
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
   // Состояние для промокода (облачное хранение)
   const [cloudPromoCode, setCloudPromoCode] = useState("");
   const [cloudPromoCodeInput, setCloudPromoCodeInput] = useState("");
@@ -470,10 +534,12 @@ const HomePage = memo(() => {
         }
         const option = serviceOptions.find((item) => String(item.id) === String(service.service_id));
         const unitPrice = option?.price ?? PACKING_SERVICE_ESTIMATE;
-        const amount = unitPrice * service.count;
+        const count = Number(service.count) || 1;
+        const amount = unitPrice * count;
         total += amount;
+        const serviceName = option?.description || getServiceTypeName(option?.type) || "Услуга";
         breakdown.push({
-          label: option?.description || getServiceTypeName(option?.type) || "Услуга",
+          label: count > 1 ? `${serviceName} (${count} шт.)` : serviceName,
           amount,
         });
       });
@@ -723,7 +789,7 @@ const HomePage = memo(() => {
     // Предзагружаем изображения опросника сразу при загрузке страницы
     if (typeof window !== 'undefined' && shouldShowLeadSourceModal()) {
       // Предзагружаем все иконки опросника
-      const icons = [SiteIcon, WhatsappIcon, TwoGisIcon, InstagramIcon, TiktokIcon, AdsIcon];
+      const icons = [SiteIcon, WhatsappIcon, TwoGisIcon, InstagramIcon, TiktokIcon, AdsIcon, TelegramIcon];
       icons.forEach((icon) => {
         const img = new Image();
         img.src = icon;
@@ -1052,7 +1118,7 @@ const HomePage = memo(() => {
     };
   }, []);
 
-  const handleCreateIndividualOrder = useCallback(async () => {
+  const handleCreateIndividualOrder = useCallback(async (paymentType = 'MONTHLY') => {
     if (isSubmittingOrder) return;
 
     if (!isAuthenticated) {
@@ -1194,6 +1260,7 @@ const HomePage = memo(() => {
         order_items: orderItems,
         is_selected_moving: includeMoving,
         is_selected_package: isPackageSelected,
+        payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
 
       // Добавляем промокод, если он применен
@@ -1280,6 +1347,10 @@ const HomePage = memo(() => {
 
       await warehouseApi.createOrder(orderData);
 
+      // Закрываем модалку предпросмотра платежей
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
+
       // Новый тост по дизайну: зелёная галочка + текст о TrustMe и оплате
       toastOrderRequestSent();
 
@@ -1300,6 +1371,8 @@ const HomePage = memo(() => {
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setTimeout(() => {
           navigate(translatedError.redirectPath, { 
             state: translatedError.redirectState || {} 
@@ -1314,6 +1387,8 @@ const HomePage = memo(() => {
         translatedError.userMessage.includes('лимит') ||
         errorData?.code === 'MAX_ORDERS_LIMIT_REACHED'
       )) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setCallbackModalContext('max_orders_limit');
         openCallbackModal('max_orders_limit');
         setSubmitError(null);
@@ -1351,7 +1426,7 @@ const HomePage = memo(() => {
     translateBackendError,
   ]);
 
-  const handleCreateCloudOrder = useCallback(async () => {
+  const handleCreateCloudOrder = useCallback(async (paymentType = 'MONTHLY') => {
     if (isSubmittingOrder) return;
 
     if (!isAuthenticated) {
@@ -1480,6 +1555,7 @@ const HomePage = memo(() => {
         is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
         moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudBookingStartDate),
         tariff_type: tariff_type, // Добавляем тип тарифа
+        payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
 
       // Добавляем промокод, если он применен
@@ -1501,10 +1577,11 @@ const HomePage = memo(() => {
 
       await warehouseApi.createOrder(orderData);
 
-      showSuccessToast(
-        'Ожидайте подтверждения менеджера. СМС от TrustMe для подписания договора придёт после подтверждения заявки.',
-        { autoClose: 4000 }
-      );
+      // Закрываем модалку предпросмотра платежей
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
+
+      toastOrderRequestSent();
 
       // Обновляем кэш заказов и ждём завершения, затем навигация
       setTimeout(async () => {
@@ -1523,6 +1600,8 @@ const HomePage = memo(() => {
 
       // Если нужно перенаправить пользователя
       if (translatedError.shouldRedirect) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setTimeout(() => {
           navigate(translatedError.redirectPath, { 
             state: translatedError.redirectState || {} 
@@ -1537,6 +1616,8 @@ const HomePage = memo(() => {
         translatedError.userMessage.includes('лимит') ||
         errorData?.code === 'MAX_ORDERS_LIMIT_REACHED'
       )) {
+        setIsPaymentPreviewOpen(false);
+        setPaymentPreviewType(null);
         setCallbackModalContext('max_orders_limit');
         openCallbackModal('max_orders_limit');
         setSubmitError(null);
@@ -1572,20 +1653,45 @@ const HomePage = memo(() => {
   ]);
 
   const handleIndividualBookingClick = useCallback(() => {
-    if (!isAuthenticated) {
-      openCallbackModal('booking');
-      return;
-    }
-    handleCreateIndividualOrder();
-  }, [handleCreateIndividualOrder, isAuthenticated, openCallbackModal]);
+    // Всегда показываем модалку предпросмотра платежей
+    setPaymentPreviewType('INDIVIDUAL');
+    setIsPaymentPreviewOpen(true);
+  }, []);
 
   const handleCloudBookingClick = useCallback(() => {
+    // Всегда показываем модалку предпросмотра платежей
+    setPaymentPreviewType('CLOUD');
+    setIsPaymentPreviewOpen(true);
+  }, []);
+
+  // Обработчик подтверждения бронирования из модалки предпросмотра платежей
+  const handlePaymentPreviewConfirm = useCallback((paymentType) => {
+    // Сохраняем выбранный тип оплаты
+    setSelectedPaymentType(paymentType || 'MONTHLY');
+    
+    // Если пользователь не авторизован - показываем модалку обратного звонка
     if (!isAuthenticated) {
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
       openCallbackModal('booking');
       return;
     }
-    handleCreateCloudOrder();
-  }, [handleCreateCloudOrder, isAuthenticated, openCallbackModal]);
+    
+    // Если авторизован - создаём заказ
+    if (paymentPreviewType === 'INDIVIDUAL') {
+      handleCreateIndividualOrder(paymentType);
+    } else if (paymentPreviewType === 'CLOUD') {
+      handleCreateCloudOrder(paymentType);
+    }
+  }, [paymentPreviewType, handleCreateIndividualOrder, handleCreateCloudOrder, isAuthenticated, openCallbackModal]);
+
+  // Закрытие модалки предпросмотра платежей
+  const handlePaymentPreviewClose = useCallback(() => {
+    if (!isSubmittingOrder) {
+      setIsPaymentPreviewOpen(false);
+      setPaymentPreviewType(null);
+    }
+  }, [isSubmittingOrder]);
 
   const handleHeroBookingClick = useCallback(() => {
     setActiveStorageTab("INDIVIDUAL");
@@ -2654,60 +2760,134 @@ const HomePage = memo(() => {
                                   
                                   return (
                                     <div key={index} className="space-y-2">
-                                      <div className="flex flex-wrap items-center gap-2 rounded-3xl border border-white bg-white/10 px-3 py-2">
-                                        <Select
-                                          value={service.service_id}
-                                          onValueChange={(value) => updateServiceRow(index, "service_id", value)}
-                                        >
-                                          <SelectTrigger className="h-10 min-w-[180px] rounded-3xl border-0 bg-white/10 text-sm text-white">
-                                            <SelectValue placeholder="Услуга" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {availableOptions.length > 0 ? (
-                                              availableOptions.map((option) => {
-                                                const serviceName = getServiceTypeName(option.type);
-                                                if (!serviceName) return null;
-                                                return (
-                                                  <SelectItem key={option.id} value={String(option.id)}>
-                                                    {serviceName}
-                                                  </SelectItem>
-                                                );
-                                              }).filter(Boolean)
-                                            ) : (
-                                              <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
-                                                Нет доступных услуг
-                                              </div>
+                                      <div className="rounded-3xl border border-white bg-white/10 px-4 py-3">
+                                        {/* Верхняя строка с иконкой, названием и ценой */}
+                                        <div className="flex items-center gap-3 mb-2">
+                                          {/* Иконка в белом округленном квадрате */}
+                                          <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 border border-white">
+                                            {selectedOption ? (() => {
+                                              const serviceIconSrc = getServiceTypeIcon(selectedOption.type);
+                                              return (
+                                                <img src={serviceIconSrc} alt="" className="h-7 w-7 object-contain" />
+                                              );
+                                            })() : (
+                                              <Package className="h-7 w-7 text-white" />
                                             )}
-                                          </SelectContent>
-                                        </Select>
+                                          </div>
+                                          
+                                          {/* Название услуги без рамок */}
+                                          <div className="flex-1 flex items-center gap-2">
+                                            <Select
+                                              value={service.service_id}
+                                              onValueChange={(value) => updateServiceRow(index, "service_id", value)}
+                                            >
+                                              <SelectTrigger className="h-auto p-0 border-0 bg-transparent text-white font-medium hover:bg-transparent focus:ring-0 focus:ring-offset-0 [&>span]:text-white [&>svg]:text-white [&>svg]:ml-1 w-auto min-w-0">
+                                                <SelectValue placeholder="Услуга" />
+                                              </SelectTrigger>
+                                            <SelectContent>
+                                              {availableOptions.length > 0 ? (
+                                                <>
+                                                  {/* Услуги персонала */}
+                                                  {(() => {
+                                                    const staffServiceTypes = ['PACKER', 'LOADER', 'RACK_RENTAL'];
+                                                    const staffServices = availableOptions.filter(option => staffServiceTypes.includes(option.type));
+                                                    if (staffServices.length === 0) return null;
+                                                    return (
+                                                      <SelectGroup>
+                                                        <SelectLabel className="text-xs font-semibold text-[#00A991] uppercase tracking-wide">
+                                                          Услуги персонала
+                                                        </SelectLabel>
+                                                        {staffServices.map((option) => {
+                                                          const serviceName = getServiceTypeName(option.type);
+                                                          if (!serviceName) return null;
+                                                          return (
+                                                            <SelectItem key={option.id} value={String(option.id)}>
+                                                              {serviceName}
+                                                            </SelectItem>
+                                                          );
+                                                        })}
+                                                      </SelectGroup>
+                                                    );
+                                                  })()}
+                                                  {/* Упаковочные материалы */}
+                                                  {(() => {
+                                                    const materialTypes = ['BOX_SIZE', 'MARKER', 'BUBBLE_WRAP_1', 'BUBBLE_WRAP_2', 'STRETCH_FILM'];
+                                                    const materialServices = availableOptions.filter(option => materialTypes.includes(option.type));
+                                                    if (materialServices.length === 0) return null;
+                                                    return (
+                                                      <SelectGroup>
+                                                        <SelectLabel className="text-xs font-semibold text-[#00A991] uppercase tracking-wide mt-2">
+                                                          Упаковочные материалы
+                                                        </SelectLabel>
+                                                        {materialServices.map((option) => {
+                                                          const serviceName = getServiceTypeName(option.type);
+                                                          if (!serviceName) return null;
+                                                          return (
+                                                            <SelectItem key={option.id} value={String(option.id)}>
+                                                              {serviceName}
+                                                            </SelectItem>
+                                                          );
+                                                        })}
+                                                      </SelectGroup>
+                                                    );
+                                                  })()}
+                                                </>
+                                              ) : (
+                                                <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
+                                                  Нет доступных услуг
+                                                </div>
+                                              )}
+                                            </SelectContent>
+                                            </Select>
+                                            
+                                            {service.service_id && (
+                                              <span className="ml-auto text-xs text-white/90">
+                                                {unitPrice.toLocaleString()} ₸/шт.
+                                              </span>
+                                            )}
+                                            
+                                            <button
+                                              type="button"
+                                              onClick={() => removeServiceRow(index)}
+                                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors shrink-0"
+                                              aria-label="Удалить услугу"
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                        </div>
 
+                                        {/* Нижняя строка с количеством */}
                                         <div className="flex items-center gap-2">
                                           <span className="text-xs text-white/90">
                                             Кол-во
                                           </span>
-                                          <input
-                                            type="number"
-                                            min="1"
-                                            value={service.count}
-                                            onChange={(e) => updateServiceRow(index, "count", e.target.value)}
-                                            className="w-8 h-6 rounded-sm border border-white bg-transparent px-1 text-xs text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                                          />
+                                          <Select
+                                            value={String(service.count)}
+                                            onValueChange={(value) => {
+                                              const newCount = parseInt(value) || 1;
+                                              updateServiceRow(index, "count", newCount);
+                                            }}
+                                          >
+                                            <SelectTrigger className="w-16 h-8 rounded-lg border border-white/50 bg-white/10 text-sm text-white [&>span]:text-white [&>svg]:text-white">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {[1, 2, 3, 4, 5].map((num) => (
+                                                <SelectItem key={num} value={String(num)}>
+                                                  {num}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
                                         </div>
 
-                                        {service.service_id && (
-                                          <span className="ml-auto text-xs text-white/90">
-                                            {unitPrice.toLocaleString()} ₸/шт.
-                                          </span>
+                                        {/* Описание выбранной услуги */}
+                                        {selectedOption && getServiceTypeDescription(selectedOption.type) && (
+                                          <p className="mt-2 text-xs text-white/70 leading-relaxed border-t border-white/10 pt-2">
+                                            {getServiceTypeDescription(selectedOption.type)}
+                                          </p>
                                         )}
-
-                                        <button
-                                          type="button"
-                                          onClick={() => removeServiceRow(index)}
-                                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors"
-                                          aria-label="Удалить услугу"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </button>
                                       </div>
                                       
                                       {isGazelleToService && (
@@ -2807,9 +2987,110 @@ const HomePage = memo(() => {
                           </div>
                         ) : (
                           <>
-                            <div className="text-sm text-gray-600">
-                              Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
+                            {/* Общая стоимость */}
+                            <div className="text-lg font-bold text-[#273655] mb-2">
+                              Общая стоимость: {promoSuccess && promoDiscount > 0 && (
+                                <span className="text-sm text-gray-400 line-through mr-1">
+                                  {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
+                                </span>
+                              )}
+                              {finalIndividualTotal?.toLocaleString() ?? "—"} ₸
+                              {previewStorage && (
+                                <span className="text-sm font-normal text-gray-600 ml-2">
+                                  ({previewStorage.available_volume || previewStorage.volume || "—"} м²)
+                                </span>
+                              )}
                             </div>
+                            <div className="text-xs text-gray-500 mb-4">
+                               
+                              {promoSuccess && ` (скидка ${promoDiscountPercent}%)`}
+                            </div>
+
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm text-gray-600">
+                                Стоимость хранения в месяц: <span className="font-semibold text-[#273655]">{costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowOrderDetails(!showOrderDetails)}
+                                className="text-sm text-[#31876D] hover:text-[#276b57] flex items-center gap-1 underline"
+                              >
+                                {showOrderDetails ? (
+                                  <>
+                                    Скрыть подробности
+                                    <ChevronUp className="w-4 h-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    Показать полностью
+                                    <ChevronDown className="w-4 h-4" />
+                                  </>
+                                )}
+                              </button>
+                            </div>
+
+                            {/* Детали заказа */}
+                            {showOrderDetails && (
+                              <div className="mt-4 space-y-4 border-t border-gray-200 pt-4">
+                                {/* Доставка */}
+                                {includeMoving && serviceSummary.breakdown.some(item => item.label.includes('Забор') || item.label.includes('Доставка')) && (
+                                  <div>
+                                    <div className="flex justify-between text-sm text-[#273655]">
+                                      <span className="font-bold">Доставка</span>
+                                      <span className="font-medium">
+                                        {serviceSummary.breakdown
+                                          .filter(item => item.label.includes('Забор') || item.label.includes('Доставка'))
+                                          .reduce((sum, item) => sum + item.amount, 0)
+                                          .toLocaleString()} ₸
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Дополнительные услуги */}
+                                {includePacking && serviceSummary.breakdown.some(item => !item.label.includes('Забор') && !item.label.includes('Доставка')) && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-[#273655] mb-2">Дополнительные услуги</h4>
+                                    <ul className="space-y-1 text-sm text-[#273655]">
+                                      {services
+                                        .filter(service => service?.service_id && service?.count && service.count > 0)
+                                        .map((service, idx) => {
+                                          const option = serviceOptions.find(item => String(item.id) === String(service.service_id));
+                                          if (!option) return null;
+                                          const unitPrice = option?.price ?? 0;
+                                          const count = Number(service.count) || 1;
+                                          const amount = unitPrice * count;
+                                          const serviceName = option?.description || getServiceTypeName(option?.type) || "Услуга";
+                                          
+                                          return (
+                                            <li key={idx} className="flex justify-between">
+                                              <span>{serviceName} - {count} шт х {unitPrice.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₸</span>
+                                              <span className="font-medium"> {amount.toLocaleString('ru-RU')} ₸</span>
+                                            </li>
+                                          );
+                                        })}
+                                    </ul>
+                                    <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between text-sm font-semibold text-[#273655]">
+                                      <span>Итого доп. услуги:</span>
+                                      <span>
+                                        {serviceSummary.breakdown
+                                          .filter(item => !item.label.includes('Забор') && !item.label.includes('Доставка'))
+                                          .reduce((sum, item) => sum + item.amount, 0)
+                                          .toLocaleString('ru-RU')} ₸
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Размер бокса */}
+                                {previewStorage && (
+                                  <div className="flex justify-between text-sm text-[#273655]">
+                                    <span>Размер бокса:</span>
+                                    <span className="font-medium">{previewStorage.available_volume || previewStorage.volume || "—"} м²</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                             
                             {/* Промокод */}
                             <div className="mt-4 mb-3">
@@ -2914,19 +3195,6 @@ const HomePage = memo(() => {
                                 <span>-{promoDiscount.toLocaleString()} ₸</span>
                               </div>
                             )}
-
-                            <div className="text-lg font-bold text-[#273655]">
-                              Общая стоимость: {promoSuccess && promoDiscount > 0 && (
-                                <span className="text-sm text-gray-400 line-through mr-1">
-                                  {costSummary.combinedTotal?.toLocaleString() ?? "—"} ₸
-                                </span>
-                              )}
-                              {finalIndividualTotal?.toLocaleString() ?? "—"} ₸
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              за {monthsNumber} {monthsNumber === 1 ? 'месяц' : monthsNumber < 5 ? 'месяца' : 'месяцев'}
-                              {promoSuccess && ` (скидка ${promoDiscountPercent}%)`}
-                            </div>
                           </>
                         )}
                       </div>
@@ -3611,10 +3879,10 @@ const HomePage = memo(() => {
             Простой процесс бронирования бокса
           </h2>
           
-          {/* Мобильная версия: 3+2 карточки */}
+          {/* Мобильная версия: 2+2 карточки */}
           <div className="md:hidden space-y-4">
-            {/* Верхний ряд: 3 карточки */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Верхний ряд: 2 карточки */}
+            <div className="grid grid-cols-2 gap-4">
               {/* Шаг 1 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
@@ -3627,56 +3895,40 @@ const HomePage = memo(() => {
                   Забронируйте бокс
                 </p>
               </div>
-
               {/* Шаг 2 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <UserCircle className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">2</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Подтверждение от менеджера
-                </p>
-              </div>
-
-              {/* Шаг 3 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
                   <MessageSquare className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">3</span>
+                  <span className="text-white font-bold text-sm">2</span>
                 </div>
                 <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
                   Подпишите договор по СМС
                 </p>
               </div>
             </div>
-
             {/* Нижний ряд: 2 карточки */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Шаг 4 */}
+              {/* Шаг 3 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
                   <Globe className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">4</span>
+                  <span className="text-white font-bold text-sm">3</span>
                 </div>
                 <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
                   Оплатите онлайн или по СМС
                 </p>
               </div>
-
-              {/* Шаг 5 */}
+              {/* Шаг 4 */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
                 <div className="w-20 h-20 flex items-center justify-center mb-2">
                   <Truck className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">5</span>
+                  <span className="text-white font-bold text-sm">4</span>
                 </div>
                 <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
                   Назначьте доставку
@@ -3685,8 +3937,8 @@ const HomePage = memo(() => {
             </div>
           </div>
 
-          {/* Десктопная версия: все 5 карточек в один ряд */}
-          <div className="hidden md:grid md:grid-cols-5 gap-6 lg:gap-8">
+          {/* Десктопная версия: все 4 карточки в один ряд */}
+          <div className="hidden md:grid md:grid-cols-4 gap-6 lg:gap-8">
             {/* Шаг 1 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
@@ -3699,53 +3951,37 @@ const HomePage = memo(() => {
                 Забронируйте бокс
               </p>
             </div>
-
             {/* Шаг 2 */}
-            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
-              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
-                <UserCircle className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
-              </div>
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">2</span>
-              </div>
-              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
-                Подтверждение от менеджера
-              </p>
-            </div>
-
-            {/* Шаг 3 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
                 <MessageSquare className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
               </div>
               <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">3</span>
+                <span className="text-white font-bold text-base lg:text-lg">2</span>
               </div>
               <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
                 Подпишите договор по СМС
               </p>
             </div>
-
-            {/* Шаг 4 */}
+            {/* Шаг 3 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
                 <Globe className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
               </div>
               <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">4</span>
+                <span className="text-white font-bold text-base lg:text-lg">3</span>
               </div>
               <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
                 Оплатите онлайн или по СМС
               </p>
             </div>
-
-            {/* Шаг 5 */}
+            {/* Шаг 4 */}
             <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
               <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
                 <Truck className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
               </div>
               <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">5</span>
+                <span className="text-white font-bold text-base lg:text-lg">4</span>
               </div>
               <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
                 Назначьте доставку
@@ -3794,6 +4030,53 @@ const HomePage = memo(() => {
             }).catch(() => {});
           }
         }}
+      />
+
+      {/* Модалка предпросмотра платежей */}
+      <PaymentPreviewModal
+        isOpen={isPaymentPreviewOpen}
+        onClose={handlePaymentPreviewClose}
+        onConfirm={handlePaymentPreviewConfirm}
+        storageType={paymentPreviewType || 'INDIVIDUAL'}
+        monthsCount={
+          paymentPreviewType === 'CLOUD'
+            ? cloudMonthsNumber
+            : monthsNumber
+        }
+        startDate={
+          paymentPreviewType === 'CLOUD'
+            ? cloudBookingStartDate
+            : individualBookingStartDate
+        }
+        totalPrice={
+          paymentPreviewType === 'CLOUD'
+            ? (cloudPricePreview?.total || 0)
+            : costSummary.baseTotal || 0
+        }
+        servicesTotal={
+          paymentPreviewType === 'CLOUD'
+            ? 0
+            : serviceSummary.total || 0
+        }
+        discountAmount={
+          paymentPreviewType === 'CLOUD'
+            ? cloudPromoDiscount
+            : promoDiscount
+        }
+        storageInfo={
+          paymentPreviewType === 'CLOUD'
+            ? {
+                name: selectedTariff?.name || 'Облачное хранение',
+                volume: selectedTariff?.type === 'CUSTOM' 
+                  ? cloudVolumeDirect 
+                  : (selectedTariff?.volume || cloudVolumeDirect),
+              }
+            : {
+                name: previewStorage?.name || previewStorage?.display_name || `Бокс №${previewStorage?.id || ''}`,
+                volume: previewStorage?.square || previewStorage?.area,
+              }
+        }
+        isSubmitting={isSubmittingOrder}
       />
 
       {/* Анимированная бегущая строка с преимуществами перед футером */}

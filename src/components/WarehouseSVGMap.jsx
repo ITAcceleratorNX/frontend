@@ -1061,6 +1061,18 @@ const WarehouseSVGMap = React.forwardRef(({
           }
         }}
       >
+        <defs>
+          {/* ClipPath для закругления углов изображений выхода */}
+          <clipPath id="roundedExitClip" clipPathUnits="objectBoundingBox">
+            <rect x="0" y="0" width="1" height="1" rx="0.2" ry="0.2" />
+          </clipPath>
+          <clipPath id="roundedExitSmallClip" clipPathUnits="objectBoundingBox">
+            <rect x="0" y="0" width="1" height="1" rx="0.2" ry="0.2" />
+          </clipPath>
+          <clipPath id="roundedExitTinyClip" clipPathUnits="objectBoundingBox">
+            <rect x="0" y="0" width="1" height="1" rx="0.2" ry="0.2" />
+          </clipPath>
+        </defs>
         <g>
           {/* Адаптивная окантовка вокруг всех боксов */}
           {(() => {
@@ -1224,23 +1236,27 @@ const WarehouseSVGMap = React.forwardRef(({
           {(warehouseName?.toLowerCase().includes('есентай') || warehouseName?.toLowerCase().includes('esentai')) && (
             <>
               {/* Первый вход: Top-Center - между блоками 37 и 38 */}
-              <image
-                x={600 - 25}
-                y={5}
-                width={50}
-                height={50}
-                href={exitIcon}
-                style={{ pointerEvents: 'none' }}
-              />
+              <g clipPath="url(#roundedExitClip)">
+                <image
+                  x={600 - 25}
+                  y={5}
+                  width={50}
+                  height={50}
+                  href={exitIcon}
+                  style={{ pointerEvents: 'none' }}
+                />
+              </g>
               {/* Второй вход: Top-Right - над блоком 1 */}
-              <image
-                x={1093}
-                y={5}
-                width={40}
-                height={40}
-                href={exitIcon}
-                style={{ pointerEvents: 'none' }}
-              />
+              <g clipPath="url(#roundedExitTinyClip)">
+                <image
+                  x={1068}
+                  y={4}
+                  width={32}
+                  height={32}
+                  href={exitIcon}
+                  style={{ pointerEvents: 'none' }}
+                />
+              </g>
             </>
           )}
           
@@ -1248,14 +1264,16 @@ const WarehouseSVGMap = React.forwardRef(({
           {(warehouseName?.toLowerCase().includes('mega') && selectedMap === 1) && (
             <>
               {/* Вход: Top-Right - на правой стене, справа от блока 1 */}
-              <image
-                x={1150}
-                y={120}
-                width={50}
-                height={50}
-                href={exitIcon}
-                style={{ pointerEvents: 'none' }}
-              />
+              <g clipPath="url(#roundedExitClip)">
+                <image
+                  x={1133}
+                  y={120}
+                  width={50}
+                  height={50}
+                  href={exitIcon}
+                  style={{ pointerEvents: 'none' }}
+                />
+              </g>
             </>
           )}
           
@@ -1264,25 +1282,29 @@ const WarehouseSVGMap = React.forwardRef(({
             <>
               {/* Ярус 1: между блоками 102 и 152 */}
               {selectedMap === 1 && (
-                <image
-                  x={867}
-                  y={544}
-                  width={40}
-                  height={40}
-                  href={exitIcon}
-                  style={{ pointerEvents: 'none' }}
-                />
+                <g clipPath="url(#roundedExitSmallClip)">
+                  <image
+                    x={850}
+                    y={544}
+                    width={40}
+                    height={40}
+                    href={exitIcon}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                </g>
               )}
               {/* Ярус 2: между блоками 103 и 153 */}
               {selectedMap === 2 && (
-                <image
-                  x={867}
-                  y={544}
-                  width={40}
-                  height={40}
-                  href={exitIcon}
-                  style={{ pointerEvents: 'none' }}
-                />
+                <g clipPath="url(#roundedExitSmallClip)">
+                  <image
+                    x={850}
+                    y={544}
+                    width={40}
+                    height={40}
+                    href={exitIcon}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                </g>
               )}
             </>
           )}

@@ -20,6 +20,17 @@ export const paymentsApi = {
     }
   },
 
+  // Админ/менеджер: список order_payments с пагинацией и фильтрами
+  getAdminPayments: (params) => api.get('/payments/admin', { params }),
+
+  // Админ/менеджер: настройки оплаты (вкл/выкл онлайн-оплаты)
+  getPaymentSettings: () => api.get('/payments/settings').then((r) => r.data),
+  updatePaymentSettings: (data) => api.patch('/payments/settings', data).then((r) => r.data),
+
+  // Подтверждение ручной оплаты (админ/менеджер)
+  confirmManualPayment: (orderPaymentId, body = {}) =>
+    api.post(`/payments/${orderPaymentId}/confirm-manual`, body),
+
   // Получение всех оплат текущего пользователя
   getUserPayments: async () => {
     try {

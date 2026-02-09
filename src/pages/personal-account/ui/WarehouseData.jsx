@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
+import {showInfoToast, showSuccessToast, showErrorToast, toastOrderRequestSent} from '../../../shared/lib/toast';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
@@ -2158,10 +2158,7 @@ const WarehouseData = () => {
 
                             await warehouseApi.createOrder(orderData);
 
-                            showSuccessToast(
-                              'Заказ успешно создан! СМС от TrustMe для подписания договора придёт после подтверждения заказа менеджером.',
-                              { autoClose: 4000 }
-                            );
+                            toastOrderRequestSent();
 
                             // Перенаправляем на страницу заказов (для админа/менеджера - на запросы, для обычных пользователей - на платежи)
                             setTimeout(() => {
@@ -3093,10 +3090,7 @@ const WarehouseData = () => {
 
                             const result = await warehouseApi.createOrder(orderData);
 
-                            showSuccessToast(
-                              'Заказ успешно создан! СМС от TrustMe для подписания договора придёт после подтверждения заказа менеджером.',
-                              { autoClose: 4000 }
-                            );
+                            toastOrderRequestSent();
 
                             // Перенаправляем на страницу заказов (для админа/менеджера - на запросы, для обычных пользователей - на платежи)
                             setTimeout(() => {

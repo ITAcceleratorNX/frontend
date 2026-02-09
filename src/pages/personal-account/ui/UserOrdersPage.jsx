@@ -7,16 +7,16 @@ import UserOrderCard from './UserOrderCard';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { useNavigate } from 'react-router-dom';
-import { List, Zap, CheckCircle, Star, FileText, HelpCircle } from 'lucide-react';
+import { List, Zap, CreditCard, FileText, HelpCircle, Archive } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import instImage from '../../../assets/inst.png';
+import instImage from '../../../assets/inst.webp';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { toastNeedDeliveryTime } from '../../../shared/lib/toast';
 
 const ORDER_FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },
-  { value: 'in_active', label: 'В обработке у менеджера' },
-  { value: 'approved', label: 'Подтверждено' },
+  { value: 'contract', label: 'Договор' },
+  { value: 'payment', label: 'Оплата' },
   { value: 'active', label: 'Активные' },
   { value: 'archive', label: 'В архиве' },
 ];
@@ -81,10 +81,12 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
     if (!orders) return [];
     
     switch (activeFilter) {
-      case 'in_active':
-        return orders.filter(order => order.status === 'INACTIVE');
-      case 'approved':
-        return orders.filter(order => order.status === 'APPROVED' || order.status === 'PROCESSING');
+      case 'contract':
+        // Ожидают подписания договора
+        return orders.filter(order => order.status === 'APPROVED' && order.contract_status !== 'SIGNED');
+      case 'payment':
+        // Ожидают оплаты (договор подписан, но не оплачено)
+        return orders.filter(order => order.status === 'PROCESSING' && order.contract_status === 'SIGNED' && order.payment_status === 'UNPAID');
       case 'active':
         return orders.filter(order => order.status === 'ACTIVE');
       case 'archive':
@@ -97,11 +99,11 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
   // Статистика заказов
   const stats = useMemo(() => {
     const total = orders.length;
-    const approved = orders.filter(o => o.status === 'APPROVED').length;
-    const unpaid = orders.filter(o => o.payment_status === 'UNPAID').length;
-    const paid = orders.filter(o => o.payment_status === 'PAID').length;
+    const awaitingContract = orders.filter(o => o.status === 'APPROVED' && o.contract_status !== 'SIGNED').length;
+    const awaitingPayment = orders.filter(o => o.status === 'PROCESSING' && o.contract_status === 'SIGNED' && o.payment_status === 'UNPAID').length;
+    const active = orders.filter(o => o.status === 'ACTIVE').length;
     
-    return { total, approved, unpaid, paid };
+    return { total, awaitingContract, awaitingPayment, active };
   }, [orders]);
 
   const handlePayOrder = (order) => {
@@ -162,18 +164,18 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
                 <span>Все</span>
               </TabsTrigger>
               <TabsTrigger
-                value="in_active"
+                value="contract"
                 className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
               >
-                <Star className="w-4 h-4" />
-                <span>В обработке у менеджера</span>
+                <FileText className="w-4 h-4" />
+                <span>Договор</span>
               </TabsTrigger>
               <TabsTrigger
-                value="approved"
+                value="payment"
                 className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
               >
-                <CheckCircle className="w-4 h-4" />
-                <span>Подтверждено</span>
+                <CreditCard className="w-4 h-4" />
+                <span>Оплата</span>
               </TabsTrigger>
               <TabsTrigger
                 value="active"
@@ -186,7 +188,7 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
                 value="archive"
                 className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
               >
-                <FileText className="w-4 h-4" />
+                <Archive className="w-4 h-4" />
                 <span>В архиве</span>
               </TabsTrigger>
             </TabsList>
@@ -266,16 +268,16 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
                 <div className="text-4xl font-bold text-[#004743]">{stats.total}</div>
               </div>
               <div className="text-center">
-                <div className="text-sm text-gray-600 mb-1">Подтверждено:</div>
-                <div className="text-4xl font-bold text-[#004743]">{stats.approved}</div>
+                <div className="text-sm text-gray-600 mb-1">Ожидают договор:</div>
+                <div className="text-4xl font-bold text-[#004743]">{stats.awaitingContract}</div>
               </div>
               <div className="text-center">
-                <div className="text-sm text-gray-600 mb-1">Неоплачено:</div>
-                <div className="text-4xl font-bold text-[#004743]">{stats.unpaid}</div>
+                <div className="text-sm text-gray-600 mb-1">Ожидают оплату:</div>
+                <div className="text-4xl font-bold text-[#004743]">{stats.awaitingPayment}</div>
               </div>
               <div className="text-center">
-                <div className="text-sm text-gray-600 mb-1">Оплачено:</div>
-                <div className="text-4xl font-bold text-[#004743]">{stats.paid}</div>
+                <div className="text-sm text-gray-600 mb-1">Активные:</div>
+                <div className="text-4xl font-bold text-[#004743]">{stats.active}</div>
               </div>
             </div>
           </div>

@@ -470,14 +470,15 @@ const useStatisticsData = (filters) => {
       };
     });
 
-    // Нормализуем источники лидов (преобразуем в проценты)
+    // Нормализуем источники лидов (сохраняем и абсолютное количество, и проценты)
     const totalLeadValue = leadSourcesData.reduce((acc, item) => acc + (item.value || 0), 0);
     const normalizedLeadSources = totalLeadValue > 0
       ? leadSourcesData.map((item) => ({
-      ...item,
-          value: Math.round(((item.value || 0) / totalLeadValue) * 100),
+          ...item,
+          count: item.value || 0, // Сохраняем абсолютное количество
+          value: Math.round(((item.value || 0) / totalLeadValue) * 100), // Процент для диаграммы
         }))
-      : leadSourcesData;
+      : leadSourcesData.map((item) => ({ ...item, count: item.value || 0 }));
 
     // Корректируем округление, чтобы сумма равнялась 100
     const totalPercent = normalizedLeadSources.reduce((acc, item) => acc + item.value, 0);
@@ -485,6 +486,9 @@ const useStatisticsData = (filters) => {
     if (diff !== 0 && normalizedLeadSources.length > 0) {
       normalizedLeadSources[0].value += diff;
     }
+    
+    // Добавляем общее количество к данным
+    normalizedLeadSources.totalCount = totalLeadValue;
 
     // Формируем данные для экспорта
     const period = filters.period || 'year';
@@ -512,8 +516,8 @@ const useStatisticsData = (filters) => {
         formatCurrency(lineChartData.datasets?.[1]?.values?.[idx] || 0),
       ]),
       [],
-      ['Источники трафика (первые визиты)', 'Доля'],
-      ...normalizedLeadSources.map((item) => [item.label, `${item.value}%`]),
+      ['Источники трафика (первые визиты)', 'Количество', 'Доля'],
+      ...normalizedLeadSources.map((item) => [item.label, formatNumber(item.count), `${item.value}%`]),
       [],
       ['Причины отмен', 'Количество', 'Доля'],
       ...cancelReasons.map((item) => [item.label, formatNumber(item.value), `${item.percent || 0}%`]),
@@ -699,7 +703,7 @@ const LineChart = ({ data }) => {
   );
 };
 
-const PieChart = ({ data, highlightedKey }) => {
+const PieChart = ({ data, highlightedKey, totalCount }) => {
   const size = 280;
   const radius = size / 2 - 12;
   const center = size / 2;
@@ -721,6 +725,9 @@ const PieChart = ({ data, highlightedKey }) => {
     };
   });
 
+  // Используем переданное общее количество или сумму count из данных
+  const displayTotal = totalCount ?? data.reduce((acc, item) => acc + (item.count || 0), 0);
+
   return (
     <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-72">
       <circle cx={center} cy={center} r={radius} fill="#F8FAFC" />
@@ -734,10 +741,10 @@ const PieChart = ({ data, highlightedKey }) => {
       ))}
       <circle cx={center} cy={center} r={radius * 0.45} fill="white" />
       <text x={center} y={center - 6} textAnchor="middle" fontSize="14" fill="#1E293B">
-        Всего
+        Всего визитов
       </text>
       <text x={center} y={center + 14} textAnchor="middle" fontSize="22" fontWeight="600" fill="#1E293B">
-        {total}
+        {formatNumber(displayTotal)}
       </text>
       {slices.map((slice) => (
         <text
@@ -934,9 +941,12 @@ const Statistics = () => {
     const leadRows = leadSources
       .map(
         (item) =>
-          `<tr><td style="padding:6px 10px;border:1px solid #e2e8f0;">${item.label}</td><td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${item.value}%</td></tr>`,
+          `<tr><td style="padding:6px 10px;border:1px solid #e2e8f0;">${item.label}</td><td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${formatNumber(item.count)}</td><td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${item.value}%</td></tr>`,
       )
       .join('');
+    
+    const leadSourcesHeader = `<tr><th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Источник</th><th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Количество</th><th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Доля</th></tr>`;
+    const leadSourcesTotal = leadSources.totalCount || leadSources.reduce((acc, item) => acc + (item.count || 0), 0);
 
     printable.document.write(`
       <html>
@@ -960,7 +970,8 @@ const Statistics = () => {
           <h2>Динамика заявок и продаж</h2>
           <table>${dynamicsHeader}${dynamicsRows}</table>
           <h2>Источники трафика (первые визиты)</h2>
-          <table>${leadRows}</table>
+          <p style="margin-bottom:8px;"><strong>Всего визитов:</strong> ${formatNumber(leadSourcesTotal)}</p>
+          <table>${leadSourcesHeader}${leadRows}</table>
         </body>
       </html>
     `);
@@ -1164,14 +1175,21 @@ const Statistics = () => {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 pb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Источники трафика (первые визиты)</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">Источники трафика (первые визиты)</h2>
+              {leadSources && leadSources.totalCount > 0 && (
+                <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">
+                  Всего: {formatNumber(leadSources.totalCount)}
+                </span>
+              )}
+            </div>
             <p className="text-sm text-slate-500">
               Распределение первых визитов по каналам привлечения за выбранный период.
             </p>
           </div>
             {leadSources && leadSources.length > 0 ? (
               <>
-          <PieChart data={leadSources} highlightedKey={filters.leadSource} />
+          <PieChart data={leadSources} highlightedKey={filters.leadSource} totalCount={leadSources.totalCount} />
           <div className="mt-4 space-y-2">
             {leadSources.map((item) => (
               <div key={item.label} className="flex items-center justify-between text-sm">
@@ -1182,7 +1200,10 @@ const Statistics = () => {
                   />
                   {item.label}
                 </div>
-                <span className="font-medium text-slate-900">{item.value}%</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-900">{formatNumber(item.count)}</span>
+                  <span className="text-slate-500">({item.value}%)</span>
+                </div>
               </div>
             ))}
           </div>

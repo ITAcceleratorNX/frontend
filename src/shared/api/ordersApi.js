@@ -21,6 +21,25 @@ export const ordersApi = {
     }
   },
 
+  // Поиск вещей по фильтрам (ID вещи, имя/фамилия клиента, номер бокса, ID заказа, телефон, email, ИИН)
+  searchItems: async (filters = {}, page = 1, pageSize = 50) => {
+    try {
+      const params = { page, pageSize };
+      if (filters.itemId != null && String(filters.itemId).trim() !== '') params.itemId = filters.itemId;
+      if (filters.clientName != null && String(filters.clientName).trim() !== '') params.clientName = filters.clientName;
+      if (filters.boxNumber != null && String(filters.boxNumber).trim() !== '') params.boxNumber = filters.boxNumber;
+      if (filters.orderId != null && String(filters.orderId).trim() !== '') params.orderId = filters.orderId;
+      if (filters.phone != null && String(filters.phone).trim() !== '') params.phone = filters.phone;
+      if (filters.email != null && String(filters.email).trim() !== '') params.email = filters.email;
+      if (filters.iin != null && String(filters.iin).trim() !== '') params.iin = filters.iin;
+      const response = await api.get('/order-items/search', { params });
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при поиске вещей:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Получение статистики заказов (для MANAGER и ADMIN)
   getOrdersStats: async () => {
     try {

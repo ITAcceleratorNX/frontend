@@ -16,7 +16,7 @@ export { default as OrderConfirmModal } from './OrderConfirmModal';
 export { default as UserPayments } from './UserPayments';
 export { default as UserOrderCard } from './UserOrderCard';
 export { default as PaymentModal } from './PaymentModal';
-export { default as PaymentHistory } from './PaymentHistory';
+export { default as AdminPaymentsPage } from './AdminPaymentsPage';
 
 // Компоненты управления промокодами
 export { default as PromoCodeManagement } from './PromoCodeManagement';

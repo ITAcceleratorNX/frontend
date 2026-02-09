@@ -19,7 +19,7 @@ import { Button } from '../../../components/ui/button';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import DeliveryCard from './DeliveryCard';
-import instImage from '../../../assets/inst.png';
+import instImage from '../../../assets/inst.webp';
 
 const DELIVERY_FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },

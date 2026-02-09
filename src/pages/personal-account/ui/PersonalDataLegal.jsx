@@ -313,6 +313,24 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
     setValue('phone', formatted, { shouldValidate: true });
   };
 
+  // Обработчик изменения БИН/ИИН - только цифры, максимум 12 символов
+  const handleBinIinChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+    setValue('bin_iin', value, { shouldValidate: true });
+  };
+
+  // Обработчик изменения БИК - латинские буквы и цифры, максимум 11 символов
+  const handleBikChange = (e) => {
+    const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 11);
+    setValue('bik', value, { shouldValidate: true });
+  };
+
+  // Обработчик изменения ИИК - латинские буквы и цифры, максимум 20 символов
+  const handleIikChange = (e) => {
+    const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
+    setValue('iik', value, { shouldValidate: true });
+  };
+
   // Отправка SMS кода для верификации телефона
   const handleSendVerificationCode = async () => {
     const phoneFormatted = formValues.phone || user?.phone;
@@ -491,12 +509,14 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
                   label="БИН/ИИН"
                   placeholder="Введите БИН/ИИН"
                   disabled={!isEditing}
+                  maxLength={12}
                   {...register('bin_iin', {
                     required: 'БИН/ИИН обязателен для заполнения',
                     pattern: {
                       value: /^\d{12}$/,
-                      message: 'БИН/ИИН должен содержать 12 цифр'
-                    }
+                      message: 'БИН/ИИН должен содержать ровно 12 цифр'
+                    },
+                    onChange: handleBinIinChange
                   })}
                   error={errors.bin_iin?.message}
                   className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
@@ -518,8 +538,14 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
                     label="БИК"
                     placeholder="БИК"
                     disabled={!isEditing}
+                    maxLength={11}
                     {...register('bik', {
-                      required: 'БИК обязателен для заполнения'
+                      required: 'БИК обязателен для заполнения',
+                      pattern: {
+                        value: /^[A-Za-z0-9]{8}$|^[A-Za-z0-9]{11}$/,
+                        message: 'БИК должен содержать 8 или 11 символов (латинские буквы и цифры)'
+                      },
+                      onChange: handleBikChange
                     })}
                     error={errors.bik?.message}
                     className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
@@ -529,8 +555,14 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
                     label="ИИК"
                     placeholder="ИИК"
                     disabled={!isEditing}
+                    maxLength={20}
                     {...register('iik', {
-                      required: 'ИИК обязателен для заполнения'
+                      required: 'ИИК обязателен для заполнения',
+                      pattern: {
+                        value: /^[A-Za-z0-9]{20}$/,
+                        message: 'ИИК должен содержать ровно 20 символов (латинские буквы и цифры)'
+                      },
+                      onChange: handleIikChange
                     })}
                     error={errors.iik?.message}
                     className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0' : 'bg-white rounded-lg'}
