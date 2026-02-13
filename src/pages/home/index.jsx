@@ -1353,13 +1353,12 @@ const HomePage = memo(() => {
       setIsPaymentPreviewOpen(false);
       setPaymentPreviewType(null);
 
-      // Новый тост по дизайну: зелёная галочка + текст о TrustMe и оплате
+      // Обновляем кэш заказов и переходим на thank-you страницу
       toastOrderRequestSent();
 
-      // Обновляем кэш заказов и ждём завершения, затем навигация
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/personal-account", { state: { activeSection: "orders" } });
+        navigate("/thank-you");
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
@@ -1585,10 +1584,10 @@ const HomePage = memo(() => {
 
       toastOrderRequestSent();
 
-      // Обновляем кэш заказов и ждём завершения, затем навигация
+      // Обновляем кэш заказов и переходим на thank-you страницу
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/personal-account", { state: { activeSection: "orders" } });
+        navigate("/thank-you");
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);

@@ -770,7 +770,7 @@ const WarehouseOrderPage = memo(() => {
         { autoClose: 4000 }
       );
       setTimeout(() => {
-        navigate("/personal-account", { state: { activeSection: "payments" } });
+        navigate("/thank-you");
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);

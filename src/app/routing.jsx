@@ -14,6 +14,7 @@ import PrivacyPolicyPage from '../pages/privacy-policy';
 import PrivacyPolicy2Page from '../pages/privacy-policy2';
 import PublicOfferPage from '../pages/public-offer';
 import MovingPage from '../pages/moving';
+import ThankYouPage from '../pages/thank-you';
 
 import PersonalAccountPage from '../pages/personal-account';
 import WarehouseOrderPage from '../pages/warehouse-order';
@@ -115,6 +116,7 @@ const Routing = memo(() => {
     { path: "/public-offer", element: <PublicOfferPage /> },
     { path: "/warehouse-order", element: <WarehouseOrderPage /> },
     { path: "/moving", element: <MovingPage /> },
+    { path: "/thank-you", element: <ThankYouPage /> },
   ], []);
 
   const protectedRoutes = useMemo(() => [

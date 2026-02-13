@@ -2160,9 +2160,13 @@ const WarehouseData = () => {
 
                             toastOrderRequestSent();
 
-                            // Перенаправляем на страницу заказов (для админа/менеджера - на запросы, для обычных пользователей - на платежи)
+                            // Для админа/менеджера — на запросы, для обычных пользователей — на thank-you
                             setTimeout(() => {
-                              navigate('/personal-account', { state: { activeSection: isAdminOrManager ? 'request' : 'payments' } });
+                              if (isAdminOrManager) {
+                                navigate('/personal-account', { state: { activeSection: 'request' } });
+                              } else {
+                                navigate('/thank-you');
+                              }
                             }, 1500);
                           } catch (error) {
                             console.error('Ошибка при создании заказа:', error);
@@ -3092,9 +3096,13 @@ const WarehouseData = () => {
 
                             toastOrderRequestSent();
 
-                            // Перенаправляем на страницу заказов (для админа/менеджера - на запросы, для обычных пользователей - на платежи)
+                            // Для админа/менеджера — на запросы, для обычных пользователей — на thank-you
                             setTimeout(() => {
-                              navigate('/personal-account', { state: { activeSection: isAdminOrManager ? 'request' : 'payments' } });
+                              if (isAdminOrManager) {
+                                navigate('/personal-account', { state: { activeSection: 'request' } });
+                              } else {
+                                navigate('/thank-you');
+                              }
                             }, 1500);
                           } catch (error) {
                             console.error('Ошибка при создании заказа:', error);
