@@ -11,7 +11,7 @@ export const DISPLAY_PHONE = '+7 778 391-14-25';
 export const TEL_LINK = 'tel:+77783911425';
 const WHATSAPP_PHONE = '77783911425';
 const WHATSAPP_MESSAGE = encodeURIComponent('Здравствуйте! Хочу забронировать бокс.');
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE}?text=${WHATSAPP_MESSAGE}`;
+export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE}?text=${WHATSAPP_MESSAGE}`;
 
 const formatPhoneNumber = (value) => {
   const numbers = value.replace(/\D/g, '');

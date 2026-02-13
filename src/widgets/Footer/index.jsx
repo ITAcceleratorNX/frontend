@@ -1,9 +1,8 @@
 // frontend/src/components/Footer.jsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserLock, BookText } from 'lucide-react';
 import {DISPLAY_PHONE, TEL_LINK} from "/src/shared/components/CallbackRequestModal.jsx";
-import extraspaceLogo from '../../assets/photo_2025-10-08_12-29-41-removebg-preview.png';
+import logo from '../../assets/novaloga.png';
 
 const WHATSAPP_MESSAGE = encodeURIComponent('Здравствуйте! Хочу забронировать бокс.');
 const WHATSAPP_LINK = `https://api.whatsapp.com/send/?phone=77783911425&text=${WHATSAPP_MESSAGE}&type=phone_number&app_absent=0`;
@@ -23,50 +22,50 @@ const Footer = () => {
 
   return (
       <>
-        <footer className="bg-[#00534E] w-full text-white font-['SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif] pt-10 pb-6" style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+        <footer className="bg-[#F7FAF9] w-full text-[#393939] font-['SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif] pt-10 pb-6" style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
           <div className="max-w-[1240px] mx-auto px-4">
             {/* Верхняя часть: логотип и описание */}
             <div className="mb-8">
               <img 
-                src={extraspaceLogo} 
+                src={logo} 
                 alt="ExtraSpace Logo" 
-                className="h-12 w-auto object-contain mb-4 filter brightness-0 invert"
+                className="h-8 w-auto object-contain mb-4"
               />
-              <p className="text-sm text-white max-w-sm leading-relaxed">
+              <p className="text-sm text-[#393939] max-w-sm leading-relaxed">
               Extra Space — сервис индивидуального и облачного хранения в Алматы. Вы получаете бокс нужной площади, удобное онлайн-управление и полностью организованный процесс хранения — от приёма и размещения вещей до их возврата.
               </p>
             </div>
 
             {/* Разделительная линия */}
-            <hr className="border-white opacity-30 mb-6" />
+            <hr className="border-[#393939] opacity-30 mb-6" />
 
             {/* Нижняя часть: копирайт слева, контакты/ссылки и иконки соцсетей справа */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-sm text-white">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-sm text-[#393939]">
               <p>Все права защищены. © 2025 extraspace.kz</p>
               <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
                 {/* Контакты и ссылки */}
                 <div className="flex flex-col gap-2 md:-ml-8">
                   <a
                     href={TEL_LINK}
-                    className="text-white text-sm hover:opacity-80 transition-opacity"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
                   >
                     Контакты: {PHONE_NUMBER}
                   </a>
                   <button
                     onClick={() => navigate("/online-payment")}
-                    className="text-white text-sm hover:opacity-80 transition-opacity text-left"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity text-left"
                   >
                     Информация об оплате
                   </button>
                   <Link 
                     to="/public-offer" 
-                    className="text-white text-sm hover:opacity-80 transition-opacity"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
                   >
                     Публичная оферта
                   </Link>
                   <Link 
                     to="/privacy-policy" 
-                    className="text-white text-sm hover:opacity-80 transition-opacity"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
                   >
                     Политика конфиденциальности
                   </Link>
@@ -75,7 +74,7 @@ const Footer = () => {
                 <div className="flex items-center gap-3">
                 <button
                   onClick={handleWhatsAppClick}
-                  className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center hover:bg-white hover:text-[#009F97] transition-all duration-300"
+                  className="w-8 h-8 rounded-full bg-[#404040] flex items-center justify-center text-white hover:opacity-90 transition-all duration-300"
                   aria-label="WhatsApp"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -84,7 +83,7 @@ const Footer = () => {
                 </button>
                 <button
                   onClick={handleInstagramClick}
-                  className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center hover:bg-white hover:text-[#009F97] transition-all duration-300"
+                  className="w-8 h-8 rounded-full bg-[#404040] flex items-center justify-center text-white hover:opacity-90 transition-all duration-300"
                   aria-label="Instagram"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

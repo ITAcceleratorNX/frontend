@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Header } from "../../widgets";
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
 import oblachImg from "../../assets/oblach.png";
-import ininvImg from "../../assets/Ininv.jpeg";
+import indiImg from "../../assets/indi.png";
+import section1Img from "../../assets/1section.png";
 import Footer from "../../widgets/Footer";
 import WarehouseMap from "../../components/WarehouseMap";
 import WarehouseSVGMap from "../../components/WarehouseSVGMap";
@@ -25,7 +26,7 @@ import {
   Switch,
 } from "../../components/ui";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
-import { Truck, Package, X, Info, Plus, Minus, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, MessageSquare, Globe, PenLine, Layers, Shield, Users, ScrollText } from "lucide-react";
+import { Truck, Package, X, Info, Plus, Minus, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Box, Moon, Camera, Wifi, Maximize, Thermometer, AlertTriangle, Tag, Check, UserCircle, PenLine, Layers, Shield, Users, ScrollText, FileText, CreditCard } from "lucide-react";
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from "../../assets/стрейч_пленка.png";
 import bubbleWrap100Icon from "../../assets/Воздушно-пузырчатая_плёнка_(100 м).png";
@@ -44,6 +45,7 @@ import {
 } from "../../shared/lib/toast";
 import { validateUserProfile } from "../../shared/lib/validation/profileValidation";
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
+import CallbackRequestSection from "@/shared/components/CallbackRequestSection.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import { getOrCreateVisitorId } from "@/shared/lib/utm";
@@ -2219,253 +2221,192 @@ const HomePage = memo(() => {
         {/*  <div className="absolute top-1/3 left-1/2 w-56 h-56 bg-[#00A991] opacity-10 rounded-full blur-2xl"></div>*/}
         {/*</div>*/}
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Левая часть - текст */}
-            <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
-                Храните там,
+          {/* Первая секция: Храните там, где удобно */}
+          <section className="flex flex-col items-center text-center">
+            <h1 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] leading-tight mb-6 sm:mb-8">
+              ХРАНИТЕ ТАМ, ГДЕ УДОБНО
+            </h1>
+            <div className="text-sm sm:text-base text-[#5C625F] leading-relaxed mb-12 max-w-2xl mt-2">
+              <p className="mb-1">Склады от 1 до 100 м² с безопасным хранением и доступом 24/7.</p>
+              <p className="mb-1">Боксы от 2 до 50 м² по спец.цене при аренде от 3 месяцев.</p>
+              <p className="flex flex-wrap items-center justify-center gap-2">
+                <span>Хранение за м² от</span>
+                <span className="inline-flex px-2.5 py-0.5 bg-[#4F9A75] text-white font-normal text-sm sm:text-base rounded-2xl">
+                  5 990 ₸
                 </span>
-                <br />
-                
-                <span className="bg-gradient-to-r from-[#31876D] via-[#363636] to-[#999999] bg-clip-text text-transparent">
-                где удобно
-                </span>
-              </h1>
-              <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-              Склады от 1 до 100 м² с безопасным хранением и доступом 24/7
               </p>
             </div>
-
-            {/* Правая часть - карусель с блоками */}
-            <div className="relative">
-              {/* Карусель */}
-              <div className="relative overflow-hidden">
-                <div 
-                  className="flex transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${currentCardIndex * 100}%)` }}
-                >
-                  {/* Блок 1: Индивидуальное хранение */}
-                  <div className="min-w-full px-2">
-                    <div className="bg-[#00A991] rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
-                      <div className="bg-[#00A991] px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6 flex justify-center">
-                        <img
-                          src={ininvImg}
-                          alt="Индивидуальное хранение"
-                          className="w-11/12 h-64 sm:h-72 md:h-80 object-cover rounded-2xl"
-                        />
-                      </div>
-                      <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                        Индивидуальное хранение
-                        </h3>
-                        <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                          Ваш личный закрытый бокс. Только вы имеете доступ — как мини-склад под ключ.
-                        </p>
-                        <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>Полная приватность</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>Круглосуточный доступ</span>
-                          </li>
-                        </ul>
-                        <button
-                          onClick={() => openCallbackModal('callback')}
-                          className="w-full bg-white text-[#00A991] font-semibold py-3 md:py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-base md:text-lg mt-auto"
-                        >
-                          Подробнее
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Блок 2: Облачное хранение */}
-                  <div className="min-w-full px-2">
-                    <div className="bg-[#00A991] rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
-                      <div className="bg-[#00A991] px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6 flex justify-center">
-                        <img
-                          src={oblachImg}
-                          alt="Облачное хранение"
-                          className="w-11/12 h-64 sm:h-72 md:h-80 object-cover rounded-2xl"
-                        />
-                      </div>
-                      <div className="p-6 sm:p-8 text-white flex-1 flex flex-col">
-                        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-                        Облачное хранение
-                        </h3>
-                        <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 leading-relaxed">
-                          Сдайте вещи без аренды бокса — мы разместим их на индивидуальной полке в охраняемом складе. Удобно, если вещей немного.
-
-                        </p>
-                        <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-sm sm:text-base md:text-lg">
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>Платите только за объём</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>Быстрая приёмка вещей</span>
-                            
-                          </li>
-                          <li className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>Упрощённый доступ</span>
-                          </li>
-                        </ul>
-                        <button
-                          onClick={() => openCallbackModal('callback')}
-                          className="w-full bg-white text-[#00A991] font-semibold py-3 md:py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-base md:text-lg mt-auto"
-                        >
-                          Подробнее
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Стрелки навигации */}
-              <div className="flex justify-center items-center gap-4 mt-6">
-                <button
-                  onClick={() => setCurrentCardIndex((prev) => (prev === 0 ? 1 : 0))}
-                  className="w-12 h-12 rounded-full border-2 border-[#00A991] text-[#00A991] flex items-center justify-center hover:bg-[#00A991] hover:text-white transition-all duration-300"
-                  aria-label="Предыдущий блок"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button
-                  onClick={() => setCurrentCardIndex((prev) => (prev === 1 ? 0 : 1))}
-                  className="w-12 h-12 rounded-full border-2 border-[#00A991] text-[#00A991] flex items-center justify-center hover:bg-[#00A991] hover:text-white transition-all duration-300"
-                  aria-label="Следующий блок"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </div>
-            </div>
-          </div>
+            <button
+              onClick={handleHeroBookingClick}
+              className="flex items-center gap-2 bg-[#31876D] hover:bg-[#2a7260] text-white font-medium px-6 py-3 rounded-full text-sm sm:text-base transition-colors duration-300 mb-8 sm:mb-8"
+            >
+              <span>Забронировать</span>
+              <ChevronRight size={16} strokeWidth={2.5} />
+            </button>
+            <img
+              src={section1Img}
+              alt="Extra Space — индивидуальное хранение"
+              className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl h-auto object-contain"
+            />
+          </section>
         </div>
       </div>
 
-      {/* Анимированная бегущая строка с преимуществами */}
-      <section className="w-full bg-[#FFF] pb-6 overflow-hidden relative">
-        <div className="flex animate-scroll">
-          {/* Первый набор элементов */}
-          <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0">
-            <div className="flex items-center gap-3 text-gray-500">
-              <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 50 м²</span>
+      {/* Секция: Быстрое бронирование */}
+      <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal text-center mb-12 sm:mb-16">
+            БЫСТРОЕ БРОНИРОВАНИЕ
+          </h2>
+          <div className="flex flex-col items-center">
+            {/* Первый ряд — 3 карточки */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 w-full max-w-5xl mb-10">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#F7F8FA] flex items-center justify-center mb-4">
+                  <Box size={24} className="text-[#31876D]" strokeWidth={1.5} />
+                </div>
+                <h3 className="font-bold text-[#202422] text-base sm:text-lg mb-2">Забронируйте бокс</h3>
+                <p className="text-[#5C625F] text-xs sm:text-sm font-normal leading-relaxed">
+                  Выберите подходящий размер бокса и забронируйте его онлайн за пару минут без визита в офис.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#F7F8FA] flex items-center justify-center mb-4">
+                  <FileText size={24} className="text-[#31876D]" strokeWidth={1.5} />
+                </div>
+                <h3 className="font-bold text-[#202422] text-base sm:text-lg mb-2">Подпишите договор по СМС</h3>
+                <p className="text-[#5C625F] text-xs sm:text-sm font-normal leading-relaxed">
+                  Подтвердите договор прямо с телефона — код придёт по СМС, никаких бумаг и встреч.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#F7F8FA] flex items-center justify-center mb-4">
+                  <CreditCard size={24} className="text-[#31876D]" strokeWidth={1.5} />
+                </div>
+                <h3 className="font-bold text-[#202422] text-base sm:text-lg mb-2">Оплатите онлайн или по СМС</h3>
+                <p className="text-[#5C625F] text-xs sm:text-sm font-normal leading-relaxed">
+                  Оплатите хранение удобным способом: картой онлайн или подтверждением через СМС.
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ 24/7</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Бронирование онлайн</span>
-            </div>
-          </div>
-          {/* Дублируем для бесконечной прокрутки */}
-          <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0 ml-8 sm:ml-24 md:ml-32">
-            <div className="flex items-center gap-3 text-gray-500">
-              <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ 24/7</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Бронирование онлайн</span>
-            </div>
-          </div>
-          {/* Третий набор для более плавного перехода */}
-          <div className="flex items-center gap-24 sm:gap-32 whitespace-nowrap flex-shrink-0 ml-24 sm:ml-32">
-            <div className="flex items-center gap-3 text-gray-500">
-              <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ 24/7</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-500">
-              <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Бронирование онлайн</span>
+            {/* Второй ряд — 1 карточка по центру */}
+            <div className="flex flex-col items-center text-center max-w-md">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#F7F8FA] flex items-center justify-center mb-4">
+                <Truck size={24} className="text-[#31876D]" strokeWidth={1.5} />
+              </div>
+              <h3 className="font-bold text-[#202422] text-base sm:text-lg mb-2">Назначьте доставку</h3>
+              <p className="text-[#5C625F] text-xs sm:text-sm font-normal leading-relaxed">
+                Укажите удобное время, и мы организуем забор и доставку ваших вещей до бокса.
+              </p>
             </div>
           </div>
         </div>
-        <style>{`
-          @keyframes scroll {
-            0% {
-              transform: translateX(0);
-            }
-            100% {
-              transform: translateX(calc(-33.333% - 0px));
-            }
-          }
-          .animate-scroll {
-            animation: scroll 50s linear infinite;
-            will-change: transform;
-          }
-          @media (max-width: 640px) {
-            .animate-scroll {
-              animation: scroll 8s linear infinite;
-            }
-          }
-        `}</style>
+      </section>
+
+      {/* Секция: Форматы хранения */}
+      <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal text-center mb-4">
+            ФОРМАТЫ ХРАНЕНИЯ
+          </h2>
+          <p className="text-[#5C625F] text-sm sm:text-base text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+            Выберите подходящий формат хранения — отдельный бокс или индивидуальную полку. Платите только за нужный объём и пользуйтесь безопасным доступом 24/7.
+          </p>
+
+          {/* Индивидуальное хранение */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center mb-16 lg:mb-20">
+            <div className="order-2 lg:order-1 w-full max-w-lg aspect-[4/3] overflow-hidden rounded-2xl mx-auto lg:mx-0 lg:ml-24">
+              <img
+                src={indiImg}
+                alt="Индивидуальное хранение"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="order-1 lg:order-2">
+              <h3 className="text-2xl sm:text-3xl font-bold text-[#202422] mb-4">Индивидуальное хранение</h3>
+              <p className="text-[#5C625F] text-sm sm:text-base mb-4">
+                Ваш личный закрытый бокс. Только вы имеете доступ — как мини-склад под ключ.
+              </p>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center gap-2 text-[#5C625F] text-sm sm:text-base">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#202422] flex-shrink-0"></span>
+                  Полная приватность
+                </li>
+                <li className="flex items-center gap-2 text-[#5C625F] text-sm sm:text-base">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#202422] flex-shrink-0"></span>
+                  Круглосуточный доступ
+                </li>
+              </ul>
+              <button
+                onClick={() => openCallbackModal('callback')}
+                className="inline-flex items-center gap-2 text-[#31876D] font-medium hover:opacity-80 transition-opacity"
+              >
+                <span>Подробнее</span>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Облачное хранение */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+            <div className="w-full max-w-lg aspect-[4/3] overflow-hidden rounded-2xl mx-auto lg:mx-0 lg:ml-24">
+              <img
+                src={oblachImg}
+                alt="Облачное хранение"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-[#202422] mb-4">Облачное хранение</h3>
+              <p className="text-[#5C625F] text-sm sm:text-base mb-4">
+                Сдайте вещи без аренды бокса — мы разместим их на индивидуальной полке в охраняемом складе. Удобно, если вещей немного.
+              </p>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center gap-2 text-[#5C625F] text-sm sm:text-base">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#202422] flex-shrink-0"></span>
+                  Платите только за объём
+                </li>
+                <li className="flex items-center gap-2 text-[#5C625F] text-sm sm:text-base">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#202422] flex-shrink-0"></span>
+                  Быстрая приёмка вещей
+                </li>
+                <li className="flex items-center gap-2 text-[#5C625F] text-sm sm:text-base">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#202422] flex-shrink-0"></span>
+                  Упрощённый доступ
+                </li>
+              </ul>
+              <button
+                onClick={() => openCallbackModal('callback')}
+                className="inline-flex items-center gap-2 text-[#31876D] font-medium hover:opacity-80 transition-opacity"
+              >
+                <span>Подробнее</span>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Отступ с фоном хэдера */}
       <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
 
-      {/* Второй фрейм: преимущества */}
+      {/* Секция: Хранение в городе */}
       <section ref={tabsSectionRef} className="w-full bg-[#FFF] py-6 sm:py-8">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-2 sm:px-2 lg:px-3 xl:px-3 max-w-7xl">
           {/* Заголовок */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">
-          Удобное хранение 
-          </h1>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-6">вещей в городе</h1>
+          <h2 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal mb-6">
+            ХРАНЕНИЕ В ГОРОДЕ
+          </h2>
+          
+          {/* Описания на одном уровне */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-start mb-8">
+            <p className="text-[#5C625F] text-base sm:text-lg">
+              Современное хранение в черте города — просто, безопасно и гибко.
+            </p>
+            <p className="text-[#5C625F] text-sm sm:text-base">
+              Настройте срок аренды, добавьте услуги перевозки или упаковки и управляйте хранением онлайн.
+            </p>
+          </div>
           
           {/* Отдельные кнопки табов */}
           <div className="flex gap-4 mb-8">
@@ -2473,8 +2414,8 @@ const HomePage = memo(() => {
               onClick={() => setActiveStorageTab("INDIVIDUAL")}
               className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
                 activeStorageTab === "INDIVIDUAL"
-                  ? "bg-gradient-to-r from-[#00A991] to-[#31876D] text-white"
-                  : "bg-gray-100/50 text-gray-600"
+                  ? "bg-[#31876D] text-white"
+                  : "bg-[#DFDFDF] text-gray-600"
               }`}
             >
               Индивидуальное хранение
@@ -2483,8 +2424,8 @@ const HomePage = memo(() => {
               onClick={() => setActiveStorageTab("CLOUD")}
               className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
                 activeStorageTab === "CLOUD"
-                  ? "bg-gradient-to-r from-[#00A991] to-[#31876D] text-white"
-                  : "bg-gray-100/50 text-gray-600"
+                  ? "bg-[#31876D] text-white"
+                  : "bg-[#DFDFDF] text-gray-600"
               }`}
             >
               Облачное хранение
@@ -2494,9 +2435,9 @@ const HomePage = memo(() => {
           <Tabs value={activeStorageTab} onValueChange={setActiveStorageTab} className="w-full">
 
             <TabsContent value="INDIVIDUAL" className="mt-8">
-              <div className="grid grid-cols-1 lg:grid-cols-[50%_1fr] gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 {/* Левая панель - Карта склада */}
-                <div className="rounded-2xl h-[70vh] min-h-[400px] flex flex-col" style={{ 
+                <div className="rounded-2xl h-[78vh] min-h-[450px] flex flex-col" style={{ 
                   background: 'linear-gradient(to bottom, #00A991 0%, #31876D 100%)',
                   padding: '20px',
                   borderRadius: '20px',
@@ -2560,8 +2501,8 @@ const HomePage = memo(() => {
                 </div>
 
                 {/* Правая панель - Форма конфигурации */}
-                <div className="bg-white rounded-3xl p-6 shadow-lg min-h-[400px] flex flex-col">
-                  <h2 className="text-2xl font-bold text-[#273655] mb-6">
+                <div className="bg-[#F7FAF9] rounded-3xl p-6 shadow-lg min-h-[450px] flex flex-col">
+                  <h2 className="font-sf-pro-text text-2xl sm:text-3xl font-semibold text-[#202422] mb-6">
                     Настройте хранение
                   </h2>
                   
@@ -2607,14 +2548,15 @@ const HomePage = memo(() => {
                       }}
                       label="Срок аренды (месяцы):"
                       variant="individual-home"
+                      triggerClassName="bg-transparent"
                     />
                   </div>
                   
                   {/* Перевозка вещей */}
-                  <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-3xl">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-medium text-[#8A8A8A]">Перевозка вещей</span>
-                      <Truck className="w-5 h-5 text-[#8A8A8A]" />
+                  <div className="flex items-center justify-between mb-6 gap-3">
+                    <div className="flex items-center gap-2 flex-1 border border-gray-200 rounded-3xl px-4 py-3 bg-transparent h-12">
+                      <span className="text-base font-medium text-[#373737]">Перевозка вещей</span>
+                      <Truck className="w-5 h-5 text-[#373737]" />
                     </div>
                     <Switch
                       checked={includeMoving}
@@ -2636,11 +2578,10 @@ const HomePage = memo(() => {
 
                   {/* Детали перевозки */}
                   {includeMoving && previewStorage && (
-                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg space-y-4 w-full max-w-full">
-                      <h3 className="text-xl font-bold text-white">Детали перевозки</h3>
+                    <div className="mb-6 bg-white rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 w-full max-w-full">
+                      <h3 className="text-xl font-bold text-[#373737]">Детали перевозки</h3>
                       <div className="space-y-3">
                         <div className="flex flex-col gap-1">
-                          
                           <DatePicker
                             value={movingPickupDate}
                             onChange={(value) => {
@@ -2650,11 +2591,11 @@ const HomePage = memo(() => {
                             minDate={new Date().toISOString().split('T')[0]}
                             allowFutureDates={true}
                             placeholder="Дата забора вещей"
-                            className="[&>div]:bg-gradient-to-r [&>div]:from-[#26B3AB] [&>div]:to-[#104D4A] [&>div]:!border-white [&>div]:rounded-3xl [&_input]:text-white [&_input]:placeholder:text-white/70 [&_label]:text-white/90 [&_button]:text-white [&_button]:hover:text-white [&_button]:hover:bg-transparent [&_button]:hover:!-translate-y-1/2 [&_button]:hover:!top-1/2 [&_button]:transition-none [&_button]:cursor-pointer [&>div]:focus-within:ring-0 [&>div]:focus-within:border-white"
+                            className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-3xl [&_input]:text-[#373737] [&_input]:placeholder:text-gray-400 [&_label]:text-[#373737] [&_button]:text-[#373737] [&_button]:hover:text-[#373737] [&_button]:hover:bg-transparent [&_button]:hover:!-translate-y-1/2 [&_button]:hover:!top-1/2 [&_button]:transition-none [&_button]:cursor-pointer [&>div]:focus-within:ring-2 [&>div]:focus-within:ring-gray-200 [&>div]:focus-within:border-gray-300"
                           />
                         </div>
                         <div className="flex flex-col gap-2 w-full">
-                          <label className="text-s text-white/90">Адрес забора вещей</label>
+                          <label className="text-sm font-medium text-[#373737]">Адрес забора вещей</label>
                           <input
                             type="text"
                             value={movingStreetFrom}
@@ -2662,8 +2603,8 @@ const HomePage = memo(() => {
                               setMovingStreetFrom(e.target.value);
                               setSubmitError(null);
                             }}
-                            placeholder="Микрорайон или улица"
-                            className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                            placeholder="Например: г. Алматы, Абая 25"
+                            className="w-full h-[42px] rounded-3xl bg-gray-100 border-0 px-3 text-sm text-[#373737] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 min-w-0"
                           />
                           <div className="flex gap-2 w-full">
                             <input
@@ -2674,7 +2615,7 @@ const HomePage = memo(() => {
                                 setSubmitError(null);
                               }}
                               placeholder="Дом"
-                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                              className="h-[42px] flex-1 rounded-3xl bg-gray-100 border-0 px-3 text-sm text-[#373737] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 min-w-0"
                             />
                             <input
                               type="text"
@@ -2684,7 +2625,7 @@ const HomePage = memo(() => {
                                 setSubmitError(null);
                               }}
                               placeholder="Этаж"
-                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                              className="h-[42px] flex-1 rounded-3xl bg-gray-100 border-0 px-3 text-sm text-[#373737] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 min-w-0"
                             />
                             <input
                               type="text"
@@ -2694,7 +2635,7 @@ const HomePage = memo(() => {
                                 setSubmitError(null);
                               }}
                               placeholder="Квартира"
-                              className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                              className="h-[42px] flex-1 rounded-3xl bg-gray-100 border-0 px-3 text-sm text-[#373737] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 min-w-0"
                             />
                           </div>
                         </div>
@@ -2703,10 +2644,10 @@ const HomePage = memo(() => {
                   )}
                   
                   {/* Услуги упаковки */}
-                  <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-3xl">
-                      <div className="flex items-center gap-2">
-                      <span className="text-base font-medium text-[#8A8A8A]">Услуги упаковки</span>
-                      <Package className="w-5 h-5 text-[#8A8A8A]" />
+                  <div className="flex items-center justify-between mb-2 gap-3">
+                      <div className="flex items-center gap-2 flex-1 border border-gray-200 rounded-3xl px-4 py-3 bg-transparent h-12">
+                      <span className="text-base font-medium text-[#373737]">Услуги упаковки</span>
+                      <Package className="w-5 h-5 text-[#373737]" />
                       </div>
                       <Switch
                         checked={includePacking}
@@ -2724,17 +2665,17 @@ const HomePage = memo(() => {
 
                   {/* Детали услуг упаковки */}
                   {includePacking && previewStorage && (
-                    <div className="mb-6 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-6 shadow-lg space-y-4">
-                      <h3 className="text-xl font-bold text-white">Детали услуг упаковки</h3>
+                    <div className="mb-3 bg-white rounded-3xl p-6 shadow-sm space-y-4">
+                      <h3 className="text-xl font-bold text-[#373737]">Детали услуг упаковки</h3>
                       <div className="space-y-3">
                         {isServicesLoading ? (
                           <div className="flex items-center justify-center py-2">
-                            <span className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                            <span className="w-5 h-5 border-2 border-t-transparent border-[#373737] rounded-full animate-spin" />
                           </div>
                         ) : (
                           <>
                             {servicesError && (
-                              <p className="text-xs text-red-200">
+                              <p className="text-xs text-red-600">
                                 {servicesError}
                               </p>
                             )}
@@ -2760,28 +2701,28 @@ const HomePage = memo(() => {
                                   
                                   return (
                                     <div key={index} className="space-y-2">
-                                      <div className="rounded-3xl border border-white bg-white/10 px-4 py-3">
+                                      <div className="rounded-3xl border border-gray-200 bg-white px-4 py-3">
                                         {/* Верхняя строка с иконкой, названием и ценой */}
                                         <div className="flex items-center gap-3 mb-2">
-                                          {/* Иконка в белом округленном квадрате */}
-                                          <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 border border-white">
+                                          {/* Иконка */}
+                                          <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0 bg-gray-100">
                                             {selectedOption ? (() => {
                                               const serviceIconSrc = getServiceTypeIcon(selectedOption.type);
                                               return (
-                                                <img src={serviceIconSrc} alt="" className="h-7 w-7 object-contain" />
+                                                <img src={serviceIconSrc} alt="" className="h-7 w-7 object-contain opacity-70" />
                                               );
                                             })() : (
-                                              <Package className="h-7 w-7 text-white" />
+                                              <Package className="h-7 w-7 text-gray-400" />
                                             )}
                                           </div>
                                           
-                                          {/* Название услуги без рамок */}
+                                          {/* Название услуги */}
                                           <div className="flex-1 flex items-center gap-2">
                                             <Select
                                               value={service.service_id}
                                               onValueChange={(value) => updateServiceRow(index, "service_id", value)}
                                             >
-                                              <SelectTrigger className="h-auto p-0 border-0 bg-transparent text-white font-medium hover:bg-transparent focus:ring-0 focus:ring-offset-0 [&>span]:text-white [&>svg]:text-white [&>svg]:ml-1 w-auto min-w-0">
+                                              <SelectTrigger className="h-auto p-0 border-0 bg-transparent text-[#373737] font-medium hover:bg-transparent focus:ring-0 focus:ring-offset-0 [&>span]:text-[#373737] [&>svg]:text-[#373737] [&>svg]:ml-1 w-auto min-w-0">
                                                 <SelectValue placeholder="Услуга" />
                                               </SelectTrigger>
                                             <SelectContent>
@@ -2841,7 +2782,7 @@ const HomePage = memo(() => {
                                             </Select>
                                             
                                             {service.service_id && (
-                                              <span className="ml-auto text-xs text-white/90">
+                                              <span className="ml-auto text-sm text-[#373737]">
                                                 {unitPrice.toLocaleString()} ₸/шт.
                                               </span>
                                             )}
@@ -2849,7 +2790,7 @@ const HomePage = memo(() => {
                                             <button
                                               type="button"
                                               onClick={() => removeServiceRow(index)}
-                                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 text-white hover:bg-white/20 transition-colors shrink-0"
+                                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-[#373737] hover:bg-gray-100 transition-colors shrink-0"
                                               aria-label="Удалить услугу"
                                             >
                                               <Trash2 className="h-4 w-4" />
@@ -2859,7 +2800,7 @@ const HomePage = memo(() => {
 
                                         {/* Нижняя строка с количеством */}
                                         <div className="flex items-center gap-2">
-                                          <span className="text-xs text-white/90">
+                                          <span className="text-sm text-[#373737]">
                                             Кол-во
                                           </span>
                                           <Select
@@ -2869,7 +2810,7 @@ const HomePage = memo(() => {
                                               updateServiceRow(index, "count", newCount);
                                             }}
                                           >
-                                            <SelectTrigger className="w-16 h-8 rounded-lg border border-white/50 bg-white/10 text-sm text-white [&>span]:text-white [&>svg]:text-white">
+                                            <SelectTrigger className="w-16 h-8 rounded-lg border border-gray-200 bg-white text-sm text-[#373737] [&>span]:text-[#373737] [&>svg]:text-gray-500">
                                               <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -2884,7 +2825,7 @@ const HomePage = memo(() => {
 
                                         {/* Описание выбранной услуги */}
                                         {selectedOption && getServiceTypeDescription(selectedOption.type) && (
-                                          <p className="mt-2 text-xs text-white/70 leading-relaxed border-t border-white/10 pt-2">
+                                          <p className="mt-2 text-xs text-gray-600 leading-relaxed border-t border-gray-100 pt-2">
                                             {getServiceTypeDescription(selectedOption.type)}
                                           </p>
                                         )}
@@ -2892,7 +2833,7 @@ const HomePage = memo(() => {
                                       
                                       {isGazelleToService && (
                                         <div className="pl-3 pr-11">
-                                          <label className="block text-xs text-white/90 mb-1">
+                                          <label className="block text-sm text-[#373737] mb-1">
                                             Адрес доставки вещей
                                           </label>
                                           <input
@@ -2907,7 +2848,7 @@ const HomePage = memo(() => {
                                               ));
                                             }}
                                             placeholder="Например: г. Алматы, Абая 25"
-                                            className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                            className="w-full h-[42px] rounded-3xl bg-gray-100 border-0 px-3 text-sm text-[#373737] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
                                           />
                                         </div>
                                       )}
@@ -2918,7 +2859,7 @@ const HomePage = memo(() => {
                             )}
 
                             {services.length === 0 && !servicesError && (
-                              <p className="text-xs text-white/90">
+                              <p className="text-xs text-[#373737]">
                                 Добавьте услуги, чтобы мы подготовили упаковку под ваши вещи.
                               </p>
                             )}
@@ -2929,7 +2870,7 @@ const HomePage = memo(() => {
                                 ensureServiceOptions();
                                 addServiceRow();
                               }}
-                              className="inline-flex items-center gap-1.5 rounded-3xl border border-dashed border-white px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                              className="inline-flex items-center gap-1.5 rounded-3xl border-2 border-dashed border-gray-300 bg-white px-3 py-2 text-xs sm:text-sm font-medium text-[#373737] hover:bg-gray-50 transition-colors"
                             >
                               <Plus className="h-4 w-4" />
                               Добавить услугу
@@ -2941,9 +2882,9 @@ const HomePage = memo(() => {
                   )}
                   
                   {/* Итог */}
-                  <div className="mt-8">
-                    <div className="border-2 border-dashed border-gray-300 rounded-3xl bg-white p-4 sm:p-6">
-                      <h3 className="text-lg font-bold text-[#585858] mb-2">Итог</h3>
+                  <div className="mt-2">
+                    <div className="border-2 border-dashed border-gray-300 rounded-3xl bg-transparent p-4 sm:p-6">
+                      <h3 className="text-lg font-bold text-[#373737] mb-2">Итог</h3>
                     {previewStorage ? (
                       <div className="space-y-2">
                         {/* Информация о бронировании для занятых боксов */}
@@ -3211,13 +3152,13 @@ const HomePage = memo(() => {
                     <button
                       onClick={handleIndividualBookingClick}
                       disabled={!isIndividualFormReady || isSubmittingOrder}
-                      className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
                     </button>
                     <button
                       onClick={handleCallbackRequestClick}
-                      className="w-full bg-white border border-gray-300 text-[#273655] font-semibold py-4 px-6 rounded-3xl hover:bg-gray-50 transition-colors"
+                      className="w-full bg-transparent border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-100/50 transition-colors"
                     >
                       Заказать обратный звонок
                     </button>
@@ -3245,7 +3186,7 @@ const HomePage = memo(() => {
                       aria-label="Предыдущий"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 8H4M4 8L8 4M4 8L8 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
                     <button
@@ -3259,7 +3200,7 @@ const HomePage = memo(() => {
                       aria-label="Следующий"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M4 8H12M12 8L8 4M12 8L8 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
                   </div>
@@ -3277,16 +3218,14 @@ const HomePage = memo(() => {
                       }}
                       className={`rounded-3xl p-4 md:p-6 flex flex-col items-center cursor-pointer transition-colors h-full ${
                         selectedTariff?.id === customTariff.id 
-                          ? 'bg-[#31876D] ring-4 ring-[#31876D]/30' 
-                          : 'bg-[#04A68E] hover:bg-[#038a77]'
+                          ? 'bg-[#B0E4DD] ring-4 ring-[#31876D]/30' 
+                          : 'bg-[#B0E4DD] hover:bg-[#9dd9d0]'
                       }`}
                     >
                       <div className="w-full h-32 md:h-40 mb-4 flex items-center justify-center">
-                        <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
-                          <Box className="w-12 h-12 text-white" />
-                        </div>
+                        <Box className="w-24 h-24 md:w-28 md:h-28 text-[#04A68E]" strokeWidth={1.5} />
                       </div>
-                      <p className="text-white text-center text-sm md:text-base font-medium leading-tight">
+                      <p className="text-[#393939] text-center text-sm md:text-base font-medium leading-tight">
                         {customTariff.name}
                       </p>
                     </div>
@@ -3334,7 +3273,7 @@ const HomePage = memo(() => {
                                 className="max-w-full max-h-full object-contain"
                               />
                             </div>
-                            <p className="text-white text-center text-sm md:text-base font-medium leading-tight">
+                            <p className="text-[#B0E4DD] text-center text-sm md:text-base font-medium leading-tight">
                               {tariff.name}
                             </p>
                           </div>
@@ -3346,9 +3285,9 @@ const HomePage = memo(() => {
               </div>
 
               <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 items-stretch">
-                {/* Левая колонка - Габариты и расчет */}
-                <div className="flex flex-col h-full justify-between order-1 lg:order-1">
-                  <h2 className="text-2xl font-bold text-[#273655] mb-6">
+                {/* Левая колонка - Габариты, Итог, Кнопка бронирования */}
+                <div className="flex flex-col order-1 lg:order-1">
+                  <h2 className="text-2xl font-bold text-[#202422] mb-6">
                     {selectedTariff?.isCustom 
                       ? 'Укажите габариты вещей' 
                       : selectedTariff 
@@ -3356,12 +3295,10 @@ const HomePage = memo(() => {
                         : 'Выберите тариф или укажите габариты'}
                   </h2>
                   
-                  {/* Поля для ввода */}
-                  <div className="space-y-4 mb-4">
+                  {/* Поля габаритов - белый фон, серая рамка */}
+                  <div className="space-y-4 mb-6">
                     {selectedTariff?.isCustom ? (
-                      /* Режим "Свои габариты" - показываем поля для габаритов */
                       <>
-                        {/* Ширина и Высота в одной строке */}
                         <div className="grid grid-cols-2 gap-4">
                           {[
                             { key: 'width', label: 'Ширина', value: cloudDimensions.width },
@@ -3378,24 +3315,18 @@ const HomePage = memo(() => {
                                 setSubmitError(null);
                               }}
                             >
-                              <SelectTrigger className="w-full h-auto min-h-[60px] text-base border-0 rounded-2xl bg-white flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4">
-                                <span className="text-sm text-[#273655] mb-1">{dim.label}:</span>
-                                <SelectValue className="text-base">
-                                  {String(dim.value)} м
-                                </SelectValue>
+                              <SelectTrigger className="w-full min-w-[155px] h-auto min-h-[74px] text-base border border-gray-200 rounded-2xl bg-white flex flex-col items-start justify-center p-3 px-4 [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:text-gray-500">
+                                <span className="text-xs text-gray-500 mb-0.5">{dim.label}</span>
+                                <SelectValue className="text-[#373737] text-base">{String(dim.value)} м</SelectValue>
                               </SelectTrigger>
                               <SelectContent>
                                 {Array.from({ length: 10 }, (_, i) => i + 1).map((val) => (
-                                  <SelectItem key={val} value={String(val)}>
-                                    {val} м
-                                  </SelectItem>
+                                  <SelectItem key={val} value={String(val)}>{val} м</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           ))}
                         </div>
-
-                        {/* Длина отдельно ниже */}
                         <Select
                           value={String(cloudDimensions.length)}
                           onValueChange={(value) => {
@@ -3406,17 +3337,13 @@ const HomePage = memo(() => {
                             setSubmitError(null);
                           }}
                         >
-                          <SelectTrigger className="w-full h-auto min-h-[60px] text-base border-0 rounded-2xl bg-white flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4">
-                            <span className="text-sm text-[#273655] mb-1">Длина:</span>
-                            <SelectValue className="text-base">
-                              {String(cloudDimensions.length)} м
-                            </SelectValue>
+                          <SelectTrigger className="w-full h-auto min-h-[60px] text-base border border-gray-200 rounded-2xl bg-white flex flex-col items-start justify-center p-3 px-4 [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:text-gray-500">
+                            <span className="text-xs text-gray-500 mb-0.5">Длина</span>
+                            <SelectValue className="text-[#373737] text-base">{String(cloudDimensions.length)} м</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {Array.from({ length: 10 }, (_, i) => i + 1).map((val) => (
-                              <SelectItem key={val} value={String(val)}>
-                                {val} м
-                              </SelectItem>
+                              <SelectItem key={val} value={String(val)}>{val} м</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -3447,10 +3374,11 @@ const HomePage = memo(() => {
                   </div>
 
                   {/* Блок ИТОГ */}
-                  <div className="bg-white rounded-3xl px-8 pt-6 pb-8 mb-6 border-2 border-dashed border-gray-300 min-h-[250px] order-2 lg:order-2">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-2xl font-bold text-[#31876D]">ИТОГ</h3>
-                      <span className="text-2xl font-bold text-[#31876D]">{cloudVolume.toFixed(2)} м³</span>
+                  <div className="bg-white rounded-3xl px-6 py-6 mb-6 border-2 border-dashed border-gray-300">
+                    <p className="text-sm text-[#555A65] mb-7">Рассчитанный объём: {cloudVolume.toFixed(2)} м³</p>
+                    <div className="flex items-center justify-between mb-7">
+                      <h3 className="text-xl font-bold text-[#04A68E]">ИТОГ</h3>
+                      <span className="text-xl font-bold text-[#04A68E]">{cloudVolume.toFixed(2)} м³</span>
                     </div>
                     <div className="text-base text-[#273655]">
                       {selectedTariff?.isCustom ? (
@@ -3464,9 +3392,9 @@ const HomePage = memo(() => {
                           <span className="font-medium">{selectedTariff.name}</span>
                         </div>
                       ) : null}
-                      <div className="flex justify-between mt-6 mb-3">
-                        <span className="text-[#00A991]">За месяц</span>
-                        <span className="font-medium text-[#00A991]">{cloudPricePreview?.monthly?.toLocaleString() ?? "—"} ₸</span>
+                      <div className="flex justify-between mt-4 mb-3">
+                        <span className="text-[#04A68E]">За месяц</span>
+                        <span className="font-medium text-[#04A68E]">{cloudPricePreview?.monthly?.toLocaleString() ?? "—"} ₸</span>
                       </div>
 
                       {/* Промокод для облачного хранения */}
@@ -3574,8 +3502,8 @@ const HomePage = memo(() => {
                       )}
 
                       <div className="flex justify-between">
-                        <span className="text-xl font-bold text-[#31876D]">За {cloudMonthsNumber} {cloudMonthsNumber === 1 ? 'месяц' : cloudMonthsNumber < 5 ? 'месяца' : 'месяцев'}</span>
-                        <span className="text-xl font-bold text-[#31876D]">
+                        <span className="text-xl font-bold text-[#04A68E]">За {cloudMonthsNumber} {cloudMonthsNumber === 1 ? 'месяц' : cloudMonthsNumber < 5 ? 'месяца' : 'месяцев'}</span>
+                        <span className="text-xl font-bold text-[#04A68E]">
                           {cloudPromoSuccess && cloudPromoDiscount > 0 && (
                             <span className="text-sm text-gray-400 line-through mr-2">
                               {cloudPricePreview?.total?.toLocaleString() ?? "—"} ₸
@@ -3587,10 +3515,21 @@ const HomePage = memo(() => {
                     </div>
                   </div>
 
-                  {/* Дата начала бронирования - для мобильной версии */}
-                  <div className="mb-6 order-3 lg:hidden">
+                  {/* Кнопка бронирования - в левой колонке */}
+                  <button
+                    onClick={handleCloudBookingClick}
+                    disabled={!isCloudFormReady || isSubmittingOrder}
+                    className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
+                  </button>
+                </div>
+
+                {/* Правая колонка - Дата, Срок аренды, Доп. услуги, Кнопка обратного звонка */}
+                <div className="flex flex-col order-2 lg:order-2 lg:pt-14">
+                  {/* Дата начала бронирования */}
+                  <div className="mb-3">
                     <DatePicker
-                      label="Дата начала бронирования"
                       value={cloudBookingStartDate}
                       onChange={(value) => {
                         setCloudBookingStartDate(value);
@@ -3598,12 +3537,13 @@ const HomePage = memo(() => {
                       }}
                       minDate={new Date().toISOString().split('T')[0]}
                       allowFutureDates={true}
-                      placeholder="ДД.ММ.ГГГГ"
+                      placeholder="Дата начала бронирования"
+                      className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-2xl [&_input]:text-[#373737]"
                     />
                   </div>
 
-                  {/* Срок аренды - для мобильной версии */}
-                  <div className="mb-6 order-4 lg:hidden">
+                  {/* Срок аренды */}
+                  <div className="mb-6">
                     <RentalPeriodSelect
                       value={cloudMonths}
                       onChange={(value) => {
@@ -3616,76 +3556,49 @@ const HomePage = memo(() => {
                     />
                   </div>
 
-                  {/* Адрес откуда забрать вещи - для мобильной версии */}
-                  <div className="mb-6 order-5 lg:hidden w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
-                    <div className="flex flex-col gap-2 w-full">
-                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
-                      <input
-                        type="text"
-                        value={cloudStreetFrom}
-                        onChange={(e) => {
-                          setCloudStreetFrom(e.target.value);
-                          setSubmitError(null);
-                        }}
-                        placeholder="Микрорайон или улица"
-                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
-                      />
-                      <div className="flex gap-2 w-full">
-                        <input
-                          type="text"
-                          value={cloudHouseFrom}
-                          onChange={(e) => {
-                            setCloudHouseFrom(e.target.value);
-                            setSubmitError(null);
-                          }}
-                          placeholder="Дом"
-                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                  {/* Дополнительные услуги */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-[#273655] mb-3">Дополнительные услуги</h3>
+                    <p className="text-sm text-[#555A65] mb-4">
+                      Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
+                    </p>
+                    <p className="text-sm text-[#555A65] mb-4">Перевозка и упаковка включены в стоимость.</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm text-[#373737] mb-1">Дата забора вещей</label>
+                        <DatePicker
+                          value={cloudBookingStartDate}
+                          onChange={(value) => { setCloudBookingStartDate(value); setSubmitError(null); }}
+                          minDate={new Date().toISOString().split('T')[0]}
+                          allowFutureDates={true}
+                          placeholder="Дата забора вещей"
+                          className="[&>div]:bg-gray-100 [&>div]:border-0 [&>div]:rounded-2xl [&_input]:text-[#373737]"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-[#373737] mb-1">Адрес забора вещей</label>
                         <input
                           type="text"
-                          value={cloudFloorFrom}
-                          onChange={(e) => {
-                            setCloudFloorFrom(e.target.value);
-                            setSubmitError(null);
-                          }}
-                          placeholder="Этаж"
-                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
-                        />
-                        <input
-                          type="text"
-                          value={cloudApartmentFrom}
-                          onChange={(e) => {
-                            setCloudApartmentFrom(e.target.value);
-                            setSubmitError(null);
-                          }}
-                          placeholder="Квартира"
-                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
+                          value={cloudStreetFrom}
+                          onChange={(e) => { setCloudStreetFrom(e.target.value); setSubmitError(null); }}
+                          placeholder="Например: г. Алматы, Абая 25"
+                          className="w-full h-[52px] rounded-2xl bg-gray-100 border-0 px-4 text-sm text-[#373737] placeholder:text-gray-400"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Кнопка бронирования - для мобильной версии */}
-                  <button
-                    onClick={handleCloudBookingClick}
-                    disabled={!isCloudFormReady || isSubmittingOrder}
-                    className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed order-6 lg:hidden mb-3"
-                  >
-                    {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
-                  </button>
-
-                  {/* Кнопка обратного звонка - для мобильной версии */}
+                  {/* Кнопка обратного звонка */}
                   <button
                     onClick={handleCallbackRequestClick}
-                    className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-3xl hover:bg-gray-200 transition-colors order-7 lg:hidden"
+                    className="w-full bg-white border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-50 transition-colors"
                   >
                     Заказать обратный звонок
                   </button>
-
                 </div>
 
-                {/* Правая колонка - Бронирование и услуги (только для десктопа) */}
-                <div className="hidden lg:flex flex-col">
+                {/* Дубликат - скрыт, т.к. правая колонка (order-2) уже содержит весь контент */}
+                <div className="hidden">
                   {/* Дата начала бронирования */}
                   <div className="mb-6">
                     <DatePicker
@@ -3729,38 +3642,6 @@ const HomePage = memo(() => {
                         placeholder="Микрорайон или улица"
                         className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
                       />
-                      <div className="flex gap-2 w-full">
-                        <input
-                          type="text"
-                          value={cloudHouseFrom}
-                          onChange={(e) => {
-                            setCloudHouseFrom(e.target.value);
-                            setSubmitError(null);
-                          }}
-                          placeholder="Дом"
-                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
-                        />
-                        <input
-                          type="text"
-                          value={cloudFloorFrom}
-                          onChange={(e) => {
-                            setCloudFloorFrom(e.target.value);
-                            setSubmitError(null);
-                          }}
-                          placeholder="Этаж"
-                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
-                        />
-                        <input
-                          type="text"
-                          value={cloudApartmentFrom}
-                          onChange={(e) => {
-                            setCloudApartmentFrom(e.target.value);
-                            setSubmitError(null);
-                          }}
-                          placeholder="Квартира"
-                          className="h-[42px] flex-1 rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
-                        />
-                      </div>
                     </div>
                   </div>
                   
@@ -3768,7 +3649,7 @@ const HomePage = memo(() => {
                   <button
                     onClick={handleCloudBookingClick}
                     disabled={!isCloudFormReady || isSubmittingOrder}
-                    className="w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white font-semibold py-4 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                    className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-3"
                   >
                     {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
                   </button>
@@ -3776,7 +3657,7 @@ const HomePage = memo(() => {
                   {/* Кнопка обратного звонка */}
                   <button
                     onClick={handleCallbackRequestClick}
-                    className="w-full bg-gray-100 text-[#273655] font-semibold py-4 px-6 rounded-3xl hover:bg-gray-200 transition-colors"
+                    className="w-full bg-transparent border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-100/50 transition-colors"
                   >
                     Заказать обратный звонок
                   </button>
@@ -3872,138 +3753,22 @@ const HomePage = memo(() => {
       {/* Отступ с фоном хэдера */}
       <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
 
-      {/* Инструкция по бронированию */}
-      <section className="w-full bg-[#FFF] py-8 md:py-12 px-4 md:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#273655] mb-6 md:mb-8 text-center">
-            Простой процесс бронирования бокса
-          </h2>
-          
-          {/* Мобильная версия: 2+2 карточки */}
-          <div className="md:hidden space-y-4">
-            {/* Верхний ряд: 2 карточки */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Шаг 1 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <Box className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">1</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Забронируйте бокс
-                </p>
-              </div>
-              {/* Шаг 2 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <MessageSquare className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">2</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Подпишите договор по СМС
-                </p>
-              </div>
-            </div>
-            {/* Нижний ряд: 2 карточки */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Шаг 3 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <Globe className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">3</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Оплатите онлайн или по СМС
-                </p>
-              </div>
-              {/* Шаг 4 */}
-              <div className="bg-white rounded-2xl p-4 flex flex-col items-center shadow-sm border border-[#E0F2FE]">
-                <div className="w-20 h-20 flex items-center justify-center mb-2">
-                  <Truck className="w-14 h-14 text-[#273655]" strokeWidth={1.5} />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#00A991] flex items-center justify-center mb-2">
-                  <span className="text-white font-bold text-sm">4</span>
-                </div>
-                <p className="text-[10px] text-center text-[#273655] font-medium leading-tight">
-                  Назначьте доставку
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Десктопная версия: все 4 карточки в один ряд */}
-          <div className="hidden md:grid md:grid-cols-4 gap-6 lg:gap-8">
-            {/* Шаг 1 */}
-            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
-              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
-                <Box className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
-              </div>
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">1</span>
-              </div>
-              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
-                Забронируйте бокс
-              </p>
-            </div>
-            {/* Шаг 2 */}
-            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
-              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
-                <MessageSquare className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
-              </div>
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">2</span>
-              </div>
-              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
-                Подпишите договор по СМС
-              </p>
-            </div>
-            {/* Шаг 3 */}
-            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
-              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
-                <Globe className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
-              </div>
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">3</span>
-              </div>
-              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
-                Оплатите онлайн или по СМС
-              </p>
-            </div>
-            {/* Шаг 4 */}
-            <div className="bg-white rounded-2xl p-6 lg:p-8 flex flex-col items-center shadow-sm border border-[#E0F2FE] hover:shadow-md transition-shadow">
-              <div className="w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center mb-4">
-                <Truck className="w-16 h-16 lg:w-20 lg:h-20 text-[#273655]" strokeWidth={1.5} />
-              </div>
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-[#00A991] flex items-center justify-center mb-3">
-                <span className="text-white font-bold text-base lg:text-lg">4</span>
-              </div>
-              <p className="text-sm lg:text-base text-center text-[#273655] font-medium leading-tight">
-                Назначьте доставку
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Заказать обратный звонок */}
+      <CallbackRequestSection showRegisterPrompt={!isAuthenticated} />
 
       {/* Шестой фрейм: филиалы Extra Space */}
-      <section className="w-full bg-[#FFF] font-['Montserrat'] py-6 sm:py-8">
-        <div className="w-full px-4 sm:px-6 lg:px-8 mb-4">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#273655] mb-2">
+      <section className="w-full bg-[#F7FAF9] pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-24 lg:pb-28">
+        <div className="w-full px-4 sm:px-6 lg:px-8 mb-12 sm:mb-16 text-center">
+          <h1 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] mb-6 sm:mb-8">
             Филиалы
           </h1>
-          <p className="text-base sm:text-lg text-gray-600">
+          <p className="text-sm sm:text-base text-[#555A65]">
             Выберите удобный филиал рядом с домом
           </p>
         </div>
 
         {/* Карта на всю ширину страницы */}
-        <div className="w-full">
+        <div className="w-full mb-12 sm:mb-16">
           <div style={{ width: "100%", height: "600px" }}>
             <WarehouseMap warehouses={warehouses} mapId="home-branches-map" />
           </div>
@@ -4080,87 +3845,87 @@ const HomePage = memo(() => {
       />
 
       {/* Анимированная бегущая строка с преимуществами перед футером */}
-      <section className="w-full bg-[#FFF] pb-6 overflow-hidden relative">
+      <section className="w-full bg-[#FFF] pt-12 sm:pt-16 lg:pt-20 pb-6 overflow-hidden relative">
         <div className="flex animate-scroll">
           {/* Первый набор элементов */}
           <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0">
             <div className="flex items-center gap-3 text-gray-500">
-              <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
+              <Box size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ 24/7</span>
+              <Moon size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Доступ 24/7</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <Camera size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Видеонаблюдение</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
+              <Maximize size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
+              <Thermometer size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Бронирование онлайн</span>
+              <Wifi size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Бронирование онлайн</span>
             </div>
           </div>
           {/* Дублируем для бесконечной прокрутки */}
           <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0 ml-8 sm:ml-24 md:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
-              <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
+              <Box size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ 24/7</span>
+              <Moon size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Доступ 24/7</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Видеонаблюдение</span>
+              <Camera size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Видеонаблюдение</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
+              <Maximize size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
+              <Thermometer size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Бронирование онлайн</span>
+              <Wifi size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Бронирование онлайн</span>
             </div>
           </div>
           {/* Третий набор для более плавного перехода */}
           <div className="flex items-center gap-8 sm:gap-24 md:gap-32 whitespace-nowrap flex-shrink-0 ml-8 sm:ml-24 md:ml-32">
             <div className="flex items-center gap-3 text-gray-500">
-              <Box size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Личные боксы 2 до 100 м²</span>
+              <Box size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Личные боксы 2 до 100 м²</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Moon size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ 24/7</span>
+              <Moon size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Доступ 24/7</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Camera size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Доступ к видеонаблюдению</span>
+              <Camera size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Доступ к видеонаблюдению</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Maximize size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Высота от 2м</span>
+              <Maximize size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Высота от 2м</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Thermometer size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Контроль температуры и влажности</span>
+              <Thermometer size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Контроль температуры и влажности</span>
             </div>
             <div className="flex items-center gap-3 text-gray-500">
-              <Wifi size={24} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-base sm:text-lg font-medium">Бронирование онлайн</span>
+              <Wifi size={28} className="text-gray-500" strokeWidth={1.5} />
+              <span className="text-lg sm:text-xl font-medium">Бронирование онлайн</span>
             </div>
           </div>
         </div>

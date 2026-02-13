@@ -20,6 +20,7 @@ import { cn } from '../lib/utils/cn';
  * @param {string} [props.variant='default'] - Вариант стиля: 'default', 'cloud', 'individual-home', 'modal'
  * @param {string} [props.className] - Дополнительные CSS классы для контейнера
  * @param {string} [props.triggerClassName] - Дополнительные CSS классы для SelectTrigger
+ * @param {string} [props.labelClassName] - Дополнительные CSS классы для label
  * @param {number} [props.maxMonths=12] - Максимальное количество месяцев для выбора
  * @param {boolean} [props.showLabelInside=false] - Показывать ли лейбл внутри SelectTrigger (для cloud варианта)
  */
@@ -31,6 +32,7 @@ export const RentalPeriodSelect = ({
   variant = 'default',
   className,
   triggerClassName,
+  labelClassName,
   maxMonths = 12,
   showLabelInside = false,
   ...props
@@ -38,11 +40,11 @@ export const RentalPeriodSelect = ({
   // Стили для разных вариантов
   const variantStyles = {
     'individual-home': {
-      trigger: 'w-full h-12 text-base bg-gray-100 border-gray-200 rounded-3xl text-[#273655]',
+      trigger: 'w-full h-12 text-base bg-transparent border-gray-200 rounded-3xl text-[#373737]',
       container: '',
     },
     'cloud-home': {
-      trigger: 'w-full h-auto min-h-[60px] text-base border-gray-300 rounded-3xl bg-transparent flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4',
+      trigger: 'w-full h-auto min-h-[60px] text-base border border-gray-200 rounded-2xl bg-white flex flex-col items-start justify-center p-3 relative [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-3 [&>svg]:h-4 [&>svg]:w-4',
       container: '',
     },
     'warehouse-data': {
@@ -70,14 +72,14 @@ export const RentalPeriodSelect = ({
   return (
     <div className={cn(styles.container, className)}>
       {label && !showLabelInside && (
-        <label className="block text-sm font-medium text-[#273655] mb-2">
+        <label className={cn("block text-sm font-medium text-[#373737] mb-2", labelClassName)}>
           {label}
         </label>
       )}
       <Select value={value} onValueChange={handleValueChange} {...props}>
         <SelectTrigger className={cn(styles.trigger, triggerClassName)}>
           {showLabelInside && label && (
-            <span className="text-sm text-[#273655] mb-1">{label}</span>
+            <span className={cn("text-sm text-[#373737] mb-1", labelClassName)}>{label}</span>
           )}
           <SelectValue className={showLabelInside ? 'text-base' : ''} placeholder={placeholder} />
         </SelectTrigger>
