@@ -68,6 +68,7 @@ const CallbackRequestSection = ({ showRegisterPrompt = false }) => {
     try {
       const response = await api.post('/submit-lead', buildLeadPayload(formData));
       if (response?.data?.success) {
+        navigate("/thank-you");
         showSuccessToast('Заявка отправлена! Мы свяжемся с вами в ближайшее время.');
         setFormData({ name: '', phone: '' });
         if (typeof window !== 'undefined') {
