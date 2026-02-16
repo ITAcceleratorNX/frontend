@@ -295,6 +295,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           area: rawArea,
           services: [],
           warehouse_id: warehouse.id,
+          // Добавляем tier из выбранного бокса, если есть
+          ...(previewStorage?.tier !== undefined && previewStorage?.tier !== null && { tier: previewStorage.tier }),
         };
 
         const response = await warehouseApi.calculateBulkPrice(payload);
@@ -439,17 +441,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       const pricesData = await paymentsApi.getPrices();
       const filteredPrices = pricesData.filter((price) => {
         if (price.id <= 4) return false;
-        const excludedTypes = [
-          "DEPOSIT",
-          "M2_UP_6M",
-          "M2_6_12M",
-          "M2_OVER_12M",
-          "M3_UP_6M",
-          "M3_6_12M",
-          "M3_OVER_12M",
-          "CLOUD_PRICE_LOW",
-          "CLOUD_PRICE_HIGH",
-        ];
+        const excludedTypes = ["DEPOSIT", "M2", "CLOUD_M3"];
         return !excludedTypes.includes(price.type);
       });
       setServiceOptions(filteredPrices);
@@ -686,9 +678,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           let pricesMap = {};
           
           // Определяем типы цен в зависимости от типа склада
-          const priceTypes = data.type === 'CLOUD' 
-            ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-            : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
+          const priceTypes = data.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
           
           // Для всех складов получаем цены из warehouse-service-prices
           const prices = await warehouseApi.getWarehouseServicePrices(warehouseId);
@@ -719,9 +709,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         } catch (priceError) {
           console.warn('Не удалось загрузить цены склада:', priceError);
           // Если цены не загрузились, используем пустые значения
-          const priceTypes = data.type === 'CLOUD' 
-            ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-            : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
+          const priceTypes = data.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
           
           const emptyFormData = {
             name: data.name || '',
@@ -831,9 +819,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       };
 
       // Определяем типы цен в зависимости от типа склада
-      const priceTypes = warehouse?.type === 'CLOUD' 
-        ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-        : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
+      const priceTypes = warehouse?.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
 
       // Сравниваем текущие значения с исходными и собираем только измененные поля
       const updateData = {};
@@ -1036,8 +1022,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     
     // Определяем типы цен в зависимости от типа склада
     const priceTypes = warehouse?.type === 'CLOUD' 
-      ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-      : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
+      ? ['CLOUD_M3']
+      : ['M2'];
     
     const cancelFormData = {
       name: warehouse.name || '',
@@ -1375,8 +1361,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
             {/* Breadcrumb и заголовок — только для полной страницы */}
             {!embedded && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                 <button 
                   onClick={handleBackToList}
                   className="inline-flex items-center text-gray-600 hover:text-[#273655] transition-colors"
@@ -1386,10 +1372,25 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                   </svg>
                   <span className="text-sm font-medium">Склады</span>
                 </button>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                 </svg>
-                <h1 className="text-2xl font-bold text-gray-900">{warehouse.name}</h1>
+                {warehouse && isAdminOrManager && allWarehouses.length > 1 ? (
+                  <Select value={String(warehouseId)} onValueChange={handleWarehouseChange}>
+                    <SelectTrigger className="w-full min-w-[200px] max-w-[280px] border-gray-300 rounded-lg text-base font-semibold text-gray-900">
+                      <SelectValue placeholder="Выберите склад" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allWarehouses.map((w) => (
+                        <SelectItem key={w.id} value={String(w.id)}>
+                          {w.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <h1 className="text-2xl font-bold text-gray-900">{warehouse?.name}</h1>
+                )}
               </div>
 
               {!isEditing && (
@@ -1497,33 +1498,14 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                       {!isCloud && (
                         <div className="pt-4 border-t border-gray-100">
                           <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                            Цены за 1 м²
+                            Цена за 1 м² в месяц
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">До 6 месяцев</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['M2_UP_6M'] 
-                                  ? `${Number(servicePrices['M2_UP_6M']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">От 6 до 12 месяцев</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['M2_6_12M'] 
-                                  ? `${Number(servicePrices['M2_6_12M']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">Свыше 12 месяцев</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['M2_OVER_12M'] 
-                                  ? `${Number(servicePrices['M2_OVER_12M']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-lg font-semibold text-gray-900">
+                              {servicePrices['M2']
+                                ? `${Number(servicePrices['M2']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -1532,25 +1514,14 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                       {isCloud && (
                         <div className="pt-4 border-t border-gray-100">
                           <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                            Цены облачного хранения
+                            Цена за 1 м³ в месяц (облачное хранение)
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">До 18 м³ (за м³)</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['CLOUD_PRICE_LOW'] 
-                                  ? `${Number(servicePrices['CLOUD_PRICE_LOW']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">От 18 м³ и более (за м³)</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['CLOUD_PRICE_HIGH'] 
-                                  ? `${Number(servicePrices['CLOUD_PRICE_HIGH']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-lg font-semibold text-gray-900">
+                              {servicePrices['CLOUD_M3']
+                                ? `${Number(servicePrices['CLOUD_M3']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -1700,99 +1671,34 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         {!isCloud && (
                           <div className="pt-6 border-t border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                              Цены за 1 м²
+                              Цена за 1 м² в месяц
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Установите цены с учетом скидок за длительный период хранения
-                            </p>
-                            
-                            <div className="space-y-4">
-                              {/* Цена до 6 месяцев */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена до 6 месяцев (₸) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('M2_UP_6M', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['M2_UP_6M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену"
-                                />
-                                {errors['M2_UP_6M'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['M2_UP_6M'].message}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Цена от 6 до 12 месяцев */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена от 6 до 12 месяцев (₸) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('M2_6_12M', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['M2_6_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену"
-                                />
-                                {errors['M2_6_12M'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['M2_6_12M'].message}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Цена свыше 12 месяцев */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена свыше 12 месяцев (₸) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('M2_OVER_12M', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['M2_OVER_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену"
-                                />
-                                {errors['M2_OVER_12M'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['M2_OVER_12M'].message}
-                                  </p>
-                                )}
-                              </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена за м² (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register('M2', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors['M2'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену за м²"
+                              />
+                              {errors['M2'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors['M2'].message}
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1801,70 +1707,34 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         {isCloud && (
                           <div className="pt-6 border-t border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                              Цены облачного хранения
+                              Цена за 1 м³ в месяц (облачное хранение)
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Установите цены за м³ в зависимости от объема (без скидки по месяцам)
-                            </p>
-                            
-                            <div className="space-y-4">
-                              {/* Цена до 18 м³ */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена до 18 м³ (₸ за м³) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('CLOUD_PRICE_LOW', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['CLOUD_PRICE_LOW'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену за м³"
-                                />
-                                {errors['CLOUD_PRICE_LOW'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['CLOUD_PRICE_LOW'].message}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Цена от 18 м³ и более */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена от 18 м³ и более (₸ за м³) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('CLOUD_PRICE_HIGH', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['CLOUD_PRICE_HIGH'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену за м³"
-                                />
-                                {errors['CLOUD_PRICE_HIGH'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['CLOUD_PRICE_HIGH'].message}
-                                  </p>
-                                )}
-                              </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена за м³ (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register('CLOUD_M3', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors['CLOUD_M3'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену за м³"
+                              />
+                              {errors['CLOUD_M3'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors['CLOUD_M3'].message}
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1959,7 +1829,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
             )}
 
             {/* Блоки с картой и настройками - только в режиме просмотра */}
-            {(!embedded ? (!isEditing && warehouseTab === 'warehouse') : true) && warehouse && (
+            {(!embedded ? (!isEditing && warehouseTab === 'warehouse') : true) && warehouse && embedded && (
               <div className="mt-8">
                 {isCloud ? (
                   // Для CLOUD складов
@@ -2861,138 +2731,12 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                                 {costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸
                               </span>
                             </div>
-                            {/* Показываем информацию о скидке для 6 и 12 месяцев */}
-                            {monthsNumber < 6 && servicePrices['M2_UP_6M'] && servicePrices['M2_6_12M'] && previewStorage && (() => {
-                              // Используем ту же логику для получения площади, что и в расчете цены
-                              const rawArea = parseFloat(
-                                previewStorage.available_volume ??
-                                previewStorage.total_volume ??
-                                previewStorage.area ??
-                                previewStorage.square ??
-                                previewStorage.volume ??
-                                0
-                              );
-                              
-                              if (!rawArea || rawArea <= 0) return null;
-                              
-                              const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
-                              const discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
-                              
-                              if (!basePricePerM2 || !discountPricePerM2) return null;
-                              
-                              const basePrice = basePricePerM2 * rawArea * 6;
-                              const discountPrice = discountPricePerM2 * rawArea * 6;
-                              
-                              if (basePrice <= 0) return null;
-                              
-                              const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
-                              if (discountPercent <= 0) return null;
-                              
-                              return (
-                                <div className="pt-2 border-t border-dashed border-[#273655]/20">
-                                  <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg">
-                                    <span className="text-xs">
-                                      <span className="text-[#6B6B6B]">За 6 мес </span>
-                                      <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
-                                    </span>
-                                    <span className="text-sm font-semibold text-[#273655]">
-                                      {Math.round(discountPrice).toLocaleString()} ₸
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                            {monthsNumber < 12 && servicePrices['M2_UP_6M'] && servicePrices['M2_OVER_12M'] && previewStorage && (() => {
-                              // Используем ту же логику для получения площади, что и в расчете цены
-                              const rawArea = parseFloat(
-                                previewStorage.available_volume ??
-                                previewStorage.total_volume ??
-                                previewStorage.area ??
-                                previewStorage.square ??
-                                previewStorage.volume ??
-                                0
-                              );
-                              
-                              if (!rawArea || rawArea <= 0) return null;
-                              
-                              const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
-                              const discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
-                              
-                              if (!basePricePerM2 || !discountPricePerM2) return null;
-                              
-                              const basePrice = basePricePerM2 * rawArea * 12;
-                              const discountPrice = discountPricePerM2 * rawArea * 12;
-                              
-                              if (basePrice <= 0) return null;
-                              
-                              const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
-                              if (discountPercent <= 0) return null;
-                              
-                              return (
-                                <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg">
-                                  <span className="text-xs">
-                                    <span className="text-[#6B6B6B]">За 12 мес </span>
-                                    <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
-                                  </span>
-                                  <span className="text-sm font-semibold text-[#273655]">
-                                    {Math.round(discountPrice).toLocaleString()} ₸
-                                  </span>
-                                </div>
-                              );
-                            })()}
-                            {(() => {
-                              // Проверяем, применяется ли скидка для выбранного периода
-                              let discountPercent = 0;
-                              let hasDiscount = false;
-                              
-                              if ((monthsNumber === 6 || monthsNumber === 12) && servicePrices['M2_UP_6M'] && previewStorage) {
-                                const rawArea = parseFloat(
-                                  previewStorage.available_volume ??
-                                  previewStorage.total_volume ??
-                                  previewStorage.area ??
-                                  previewStorage.square ??
-                                  previewStorage.volume ??
-                                  0
-                                );
-                                
-                                if (rawArea && rawArea > 0) {
-                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
-                                  let discountPricePerM2 = 0;
-                                  
-                                  if (monthsNumber === 6) {
-                                    discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
-                                  } else if (monthsNumber === 12) {
-                                    discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
-                                  }
-                                  
-                                  if (basePricePerM2 && discountPricePerM2) {
-                                    const basePrice = basePricePerM2 * rawArea * monthsNumber;
-                                    const discountPrice = discountPricePerM2 * rawArea * monthsNumber;
-                                    
-                                    if (basePrice > 0) {
-                                      discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
-                                      hasDiscount = discountPercent > 0;
-                                    }
-                                  }
-                                }
-                              }
-                              
-                              return (
-                                <div className={`flex items-center justify-between ${hasDiscount ? 'px-2 py-1.5 border-2 border-red-500 rounded-lg' : ''}`}>
-                                  <span className="text-[#6B6B6B]">
-                                    За {monthsNumber} мес
-                                    {hasDiscount && (
-                                      <span className="text-red-600 font-semibold ml-2">
-                                        скидка {discountPercent}%!
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span className="text-lg font-bold text-[#273655]">
-                                    {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
-                                  </span>
-                                </div>
-                              );
-                            })()}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#6B6B6B]">За {monthsNumber} мес</span>
+                              <span className="text-lg font-bold text-[#273655]">
+                                {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
+                              </span>
+                            </div>
                             {pricePreview.isFallback && (
                               <p className="text-xs text-[#C67A00]">
                                 Ориентировочная стоимость по тарифу бокса.
@@ -3382,7 +3126,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       </div>
 
       {/* Модальное окно с полноэкранной картой - только для INDIVIDUAL складов */}
-      {isMapModalOpen && !isCloud && warehouse && (
+      {isMapModalOpen && !isCloud && warehouse && embedded && (
         <div className="fixed inset-0 z-[1200]">
           {isMobileView ? (
             <div className="absolute inset-0 flex flex-col justify-end">

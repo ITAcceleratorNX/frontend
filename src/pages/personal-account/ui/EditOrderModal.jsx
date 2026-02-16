@@ -242,21 +242,9 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 const pricesData = await paymentsApi.getPrices()
                 // Фильтруем исключенные типы
                 const excludedTypes = [
-                    "CLOUD_PRICE_LOW",
-                    "CLOUD_PRICE_HIGH",
+                    "M2",
+                    "CLOUD_M3",
                     "DEPOSIT",
-                    "M2_UP_6M",
-                    "M2_6_12M",
-                    "M2_OVER_12M",
-                    "M3_UP_6M",
-                    "M3_6_12M",
-                    "M3_OVER_12M",
-                    "M2_01_UP_6M",
-                    "M2_01_6_12M",
-                    "M2_01_OVER_12M",
-                    "M3_01_UP_6M",
-                    "M3_01_6_12M",
-                    "M3_01_OVER_12M",
                     "UTILITY_KNIFE",
                     "FURNITURE_SPECIALIST",
                     "CLOUD_TARIFF_SUMKA",

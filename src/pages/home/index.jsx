@@ -172,7 +172,7 @@ const HomePage = memo(() => {
   const [gazelleFromPrice, setGazelleFromPrice] = useState(null);
   // Состояние для цен тарифов облачного хранения из API
   const [tariffPrices, setTariffPrices] = useState({});
-  // Состояние для цен кастомного тарифа (CLOUD_PRICE_LOW и CLOUD_PRICE_HIGH)
+  // Состояние для цен кастомного тарифа (CLOUD_M3 — одна цена за м³)
   const [cloudCustomPrices, setCloudCustomPrices] = useState({ low: null, high: null });
   // Состояние для промокода (индивидуальное хранение)
   const [promoCode, setPromoCode] = useState("");
@@ -256,18 +256,8 @@ const HomePage = memo(() => {
       const filteredPrices = pricesData.filter((price) => {
         const excludedTypes = [
           "DEPOSIT",
-          "M2_UP_6M",
-          "M2_6_12M",
-          "M2_OVER_12M",
-          "M3_UP_6M",
-          "M3_6_12M",
-          "M3_OVER_12M",
-          "M2_01_UP_6M",
-          "M2_01_6_12M",
-          "M2_01_OVER_12M",
-          "M3_01_UP_6M",
-          "M3_01_6_12M",
-          "M3_01_OVER_12M",
+          "M2",
+          "CLOUD_M3",
           "UTILITY_KNIFE",
           "FURNITURE_SPECIALIST",
           "CLOUD_TARIFF_SUMKA",
@@ -714,7 +704,7 @@ const HomePage = memo(() => {
   }, [activeStorageTab, cloudMonthsNumber, monthsNumber]);
 
   // Карточка "Свои габариты" - статичная
-  // Цена для кастомного тарифа загружается из API (CLOUD_PRICE_LOW/CLOUD_PRICE_HIGH)
+  // Цена для кастомного тарифа загружается из API (CLOUD_M3)
   const customTariff = useMemo(() => ({
     id: 'custom',
     name: 'Свои габариты',
@@ -1612,10 +1602,8 @@ const HomePage = memo(() => {
 
     } else if (selectedTariff?.isCustom) {
 
-      // Если объем <= 18 м³, используем CLOUD_PRICE_LOW, иначе CLOUD_PRICE_HIGH
-      const pricePerM3 = cloudVolume <= 18 
-        ? (cloudCustomPrices.low || 9500) // Fallback на дефолтное значение
-        : (cloudCustomPrices.high || 9000); // Fallback на дефолтное значение
+      // Одна цена за м³ (CLOUD_M3)
+      const pricePerM3 = cloudCustomPrices.low ?? cloudCustomPrices.high ?? 9500;
       
       const monthlyPrice = Math.round(pricePerM3 * cloudVolume);
       const totalPrice = Math.round(monthlyPrice * cloudMonthsNumber);
@@ -1712,28 +1700,23 @@ const HomePage = memo(() => {
         ];
         
         const pricesMap = {};
-        let cloudPriceLow = null;
-        let cloudPriceHigh = null;
+        let cloudM3Price = null;
         
         pricesData.forEach(price => {
           if (tariffTypes.includes(price.type)) {
             pricesMap[price.type] = parseFloat(price.price);
           }
-          // Загружаем цены для кастомного тарифа
-          if (price.type === 'CLOUD_PRICE_LOW') {
-            cloudPriceLow = parseFloat(price.price);
-          }
-          if (price.type === 'CLOUD_PRICE_HIGH') {
-            cloudPriceHigh = parseFloat(price.price);
+          if (price.type === 'CLOUD_M3') {
+            cloudM3Price = parseFloat(price.price);
           }
         });
         
         setTariffPrices(pricesMap);
-        setCloudCustomPrices({ low: cloudPriceLow, high: cloudPriceHigh });
+        setCloudCustomPrices({ low: cloudM3Price, high: cloudM3Price });
         
         if (import.meta.env.DEV) {
           console.log('Цены тарифов облачного хранения загружены:', pricesMap);
-          console.log('Цены кастомного тарифа загружены:', { low: cloudPriceLow, high: cloudPriceHigh });
+          console.log('Цена за м³ (CLOUD_M3) загружена:', cloudM3Price);
         }
       } catch (error) {
         console.error('Ошибка при загрузке цен тарифов облачного хранения:', error);
@@ -1838,6 +1821,8 @@ const HomePage = memo(() => {
           area: rawArea,
           services: [],
           warehouse_id: selectedWarehouse.id,
+          // Добавляем tier из выбранного бокса, если есть
+          ...(previewStorage?.tier !== undefined && previewStorage?.tier !== null && { tier: previewStorage.tier }),
         };
 
         const response = await warehouseApi.calculateBulkPrice(payload);
