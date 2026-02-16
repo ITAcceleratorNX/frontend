@@ -6,7 +6,7 @@ function BranchesSection({ warehouses }) {
         <section className="w-full bg-[#F7FAF9] pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-24 lg:pb-28">
 
             <div className="w-full px-4 sm:px-6 lg:px-8 mb-12 sm:mb-16 text-center">
-                <h1 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] mb-6 sm:mb-8">
+                <h1 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] mb-6 sm:mb-8">
                     филиалы
                 </h1>
 

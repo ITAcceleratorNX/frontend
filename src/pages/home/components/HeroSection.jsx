@@ -7,7 +7,7 @@ export default function HeroSection({ handleHeroBookingClick }) {
         <div className="flex-1 relative overflow-hidden bg-gradient-to-r bg-[#FFF] -mt-16 pt-16">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative z-10">
                 <section className="flex flex-col items-center text-center">
-                    <h1 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] leading-tight mb-6 sm:mb-8">
+                    <h1 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] leading-tight mb-6 sm:mb-8">
                         храните там, где удобно
                     </h1>
                     <div className="text-sm sm:text-base text-[#5C625F] leading-relaxed mb-12 max-w-2xl mt-2">

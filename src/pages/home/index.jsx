@@ -2027,7 +2027,7 @@ const HomePage = memo(() => {
       <section ref={tabsSectionRef} className="w-full bg-[#FFF] py-6 sm:py-8">
         <div className="container mx-auto px-2 sm:px-2 lg:px-3 xl:px-3 max-w-7xl">
           {/* Заголовок */}
-          <h2 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal mb-6">
+          <h2 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal mb-6">
             хранение в городе
           </h2>
           
