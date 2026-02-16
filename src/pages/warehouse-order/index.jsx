@@ -775,7 +775,7 @@ const WarehouseOrderPage = memo(() => {
         { autoClose: 4000 }
       );
       setTimeout(() => {
-        navigate("/thank-you");
+        navigate("/personal-account", { state: { activeSection: "payments" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);

@@ -149,13 +149,16 @@ export const Header = memo(() => {
       <>
         <header className={clsx(headerClass, 'border-b border-gray-200')}>
           <div className="w-full max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 relative">
-              {/* Левая часть: соц. сети + номер */}
-              <div className="flex items-center gap-3 min-w-0 flex-1 justify-start pl-10">
-                {socialIcons}
+            <div className="flex items-center justify-between h-14 sm:h-16 relative gap-2">
+              {/* Левая часть: на мобилке — только телефон, на десктопе — соц. сети + телефон */}
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 justify-start pl-0 sm:pl-10">
+                <div className="hidden sm:flex items-center gap-2">
+                  {socialIcons}
+                </div>
                 <a
                   href={PHONE_LINK}
-                  className="text-[#374151] font-medium text-sm hover:text-[#31876D] transition-colors whitespace-nowrap"
+                  className="text-[#374151] font-medium text-xs sm:text-sm hover:text-[#31876D] transition-colors whitespace-nowrap truncate max-w-[140px] sm:max-w-none"
+                  title={PHONE_NUMBER}
                 >
                   {PHONE_NUMBER}
                 </a>
@@ -163,28 +166,28 @@ export const Header = memo(() => {
 
               {/* Центр: лого + название */}
               <div
-                className="flex items-center gap-2 cursor-pointer flex-shrink-0 absolute left-1/2 -translate-x-1/2 transition-transform duration-300 hover:scale-105"
+                className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0 absolute left-1/2 -translate-x-1/2 transition-transform duration-300 active:scale-95 sm:hover:scale-105"
                 onClick={handleLogoClick}
               >
                 <img
                   src={logo}
                   alt="ExtraSpace Logo"
-                  className="h-8 w-auto object-contain"
+                  className="h-7 sm:h-8 w-auto object-contain"
                 />
-                <span className="font-bold text-[#1F2937] text-sm tracking-wide">EXTRA SPACE</span>
+                <span className="font-bold text-[#1F2937] text-xs sm:text-sm tracking-wide hidden min-[380px]:inline">EXTRA SPACE</span>
               </div>
 
-              {/* Правая часть: кнопка Войти */}
-              <div className="flex items-center min-w-0 flex-1 justify-end pr-10">
+              {/* Правая часть: кнопка Войти / гамбургер */}
+              <div className="flex items-center min-w-0 flex-1 justify-end pr-0 sm:pr-10">
                 <div className="hidden md:block">
                   {authButtons}
                 </div>
                 <button
                   onClick={toggleMobileMenu}
-                  className="md:hidden p-2 text-[#374151]"
+                  className="md:hidden p-3 -m-1 text-[#374151] touch-manipulation active:opacity-70"
                   aria-label="Меню"
                 >
-                  {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                  {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
                 </button>
               </div>
             </div>
@@ -192,8 +195,8 @@ export const Header = memo(() => {
 
           {/* Мобильное меню */}
           {isMobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-200 bg-white py-4 px-6 space-y-4">
-              <div className="flex items-center gap-4 justify-center">
+            <div className="md:hidden border-t border-gray-200 bg-white py-5 px-6 space-y-5">
+              <div className="flex items-center gap-4 justify-center flex-wrap">
                 {socialIcons}
                 <a href={PHONE_LINK} className="text-[#374151] font-medium text-sm">
                   {PHONE_NUMBER}
@@ -206,7 +209,7 @@ export const Header = memo(() => {
           )}
         </header>
 
-        <div className="pt-16"></div>
+        <div className="pt-14 sm:pt-16"></div>
       </>
   );
 });
