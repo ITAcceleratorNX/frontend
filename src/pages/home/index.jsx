@@ -1821,6 +1821,7 @@ const HomePage = memo(() => {
           area: rawArea,
           services: [],
           warehouse_id: selectedWarehouse.id,
+          storage_id: previewStorage?.id,
           // Добавляем tier из выбранного бокса, если есть
           ...(previewStorage?.tier !== undefined && previewStorage?.tier !== null && { tier: previewStorage.tier }),
         };

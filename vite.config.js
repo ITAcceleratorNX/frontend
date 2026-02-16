@@ -33,7 +33,7 @@ server: {
   port: PORT,
   proxy: {
     '/api': {
-      target: 'https://api.extraspace.kz',
+      target: 'http://localhost:8080',
       changeOrigin: true,
       rewrite: (path) => path.replace(/^\/api/, ''),
       secure: false,

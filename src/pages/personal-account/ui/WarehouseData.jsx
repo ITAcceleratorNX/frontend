@@ -140,6 +140,15 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const mapRef = useRef(null);
 
+  // Массовое обновление цен боксов (по фильтрам)
+  const [bulkPriceTier, setBulkPriceTier] = useState('');
+  const [bulkPriceFrom, setBulkPriceFrom] = useState('');
+  const [bulkPriceTo, setBulkPriceTo] = useState('');
+  const [bulkPriceValue, setBulkPriceValue] = useState('');
+  const [bulkPriceUpdating, setBulkPriceUpdating] = useState(false);
+  const [bulkPriceUpdatedCount, setBulkPriceUpdatedCount] = useState(null);
+  const [bulkPriceWarehouseId, setBulkPriceWarehouseId] = useState(warehouseId || '');
+
   // Проверка, является ли пользователь менеджером или админом
   const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
@@ -150,7 +159,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     getValues,
     formState: { errors, isDirty }
   } = useForm();
-  
+
   const [initialFormData, setInitialFormData] = useState(null);
 
   // Компонент InfoHint для подсказок
@@ -295,6 +304,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           area: rawArea,
           services: [],
           warehouse_id: warehouse.id,
+          storage_id: previewStorage?.id,
           // Добавляем tier из выбранного бокса, если есть
           ...(previewStorage?.tier !== undefined && previewStorage?.tier !== null && { tier: previewStorage.tier }),
         };
@@ -470,29 +480,29 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
             }
           : service
       );
-      
+
       return updated;
     });
-    
+
     // Обрабатываем изменение service_id отдельно, вне setServices
     if (field === "service_id") {
       // Получаем текущую услугу
       const currentService = services[index];
-      
+
       // Проверяем, была ли добавлена услуга GAZELLE_TO
       if (value && serviceOptions.length > 0) {
         const selectedOption = serviceOptions.find(opt => String(opt.id) === String(value));
-        
+
         if (selectedOption && selectedOption.type === "GAZELLE_TO") {
           console.log("✅ GAZELLE_TO выбрана, создаем moving_order");
-          
+
           // Добавляем moving_order для возврата вещей
           // Дата возврата = дата начала бронирования + количество месяцев
           const startDate = individualBookingStartDate ? new Date(individualBookingStartDate) : new Date();
           const returnDate = new Date(startDate);
           returnDate.setMonth(returnDate.getMonth() + monthsNumber);
           returnDate.setHours(10, 0, 0, 0);
-          
+
           setMovingOrders(prevOrders => {
             // Проверяем, нет ли уже такого moving_order
             const exists = prevOrders.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
@@ -500,20 +510,20 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               console.log("⚠️ moving_order PENDING (TO_CLIENT) уже существует");
               return prevOrders;
             }
-            
+
             const newOrder = {
               moving_date: returnDate.toISOString(),
               status: "PENDING",
               direction: "TO_CLIENT",
               address: movingAddressTo || movingAddressFrom || "",
             };
-            
+
             console.log("✅ Создан новый moving_order:", newOrder);
             return [...prevOrders, newOrder];
           });
         }
       }
-      
+
       // Проверяем, была ли удалена услуга GAZELLE_TO
       if (currentService?.service_id && serviceOptions.length > 0) {
         const oldOption = serviceOptions.find(opt => String(opt.id) === String(currentService.service_id));
@@ -529,7 +539,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const removeServiceRow = useCallback((index) => {
     setServices((prev) => {
       const serviceToRemove = prev[index];
-      
+
       // Если удаляется GAZELLE_TO, удаляем соответствующий moving_order
       if (serviceToRemove?.service_id && serviceOptions.length > 0) {
         const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
@@ -537,7 +547,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
-      
+
       return prev.filter((_, i) => i !== index);
     });
   }, [serviceOptions]);
@@ -672,23 +682,23 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         const data = await warehouseApi.getWarehouseById(warehouseId);
         setWarehouse(data);
         setIsCloud(data.type === "CLOUD");
-        
+
         // Загружаем цены услуг для склада
         try {
           let pricesMap = {};
-          
+
           // Определяем типы цен в зависимости от типа склада
           const priceTypes = data.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
-          
+
           // Для всех складов получаем цены из warehouse-service-prices
           const prices = await warehouseApi.getWarehouseServicePrices(warehouseId);
           // Преобразуем массив цен в объект для удобства
           prices.forEach(price => {
             pricesMap[price.service_type] = parseFloat(price.price);
           });
-          
+
           setServicePrices(pricesMap);
-          
+
           // Заполняем форму данными склада и ценами
           const formData = {
             name: data.name || '',
@@ -702,7 +712,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               return acc;
             }, {})
           };
-          
+
           reset(formData);
           // Сохраняем исходные данные для сравнения
           setInitialFormData(formData);
@@ -710,7 +720,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           console.warn('Не удалось загрузить цены склада:', priceError);
           // Если цены не загрузились, используем пустые значения
           const priceTypes = data.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
-          
+
           const emptyFormData = {
             name: data.name || '',
             address: data.address || '',
@@ -811,7 +821,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const onSubmit = async (data) => {
     try {
       setIsSaving(true);
-      
+
       // Обрезаем секунды от времени (09:00:00 -> 09:00)
       const formatTime = (timeString) => {
         if (!timeString) return timeString;
@@ -823,13 +833,13 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
       // Сравниваем текущие значения с исходными и собираем только измененные поля
       const updateData = {};
-      
+
       if (!initialFormData) {
         // Если исходные данные не загружены, отправляем все данные
         updateData.name = data.name;
         // Для CLOUD складов адрес может быть пустым
-        updateData.address = isCloud && (!data.address || data.address.trim() === '') 
-          ? null 
+        updateData.address = isCloud && (!data.address || data.address.trim() === '')
+          ? null
           : data.address;
         updateData.work_start = formatTime(data.work_start);
         updateData.work_end = formatTime(data.work_end);
@@ -842,32 +852,32 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         if (data.name !== initialFormData.name) {
           updateData.name = data.name;
         }
-        
+
         // Для CLOUD складов адрес может быть пустым, для INDIVIDUAL - обязателен
         // Нормализуем значения для сравнения (пустая строка = null для CLOUD)
-        const currentAddress = isCloud && (!data.address || data.address.trim() === '') 
-          ? null 
+        const currentAddress = isCloud && (!data.address || data.address.trim() === '')
+          ? null
           : data.address;
-        const initialAddress = isCloud && (!initialFormData.address || initialFormData.address.trim() === '') 
-          ? null 
+        const initialAddress = isCloud && (!initialFormData.address || initialFormData.address.trim() === '')
+          ? null
           : initialFormData.address;
-        
+
         if (currentAddress !== initialAddress) {
           updateData.address = currentAddress;
         }
-        
+
         if (formatTime(data.work_start) !== formatTime(initialFormData.work_start)) {
           updateData.work_start = formatTime(data.work_start);
         }
-        
+
         if (formatTime(data.work_end) !== formatTime(initialFormData.work_end)) {
           updateData.work_end = formatTime(data.work_end);
         }
-        
+
         if (data.status !== initialFormData.status) {
           updateData.status = data.status;
         }
-        
+
         if (isCloud && data.total_volume !== initialFormData.total_volume) {
           updateData.total_volume = data.total_volume;
         }
@@ -879,12 +889,12 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         priceTypes.forEach(type => {
           const currentValue = data[type];
           const initialValue = initialFormData[type];
-          
+
           // Проверяем, изменилась ли цена
           if (currentValue !== undefined && currentValue !== '' && currentValue !== null) {
             const currentPrice = parseFloat(currentValue);
             const initialPrice = initialValue ? parseFloat(initialValue) : null;
-            
+
             // Проверяем, что текущая цена является валидным положительным числом
             if (!isNaN(currentPrice) && isFinite(currentPrice) && currentPrice > 0 && currentPrice !== initialPrice) {
               changedPrices.push({
@@ -941,7 +951,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         }
         return updated;
       });
-      
+
       // Обновляем локальные цены только для измененных
       if (updateData.service_prices) {
         const updatedPrices = { ...servicePrices };
@@ -950,29 +960,29 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         });
         setServicePrices(updatedPrices);
       }
-      
+
       // Обновляем исходные данные формы после успешного сохранения
       const currentValues = getValues();
       const updatedInitialData = { ...initialFormData };
-      
+
       // Обновляем все поля, которые были изменены
       Object.keys(updateData).forEach(key => {
         if (key !== 'service_prices') {
           updatedInitialData[key] = currentValues[key];
         }
       });
-      
+
       // Обновляем цены
       if (updateData.service_prices) {
         updateData.service_prices.forEach(sp => {
           updatedInitialData[sp.service_type] = sp.price.toString();
         });
       }
-      
+
       setInitialFormData(updatedInitialData);
-      
+
       showSuccessToast('Данные склада успешно обновлены');
-      
+
       if (import.meta.env.DEV) {
         console.log('Склад успешно обновлен:', updateData);
       }
@@ -984,7 +994,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     } catch (error) {
       console.error('Ошибка при обновлении склада:', error);
       console.error('Детали ошибки:', error.response?.data);
-      
+
       // Показываем детали ошибки валидации если они есть
       if (error.response?.status === 400) {
         if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
@@ -1019,12 +1029,12 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     setIsEditing(false);
     // Убираем параметр edit из URL
     navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${warehouseId}`, { replace: true });
-    
+
     // Определяем типы цен в зависимости от типа склада
-    const priceTypes = warehouse?.type === 'CLOUD' 
+    const priceTypes = warehouse?.type === 'CLOUD'
       ? ['CLOUD_M3']
       : ['M2'];
-    
+
     const cancelFormData = {
       name: warehouse.name || '',
       address: warehouse?.address || '',
@@ -1363,7 +1373,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
             {!embedded && (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                <button 
+                <button
                   onClick={handleBackToList}
                   className="inline-flex items-center text-gray-600 hover:text-[#273655] transition-colors"
                 >
@@ -1435,7 +1445,131 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
             {/* Контент: Тарифы и акции — только для полной страницы */}
             {!embedded && warehouseTab === 'pricing' && isAdminOrManager && (
-              <PricingRuleManagement />
+              <div className="space-y-6">
+                <PricingRuleManagement />
+
+                {/* Управление ценами боксов по фильтрам */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900">Цены боксов (по фильтрам)</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Обновляет поле цены на уровне бокса (storages) для INDIVIDUAL хранения.
+                    </p>
+                  </div>
+
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Склад</label>
+                      <select
+                        value={bulkPriceWarehouseId || ''}
+                        onChange={(e) => setBulkPriceWarehouseId(e.target.value)}
+                        className="w-full md:w-72 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                      >
+                        <option value="">Текущий склад</option>
+                        {allWarehouses.map(w => (
+                          <option key={w.id} value={String(w.id)}>{w.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Ярус (tier)</label>
+                        <input
+                          type="number"
+                          value={bulkPriceTier}
+                          onChange={(e) => setBulkPriceTier(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          placeholder="например 1"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Пусто = все ярусы</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Объем от</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={bulkPriceFrom}
+                          onChange={(e) => setBulkPriceFrom(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          placeholder="например 2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Объем до</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={bulkPriceTo}
+                          onChange={(e) => setBulkPriceTo(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          placeholder="например 4"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Цена за м² (₸)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={bulkPriceValue}
+                          onChange={(e) => setBulkPriceValue(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          placeholder="например 9000"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={bulkPriceUpdating || !warehouseId || !bulkPriceValue}
+                        onClick={async () => {
+                          if (!warehouseId) return;
+                          const price = parseFloat(bulkPriceValue);
+                          if (!price || Number.isNaN(price) || price <= 0) {
+                            showErrorToast('Укажите корректную цену');
+                            return;
+                          }
+
+                          const payload = {
+                            warehouse_id: Number(bulkPriceWarehouseId || warehouseId),
+                            price_per_m2: price,
+                          };
+
+                          if (bulkPriceTier !== '') payload.tier = Number(bulkPriceTier);
+                          if (bulkPriceFrom !== '') payload.volume_from = Number(bulkPriceFrom);
+                          if (bulkPriceTo !== '') payload.volume_to = Number(bulkPriceTo);
+
+                          try {
+                            setBulkPriceUpdating(true);
+                            setBulkPriceUpdatedCount(null);
+                            const res = await warehouseApi.bulkUpdateStoragePricePerM2(payload);
+                            setBulkPriceUpdatedCount(res?.updated ?? null);
+                            showSuccessToast(`Обновлено боксов: ${res?.updated ?? 0}`);
+                          } catch (e) {
+                            console.error(e);
+                            showErrorToast('Не удалось обновить цены боксов');
+                          } finally {
+                            setBulkPriceUpdating(false);
+                          }
+                        }}
+                        className="px-6 py-2.5 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2c4f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {bulkPriceUpdating ? 'Обновление...' : 'Применить'}
+                      </button>
+
+                      {bulkPriceUpdatedCount !== null && (
+                        <div className="text-sm text-gray-700">
+                          Обновлено: <span className="font-semibold">{bulkPriceUpdatedCount}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Информация о складе — только для полной страницы и вкладки "склад" */}
@@ -1455,7 +1589,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-6 space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
@@ -1463,7 +1597,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             <label className="text-sm font-medium text-gray-500">Название</label>
                             <p className="text-lg font-semibold text-gray-900 mt-1">{warehouse.name}</p>
                           </div>
-                          
+
                           <div>
                             <label className="text-sm font-medium text-gray-500">Время работы</label>
                             <div className="flex items-center mt-1">
@@ -1494,21 +1628,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         </div>
                       )}
 
-                      {/* Секция цен в режиме просмотра */}
-                      {!isCloud && (
-                        <div className="pt-4 border-t border-gray-100">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                            Цена за 1 м² в месяц
-                          </h3>
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-lg font-semibold text-gray-900">
-                              {servicePrices['M2']
-                                ? `${Number(servicePrices['M2']).toLocaleString('ru-RU')} ₸`
-                                : 'Не установлена'}
-                            </p>
-                          </div>
-                        </div>
-                      )}
 
                       {/* Секция цен облачного хранения в режиме просмотра */}
                       {isCloud && (
@@ -1534,7 +1653,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                       <h2 className="text-lg font-semibold text-gray-900">Редактирование склада</h2>
                       <p className="text-sm text-gray-600 mt-1">Внесите изменения в информацию о складе</p>
                     </div>
-                    
+
                     <form onSubmit={handleSubmit(onSubmit)} className="p-6">
                       <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1579,7 +1698,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             Адрес {!isCloud && '*'}
                           </label>
                           <textarea
-                            {...register('address', { 
+                            {...register('address', {
                               required: !isCloud ? 'Адрес обязателен' : false
                             })}
                             rows={3}
@@ -1667,41 +1786,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           </div>
                         )}
 
-                        {/* Секция цен для индивидуального хранения */}
-                        {!isCloud && (
-                          <div className="pt-6 border-t border-gray-200">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                              Цена за 1 м² в месяц
-                            </h3>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Цена за м² (₸) *
-                              </label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                {...register('M2', { 
-                                  required: 'Цена обязательна',
-                                  valueAsNumber: true,
-                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                })}
-                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                  errors['M2'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                }`}
-                                placeholder="Введите цену за м²"
-                              />
-                              {errors['M2'] && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
-                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  {errors['M2'].message}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        )}
 
                         {/* Секция цен облачного хранения */}
                         {isCloud && (

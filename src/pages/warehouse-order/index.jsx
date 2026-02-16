@@ -477,6 +477,10 @@ const WarehouseOrderPage = memo(() => {
       if (storageType === 'INDIVIDUAL') {
         requestData.warehouse_id = selectedWarehouse.id;
         requestData.area = area;
+        // Идентификатор бокса (для цены на уровне бокса)
+        if (selectedStorage?.id) {
+          requestData.storage_id = selectedStorage.id;
+        }
         // Добавляем tier из выбранного бокса, если есть
         if (selectedStorage?.tier !== undefined && selectedStorage?.tier !== null) {
           requestData.tier = selectedStorage.tier;
