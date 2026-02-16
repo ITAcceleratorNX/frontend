@@ -1474,13 +1474,15 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Ярус (tier)</label>
-                        <input
-                          type="number"
+                        <select
                           value={bulkPriceTier}
                           onChange={(e) => setBulkPriceTier(e.target.value)}
                           className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
-                          placeholder="например 1"
-                        />
+                        >
+                          <option value="">Все ярусы</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                        </select>
                         <p className="text-xs text-gray-500 mt-1">Пусто = все ярусы</p>
                       </div>
 
@@ -1529,7 +1531,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         onClick={async () => {
                           if (!warehouseId) return;
                           const price = parseFloat(bulkPriceValue);
-                          if (!price || Number.isNaN(price) || price <= 0) {
+                          if (!price || Number.isNaN(price)) {
                             showErrorToast('Укажите корректную цену');
                             return;
                           }
