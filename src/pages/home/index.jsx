@@ -1353,7 +1353,7 @@ const HomePage = memo(() => {
       setIsPaymentPreviewOpen(false);
       setPaymentPreviewType(null);
 
-      // Новый тост по дизайну: зелёная галочка + текст о TrustMe и оплате
+      // Обновляем кэш заказов и переходим на thank-you страницу
       toastOrderRequestSent();
 
       // Обновляем кэш заказов и ждём завершения, затем навигация
@@ -2223,7 +2223,7 @@ const HomePage = memo(() => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative z-10">
           {/* Первая секция: Храните там, где удобно */}
           <section className="flex flex-col items-center text-center">
-            <h1 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] leading-tight mb-6 sm:mb-8">
+            <h1 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] leading-tight mb-6 sm:mb-8">
               ХРАНИТЕ ТАМ, ГДЕ УДОБНО
             </h1>
             <div className="text-sm sm:text-base text-[#5C625F] leading-relaxed mb-12 max-w-2xl mt-2">
@@ -2255,7 +2255,7 @@ const HomePage = memo(() => {
       {/* Секция: Быстрое бронирование */}
       <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal text-center mb-12 sm:mb-16">
+          <h2 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal text-center mb-12 sm:mb-16">
             БЫСТРОЕ БРОНИРОВАНИЕ
           </h2>
           <div className="flex flex-col items-center">
@@ -2306,7 +2306,7 @@ const HomePage = memo(() => {
       {/* Секция: Форматы хранения */}
       <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal text-center mb-4">
+          <h2 className="font-sf-pro-text text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal text-center mb-3 sm:mb-4">
             ФОРМАТЫ ХРАНЕНИЯ
           </h2>
           <p className="text-[#5C625F] text-sm sm:text-base text-center max-w-2xl mx-auto mb-12 sm:mb-16">
@@ -2394,7 +2394,7 @@ const HomePage = memo(() => {
       <section ref={tabsSectionRef} className="w-full bg-[#FFF] py-6 sm:py-8">
         <div className="container mx-auto px-2 sm:px-2 lg:px-3 xl:px-3 max-w-7xl">
           {/* Заголовок */}
-          <h2 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal mb-6">
+          <h2 className="font-sf-pro-text text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal mb-4 sm:mb-6">
             ХРАНЕНИЕ В ГОРОДЕ
           </h2>
           
@@ -3759,7 +3759,7 @@ const HomePage = memo(() => {
       {/* Шестой фрейм: филиалы Extra Space */}
       <section className="w-full bg-[#F7FAF9] pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-24 lg:pb-28">
         <div className="w-full px-4 sm:px-6 lg:px-8 mb-12 sm:mb-16 text-center">
-          <h1 className="font-belcanto text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] mb-6 sm:mb-8">
+          <h1 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#202422] mb-6 sm:mb-8">
             Филиалы
           </h1>
           <p className="text-sm sm:text-base text-[#555A65]">
