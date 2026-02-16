@@ -230,7 +230,7 @@ const AdminPaymentsPage = () => {
       <Card className="bg-white rounded-2xl border border-[#E0F2FE]">
         <CardHeader>
           <CardTitle className="text-[#273655]">Настройки оплаты</CardTitle>
-          <p className="text-sm text-[#8A8A8A]">Включение или отключение онлайн-оплаты (One Vision). При выключении клиенты видят контакты менеджера, оплату подтверждаете вручную в разделе ниже.</p>
+          <p className="text-sm text-[#8A8A8A]">Включение или отключение онлайн-оплаты (TipTop Pay). При выключении клиенты видят контакты менеджера, оплату подтверждаете вручную в разделе ниже.</p>
         </CardHeader>
         <CardContent>
           {settingsLoading ? (
