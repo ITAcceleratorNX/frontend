@@ -170,7 +170,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           type="button"
           aria-label={ariaLabel}
           title={ariaLabel}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-[#6B6B6B] transition-colors hover:border-[#d7dbe6] hover:text-[#273655] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#273655]/30"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-[#6B6B6B] transition-colors hover:border-[#d7dbe6] hover:text-[#004743] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A991]/30"
         >
           <Info className="h-4 w-4" />
         </button>
@@ -179,7 +179,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         align={align}
         side={side}
         sideOffset={8}
-        className="max-w-xs rounded-2xl border border-[#d7dbe6] bg-white p-4 text-sm leading-relaxed text-[#273655] shadow-xl"
+        className="max-w-xs rounded-2xl border border-[#d7dbe6] bg-white p-4 text-sm leading-relaxed text-[#004743] shadow-xl"
       >
         {description}
       </PopoverContent>
@@ -1248,7 +1248,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               )}
               <button
                 onClick={() => window.location.reload()}
-                className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-[#00A991] hover:bg-[#009882] text-white text-sm font-medium rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1277,8 +1277,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   if (!warehouse) {
     const waitingSpinner = (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#273655]"></div>
-        <span className="ml-3 text-[#273655] font-medium">Загрузка склада...</span>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00A991]"></div>
+        <span className="ml-3 text-[#004743] font-medium">Загрузка склада...</span>
       </div>
     );
 
@@ -1291,7 +1291,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               onClick={() => handleEmbeddedStorageTypeChange('INDIVIDUAL')}
               className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
                 embeddedStorageType === 'INDIVIDUAL'
-                  ? 'bg-white text-[#273655] shadow-sm'
+                  ? 'bg-white text-[#004743] shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -1304,7 +1304,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               onClick={() => handleEmbeddedStorageTypeChange('CLOUD')}
               className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
                 embeddedStorageType === 'CLOUD'
-                  ? 'bg-white text-[#273655] shadow-sm'
+                  ? 'bg-white text-[#004743] shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -1375,7 +1375,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                 <button
                   onClick={handleBackToList}
-                  className="inline-flex items-center text-gray-600 hover:text-[#273655] transition-colors"
+                  className="inline-flex items-center text-gray-600 hover:text-[#004743] transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -1406,7 +1406,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               {!isEditing && (
                 <button
                   onClick={handleEditClick}
-                  className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-[#00A991] hover:bg-[#009882] text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1424,7 +1424,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                   onClick={() => setWarehouseTab('warehouse')}
                   className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
                     warehouseTab === 'warehouse'
-                      ? 'bg-white text-[#273655] shadow-sm'
+                      ? 'bg-white text-[#004743] shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -1434,7 +1434,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                   onClick={() => setWarehouseTab('pricing')}
                   className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
                     warehouseTab === 'pricing'
-                      ? 'bg-white text-[#273655] shadow-sm'
+                      ? 'bg-white text-[#004743] shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -1463,7 +1463,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                       <select
                         value={bulkPriceWarehouseId || ''}
                         onChange={(e) => setBulkPriceWarehouseId(e.target.value)}
-                        className="w-full md:w-72 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                        className="w-full md:w-72 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
                       >
                         <option value="">Текущий склад</option>
                         {allWarehouses.map(w => (
@@ -1478,7 +1478,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           type="number"
                           value={bulkPriceTier}
                           onChange={(e) => setBulkPriceTier(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
                           placeholder="например 1"
                         />
                         <p className="text-xs text-gray-500 mt-1">Пусто = все ярусы</p>
@@ -1491,7 +1491,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           step="0.01"
                           value={bulkPriceFrom}
                           onChange={(e) => setBulkPriceFrom(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
                           placeholder="например 2"
                         />
                       </div>
@@ -1503,7 +1503,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           step="0.01"
                           value={bulkPriceTo}
                           onChange={(e) => setBulkPriceTo(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
                           placeholder="например 4"
                         />
                       </div>
@@ -1516,7 +1516,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           min="0.01"
                           value={bulkPriceValue}
                           onChange={(e) => setBulkPriceValue(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
                           placeholder="например 9000"
                         />
                       </div>
@@ -1556,7 +1556,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             setBulkPriceUpdating(false);
                           }
                         }}
-                        className="px-6 py-2.5 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2c4f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="px-6 py-2.5 bg-[#00A991] text-white text-sm font-medium rounded-lg hover:bg-[#009882] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         {bulkPriceUpdating ? 'Обновление...' : 'Применить'}
                       </button>
@@ -1833,7 +1833,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           <button
                             type="submit"
                             disabled={isSaving || !isDirty}
-                            className="px-6 py-2.5 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2c4f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="px-6 py-2.5 bg-[#00A991] text-white text-sm font-medium rounded-lg hover:bg-[#009882] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {isSaving ? (
                               <div className="flex items-center">
@@ -1922,7 +1922,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                     <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="text-xl font-bold text-[#273655]">
+                          <h3 className="text-xl font-bold text-[#004743]">
                             Укажите габариты вещей
                           </h3>
                         </div>
@@ -1945,7 +1945,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             step="0.1"
                             value={cloudDimensions.width}
                             onChange={(e) => setCloudDimensions(prev => ({ ...prev, width: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                           <span className="text-sm text-[#6B6B6B]">м</span>
                         </div>
@@ -1957,7 +1957,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             step="0.1"
                             value={cloudDimensions.height}
                             onChange={(e) => setCloudDimensions(prev => ({ ...prev, height: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                           <span className="text-sm text-[#6B6B6B]">м</span>
                         </div>
@@ -1969,20 +1969,20 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             step="0.1"
                             value={cloudDimensions.length}
                             onChange={(e) => setCloudDimensions(prev => ({ ...prev, length: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                           <span className="text-sm text-[#6B6B6B]">м</span>
                         </div>
                       </div>
 
-                      <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/15 p-3 space-y-3">
+                      <div className="rounded-2xl bg-[#00A991]/10 border border-[#00A991]/15 p-3 space-y-3">
                         <p className="text-sm text-[#6B6B6B]">
-                          Рассчитанный объём: <span className="font-semibold text-[#273655]">{cloudVolume.toFixed(2)} м³</span>
+                          Рассчитанный объём: <span className="font-semibold text-[#004743]">{cloudVolume.toFixed(2)} м³</span>
                         </p>
 
                         {/* Блок с расчетом стоимости для CLOUD */}
-                        <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3 mt-3">
-                          <div className="flex items-center justify-between text-[#273655]">
+                        <div className="rounded-2xl border border-dashed border-[#00A991]/30 bg-white px-4 py-3 text-sm text-[#004743] space-y-3 mt-3">
+                          <div className="flex items-center justify-between text-[#004743]">
                             <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
                             <span className="text-xs text-[#6B6B6B]">
                               {cloudVolume.toFixed(2)} м³
@@ -1990,7 +1990,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           </div>
                           {isCloudPriceCalculating ? (
                             <div className="flex items-center justify-center gap-2 text-base font-semibold">
-                              <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                              <span className="w-4 h-4 border-2 border-t-transparent border-[#00A991] rounded-full animate-spin" />
                               Расчёт...
                             </div>
                           ) : cloudPricePreview ? (
@@ -2003,10 +2003,10 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                               </div>
                               {/* Показываем информацию о ценах за 6 и 12 месяцев */}
                               {cloudMonthsNumber < 6 && (
-                                <div className="pt-2 border-t border-dashed border-[#273655]/20">
+                                <div className="pt-2 border-t border-dashed border-[#00A991]/20">
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs text-[#6B6B6B]">За 6 мес</span>
-                                    <span className="text-sm font-semibold text-[#273655]">
+                                    <span className="text-sm font-semibold text-[#004743]">
                                       {Math.round(cloudPricePreview.monthly * 6).toLocaleString()} ₸
                                     </span>
                                   </div>
@@ -2015,14 +2015,14 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                               {cloudMonthsNumber < 12 && (
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs text-[#6B6B6B]">За 12 мес</span>
-                                  <span className="text-sm font-semibold text-[#273655]">
+                                  <span className="text-sm font-semibold text-[#004743]">
                                     {Math.round(cloudPricePreview.monthly * 12).toLocaleString()} ₸
                                   </span>
                                 </div>
                               )}
                               <div className="flex items-center justify-between">
                                 <span className="text-[#6B6B6B]">За {cloudMonthsNumber} мес</span>
-                                <span className="text-lg font-bold text-[#273655]">
+                                <span className="text-lg font-bold text-[#004743]">
                                   {Math.round(cloudPricePreview.total).toLocaleString()} ₸
                                 </span>
                               </div>
@@ -2050,7 +2050,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                     <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="text-xl font-bold text-[#273655]">
+                          <h3 className="text-xl font-bold text-[#004743]">
                             Облачное хранение ExtraSpace
                           </h3>
                         </div>
@@ -2065,7 +2065,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                       </div>
 
                       <div className="space-y-2 sm:space-y-2.5">
-                        <span className="text-sm font-semibold text-[#273655]">
+                        <span className="text-sm font-semibold text-[#004743]">
                           Дата начала бронирования
                         </span>
                         <DatePicker
@@ -2087,8 +2087,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         />
                       </div>
 
-                      <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/20 p-3 text-sm text-[#273655] space-y-2">
-                        <div className="rounded-xl border border-[#273655]/20 bg-white/80 px-3 py-2 text-xs sm:text-sm text-[#273655] flex items-start gap-2">
+                      <div className="rounded-2xl bg-[#00A991]/10 border border-[#00A991]/20 p-3 text-sm text-[#004743] space-y-2">
+                        <div className="rounded-xl border border-[#00A991]/20 bg-white/80 px-3 py-2 text-xs sm:text-sm text-[#004743] flex items-start gap-2">
                           <Truck className="h-4 w-4 mt-[2px]" />
                           <div>
                             <strong>Дополнительные услуги</strong>
@@ -2114,7 +2114,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             value={cloudPickupAddress}
                             onChange={(e) => setCloudPickupAddress(e.target.value)}
                             placeholder="Например: г. Алматы, Абая 25"
-                            className="h-[46px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="h-[46px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#004743] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                         </div>
                         <p>Перевозка и упаковка включены в стоимость.</p>
@@ -2124,21 +2124,21 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                       {isAdminOrManager && (
                         <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                            <div className="flex items-center gap-2 text-[#004743] font-semibold">
                               <User className="w-5 h-5 shrink-0" />
                               <span>Клиент</span>
                             </div>
                             <button
                               type="button"
                               onClick={() => setIsClientSelectorOpen(true)}
-                              className="px-4 py-2 text-sm font-medium text-[#273655] border border-[#273655] rounded-lg hover:bg-[#273655] hover:text-white transition-colors"
+                              className="px-4 py-2 text-sm font-medium text-[#004743] border border-[#00A991] rounded-lg hover:bg-[#00A991] hover:text-white transition-colors"
                             >
                               {selectedClientUser ? 'Изменить' : 'Выбрать клиента'}
                             </button>
                           </div>
                           {selectedClientUser && (
-                            <div className="bg-[#273655]/5 rounded-lg p-3">
-                              <div className="text-sm font-medium text-[#273655]">
+                            <div className="bg-[#00A991]/10 rounded-lg p-3">
+                              <div className="text-sm font-medium text-[#004743]">
                                 {selectedClientUser.name || 'Без имени'}
                               </div>
                               <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
