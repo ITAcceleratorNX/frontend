@@ -81,7 +81,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
       case 'GAZELLE':
         return 'Газель';
       case 'GAZELLE_FROM':
-        return 'Газель - забор вещей';
+        return 'Газель - доставка';
       case 'GAZELLE_TO':
         return 'Газель - возврат вещей';
       case 'STRETCH_FILM':

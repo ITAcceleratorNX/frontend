@@ -375,7 +375,7 @@ const WarehouseOrderPage = memo(() => {
       case "GAZELLE":
         return "Газель";
       case "GAZELLE_FROM":
-        return "Газель - забор вещей";
+        return "Газель - Доставка";
       case "GAZELLE_TO":
         return "Газель - возврат вещей";
       case "STRETCH_FILM":

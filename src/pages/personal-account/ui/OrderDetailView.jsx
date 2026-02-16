@@ -7,6 +7,7 @@ import {
   getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
+import { getServiceTypeName } from '../../../shared/lib/utils/serviceNames';
 import EditLocationModal from './EditLocationModal';
 import { AlertTriangle, Unlock, Tag } from 'lucide-react';
 
@@ -24,21 +25,55 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
   const [selectedItem, setSelectedItem] = useState(null);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
 
-  // Расчёт суммы услуг
+  // Расчёт суммы услуг. Бэкенд должен возвращать в GET /orders сервисы с полем price
+  // или OrderService.total_price (order_service.total_price при snake_case).
+  const getServiceAmount = (service) => {
+    const orderSvc = service.OrderService || service.order_service;
+    const totalFromApi = orderSvc?.total_price ?? orderSvc?.amount;
+    if (totalFromApi != null && parseFloat(totalFromApi) > 0) return parseFloat(totalFromApi);
+    const price = parseFloat(service.price) ?? parseFloat(service.unit_price) ?? 0;
+    const count = orderSvc?.count ?? 1;
+    const amount = price * count;
+    if (import.meta.env.DEV && amount === 0 && (orderSvc || service.id)) {
+      console.debug('[OrderDetailView] Цена услуги = 0. Ожидаемые поля: service.price или OrderService.total_price. Получено:', {
+        type: service.type,
+        price: service.price,
+        orderService: orderSvc,
+      });
+    }
+    return amount;
+  };
+
   const getServicesTotal = () => {
     if (!order.services || order.services.length === 0) return 0;
-    return order.services.reduce((total, service) => {
-      if (service.OrderService && service.OrderService.total_price) {
-        return total + parseFloat(service.OrderService.total_price);
-      }
-      return total;
-    }, 0);
+    return order.services.reduce((total, service) => total + getServiceAmount(service), 0);
   };
 
   const servicesTotal = getServicesTotal();
   const totalBeforeDiscount = Number(order.total_price) + servicesTotal;
   const discountAmount = Number(order.discount_amount || 0);
   const totalPrice = Math.max(0, totalBeforeDiscount - discountAmount);
+
+  // Расчёт стоимости в месяц при ежемесячной оплате
+  const isMonthlyPayment = order.payment_type === 'MONTHLY';
+  let monthlyAmount = null;
+  if (isMonthlyPayment) {
+    if (order.order_payment && order.order_payment.length > 0) {
+      monthlyAmount = Number(order.order_payment[0].amount);
+    } else if (order.start_date && order.end_date) {
+      try {
+        const startDate = new Date(order.start_date);
+        const endDate = new Date(order.end_date);
+        const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+          (endDate.getMonth() - startDate.getMonth());
+        if (monthsDiff > 0) {
+          monthlyAmount = Math.round(totalPrice / monthsDiff);
+        }
+      } catch (e) {
+        console.error('Ошибка при расчете месячной стоимости:', e);
+      }
+    }
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
@@ -55,7 +90,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
   };
 
   const MOVING_STATUS_TEXT = {
-    PENDING: 'Ожидает забора',
+    PENDING: 'Ожидает доставки',
     COURIER_ASSIGNED: 'Курьер назначен',
     COURIER_IN_TRANSIT: 'Курьер в пути',
     COURIER_AT_CLIENT: 'Курьер у клиента',
@@ -68,7 +103,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
   function getMovingStatusText(s, direction) {
     const baseText = MOVING_STATUS_TEXT[s] || s;
     if (s === 'PENDING') {
-      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает доставки';
     }
     if (s === 'IN_PROGRESS') {
       return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
@@ -179,6 +214,13 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
         <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Финансовая информация</h3>
         <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
           <InfoRow label="Стоимость аренды" value={formatPrice(order.total_price)} />
+          {/* Стоимость в месяц — при ежемесячной оплате */}
+          {isMonthlyPayment && monthlyAmount != null && (
+            <>
+              <Separator className="bg-gray-300" />
+              <InfoRow label="Стоимость в месяц" value={formatPrice(monthlyAmount)} />
+            </>
+          )}
           {/* Услуги */}
           {servicesTotal > 0 && (
             <>
@@ -259,25 +301,66 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
         <div className="space-y-3">
           <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Дополнительные услуги</h3>
           <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
+            {/* Перевозка */}
             <div className="flex justify-between items-center py-2">
               <span className="text-sm text-gray-600">Перевозка</span>
-              <Badge 
-                variant={order.is_selected_moving ? 'default' : 'outline'}
-                className="font-medium"
-              >
-                {order.is_selected_moving ? 'Выбрано' : 'Не выбрано'}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {order.services?.some(s => ['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type)) && (
+                  <span className="text-sm font-medium text-gray-900">
+                    {formatPrice(order.services
+                      .filter(s => ['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type))
+                      .reduce((sum, s) => sum + getServiceAmount(s), 0)
+                    )}
+                  </span>
+                )}
+                <Badge 
+                  variant={order.is_selected_moving ? 'default' : 'outline'}
+                  className="font-medium"
+                >
+                  {order.is_selected_moving ? 'Выбрано' : 'Не выбрано'}
+                </Badge>
+              </div>
             </div>
             <Separator className="bg-gray-300" />
+            {/* Упаковка и прочие услуги (маркер, коробка и т.д.) */}
             <div className="flex justify-between items-center py-2">
               <span className="text-sm text-gray-600">Упаковка</span>
-              <Badge 
-                variant={order.is_selected_package ? 'default' : 'outline'}
-                className="font-medium"
-              >
-                {order.is_selected_package ? 'Выбрано' : 'Не выбрано'}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {order.services?.filter(s => !['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type)).length > 0 && (
+                  <span className="text-sm font-medium text-gray-900">
+                    {formatPrice(order.services
+                      .filter(s => !['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type))
+                      .reduce((sum, s) => sum + getServiceAmount(s), 0)
+                    )}
+                  </span>
+                )}
+                <Badge 
+                  variant={order.is_selected_package ? 'default' : 'outline'}
+                  className="font-medium"
+                >
+                  {order.is_selected_package ? 'Выбрано' : 'Не выбрано'}
+                </Badge>
+              </div>
             </div>
+            {/* Детализация: маркер, коробка и т.д. */}
+            {order.services && order.services.length > 0 && (
+              <>
+                <Separator className="bg-gray-300" />
+                <div className="pt-2 space-y-2">
+                  {order.services.map((service, index) => (
+                    <div key={service.id || index} className="flex justify-between items-center py-1 text-xs">
+                      <span className="text-gray-600">
+                        {getServiceTypeName(service.type) || service.description || service.type}
+                        {service.OrderService?.count > 1 && ` ×${service.OrderService.count}`}
+                      </span>
+                      <span className="font-medium text-gray-900">
+                        {formatPrice(getServiceAmount(service))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

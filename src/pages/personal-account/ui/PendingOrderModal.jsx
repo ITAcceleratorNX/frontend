@@ -33,7 +33,7 @@ const getServiceTypeName = (type) => {
     "PACKER": "Упаковщик",
     "FURNITURE_SPECIALIST": "Мебельщик",
     "GAZELLE": "Газель",
-    "GAZELLE_FROM": "Газель - забор вещей",
+    "GAZELLE_FROM": "Газель - доставка",
     "GAZELLE_TO": "Газель - возврат вещей",
     "STRETCH_FILM": "Стрейч-плёнка",
     "BOX_SIZE": "Коробка",

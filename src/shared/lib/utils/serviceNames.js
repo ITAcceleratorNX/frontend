@@ -14,7 +14,7 @@ export const getServiceTypeName = (type) => {
     
     // Услуги перевозки
     GAZELLE: "Газель",
-    GAZELLE_FROM: "Газель - забор вещей",
+    GAZELLE_FROM: "Газель - Доставка",
     GAZELLE_TO: "Газель - возврат вещей",
     
     // Упаковочные материалы

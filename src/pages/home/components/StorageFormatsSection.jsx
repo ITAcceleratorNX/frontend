@@ -58,7 +58,7 @@ export default function StorageFormatsSection({ onMore }) {
         <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
-                <h2 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal text-center mb-4">
+                <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-bold text-center mb-4">
                     форматы хранения
                 </h2>
 

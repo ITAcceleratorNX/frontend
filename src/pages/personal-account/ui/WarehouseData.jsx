@@ -41,7 +41,7 @@ const getServiceTypeName = (type) => {
     case "GAZELLE":
       return "Газель";
     case "GAZELLE_FROM":
-      return "Газель - забор вещей";
+      return "Газель - Доставка";
     case "GAZELLE_TO":
       return "Газель - возврат вещей";
     case "STRETCH_FILM":
@@ -592,7 +592,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       setGazelleService({
         id: String(gazelleFrom.id),
         type: gazelleFrom.type,
-        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - Доставка",
         price: gazelleFrom.price,
       });
     } else {
@@ -611,7 +611,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
       total += amount;
       breakdown.push({
-        label: gazelleService.name || "Забор вещей (с клиента на склад)",
+        label: gazelleService.name || "Доставка (с клиента на склад)",
         amount,
       });
     }
@@ -2577,7 +2577,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                                     setGazelleService({
                                       id: String(gazelleFrom.id),
                                       type: gazelleFrom.type,
-                                      name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+                                      name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - Доставка",
                                       price: gazelleFrom.price,
                                     });
                                   }

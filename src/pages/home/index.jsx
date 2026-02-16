@@ -394,7 +394,7 @@ const HomePage = memo(() => {
       // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
       total += gazelleFromPrice;
       breakdown.push({
-        label: "Забор вещей (с клиента на склад)",
+        label: "Доставка (с клиента на склад)",
         amount: gazelleFromPrice,
       });
     }
@@ -1766,7 +1766,7 @@ const HomePage = memo(() => {
     if (gazelleFrom) {
       setGazelleService({
         id: String(gazelleFrom.id),
-        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - Доставка",
         price: gazelleFrom.price,
       });
     } else {
@@ -2013,7 +2013,7 @@ const HomePage = memo(() => {
       <section ref={tabsSectionRef} className="w-full bg-[#FFF] py-6 sm:py-8">
         <div className="container mx-auto px-2 sm:px-2 lg:px-3 xl:px-3 max-w-7xl">
           {/* Заголовок */}
-          <h2 className="font-sf-pro-text text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-normal mb-6">
+          <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-bold mb-6">
             хранение в городе
           </h2>
           
@@ -2066,7 +2066,7 @@ const HomePage = memo(() => {
 
                 {/* Правая панель - Форма конфигурации */}
                 <div className="bg-[#F7FAF9] rounded-3xl p-6 shadow-lg min-h-[450px] flex flex-col">
-                  <h2 className="font-sf-pro-text text-2xl sm:text-3xl font-semibold text-[#202422] mb-6">
+                  <h2 className="font-soyuz-grotesk text-2xl sm:text-3xl font-bold text-[#202422] mb-6">
                     Настройте хранение
                   </h2>
                   
@@ -2244,14 +2244,14 @@ const HomePage = memo(() => {
                   />
 
                   {/* Кнопка бронирования - в левой колонке */}
-                  <button
+                          <button
                     onClick={handleCloudBookingClick}
                     disabled={!isCloudFormReady || isSubmittingOrder}
                     className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
-                  </button>
-                </div>
+                          </button>
+                      </div>
 
                 {/* Правая колонка - Дата, Срок аренды, Доп. услуги, Кнопка обратного звонка */}
                 <div className="flex flex-col order-2 lg:order-2 lg:pt-14">
@@ -2303,9 +2303,9 @@ const HomePage = memo(() => {
                       </div>
                       <div>
                         <label className="block text-sm text-[#373737] mb-1">Адрес забора вещей</label>
-                        <input
-                          type="text"
-                          value={cloudStreetFrom}
+                      <input
+                        type="text"
+                        value={cloudStreetFrom}
                           onChange={(e) => { setCloudStreetFrom(e.target.value); }}
                           placeholder="Например: г. Алматы, Абая 25"
                           className="w-full h-[52px] rounded-2xl bg-gray-100 border-0 px-4 text-sm text-[#373737] placeholder:text-gray-400"

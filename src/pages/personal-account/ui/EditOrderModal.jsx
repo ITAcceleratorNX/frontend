@@ -266,7 +266,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                     setGazelleService({ 
                         id: String(gazelleFrom.id), 
                         type: gazelleFrom.type, 
-                        name: getServiceTypeName(gazelleFrom.type) || "Газель - забор вещей" 
+                        name: getServiceTypeName(gazelleFrom.type) || "Газель - Доставка" 
                     })
                 }
             } catch (err) {
