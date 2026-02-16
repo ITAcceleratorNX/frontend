@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Используем прокси URL для локальной разработки
 const isDevelopment = import.meta.env.DEV;
-const API_URL = isDevelopment ? '/api' : 'http://localhost:8080';
+const API_URL = isDevelopment ? '/api' : 'https://api.extraspace.kz';
 
 export const api = axios.create({
   baseURL: API_URL,

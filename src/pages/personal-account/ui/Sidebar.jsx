@@ -178,7 +178,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         if (isProd) {
           // В production используем подход с перенаправлением на страницу выхода
           // и сразу возвращаемся на главную страницу через параметр redirect
-          const logoutUrl = 'http://localhost:8080/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
+          const logoutUrl = 'https://api.extraspace.kz/auth/logout?redirect=https://frontend-6j9m.onrender.com/';
           
           // Обновляем уведомление
           updateToast(logoutToast, "Выход выполнен успешно!", "success");
