@@ -129,6 +129,114 @@ const generateMonthlyPayments = (startDateStr, monthsCount, totalPrice, extraSer
 };
 
 /**
+ * Генерирует платежи помесячно с учётом промо-периода (разные суммы для промо и стандартных месяцев)
+ */
+const generateSplitMonthlyPayments = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0, pricingBreakdown = {}) => {
+  if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
+
+  const promoMonths = pricingBreakdown.promoMonths || 0;
+  const promoMonthlyAmount = Number(pricingBreakdown.promoMonthlyAmount) || 0;
+  const standardMonthlyAmount = Number(pricingBreakdown.standardMonthlyAmount) || 0;
+
+  const start = new Date(startDateStr);
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + monthsCount);
+  
+  const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  if (totalDays <= 0) return [];
+
+  const paymentAmounts = [];
+  let current = new Date(start);
+  let remaining = totalDays;
+  let monthIndex = 0;
+
+  while (remaining > 0) {
+    const year = current.getFullYear();
+    const month = current.getMonth() + 1;
+    const daysInMonth = getDaysInMonth(year, month);
+    const startDay = current.getDate();
+    const daysThisMonth = daysInMonth - startDay + 1;
+    const daysToCharge = Math.min(remaining, daysThisMonth);
+
+    const isPromo = monthIndex < promoMonths;
+    const monthlyRate = isPromo ? promoMonthlyAmount : standardMonthlyAmount;
+    const dailyRate = monthlyRate / daysInMonth;
+    const amount = dailyRate * daysToCharge;
+
+    paymentAmounts.push({
+      amount,
+      month,
+      year,
+      daysToCharge,
+      isPromo,
+    });
+
+    remaining -= daysToCharge;
+    current = new Date(year, month, 1);
+    monthIndex++;
+  }
+
+  // Округление
+  let totalCalculatedAmount = 0;
+  paymentAmounts.forEach((payment) => {
+    payment.roundedAmount = Number(parseFloat(payment.amount).toFixed(2));
+    totalCalculatedAmount += payment.roundedAmount;
+  });
+
+  const difference = totalPrice - totalCalculatedAmount;
+  if (paymentAmounts.length > 0) {
+    paymentAmounts[paymentAmounts.length - 1].roundedAmount =
+      Number(parseFloat(paymentAmounts[paymentAmounts.length - 1].roundedAmount + difference).toFixed(2));
+  }
+
+  // Распределение скидки
+  const totalAmountBeforeDiscount = totalPrice + Number(extraServicesAmount);
+  const discount = Number(discountAmount) || 0;
+  let remainingDiscount = discount;
+  const discountPerPayment = [];
+
+  paymentAmounts.forEach((payment, index) => {
+    const paymentTotal = index === 0
+      ? payment.roundedAmount + Number(extraServicesAmount)
+      : payment.roundedAmount;
+
+    const paymentShare = totalAmountBeforeDiscount > 0 ? paymentTotal / totalAmountBeforeDiscount : 0;
+    let paymentDiscount = Number(parseFloat(discount * paymentShare).toFixed(2));
+    paymentDiscount = Math.min(paymentDiscount, remainingDiscount);
+    paymentDiscount = Math.min(paymentDiscount, paymentTotal);
+
+    discountPerPayment.push(paymentDiscount);
+    remainingDiscount -= paymentDiscount;
+  });
+
+  if (remainingDiscount > 0 && discountPerPayment.length > 0) {
+    const lastIndex = discountPerPayment.length - 1;
+    const lastPaymentTotal = paymentAmounts[lastIndex].roundedAmount;
+    const maxAdditionalDiscount = lastPaymentTotal - discountPerPayment[lastIndex];
+    discountPerPayment[lastIndex] += Math.min(remainingDiscount, maxAdditionalDiscount);
+  }
+
+  return paymentAmounts.map((payment, index) => {
+    let finalAmount = payment.roundedAmount;
+    if (index === 0) finalAmount += Number(extraServicesAmount);
+    finalAmount -= discountPerPayment[index] || 0;
+    finalAmount = Math.max(0, Number(parseFloat(finalAmount).toFixed(2)));
+
+    return {
+      id: index + 1,
+      month: payment.month,
+      year: payment.year,
+      amount: finalAmount,
+      daysToCharge: payment.daysToCharge,
+      hasServices: index === 0 && extraServicesAmount > 0,
+      isPromo: payment.isPromo,
+    };
+  });
+};
+
+/**
  * Генерирует один платёж на всю сумму (FULL)
  */
 const generateFullPayment = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0) => {
@@ -168,6 +276,7 @@ const PaymentPreviewModal = ({
   discountAmount = 0,
   storageInfo = {},
   isSubmitting = false,
+  pricingBreakdown = null,
 }) => {
   // Состояние для типа оплаты
   const [paymentType, setPaymentType] = useState('MONTHLY');
@@ -177,8 +286,12 @@ const PaymentPreviewModal = ({
     if (paymentType === 'FULL') {
       return generateFullPayment(startDate, monthsCount, totalPrice, servicesTotal, discountAmount);
     }
+    // Если есть pricingBreakdown с promoMonths — используем split-генератор
+    if (pricingBreakdown && pricingBreakdown.promoMonths && pricingBreakdown.promoMonthlyAmount != null) {
+      return generateSplitMonthlyPayments(startDate, monthsCount, totalPrice, servicesTotal, discountAmount, pricingBreakdown);
+    }
     return generateMonthlyPayments(startDate, monthsCount, totalPrice, servicesTotal, discountAmount);
-  }, [startDate, monthsCount, totalPrice, servicesTotal, discountAmount, paymentType]);
+  }, [startDate, monthsCount, totalPrice, servicesTotal, discountAmount, paymentType, pricingBreakdown]);
 
   const calculatedTotal = useMemo(() => {
     return payments.reduce((sum, payment) => sum + payment.amount, 0);
@@ -202,6 +315,24 @@ const PaymentPreviewModal = ({
             {storageInfo.volume && ` • ${storageInfo.volume} ${volumeUnit}`}
             {` • ${monthsCount} мес.`}
           </p>
+          {pricingBreakdown && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-2xl">
+              <div className="text-sm font-semibold text-green-700 mb-1">
+                {pricingBreakdown.ruleName}
+              </div>
+              {pricingBreakdown.promoMonths ? (
+                <div className="text-xs text-green-600 space-y-0.5">
+                  <div>Первые {pricingBreakdown.promoMonths} мес: <span className="font-bold">{formatPrice(pricingBreakdown.promoMonthlyAmount)} ₸/мес</span> <span className="text-green-500">({formatPrice(pricingBreakdown.promoPrice)} ₸/м²)</span></div>
+                  <div>Далее: <span className="font-bold">{formatPrice(pricingBreakdown.standardMonthlyAmount)} ₸/мес</span> <span className="text-green-500">({formatPrice(pricingBreakdown.standardPrice)} ₸/м²)</span></div>
+                </div>
+              ) : (
+                <div className="text-xs text-green-600">
+                  Спец.цена: <span className="font-bold">{formatPrice(pricingBreakdown.standardMonthlyAmount)} ₸/мес</span>
+                  {pricingBreakdown.discountPercent && ` (скидка ${pricingBreakdown.discountPercent}%)`}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Контент - скроллится */}
@@ -257,20 +388,29 @@ const PaymentPreviewModal = ({
             {payments.map((payment) => (
               <div
                 key={payment.id}
-                className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-2xl"
+                className={`flex items-center justify-between py-3 px-4 rounded-2xl ${
+                  payment.isPromo ? 'bg-green-50 border border-green-100' : 'bg-gray-50'
+                }`}
               >
                 <div>
-                  <p className="text-sm font-semibold text-[#273655]">
-                    {payment.isFull 
-                      ? `Полная оплата (${monthsCount} мес.)`
-                      : `${getMonthName(payment.month)} ${payment.year}`
-                    }
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-[#273655]">
+                      {payment.isFull 
+                        ? `Полная оплата (${monthsCount} мес.)`
+                        : `${getMonthName(payment.month)} ${payment.year}`
+                      }
+                    </p>
+                    {payment.isPromo && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                        Акция
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-400">
                     {payment.daysToCharge} дн.{payment.hasServices ? ' + услуги' : ''}
                   </p>
                 </div>
-                <p className="text-sm font-bold text-[#273655]">
+                <p className={`text-sm font-bold ${payment.isPromo ? 'text-green-700' : 'text-[#273655]'}`}>
                   {formatPrice(payment.amount)} ₸
                 </p>
               </div>

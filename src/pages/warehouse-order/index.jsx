@@ -405,6 +405,7 @@ const WarehouseOrderPage = memo(() => {
 
   // Состояние для цены аренды склада
   const [storagePrice, setStoragePrice] = useState(0);
+  const [storagePricingBreakdown, setStoragePricingBreakdown] = useState(null);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
   // Состояние для информации о бронировании занятого бокса
   const [bookingInfo, setBookingInfo] = useState(null);
@@ -490,10 +491,12 @@ const WarehouseOrderPage = memo(() => {
       console.log('Результат расчета стоимости хранения:', result);
       console.log('Устанавливаем storagePrice =', result.storage.price);
       setStoragePrice(result.storage.price);
+      setStoragePricingBreakdown(result.storage.pricingBreakdown || null);
     } catch (error) {
       console.error('Ошибка при расчете цены склада:', error);
       // Fallback на старую логику
       setStoragePrice((selectedStorage.price || 0) * months);
+      setStoragePricingBreakdown(null);
     } finally {
       setIsCalculatingPrice(false);
     }
@@ -1134,9 +1137,33 @@ const WarehouseOrderPage = memo(() => {
                           </div>
                         ) : (
                           <>
-                            <div className="text-sm text-gray-600">
-                              Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸</span>
-                            </div>
+                            {storagePricingBreakdown ? (
+                              <div className="space-y-1">
+                                <div className="text-sm text-green-600 font-semibold">
+                                  Акция: {storagePricingBreakdown.ruleName}
+                                </div>
+                                {storagePricingBreakdown.promoMonths ? (
+                                  <>
+                                    <div className="text-sm text-gray-600">
+                                      Первые {storagePricingBreakdown.promoMonths} мес:{' '}
+                                      <span className="font-semibold text-green-600">{Math.round(storagePricingBreakdown.promoMonthlyAmount).toLocaleString()} ₸/мес</span>
+                                      <span className="text-xs text-gray-400 ml-1">({Number(storagePricingBreakdown.promoPrice).toLocaleString()} ₸/м²)</span>
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Далее: <span className="font-semibold">{Math.round(storagePricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸/мес</span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-sm text-gray-600">
+                                    Стоимость хранения за месяц: <span className="font-semibold text-green-600">{Math.round(storagePricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸/мес</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-600">
+                                Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸</span>
+                              </div>
+                            )}
                             <div className="text-lg font-bold text-[#273655]">
                               Общая стоимость: {calculateTotalPrice().toLocaleString()} ₸
                             </div>
@@ -1274,9 +1301,33 @@ const WarehouseOrderPage = memo(() => {
                           </div>
                         ) : (
                           <>
-                            <div className="text-sm text-gray-600">
-                              Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸</span>
-                            </div>
+                            {storagePricingBreakdown ? (
+                              <div className="space-y-1">
+                                <div className="text-sm text-green-600 font-semibold">
+                                  Акция: {storagePricingBreakdown.ruleName}
+                                </div>
+                                {storagePricingBreakdown.promoMonths ? (
+                                  <>
+                                    <div className="text-sm text-gray-600">
+                                      Первые {storagePricingBreakdown.promoMonths} мес:{' '}
+                                      <span className="font-semibold text-green-600">{Math.round(storagePricingBreakdown.promoMonthlyAmount).toLocaleString()} ₸/мес</span>
+                                      <span className="text-xs text-gray-400 ml-1">({Number(storagePricingBreakdown.promoPrice).toLocaleString()} ₸/м²)</span>
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Далее: <span className="font-semibold">{Math.round(storagePricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸/мес</span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-sm text-gray-600">
+                                    Стоимость хранения за месяц: <span className="font-semibold text-green-600">{Math.round(storagePricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸/мес</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-600">
+                                Стоимость хранения за месяц: <span className="font-semibold text-[#273655]">{storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸</span>
+                              </div>
+                            )}
                             <div className="text-lg font-bold text-[#273655]">
                               Общая стоимость: {calculateTotalPrice().toLocaleString()} ₸
                             </div>
@@ -1893,10 +1944,41 @@ const WarehouseOrderPage = memo(() => {
                           <>
                             {/* Месячная стоимость хранения */}
                             <div className="mb-3">
-                              <div className="text-[14px] text-[#6B6B6B] mb-1">Стоимость хранения за месяц:</div>
-                              <div className="text-[18px] font-bold text-[#273655]">
-                                {storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸
-                              </div>
+                              {storagePricingBreakdown ? (
+                                <>
+                                  <div className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 mb-2">
+                                    Акция: {storagePricingBreakdown.ruleName}
+                                  </div>
+                                  {storagePricingBreakdown.promoMonths ? (
+                                    <div className="space-y-1">
+                                      <div className="text-[14px] text-[#6B6B6B]">
+                                        Первые {storagePricingBreakdown.promoMonths} мес:{' '}
+                                        <span className="font-bold text-green-600">
+                                          {Math.round(storagePricingBreakdown.promoMonthlyAmount).toLocaleString()} ₸/мес
+                                        </span>
+                                        <span className="text-xs text-gray-400 ml-1">({Number(storagePricingBreakdown.promoPrice).toLocaleString()} ₸/м²)</span>
+                                      </div>
+                                      <div className="text-[14px] text-[#6B6B6B]">
+                                        Далее: <span className="font-bold text-[#273655]">{Math.round(storagePricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸/мес</span>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="text-[14px] text-[#6B6B6B] mb-1">Стоимость хранения за месяц:</div>
+                                      <div className="text-[18px] font-bold text-green-600">
+                                        {Math.round(storagePricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸
+                                      </div>
+                                    </>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-[14px] text-[#6B6B6B] mb-1">Стоимость хранения за месяц:</div>
+                                  <div className="text-[18px] font-bold text-[#273655]">
+                                    {storagePrice > 0 ? Math.round(storagePrice / months).toLocaleString() : '0'} ₸
+                                  </div>
+                                </>
+                              )}
                             </div>
 
                             {/* Общая стоимость услуг */}

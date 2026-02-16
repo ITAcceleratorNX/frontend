@@ -25,6 +25,7 @@ import PendingOrderModal from './PendingOrderModal';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import DatePicker from '../../../shared/ui/DatePicker';
 import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
+import PricingRuleManagement from './PricingRuleManagement';
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -62,17 +63,21 @@ const getServiceTypeName = (type) => {
   }
 };
 
-const WarehouseData = () => {
+const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const navigate = useNavigate();
-  const { warehouseId } = useParams();
+  const { warehouseId: routeWarehouseId } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const [embeddedWarehouseId, setEmbeddedWarehouseId] = useState(null);
+  const [embeddedStorageType, setEmbeddedStorageType] = useState('INDIVIDUAL'); // 'INDIVIDUAL' | 'CLOUD'
+  const warehouseId = embedded ? embeddedWarehouseId : routeWarehouseId;
   const [warehouse, setWarehouse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeNav, setActiveNav] = useState('warehouses');
+  const [warehouseTab, setWarehouseTab] = useState('warehouse'); // 'warehouse' | 'pricing'
   const [isCloud, setIsCloud] = useState(false);
   const [servicePrices, setServicePrices] = useState({});
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -231,7 +236,11 @@ const WarehouseData = () => {
   // Обработка смены склада
   const handleWarehouseChange = (newWarehouseId) => {
     if (newWarehouseId && newWarehouseId !== warehouseId) {
-      navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${newWarehouseId}`);
+      if (embedded) {
+        setEmbeddedWarehouseId(String(newWarehouseId));
+      } else {
+        navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${newWarehouseId}`);
+      }
       setPreviewStorage(null);
       setPricePreview(null);
       setPriceError(null);
@@ -758,13 +767,58 @@ const WarehouseData = () => {
   // Автоматически выбираем первый склад, если склад не выбран
   useEffect(() => {
     if (!warehouseId && allWarehouses.length > 0 && !warehouse && !isLoading && !warehousesLoading && !error) {
-      const firstWarehouse = allWarehouses.find(w => w.type !== 'CLOUD') || allWarehouses[0];
+      let firstWarehouse;
+      if (embedded) {
+        // В embedded-режиме выбираем склад в зависимости от вкладки
+        if (embeddedStorageType === 'CLOUD') {
+          firstWarehouse = allWarehouses.find(w => w.type === 'CLOUD') || allWarehouses[0];
+        } else {
+          firstWarehouse = allWarehouses.find(w => w.type !== 'CLOUD') || allWarehouses[0];
+        }
+      } else {
+        firstWarehouse = allWarehouses.find(w => w.type !== 'CLOUD') || allWarehouses[0];
+      }
       if (firstWarehouse) {
-        const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
-        navigate(`/personal-account/${basePath}/warehouses/${firstWarehouse.id}`, { replace: true });
+        if (embedded) {
+          setEmbeddedWarehouseId(String(firstWarehouse.id));
+        } else {
+          const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
+          navigate(`/personal-account/${basePath}/warehouses/${firstWarehouse.id}`, { replace: true });
+        }
       }
     }
-  }, [warehouseId, allWarehouses, warehouse, isLoading, warehousesLoading, error, navigate, user?.role]);
+  }, [warehouseId, allWarehouses, warehouse, isLoading, warehousesLoading, error, navigate, user?.role, embedded, embeddedStorageType]);
+
+  // Переключение типа хранения в embedded-режиме
+  const handleEmbeddedStorageTypeChange = useCallback((newType) => {
+    if (newType === embeddedStorageType) return;
+    setEmbeddedStorageType(newType);
+    // Сбрасываем состояния при переключении
+    setWarehouse(null);
+    setSelectedWarehouse(null);
+    setPreviewStorage(null);
+    setPricePreview(null);
+    setPriceError(null);
+    setCloudPricePreview(null);
+    setCloudPriceError(null);
+    setSelectedClientUser(null);
+    setOrderError(null);
+    setServices([]);
+    setIncludeMoving(false);
+    setIncludePacking(false);
+    // Ищем подходящий склад для нового типа
+    if (allWarehouses.length > 0) {
+      let targetWarehouse;
+      if (newType === 'CLOUD') {
+        targetWarehouse = allWarehouses.find(w => w.type === 'CLOUD');
+      } else {
+        targetWarehouse = allWarehouses.find(w => w.type !== 'CLOUD');
+      }
+      if (targetWarehouse) {
+        setEmbeddedWarehouseId(String(targetWarehouse.id));
+      }
+    }
+  }, [embeddedStorageType, allWarehouses]);
 
   const onSubmit = async (data) => {
     try {
@@ -1076,6 +1130,7 @@ const WarehouseData = () => {
         {showInlineCanvas ? (
           <div className="w-full h-full" style={{ width: '100%', height: '100%', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
             <WarehouseSVGMap
+              key={`warehouse-map-${selectedWarehouse?.id || warehouseId}`}
               ref={isFullscreen ? mapRef : null}
               warehouse={selectedWarehouse}
               storageBoxes={storageBoxes}
@@ -1128,41 +1183,42 @@ const WarehouseData = () => {
   };
 
   if (isLoading) {
+    const loadingContent = (
+      <div className={embedded ? "p-6" : "max-w-6xl mx-auto space-y-6"}>
+        <div className="flex items-center space-x-4">
+          <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    if (embedded) return loadingContent;
+
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-          <main className="flex-1 p-6">
-            <div className="max-w-6xl mx-auto space-y-6">
-              {/* Заголовок загрузки */}
-              <div className="flex items-center space-x-4">
-                <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
-              </div>
-
-              {/* Карточки загрузки */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-                      <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </main>
+          <main className="flex-1 p-6">{loadingContent}</main>
         </div>
       </div>
     );
@@ -1171,44 +1227,108 @@ const WarehouseData = () => {
 
   // Если есть ошибка загрузки, показываем сообщение об ошибке
   if (error) {
+    const errorContent = (
+      <div className={embedded ? "p-6" : "max-w-6xl mx-auto"}>
+        <div className="bg-white rounded-xl border border-red-200 shadow-sm">
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="flex justify-center space-x-4">
+              {!embedded && (
+                <button
+                  onClick={handleBackToList}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Назад к списку
+                </button>
+              )}
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Повторить
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    if (embedded) return errorContent;
+
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="flex flex-1">
+          <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
+          <main className="flex-1 p-6">{errorContent}</main>
+        </div>
+      </div>
+    );
+  }
+
+  // Если warehouse ещё не загружен (ожидание автоматического перенаправления на первый склад)
+  if (!warehouse) {
+    const waitingSpinner = (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#273655]"></div>
+        <span className="ml-3 text-[#273655] font-medium">Загрузка склада...</span>
+      </div>
+    );
+
+    if (embedded) {
+      // В embedded-режиме показываем табы + спиннер, чтобы UX не прыгал
+      return (
+        <div className="space-y-6">
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl w-full sm:w-fit">
+            <button
+              onClick={() => handleEmbeddedStorageTypeChange('INDIVIDUAL')}
+              className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                embeddedStorageType === 'INDIVIDUAL'
+                  ? 'bg-white text-[#273655] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Индивидуальное хранение
+            </button>
+            <button
+              onClick={() => handleEmbeddedStorageTypeChange('CLOUD')}
+              className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                embeddedStorageType === 'CLOUD'
+                  ? 'bg-white text-[#273655] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+              </svg>
+              Облачное хранение
+            </button>
+          </div>
+          {waitingSpinner}
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           <main className="flex-1 p-6">
-            <div className="max-w-6xl mx-auto">
-              <div className="bg-white rounded-xl border border-red-200 shadow-sm">
-                <div className="p-8 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
-                  <p className="text-gray-600 mb-6">{error}</p>
-                  <div className="flex justify-center space-x-4">
-                    <button
-                      onClick={handleBackToList}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Назад к списку
-                    </button>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Повторить
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div className="max-w-6xl mx-auto">{waitingSpinner}</div>
           </main>
         </div>
       </div>
@@ -1216,12 +1336,45 @@ const WarehouseData = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <div className="flex flex-1">
-        <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto space-y-6">
-            {/* Breadcrumb и заголовок */}
+    <div className={embedded ? "" : "min-h-screen flex flex-col bg-gray-50"}>
+      <div className={embedded ? "" : "flex flex-1"}>
+        {!embedded && <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
+        <main className={embedded ? "" : "flex-1 p-6"}>
+          <div className={embedded ? "space-y-6" : "max-w-6xl mx-auto space-y-6"}>
+            {/* Табы INDIVIDUAL / CLOUD — для embedded-режима */}
+            {embedded && (
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl w-full sm:w-fit">
+                <button
+                  onClick={() => handleEmbeddedStorageTypeChange('INDIVIDUAL')}
+                  className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                    embeddedStorageType === 'INDIVIDUAL'
+                      ? 'bg-white text-[#273655] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Индивидуальное хранение
+                </button>
+                <button
+                  onClick={() => handleEmbeddedStorageTypeChange('CLOUD')}
+                  className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                    embeddedStorageType === 'CLOUD'
+                      ? 'bg-white text-[#273655] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                  Облачное хранение
+                </button>
+              </div>
+            )}
+
+            {/* Breadcrumb и заголовок — только для полной страницы */}
+            {!embedded && (
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button 
@@ -1251,7 +1404,41 @@ const WarehouseData = () => {
                 </button>
               )}
             </div>
+            )}
 
+            {/* Табы переключения: Склад / Тарифы и акции — только для полной страницы */}
+            {!embedded && isAdminOrManager && (
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+                <button
+                  onClick={() => setWarehouseTab('warehouse')}
+                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
+                    warehouseTab === 'warehouse'
+                      ? 'bg-white text-[#273655] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Управление складом
+                </button>
+                <button
+                  onClick={() => setWarehouseTab('pricing')}
+                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
+                    warehouseTab === 'pricing'
+                      ? 'bg-white text-[#273655] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Тарифы и акции
+                </button>
+              </div>
+            )}
+
+            {/* Контент: Тарифы и акции — только для полной страницы */}
+            {!embedded && warehouseTab === 'pricing' && isAdminOrManager && (
+              <PricingRuleManagement />
+            )}
+
+            {/* Информация о складе — только для полной страницы и вкладки "склад" */}
+            {!embedded && warehouseTab === 'warehouse' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Основная информация */}
               <div className="lg:col-span-2 space-y-6">
@@ -1769,9 +1956,10 @@ const WarehouseData = () => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Блоки с картой и настройками - только в режиме просмотра */}
-            {!isEditing && warehouse && (
+            {(!embedded ? (!isEditing && warehouseTab === 'warehouse') : true) && warehouse && (
               <div className="mt-8">
                 {isCloud ? (
                   // Для CLOUD складов
@@ -2160,9 +2348,11 @@ const WarehouseData = () => {
 
                             toastOrderRequestSent();
 
-                            // Для админа/менеджера — на запросы, для обычных пользователей — на thank-you
+                            // Для embedded — вызываем callback, для админа/менеджера — на запросы, для обычных пользователей — на thank-you
                             setTimeout(() => {
-                              if (isAdminOrManager) {
+                              if (embedded && onBookingComplete) {
+                                onBookingComplete();
+                              } else if (isAdminOrManager) {
                                 navigate('/personal-account', { state: { activeSection: 'request' } });
                               } else {
                                 navigate('/thank-you');
@@ -2188,9 +2378,11 @@ const WarehouseData = () => {
                                 'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
                                 { autoClose: 5000 }
                               );
-                              setTimeout(() => {
-                                navigate('/personal-account', { state: { activeSection: 'personal' } });
-                              }, 2000);
+                              if (!embedded) {
+                                setTimeout(() => {
+                                  navigate('/personal-account', { state: { activeSection: 'personal' } });
+                                }, 2000);
+                              }
                               setIsCreatingOrder(false);
                               return;
                             }
@@ -2241,9 +2433,30 @@ const WarehouseData = () => {
                             items={allWarehouses.filter(w => w.type !== 'CLOUD')}
                             value={selectedWarehouse ? selectedWarehouse.id : undefined}
                             onChange={(_, item) => {
-                              setSelectedWarehouse(item);
-                              const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
-                              navigate(`/personal-account/${basePath}/warehouses/${item.id}`);
+                              // Сбрасываем состояния при смене склада
+                              setPreviewStorage(null);
+                              setPricePreview(null);
+                              setPriceError(null);
+                              setCloudPricePreview(null);
+                              setCloudPriceError(null);
+                              setOrderError(null);
+                              setServices([]);
+                              setIncludeMoving(false);
+                              setIncludePacking(false);
+                              setSelectedClientUser(null);
+                              
+                              // Сбрасываем warehouse и карту чтобы вызвать полную перезагрузку
+                              setWarehouse(null);
+                              setSelectedWarehouse(null);
+                              setMegaSelectedMap(1);
+                              setKomfortSelectedMap(1);
+                              
+                              if (embedded) {
+                                setEmbeddedWarehouseId(String(item.id));
+                              } else {
+                                const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
+                                navigate(`/personal-account/${basePath}/warehouses/${item.id}`);
+                              }
                             }}
                             placeholder="Выберите склад"
                             searchable={false}
@@ -3096,9 +3309,11 @@ const WarehouseData = () => {
 
                             toastOrderRequestSent();
 
-                            // Для админа/менеджера — на запросы, для обычных пользователей — на thank-you
+                            // Для embedded — вызываем callback, для админа/менеджера — на запросы, для обычных пользователей — на thank-you
                             setTimeout(() => {
-                              if (isAdminOrManager) {
+                              if (embedded && onBookingComplete) {
+                                onBookingComplete();
+                              } else if (isAdminOrManager) {
                                 navigate('/personal-account', { state: { activeSection: 'request' } });
                               } else {
                                 navigate('/thank-you');
@@ -3124,9 +3339,11 @@ const WarehouseData = () => {
                                 'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
                                 { autoClose: 5000 }
                               );
-                              setTimeout(() => {
-                                navigate('/personal-account', { state: { activeSection: 'personal' } });
-                              }, 2000);
+                              if (!embedded) {
+                                setTimeout(() => {
+                                  navigate('/personal-account', { state: { activeSection: 'personal' } });
+                                }, 2000);
+                              }
                               setIsCreatingOrder(false);
                               return;
                             }
