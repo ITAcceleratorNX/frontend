@@ -1,5 +1,6 @@
 import React from 'react';
 import { Package, Trash2, Plus } from 'lucide-react';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 import { Switch, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel } from '../../../../components/ui';
 import uslugiMuveraIcon from "../../../../../src/assets/услуги_мувера.png";
 import uslugiUpakovkiIcon from "../../../../../src/assets/услуги_упаковки.png";
@@ -178,7 +179,7 @@ export default function PackingServicesSection({
                                                                                 <SelectGroup>
                                                                                     <SelectLabel className="text-xs font-semibold text-[#00A991] uppercase tracking-wide">Услуги персонала</SelectLabel>
                                                                                     {availableOptions.filter(o => ['PACKER', 'LOADER', 'RACK_RENTAL'].includes(o.type)).map(option => (
-                                                                                        <SelectItem key={option.id} value={String(option.id)}>{getServiceTypeName(option.type)}</SelectItem>
+                                                                                        <SelectItem key={option.id} value={String(option.id)}>{formatServiceDescription(option.description) || getServiceTypeName(option.type)}</SelectItem>
                                                                                     ))}
                                                                                 </SelectGroup>
                                                                             )}
@@ -186,7 +187,7 @@ export default function PackingServicesSection({
                                                                                 <SelectGroup>
                                                                                     <SelectLabel className="text-xs font-semibold text-[#00A991] uppercase tracking-wide mt-2">Упаковочные материалы</SelectLabel>
                                                                                     {availableOptions.filter(o => ['BOX_SIZE', 'MARKER', 'BUBBLE_WRAP_1', 'BUBBLE_WRAP_2', 'STRETCH_FILM'].includes(o.type)).map(option => (
-                                                                                        <SelectItem key={option.id} value={String(option.id)}>{getServiceTypeName(option.type)}</SelectItem>
+                                                                                        <SelectItem key={option.id} value={String(option.id)}>{formatServiceDescription(option.description) || getServiceTypeName(option.type)}</SelectItem>
                                                                                     ))}
                                                                                 </SelectGroup>
                                                                             )}

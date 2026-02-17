@@ -28,6 +28,7 @@ import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
 import PricingRuleManagement from './PricingRuleManagement';
 import {StoragePricesMatrix} from "../../../../src/pages/personal-account/admin/StoragePricesMatrix.js";
 import {useStoragePrices} from "../../../../src/shared/hooks/useStoragePrices.js";
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -556,7 +557,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     });
   }, [serviceOptions]);
 
-  // Синхронизация услуги "Газель - забор" (GAZELLE_FROM)
+  // Синхронизация услуги "Газель - Доставка" (GAZELLE_FROM)
   // Добавляем только GAZELLE_FROM с count: 1 при включении перевозки
   const syncGazelleService = useCallback((currentServices) => {
     if (!gazelleService || !includeMoving) {
@@ -571,7 +572,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       // Обновляем количество (всегда 1 для GAZELLE_FROM)
       updated[existingIndex] = { ...updated[existingIndex], count: 1 };
     } else {
-      // Добавляем "Газель - забор" с количеством 1
+      // Добавляем "Газель - Доставка" с количеством 1
       updated.push({ service_id: gazelleService.id, count: 1 });
     }
 
@@ -609,9 +610,9 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     const breakdown = [];
     let total = 0;
 
-    // Перевозка вещей (только забор)
+    // Перевозка вещей (только доставка)
     if (includeMoving && gazelleService) {
-      const count = 1; // Только забор вещей
+      const count = 1; // Только доставка
       const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
       total += amount;
       breakdown.push({
@@ -631,7 +632,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         const amount = unitPrice * service.count;
         total += amount;
         breakdown.push({
-          label: option?.description || getServiceTypeName(option?.type) || "Услуга",
+          label: formatServiceDescription(option?.description) || getServiceTypeName(option?.type) || "Услуга",
           amount,
         });
       });
@@ -2102,12 +2103,12 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           <div>
                             <strong>Дополнительные услуги</strong>
                             <p className="mt-1">
-                              Мы сами забираем и упаковываем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
+                              Мы сами забираем и упаковываем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес доставки.
                             </p>
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата забора вещей</span>
+                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата доставки</span>
                           <DatePicker
                             value={cloudPickupDate}
                             onChange={(value) => setCloudPickupDate(value)}
@@ -2117,7 +2118,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           />
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес забора вещей</span>
+                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес доставки</span>
                           <input
                             type="text"
                             value={cloudPickupAddress}
@@ -2180,7 +2181,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           }
 
                           if (!cloudPickupAddress.trim()) {
-                            showErrorToast('Укажите адрес забора вещей');
+                            showErrorToast('Укажите адрес доставки');
                             return;
                           }
 
@@ -2272,13 +2273,13 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
                             // Добавляем перевозки
                             if (includeMoving) {
-                              // Используем выбранную дату забора или текущую дату
+                              // Используем выбранную дату доставки или текущую дату
                               const pickupDate = cloudPickupDate 
                                 ? new Date(cloudPickupDate)
                                 : new Date();
                               pickupDate.setHours(10, 0, 0, 0);
                               
-                              // Дата возврата = дата забора + количество месяцев
+                              // Дата возврата = дата доставки + количество месяцев
                               const returnDate = new Date(pickupDate);
                               returnDate.setMonth(returnDate.getMonth() + cloudMonthsNumber);
                               returnDate.setHours(10, 0, 0, 0);
@@ -2600,7 +2601,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         {includeMoving && (
                           <div className="mt-3 space-y-3">
                             <div className="flex flex-col gap-1">
-                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата забора вещей</label>
+                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата доставки</label>
                               <DatePicker
                                 value={movingPickupDate}
                                 onChange={(value) => setMovingPickupDate(value)}
@@ -2608,7 +2609,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                                 allowFutureDates={true}
                                 placeholder="ДД.ММ.ГГГГ"
                               />
-                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mt-2">Адрес забора</label>
+                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mt-2">Адрес доставки</label>
                               <input
                                 type="text"
                                 value={movingAddressFrom}
@@ -2702,7 +2703,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                                                   availableOptions
                                                     .map((option) => {
                                                       // Используем description если есть, иначе getServiceTypeName
-                                                      const serviceName = option.description || getServiceTypeName(option.type);
+                                                      const serviceName = formatServiceDescription(option.description) || getServiceTypeName(option.type);
                                                       // Не показываем услуги без названия
                                                       if (!serviceName) return null;
                                                       return (
@@ -2927,7 +2928,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           }
 
                           if (includeMoving && !movingAddressFrom.trim()) {
-                            showErrorToast('Укажите адрес забора вещей');
+                            showErrorToast('Укажите адрес доставки');
                             return;
                           }
 
@@ -3047,7 +3048,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             const allMovingOrders = [];
                             
                             if (includeMoving && movingAddressFrom.trim()) {
-                              // Добавляем забор вещей (PENDING с direction TO_WAREHOUSE)
+                              // Добавляем доставку (PENDING с direction TO_WAREHOUSE)
                               const pickupDate = movingPickupDate 
                                 ? new Date(movingPickupDate)
                                 : new Date();

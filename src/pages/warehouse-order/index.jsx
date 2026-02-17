@@ -15,6 +15,7 @@ import ZhkKomfortCanvas from "../../components/ZhkKomfortCanvas.jsx";
 import MiniVolumeSelector from "../../components/MiniVolumeSelector";
 import ProfileValidationGuard from "../../shared/components/ProfileValidationGuard";
 import CallbackRequestModal from "../../shared/components/CallbackRequestModal.jsx";
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 // Импорт компонентов UI
 import {
   Switch,
@@ -120,7 +121,7 @@ const WarehouseOrderPage = memo(() => {
         setIsSelectedPackage(true);
         // Не сбрасываем movingOrders, если уже есть
         if (movingOrders.length === 0) {
-          // Для облачного хранения создаем только забор вещей (PENDING с direction TO_WAREHOUSE)
+          // Для облачного хранения создаем только доставку (PENDING с direction TO_WAREHOUSE)
           setMovingOrders([
             { moving_date: new Date().toISOString(), status: 'PENDING', direction: 'TO_WAREHOUSE', address: '' }
           ]);
@@ -176,7 +177,7 @@ const WarehouseOrderPage = memo(() => {
         updated.push({ service_id: gazelleFromOption.id.toString(), count: 1 });
       }
     } else if (!hasPickup && gazelleFromOption) {
-      // Удаляем услугу, если нет забора
+      // Удаляем услугу, если нет доставки
       updated = updated.filter(s => String(s.service_id) !== String(gazelleFromOption.id));
     }
     
@@ -323,7 +324,7 @@ const WarehouseOrderPage = memo(() => {
     return errors;
   };
 
-  // Функция добавления даты перевозки (только забор вещей)
+  // Функция добавления даты перевозки (только доставка)
   const addMovingOrder = () => {
     const newOrder = {
       moving_date: new Date().toISOString(),
@@ -715,7 +716,7 @@ const WarehouseOrderPage = memo(() => {
       setIsSubmitting(true);
       setError(null);
 
-      // Финальная синхронизация "Газель - забор" (GAZELLE_FROM)
+      // Финальная синхронизация "Газель - Доставка" (GAZELLE_FROM)
       // Синхронизируем услуги перевозки на основе moving_orders
       let finalServices = syncMovingServices(services, movingOrders);
 
@@ -1614,7 +1615,7 @@ const WarehouseOrderPage = memo(() => {
                           <div>
                             <label className="block text-sm font-medium text-[#273655] mb-1">
                               {order.status === 'PENDING' && order.direction === 'TO_WAREHOUSE'
-                                  ? 'Дата забора вещей'
+                                  ? 'Дата доставки'
                                   : 'Дата доставки вещей'}
                             </label>
                             <DatePicker
@@ -1760,7 +1761,7 @@ const WarehouseOrderPage = memo(() => {
                                         })
                                         .map((price) => {
                                           // Используем description если есть, иначе getServiceTypeName
-                                          const serviceName = price.description || getServiceTypeName(price.type);
+                                          const serviceName = formatServiceDescription(price.description) || getServiceTypeName(price.type);
                                           // Не показываем услуги без названия
                                           if (!serviceName) return null;
                                           return (

@@ -1,4 +1,15 @@
 /**
+ * Убирает габариты вида 60*40*40, 60×40×40 и т.д. из описания услуги.
+ * Оставляет только текст в скобках (120 мм), (шт) и т.п.
+ * @param {string} desc - Описание услуги
+ * @returns {string} - Отформатированное описание без габаритов
+ */
+export const formatServiceDescription = (desc) => {
+  if (!desc || typeof desc !== "string") return desc || "";
+  return desc.replace(/\d+\s*[*×xX]\s*\d+\s*[*×xX]\s*\d+/g, "").trim();
+};
+
+/**
  * Утилита для получения человекочитаемых названий типов услуг
  * @param {string} type - Тип услуги
  * @returns {string} - Название услуги на русском языке

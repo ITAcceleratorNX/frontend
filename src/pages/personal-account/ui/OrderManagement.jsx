@@ -382,21 +382,25 @@ const OrderManagement = () => {
       {/* Статистика */}
       <div className="flex gap-3 overflow-x-auto pb-1 hide-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-5 sm:overflow-x-visible">
         {[
-          { key: 'total', value: statistics.total, label: 'Всего', gradient: 'from-[#273655] to-[#1a1f3d]', icon: ClipboardList },
-          { key: 'inactive', value: statistics.inactive, label: 'Неактивные', gradient: 'from-gray-700 to-gray-900', icon: Users },
-          { key: 'approved', value: statistics.approved, label: 'Подтверждено', gradient: 'from-emerald-500 to-emerald-600', icon: CheckCircle2 },
-          { key: 'processing', value: statistics.processing, label: 'В обработке', gradient: 'from-amber-400 to-orange-500', icon: Clock },
-          { key: 'active', value: statistics.active, label: 'Активных', gradient: 'from-[#00A991] to-[#004743]', icon: Zap },
+          { key: 'total', value: statistics.total, label: 'Всего', accent: 'bg-[#273655]', icon: ClipboardList },
+          { key: 'inactive', value: statistics.inactive, label: 'Неактивные', accent: 'bg-gray-500', icon: Users },
+          { key: 'approved', value: statistics.approved, label: 'Подтверждено', accent: 'bg-emerald-500', icon: CheckCircle2 },
+          { key: 'processing', value: statistics.processing, label: 'В обработке', accent: 'bg-amber-500', icon: Clock },
+          { key: 'active', value: statistics.active, label: 'Активных', accent: 'bg-[#00A991]', icon: Zap },
         ].map((stat) => (
           <div
             key={stat.key}
-            className={`min-w-[130px] sm:min-w-0 bg-gradient-to-br ${stat.gradient} text-white rounded-2xl p-3 sm:p-4 flex flex-col items-center gap-1 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 sm:flex-shrink`}
+            className={`min-w-[130px] sm:min-w-0 bg-white rounded-3xl p-4 sm:p-5 flex flex-col gap-2 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all flex-shrink-0 sm:flex-shrink`}
           >
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 opacity-80" />
-              <span className="text-xl sm:text-2xl font-bold">{stat.value}</span>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-2xl ${stat.accent} flex items-center justify-center flex-shrink-0`}>
+                <stat.icon className="w-5 h-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xl sm:text-2xl font-bold text-[#202422] block font-soyuz-grotesk">{stat.value}</span>
+                <span className="text-xs text-[#5C625F] whitespace-nowrap">{stat.label}</span>
+              </div>
             </div>
-            <span className="text-[11px] sm:text-xs opacity-80 whitespace-nowrap">{stat.label}</span>
           </div>
         ))}
       </div>
