@@ -68,6 +68,7 @@ const CallbackRequestSection = ({ showRegisterPrompt = false }) => {
     try {
       const response = await api.post('/submit-lead', buildLeadPayload(formData));
       if (response?.data?.success) {
+        navigate("/thank-you");
         showSuccessToast('Заявка отправлена! Мы свяжемся с вами в ближайшее время.');
         setFormData({ name: '', phone: '' });
         if (typeof window !== 'undefined') {
@@ -94,7 +95,7 @@ const CallbackRequestSection = ({ showRegisterPrompt = false }) => {
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
             {/* Левая колонка */}
             <div className="flex-1 w-full lg:max-w-[45%] space-y-4">
-              <h2 className="font-belcanto text-3xl sm:text-4xl lg:text-5xl font-normal text-[#202422] leading-tight">
+              <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl lg:text-5xl font-bold text-[#202422] leading-tight">
                 ЗАКАЗАТЬ<br />ОБРАТНЫЙ ЗВОНОК
               </h2>
               <p className="text-sm text-gray-600">

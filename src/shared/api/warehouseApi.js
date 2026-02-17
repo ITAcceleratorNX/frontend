@@ -104,4 +104,32 @@ export const warehouseApi = {
       throw error;
     }
   },
+
+  // Массовое обновление цены боксов (INDIVIDUAL) по фильтрам
+  bulkUpdateStoragePricePerM2: async (payload) => {
+    try {
+      console.log('Отправка запроса на массовое обновление цены боксов:', payload);
+      const response = await api.post('/storages/bulk/update-price', payload);
+      console.log('Цены боксов успешно обновлены:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при массовом обновлении цены боксов:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getStoragePrices: async (warehouseId) => {
+    try {
+      const { data } = await api.get("/storages/prices", {
+        params: { warehouse_id: warehouseId }
+      });
+      return data;
+    } catch (error) {
+      console.error(
+          "Ошибка при получении цен для складов:",
+          error.response?.data || error.message
+      );
+      throw error;
+    }
+  }
 }; 

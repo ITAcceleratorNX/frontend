@@ -25,6 +25,9 @@ import PendingOrderModal from './PendingOrderModal';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import DatePicker from '../../../shared/ui/DatePicker';
 import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
+import PricingRuleManagement from './PricingRuleManagement';
+import {StoragePricesMatrix} from "../../../../src/pages/personal-account/admin/StoragePricesMatrix.js";
+import {useStoragePrices} from "../../../../src/shared/hooks/useStoragePrices.js";
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -40,7 +43,7 @@ const getServiceTypeName = (type) => {
     case "GAZELLE":
       return "Газель";
     case "GAZELLE_FROM":
-      return "Газель - забор вещей";
+      return "Газель - Доставка";
     case "GAZELLE_TO":
       return "Газель - возврат вещей";
     case "STRETCH_FILM":
@@ -62,17 +65,21 @@ const getServiceTypeName = (type) => {
   }
 };
 
-const WarehouseData = () => {
+const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const navigate = useNavigate();
-  const { warehouseId } = useParams();
+  const { warehouseId: routeWarehouseId } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const [embeddedWarehouseId, setEmbeddedWarehouseId] = useState(null);
+  const [embeddedStorageType, setEmbeddedStorageType] = useState('INDIVIDUAL'); // 'INDIVIDUAL' | 'CLOUD'
+  const warehouseId = embedded ? embeddedWarehouseId : routeWarehouseId;
   const [warehouse, setWarehouse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeNav, setActiveNav] = useState('warehouses');
+  const [warehouseTab, setWarehouseTab] = useState('warehouse'); // 'warehouse' | 'pricing'
   const [isCloud, setIsCloud] = useState(false);
   const [servicePrices, setServicePrices] = useState({});
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -135,6 +142,17 @@ const WarehouseData = () => {
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const mapRef = useRef(null);
 
+  // Массовое обновление цен боксов (по фильтрам)
+  const [bulkPriceTier, setBulkPriceTier] = useState('');
+  const [bulkPriceFrom, setBulkPriceFrom] = useState('');
+  const [bulkPriceTo, setBulkPriceTo] = useState('');
+  const [bulkPriceValue, setBulkPriceValue] = useState('');
+  const [bulkPriceUpdating, setBulkPriceUpdating] = useState(false);
+  const [bulkPriceUpdatedCount, setBulkPriceUpdatedCount] = useState(null);
+  const [bulkPriceWarehouseId, setBulkPriceWarehouseId] = useState(warehouseId || '');
+
+  const { refetch, prices } = useStoragePrices();
+
   // Проверка, является ли пользователь менеджером или админом
   const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
@@ -145,7 +163,7 @@ const WarehouseData = () => {
     getValues,
     formState: { errors, isDirty }
   } = useForm();
-  
+
   const [initialFormData, setInitialFormData] = useState(null);
 
   // Компонент InfoHint для подсказок
@@ -156,7 +174,7 @@ const WarehouseData = () => {
           type="button"
           aria-label={ariaLabel}
           title={ariaLabel}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-[#6B6B6B] transition-colors hover:border-[#d7dbe6] hover:text-[#273655] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#273655]/30"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-[#6B6B6B] transition-colors hover:border-[#d7dbe6] hover:text-[#004743] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A991]/30"
         >
           <Info className="h-4 w-4" />
         </button>
@@ -165,7 +183,7 @@ const WarehouseData = () => {
         align={align}
         side={side}
         sideOffset={8}
-        className="max-w-xs rounded-2xl border border-[#d7dbe6] bg-white p-4 text-sm leading-relaxed text-[#273655] shadow-xl"
+        className="max-w-xs rounded-2xl border border-[#d7dbe6] bg-white p-4 text-sm leading-relaxed text-[#004743] shadow-xl"
       >
         {description}
       </PopoverContent>
@@ -231,7 +249,11 @@ const WarehouseData = () => {
   // Обработка смены склада
   const handleWarehouseChange = (newWarehouseId) => {
     if (newWarehouseId && newWarehouseId !== warehouseId) {
-      navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${newWarehouseId}`);
+      if (embedded) {
+        setEmbeddedWarehouseId(String(newWarehouseId));
+      } else {
+        navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${newWarehouseId}`);
+      }
       setPreviewStorage(null);
       setPricePreview(null);
       setPriceError(null);
@@ -286,6 +308,9 @@ const WarehouseData = () => {
           area: rawArea,
           services: [],
           warehouse_id: warehouse.id,
+          storage_id: previewStorage?.id,
+          // Добавляем tier из выбранного бокса, если есть
+          ...(previewStorage?.tier !== undefined && previewStorage?.tier !== null && { tier: previewStorage.tier }),
         };
 
         const response = await warehouseApi.calculateBulkPrice(payload);
@@ -430,17 +455,7 @@ const WarehouseData = () => {
       const pricesData = await paymentsApi.getPrices();
       const filteredPrices = pricesData.filter((price) => {
         if (price.id <= 4) return false;
-        const excludedTypes = [
-          "DEPOSIT",
-          "M2_UP_6M",
-          "M2_6_12M",
-          "M2_OVER_12M",
-          "M3_UP_6M",
-          "M3_6_12M",
-          "M3_OVER_12M",
-          "CLOUD_PRICE_LOW",
-          "CLOUD_PRICE_HIGH",
-        ];
+        const excludedTypes = ["DEPOSIT", "M2", "CLOUD_M3"];
         return !excludedTypes.includes(price.type);
       });
       setServiceOptions(filteredPrices);
@@ -469,29 +484,29 @@ const WarehouseData = () => {
             }
           : service
       );
-      
+
       return updated;
     });
-    
+
     // Обрабатываем изменение service_id отдельно, вне setServices
     if (field === "service_id") {
       // Получаем текущую услугу
       const currentService = services[index];
-      
+
       // Проверяем, была ли добавлена услуга GAZELLE_TO
       if (value && serviceOptions.length > 0) {
         const selectedOption = serviceOptions.find(opt => String(opt.id) === String(value));
-        
+
         if (selectedOption && selectedOption.type === "GAZELLE_TO") {
           console.log("✅ GAZELLE_TO выбрана, создаем moving_order");
-          
+
           // Добавляем moving_order для возврата вещей
           // Дата возврата = дата начала бронирования + количество месяцев
           const startDate = individualBookingStartDate ? new Date(individualBookingStartDate) : new Date();
           const returnDate = new Date(startDate);
           returnDate.setMonth(returnDate.getMonth() + monthsNumber);
           returnDate.setHours(10, 0, 0, 0);
-          
+
           setMovingOrders(prevOrders => {
             // Проверяем, нет ли уже такого moving_order
             const exists = prevOrders.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
@@ -499,20 +514,20 @@ const WarehouseData = () => {
               console.log("⚠️ moving_order PENDING (TO_CLIENT) уже существует");
               return prevOrders;
             }
-            
+
             const newOrder = {
               moving_date: returnDate.toISOString(),
               status: "PENDING",
               direction: "TO_CLIENT",
               address: movingAddressTo || movingAddressFrom || "",
             };
-            
+
             console.log("✅ Создан новый moving_order:", newOrder);
             return [...prevOrders, newOrder];
           });
         }
       }
-      
+
       // Проверяем, была ли удалена услуга GAZELLE_TO
       if (currentService?.service_id && serviceOptions.length > 0) {
         const oldOption = serviceOptions.find(opt => String(opt.id) === String(currentService.service_id));
@@ -528,7 +543,7 @@ const WarehouseData = () => {
   const removeServiceRow = useCallback((index) => {
     setServices((prev) => {
       const serviceToRemove = prev[index];
-      
+
       // Если удаляется GAZELLE_TO, удаляем соответствующий moving_order
       if (serviceToRemove?.service_id && serviceOptions.length > 0) {
         const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
@@ -536,7 +551,7 @@ const WarehouseData = () => {
           setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
         }
       }
-      
+
       return prev.filter((_, i) => i !== index);
     });
   }, [serviceOptions]);
@@ -581,7 +596,7 @@ const WarehouseData = () => {
       setGazelleService({
         id: String(gazelleFrom.id),
         type: gazelleFrom.type,
-        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - Доставка",
         price: gazelleFrom.price,
       });
     } else {
@@ -600,7 +615,7 @@ const WarehouseData = () => {
       const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
       total += amount;
       breakdown.push({
-        label: gazelleService.name || "Забор вещей (с клиента на склад)",
+        label: gazelleService.name || "Доставка (с клиента на склад)",
         amount,
       });
     }
@@ -671,25 +686,23 @@ const WarehouseData = () => {
         const data = await warehouseApi.getWarehouseById(warehouseId);
         setWarehouse(data);
         setIsCloud(data.type === "CLOUD");
-        
+
         // Загружаем цены услуг для склада
         try {
           let pricesMap = {};
-          
+
           // Определяем типы цен в зависимости от типа склада
-          const priceTypes = data.type === 'CLOUD' 
-            ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-            : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
-          
+          const priceTypes = data.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
+
           // Для всех складов получаем цены из warehouse-service-prices
           const prices = await warehouseApi.getWarehouseServicePrices(warehouseId);
           // Преобразуем массив цен в объект для удобства
           prices.forEach(price => {
             pricesMap[price.service_type] = parseFloat(price.price);
           });
-          
+
           setServicePrices(pricesMap);
-          
+
           // Заполняем форму данными склада и ценами
           const formData = {
             name: data.name || '',
@@ -703,17 +716,15 @@ const WarehouseData = () => {
               return acc;
             }, {})
           };
-          
+
           reset(formData);
           // Сохраняем исходные данные для сравнения
           setInitialFormData(formData);
         } catch (priceError) {
           console.warn('Не удалось загрузить цены склада:', priceError);
           // Если цены не загрузились, используем пустые значения
-          const priceTypes = data.type === 'CLOUD' 
-            ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-            : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
-          
+          const priceTypes = data.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
+
           const emptyFormData = {
             name: data.name || '',
             address: data.address || '',
@@ -758,18 +769,63 @@ const WarehouseData = () => {
   // Автоматически выбираем первый склад, если склад не выбран
   useEffect(() => {
     if (!warehouseId && allWarehouses.length > 0 && !warehouse && !isLoading && !warehousesLoading && !error) {
-      const firstWarehouse = allWarehouses.find(w => w.type !== 'CLOUD') || allWarehouses[0];
+      let firstWarehouse;
+      if (embedded) {
+        // В embedded-режиме выбираем склад в зависимости от вкладки
+        if (embeddedStorageType === 'CLOUD') {
+          firstWarehouse = allWarehouses.find(w => w.type === 'CLOUD') || allWarehouses[0];
+        } else {
+          firstWarehouse = allWarehouses.find(w => w.type !== 'CLOUD') || allWarehouses[0];
+        }
+      } else {
+        firstWarehouse = allWarehouses.find(w => w.type !== 'CLOUD') || allWarehouses[0];
+      }
       if (firstWarehouse) {
-        const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
-        navigate(`/personal-account/${basePath}/warehouses/${firstWarehouse.id}`, { replace: true });
+        if (embedded) {
+          setEmbeddedWarehouseId(String(firstWarehouse.id));
+        } else {
+          const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
+          navigate(`/personal-account/${basePath}/warehouses/${firstWarehouse.id}`, { replace: true });
+        }
       }
     }
-  }, [warehouseId, allWarehouses, warehouse, isLoading, warehousesLoading, error, navigate, user?.role]);
+  }, [warehouseId, allWarehouses, warehouse, isLoading, warehousesLoading, error, navigate, user?.role, embedded, embeddedStorageType]);
+
+  // Переключение типа хранения в embedded-режиме
+  const handleEmbeddedStorageTypeChange = useCallback((newType) => {
+    if (newType === embeddedStorageType) return;
+    setEmbeddedStorageType(newType);
+    // Сбрасываем состояния при переключении
+    setWarehouse(null);
+    setSelectedWarehouse(null);
+    setPreviewStorage(null);
+    setPricePreview(null);
+    setPriceError(null);
+    setCloudPricePreview(null);
+    setCloudPriceError(null);
+    setSelectedClientUser(null);
+    setOrderError(null);
+    setServices([]);
+    setIncludeMoving(false);
+    setIncludePacking(false);
+    // Ищем подходящий склад для нового типа
+    if (allWarehouses.length > 0) {
+      let targetWarehouse;
+      if (newType === 'CLOUD') {
+        targetWarehouse = allWarehouses.find(w => w.type === 'CLOUD');
+      } else {
+        targetWarehouse = allWarehouses.find(w => w.type !== 'CLOUD');
+      }
+      if (targetWarehouse) {
+        setEmbeddedWarehouseId(String(targetWarehouse.id));
+      }
+    }
+  }, [embeddedStorageType, allWarehouses]);
 
   const onSubmit = async (data) => {
     try {
       setIsSaving(true);
-      
+
       // Обрезаем секунды от времени (09:00:00 -> 09:00)
       const formatTime = (timeString) => {
         if (!timeString) return timeString;
@@ -777,19 +833,17 @@ const WarehouseData = () => {
       };
 
       // Определяем типы цен в зависимости от типа склада
-      const priceTypes = warehouse?.type === 'CLOUD' 
-        ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-        : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
+      const priceTypes = warehouse?.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
 
       // Сравниваем текущие значения с исходными и собираем только измененные поля
       const updateData = {};
-      
+
       if (!initialFormData) {
         // Если исходные данные не загружены, отправляем все данные
         updateData.name = data.name;
         // Для CLOUD складов адрес может быть пустым
-        updateData.address = isCloud && (!data.address || data.address.trim() === '') 
-          ? null 
+        updateData.address = isCloud && (!data.address || data.address.trim() === '')
+          ? null
           : data.address;
         updateData.work_start = formatTime(data.work_start);
         updateData.work_end = formatTime(data.work_end);
@@ -802,32 +856,32 @@ const WarehouseData = () => {
         if (data.name !== initialFormData.name) {
           updateData.name = data.name;
         }
-        
+
         // Для CLOUD складов адрес может быть пустым, для INDIVIDUAL - обязателен
         // Нормализуем значения для сравнения (пустая строка = null для CLOUD)
-        const currentAddress = isCloud && (!data.address || data.address.trim() === '') 
-          ? null 
+        const currentAddress = isCloud && (!data.address || data.address.trim() === '')
+          ? null
           : data.address;
-        const initialAddress = isCloud && (!initialFormData.address || initialFormData.address.trim() === '') 
-          ? null 
+        const initialAddress = isCloud && (!initialFormData.address || initialFormData.address.trim() === '')
+          ? null
           : initialFormData.address;
-        
+
         if (currentAddress !== initialAddress) {
           updateData.address = currentAddress;
         }
-        
+
         if (formatTime(data.work_start) !== formatTime(initialFormData.work_start)) {
           updateData.work_start = formatTime(data.work_start);
         }
-        
+
         if (formatTime(data.work_end) !== formatTime(initialFormData.work_end)) {
           updateData.work_end = formatTime(data.work_end);
         }
-        
+
         if (data.status !== initialFormData.status) {
           updateData.status = data.status;
         }
-        
+
         if (isCloud && data.total_volume !== initialFormData.total_volume) {
           updateData.total_volume = data.total_volume;
         }
@@ -839,12 +893,12 @@ const WarehouseData = () => {
         priceTypes.forEach(type => {
           const currentValue = data[type];
           const initialValue = initialFormData[type];
-          
+
           // Проверяем, изменилась ли цена
           if (currentValue !== undefined && currentValue !== '' && currentValue !== null) {
             const currentPrice = parseFloat(currentValue);
             const initialPrice = initialValue ? parseFloat(initialValue) : null;
-            
+
             // Проверяем, что текущая цена является валидным положительным числом
             if (!isNaN(currentPrice) && isFinite(currentPrice) && currentPrice > 0 && currentPrice !== initialPrice) {
               changedPrices.push({
@@ -901,7 +955,7 @@ const WarehouseData = () => {
         }
         return updated;
       });
-      
+
       // Обновляем локальные цены только для измененных
       if (updateData.service_prices) {
         const updatedPrices = { ...servicePrices };
@@ -910,29 +964,29 @@ const WarehouseData = () => {
         });
         setServicePrices(updatedPrices);
       }
-      
+
       // Обновляем исходные данные формы после успешного сохранения
       const currentValues = getValues();
       const updatedInitialData = { ...initialFormData };
-      
+
       // Обновляем все поля, которые были изменены
       Object.keys(updateData).forEach(key => {
         if (key !== 'service_prices') {
           updatedInitialData[key] = currentValues[key];
         }
       });
-      
+
       // Обновляем цены
       if (updateData.service_prices) {
         updateData.service_prices.forEach(sp => {
           updatedInitialData[sp.service_type] = sp.price.toString();
         });
       }
-      
+
       setInitialFormData(updatedInitialData);
-      
+
       showSuccessToast('Данные склада успешно обновлены');
-      
+
       if (import.meta.env.DEV) {
         console.log('Склад успешно обновлен:', updateData);
       }
@@ -944,7 +998,7 @@ const WarehouseData = () => {
     } catch (error) {
       console.error('Ошибка при обновлении склада:', error);
       console.error('Детали ошибки:', error.response?.data);
-      
+
       // Показываем детали ошибки валидации если они есть
       if (error.response?.status === 400) {
         if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
@@ -979,12 +1033,12 @@ const WarehouseData = () => {
     setIsEditing(false);
     // Убираем параметр edit из URL
     navigate(`/personal-account/${user?.role === 'ADMIN' ? 'admin' : 'manager'}/warehouses/${warehouseId}`, { replace: true });
-    
+
     // Определяем типы цен в зависимости от типа склада
-    const priceTypes = warehouse?.type === 'CLOUD' 
-      ? ['CLOUD_PRICE_LOW', 'CLOUD_PRICE_HIGH']
-      : ['M2_UP_6M', 'M2_6_12M', 'M2_OVER_12M'];
-    
+    const priceTypes = warehouse?.type === 'CLOUD'
+      ? ['CLOUD_M3']
+      : ['M2'];
+
     const cancelFormData = {
       name: warehouse.name || '',
       address: warehouse?.address || '',
@@ -1076,6 +1130,7 @@ const WarehouseData = () => {
         {showInlineCanvas ? (
           <div className="w-full h-full" style={{ width: '100%', height: '100%', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
             <WarehouseSVGMap
+              key={`warehouse-map-${selectedWarehouse?.id || warehouseId}`}
               ref={isFullscreen ? mapRef : null}
               warehouse={selectedWarehouse}
               storageBoxes={storageBoxes}
@@ -1128,41 +1183,42 @@ const WarehouseData = () => {
   };
 
   if (isLoading) {
+    const loadingContent = (
+      <div className={embedded ? "p-6" : "max-w-6xl mx-auto space-y-6"}>
+        <div className="flex items-center space-x-4">
+          <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    if (embedded) return loadingContent;
+
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-          <main className="flex-1 p-6">
-            <div className="max-w-6xl mx-auto space-y-6">
-              {/* Заголовок загрузки */}
-              <div className="flex items-center space-x-4">
-                <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
-              </div>
-
-              {/* Карточки загрузки */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-                      <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </main>
+          <main className="flex-1 p-6">{loadingContent}</main>
         </div>
       </div>
     );
@@ -1171,44 +1227,108 @@ const WarehouseData = () => {
 
   // Если есть ошибка загрузки, показываем сообщение об ошибке
   if (error) {
+    const errorContent = (
+      <div className={embedded ? "p-6" : "max-w-6xl mx-auto"}>
+        <div className="bg-white rounded-xl border border-red-200 shadow-sm">
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="flex justify-center space-x-4">
+              {!embedded && (
+                <button
+                  onClick={handleBackToList}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Назад к списку
+                </button>
+              )}
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center px-4 py-2 bg-[#00A991] hover:bg-[#009882] text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Повторить
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    if (embedded) return errorContent;
+
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="flex flex-1">
+          <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
+          <main className="flex-1 p-6">{errorContent}</main>
+        </div>
+      </div>
+    );
+  }
+
+  // Если warehouse ещё не загружен (ожидание автоматического перенаправления на первый склад)
+  if (!warehouse) {
+    const waitingSpinner = (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00A991]"></div>
+        <span className="ml-3 text-[#004743] font-medium">Загрузка склада...</span>
+      </div>
+    );
+
+    if (embedded) {
+      // В embedded-режиме показываем табы + спиннер, чтобы UX не прыгал
+      return (
+        <div className="space-y-6">
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl w-full sm:w-fit">
+            <button
+              onClick={() => handleEmbeddedStorageTypeChange('INDIVIDUAL')}
+              className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                embeddedStorageType === 'INDIVIDUAL'
+                  ? 'bg-white text-[#004743] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Индивидуальное хранение
+            </button>
+            <button
+              onClick={() => handleEmbeddedStorageTypeChange('CLOUD')}
+              className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                embeddedStorageType === 'CLOUD'
+                  ? 'bg-white text-[#004743] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+              </svg>
+              Облачное хранение
+            </button>
+          </div>
+          {waitingSpinner}
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           <main className="flex-1 p-6">
-            <div className="max-w-6xl mx-auto">
-              <div className="bg-white rounded-xl border border-red-200 shadow-sm">
-                <div className="p-8 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
-                  <p className="text-gray-600 mb-6">{error}</p>
-                  <div className="flex justify-center space-x-4">
-                    <button
-                      onClick={handleBackToList}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Назад к списку
-                    </button>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Повторить
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div className="max-w-6xl mx-auto">{waitingSpinner}</div>
           </main>
         </div>
       </div>
@@ -1216,33 +1336,81 @@ const WarehouseData = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <div className="flex flex-1">
-        <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto space-y-6">
-            {/* Breadcrumb и заголовок */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button 
+    <div className={embedded ? "" : "min-h-screen flex flex-col bg-gray-50"}>
+      <div className={embedded ? "" : "flex flex-1"}>
+        {!embedded && <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
+        <main className={embedded ? "" : "flex-1 p-6"}>
+          <div className={embedded ? "space-y-6" : "max-w-6xl mx-auto space-y-6"}>
+            {/* Табы INDIVIDUAL / CLOUD — для embedded-режима */}
+            {embedded && (
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl w-full sm:w-fit">
+                <button
+                  onClick={() => handleEmbeddedStorageTypeChange('INDIVIDUAL')}
+                  className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                    embeddedStorageType === 'INDIVIDUAL'
+                      ? 'bg-white text-[#273655] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Индивидуальное хранение
+                </button>
+                <button
+                  onClick={() => handleEmbeddedStorageTypeChange('CLOUD')}
+                  className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
+                    embeddedStorageType === 'CLOUD'
+                      ? 'bg-white text-[#273655] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                  Облачное хранение
+                </button>
+              </div>
+            )}
+
+            {/* Breadcrumb и заголовок — только для полной страницы */}
+            {!embedded && (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                <button
                   onClick={handleBackToList}
-                  className="inline-flex items-center text-gray-600 hover:text-[#273655] transition-colors"
+                  className="inline-flex items-center text-gray-600 hover:text-[#004743] transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                   </svg>
                   <span className="text-sm font-medium">Склады</span>
                 </button>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                 </svg>
-                <h1 className="text-2xl font-bold text-gray-900">{warehouse.name}</h1>
+                {warehouse && isAdminOrManager && allWarehouses.length > 1 ? (
+                  <Select value={String(warehouseId)} onValueChange={handleWarehouseChange}>
+                    <SelectTrigger className="w-full min-w-[200px] max-w-[280px] border-gray-300 rounded-lg text-base font-semibold text-gray-900">
+                      <SelectValue placeholder="Выберите склад" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allWarehouses.map((w) => (
+                        <SelectItem key={w.id} value={String(w.id)}>
+                          {w.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <h1 className="text-2xl font-bold text-gray-900">{warehouse?.name}</h1>
+                )}
               </div>
 
               {!isEditing && (
                 <button
                   onClick={handleEditClick}
-                  className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-[#00A991] hover:bg-[#009882] text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1251,7 +1419,170 @@ const WarehouseData = () => {
                 </button>
               )}
             </div>
+            )}
 
+            {/* Табы переключения: Склад / Тарифы и акции — только для полной страницы */}
+            {!embedded && isAdminOrManager && (
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+                <button
+                  onClick={() => setWarehouseTab('warehouse')}
+                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
+                    warehouseTab === 'warehouse'
+                      ? 'bg-white text-[#004743] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Управление складом
+                </button>
+                <button
+                  onClick={() => setWarehouseTab('pricing')}
+                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
+                    warehouseTab === 'pricing'
+                      ? 'bg-white text-[#004743] shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Тарифы и акции
+                </button>
+              </div>
+            )}
+
+            {/* Контент: Тарифы и акции — только для полной страницы */}
+            {!embedded && warehouseTab === 'pricing' && isAdminOrManager && (
+              <div className="space-y-6">
+                <PricingRuleManagement />
+
+                {/* Управление ценами боксов по фильтрам */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900">Цены боксов (по фильтрам)</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Обновляет поле цены на уровне бокса (storages) для INDIVIDUAL хранения.
+                    </p>
+                  </div>
+
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Склад</label>
+                      <select
+                        value={bulkPriceWarehouseId || ''}
+                        onChange={(e) => setBulkPriceWarehouseId(e.target.value)}
+                        className="w-full md:w-72 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
+                      >
+                        <option value="">Текущий склад</option>
+                        {allWarehouses.map(w => (
+                          <option key={w.id} value={String(w.id)}>{w.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Ярус (tier)</label>
+                        <select
+                          value={bulkPriceTier}
+                          onChange={(e) => setBulkPriceTier(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
+                        >
+                          <option value="">Все ярусы</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Пусто = все ярусы</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Объем от</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={bulkPriceFrom}
+                          onChange={(e) => setBulkPriceFrom(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
+                          placeholder="например 2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Объем до</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={bulkPriceTo}
+                          onChange={(e) => setBulkPriceTo(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
+                          placeholder="например 4"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Цена за м² (₸)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={bulkPriceValue}
+                          onChange={(e) => setBulkPriceValue(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
+                          placeholder="например 9000"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={bulkPriceUpdating || !warehouseId || !bulkPriceValue}
+                        onClick={async () => {
+                          if (!warehouseId) return;
+                          const price = parseFloat(bulkPriceValue);
+                          if (!price || Number.isNaN(price)) {
+                            showErrorToast('Укажите корректную цену');
+                            return;
+                          }
+
+                          const payload = {
+                            warehouse_id: Number(bulkPriceWarehouseId || warehouseId),
+                            price_per_m2: price,
+                          };
+
+                          if (bulkPriceTier !== '') payload.tier = Number(bulkPriceTier);
+                          if (bulkPriceFrom !== '') payload.volume_from = Number(bulkPriceFrom);
+                          if (bulkPriceTo !== '') payload.volume_to = Number(bulkPriceTo);
+
+                          try {
+                            setBulkPriceUpdating(true);
+                            setBulkPriceUpdatedCount(null);
+                            const res = await warehouseApi.bulkUpdateStoragePricePerM2(payload);
+                            setBulkPriceUpdatedCount(res?.updated ?? null);
+                            showSuccessToast(`Обновлено боксов: ${res?.updated ?? 0}`);
+                          } catch (e) {
+                            console.error(e);
+                            showErrorToast('Не удалось обновить цены боксов');
+                          } finally {
+                            setBulkPriceUpdating(false);
+                            await refetch()
+                          }
+                        }}
+                        className="px-6 py-2.5 bg-[#00A991] text-white text-sm font-medium rounded-lg hover:bg-[#009882] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {bulkPriceUpdating ? 'Обновление...' : 'Применить'}
+                      </button>
+
+                      {bulkPriceUpdatedCount !== null && (
+                        <div className="text-sm text-gray-700">
+                          Обновлено: <span className="font-semibold">{bulkPriceUpdatedCount}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <StoragePricesMatrix prices={prices} />
+              </div>
+            )}
+
+            {/* Информация о складе — только для полной страницы и вкладки "склад" */}
+            {!embedded && warehouseTab === 'warehouse' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Основная информация */}
               <div className="lg:col-span-2 space-y-6">
@@ -1267,7 +1598,7 @@ const WarehouseData = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-6 space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
@@ -1275,7 +1606,7 @@ const WarehouseData = () => {
                             <label className="text-sm font-medium text-gray-500">Название</label>
                             <p className="text-lg font-semibold text-gray-900 mt-1">{warehouse.name}</p>
                           </div>
-                          
+
                           <div>
                             <label className="text-sm font-medium text-gray-500">Время работы</label>
                             <div className="flex items-center mt-1">
@@ -1306,64 +1637,19 @@ const WarehouseData = () => {
                         </div>
                       )}
 
-                      {/* Секция цен в режиме просмотра */}
-                      {!isCloud && (
-                        <div className="pt-4 border-t border-gray-100">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                            Цены за 1 м²
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">До 6 месяцев</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['M2_UP_6M'] 
-                                  ? `${Number(servicePrices['M2_UP_6M']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">От 6 до 12 месяцев</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['M2_6_12M'] 
-                                  ? `${Number(servicePrices['M2_6_12M']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">Свыше 12 месяцев</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['M2_OVER_12M'] 
-                                  ? `${Number(servicePrices['M2_OVER_12M']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
                       {/* Секция цен облачного хранения в режиме просмотра */}
                       {isCloud && (
                         <div className="pt-4 border-t border-gray-100">
                           <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                            Цены облачного хранения
+                            Цена за 1 м³ в месяц (облачное хранение)
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">До 18 м³ (за м³)</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['CLOUD_PRICE_LOW'] 
-                                  ? `${Number(servicePrices['CLOUD_PRICE_LOW']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <label className="text-xs font-medium text-gray-500">От 18 м³ и более (за м³)</label>
-                              <p className="text-lg font-semibold text-gray-900 mt-1">
-                                {servicePrices['CLOUD_PRICE_HIGH'] 
-                                  ? `${Number(servicePrices['CLOUD_PRICE_HIGH']).toLocaleString('ru-RU')} ₸`
-                                  : 'Не установлена'}
-                              </p>
-                            </div>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-lg font-semibold text-gray-900">
+                              {servicePrices['CLOUD_M3']
+                                ? `${Number(servicePrices['CLOUD_M3']).toLocaleString('ru-RU')} ₸`
+                                : 'Не установлена'}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -1376,7 +1662,7 @@ const WarehouseData = () => {
                       <h2 className="text-lg font-semibold text-gray-900">Редактирование склада</h2>
                       <p className="text-sm text-gray-600 mt-1">Внесите изменения в информацию о складе</p>
                     </div>
-                    
+
                     <form onSubmit={handleSubmit(onSubmit)} className="p-6">
                       <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1421,7 +1707,7 @@ const WarehouseData = () => {
                             Адрес {!isCloud && '*'}
                           </label>
                           <textarea
-                            {...register('address', { 
+                            {...register('address', {
                               required: !isCloud ? 'Адрес обязателен' : false
                             })}
                             rows={3}
@@ -1509,175 +1795,39 @@ const WarehouseData = () => {
                           </div>
                         )}
 
-                        {/* Секция цен для индивидуального хранения */}
-                        {!isCloud && (
-                          <div className="pt-6 border-t border-gray-200">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                              Цены за 1 м²
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Установите цены с учетом скидок за длительный период хранения
-                            </p>
-                            
-                            <div className="space-y-4">
-                              {/* Цена до 6 месяцев */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена до 6 месяцев (₸) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('M2_UP_6M', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['M2_UP_6M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену"
-                                />
-                                {errors['M2_UP_6M'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['M2_UP_6M'].message}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Цена от 6 до 12 месяцев */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена от 6 до 12 месяцев (₸) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('M2_6_12M', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['M2_6_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену"
-                                />
-                                {errors['M2_6_12M'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['M2_6_12M'].message}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Цена свыше 12 месяцев */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена свыше 12 месяцев (₸) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('M2_OVER_12M', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['M2_OVER_12M'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену"
-                                />
-                                {errors['M2_OVER_12M'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['M2_OVER_12M'].message}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
 
                         {/* Секция цен облачного хранения */}
                         {isCloud && (
                           <div className="pt-6 border-t border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                              Цены облачного хранения
+                              Цена за 1 м³ в месяц (облачное хранение)
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Установите цены за м³ в зависимости от объема (без скидки по месяцам)
-                            </p>
-                            
-                            <div className="space-y-4">
-                              {/* Цена до 18 м³ */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена до 18 м³ (₸ за м³) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('CLOUD_PRICE_LOW', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['CLOUD_PRICE_LOW'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену за м³"
-                                />
-                                {errors['CLOUD_PRICE_LOW'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['CLOUD_PRICE_LOW'].message}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Цена от 18 м³ и более */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Цена от 18 м³ и более (₸ за м³) *
-                                </label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  {...register('CLOUD_PRICE_HIGH', { 
-                                    required: 'Цена обязательна',
-                                    valueAsNumber: true,
-                                    min: { value: 0.01, message: 'Цена должна быть больше 0' }
-                                  })}
-                                  className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                    errors['CLOUD_PRICE_HIGH'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                  }`}
-                                  placeholder="Введите цену за м³"
-                                />
-                                {errors['CLOUD_PRICE_HIGH'] && (
-                                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors['CLOUD_PRICE_HIGH'].message}
-                                  </p>
-                                )}
-                              </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Цена за м³ (₸) *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                {...register('CLOUD_M3', { 
+                                  required: 'Цена обязательна',
+                                  valueAsNumber: true,
+                                  min: { value: 0.01, message: 'Цена должна быть больше 0' }
+                                })}
+                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
+                                  errors['CLOUD_M3'] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="Введите цену за м³"
+                              />
+                              {errors['CLOUD_M3'] && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {errors['CLOUD_M3'].message}
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1692,7 +1842,7 @@ const WarehouseData = () => {
                           <button
                             type="submit"
                             disabled={isSaving || !isDirty}
-                            className="px-6 py-2.5 bg-[#273655] text-white text-sm font-medium rounded-lg hover:bg-[#1e2c4f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="px-6 py-2.5 bg-[#00A991] text-white text-sm font-medium rounded-lg hover:bg-[#009882] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {isSaving ? (
                               <div className="flex items-center">
@@ -1769,9 +1919,10 @@ const WarehouseData = () => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Блоки с картой и настройками - только в режиме просмотра */}
-            {!isEditing && warehouse && (
+            {(!embedded ? (!isEditing && warehouseTab === 'warehouse') : true) && warehouse && embedded && (
               <div className="mt-8">
                 {isCloud ? (
                   // Для CLOUD складов
@@ -1780,7 +1931,7 @@ const WarehouseData = () => {
                     <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="text-xl font-bold text-[#273655]">
+                          <h3 className="text-xl font-bold text-[#004743]">
                             Укажите габариты вещей
                           </h3>
                         </div>
@@ -1803,7 +1954,7 @@ const WarehouseData = () => {
                             step="0.1"
                             value={cloudDimensions.width}
                             onChange={(e) => setCloudDimensions(prev => ({ ...prev, width: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                           <span className="text-sm text-[#6B6B6B]">м</span>
                         </div>
@@ -1815,7 +1966,7 @@ const WarehouseData = () => {
                             step="0.1"
                             value={cloudDimensions.height}
                             onChange={(e) => setCloudDimensions(prev => ({ ...prev, height: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                           <span className="text-sm text-[#6B6B6B]">м</span>
                         </div>
@@ -1827,20 +1978,20 @@ const WarehouseData = () => {
                             step="0.1"
                             value={cloudDimensions.length}
                             onChange={(e) => setCloudDimensions(prev => ({ ...prev, length: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#273655]/20 bg-white px-4 text-base text-[#273655] font-medium focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                           <span className="text-sm text-[#6B6B6B]">м</span>
                         </div>
                       </div>
 
-                      <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/15 p-3 space-y-3">
+                      <div className="rounded-2xl bg-[#00A991]/10 border border-[#00A991]/15 p-3 space-y-3">
                         <p className="text-sm text-[#6B6B6B]">
-                          Рассчитанный объём: <span className="font-semibold text-[#273655]">{cloudVolume.toFixed(2)} м³</span>
+                          Рассчитанный объём: <span className="font-semibold text-[#004743]">{cloudVolume.toFixed(2)} м³</span>
                         </p>
 
                         {/* Блок с расчетом стоимости для CLOUD */}
-                        <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3 mt-3">
-                          <div className="flex items-center justify-between text-[#273655]">
+                        <div className="rounded-2xl border border-dashed border-[#00A991]/30 bg-white px-4 py-3 text-sm text-[#004743] space-y-3 mt-3">
+                          <div className="flex items-center justify-between text-[#004743]">
                             <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
                             <span className="text-xs text-[#6B6B6B]">
                               {cloudVolume.toFixed(2)} м³
@@ -1848,7 +1999,7 @@ const WarehouseData = () => {
                           </div>
                           {isCloudPriceCalculating ? (
                             <div className="flex items-center justify-center gap-2 text-base font-semibold">
-                              <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                              <span className="w-4 h-4 border-2 border-t-transparent border-[#00A991] rounded-full animate-spin" />
                               Расчёт...
                             </div>
                           ) : cloudPricePreview ? (
@@ -1861,10 +2012,10 @@ const WarehouseData = () => {
                               </div>
                               {/* Показываем информацию о ценах за 6 и 12 месяцев */}
                               {cloudMonthsNumber < 6 && (
-                                <div className="pt-2 border-t border-dashed border-[#273655]/20">
+                                <div className="pt-2 border-t border-dashed border-[#00A991]/20">
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs text-[#6B6B6B]">За 6 мес</span>
-                                    <span className="text-sm font-semibold text-[#273655]">
+                                    <span className="text-sm font-semibold text-[#004743]">
                                       {Math.round(cloudPricePreview.monthly * 6).toLocaleString()} ₸
                                     </span>
                                   </div>
@@ -1873,14 +2024,14 @@ const WarehouseData = () => {
                               {cloudMonthsNumber < 12 && (
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs text-[#6B6B6B]">За 12 мес</span>
-                                  <span className="text-sm font-semibold text-[#273655]">
+                                  <span className="text-sm font-semibold text-[#004743]">
                                     {Math.round(cloudPricePreview.monthly * 12).toLocaleString()} ₸
                                   </span>
                                 </div>
                               )}
                               <div className="flex items-center justify-between">
                                 <span className="text-[#6B6B6B]">За {cloudMonthsNumber} мес</span>
-                                <span className="text-lg font-bold text-[#273655]">
+                                <span className="text-lg font-bold text-[#004743]">
                                   {Math.round(cloudPricePreview.total).toLocaleString()} ₸
                                 </span>
                               </div>
@@ -1908,7 +2059,7 @@ const WarehouseData = () => {
                     <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="text-xl font-bold text-[#273655]">
+                          <h3 className="text-xl font-bold text-[#004743]">
                             Облачное хранение ExtraSpace
                           </h3>
                         </div>
@@ -1923,7 +2074,7 @@ const WarehouseData = () => {
                       </div>
 
                       <div className="space-y-2 sm:space-y-2.5">
-                        <span className="text-sm font-semibold text-[#273655]">
+                        <span className="text-sm font-semibold text-[#004743]">
                           Дата начала бронирования
                         </span>
                         <DatePicker
@@ -1945,8 +2096,8 @@ const WarehouseData = () => {
                         />
                       </div>
 
-                      <div className="rounded-2xl bg-[#273655]/5 border border-[#273655]/20 p-3 text-sm text-[#273655] space-y-2">
-                        <div className="rounded-xl border border-[#273655]/20 bg-white/80 px-3 py-2 text-xs sm:text-sm text-[#273655] flex items-start gap-2">
+                      <div className="rounded-2xl bg-[#00A991]/10 border border-[#00A991]/20 p-3 text-sm text-[#004743] space-y-2">
+                        <div className="rounded-xl border border-[#00A991]/20 bg-white/80 px-3 py-2 text-xs sm:text-sm text-[#004743] flex items-start gap-2">
                           <Truck className="h-4 w-4 mt-[2px]" />
                           <div>
                             <strong>Дополнительные услуги</strong>
@@ -1972,7 +2123,7 @@ const WarehouseData = () => {
                             value={cloudPickupAddress}
                             onChange={(e) => setCloudPickupAddress(e.target.value)}
                             placeholder="Например: г. Алматы, Абая 25"
-                            className="h-[46px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
+                            className="h-[46px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#004743] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
                           />
                         </div>
                         <p>Перевозка и упаковка включены в стоимость.</p>
@@ -1982,21 +2133,21 @@ const WarehouseData = () => {
                       {isAdminOrManager && (
                         <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[#273655] font-semibold">
+                            <div className="flex items-center gap-2 text-[#004743] font-semibold">
                               <User className="w-5 h-5 shrink-0" />
                               <span>Клиент</span>
                             </div>
                             <button
                               type="button"
                               onClick={() => setIsClientSelectorOpen(true)}
-                              className="px-4 py-2 text-sm font-medium text-[#273655] border border-[#273655] rounded-lg hover:bg-[#273655] hover:text-white transition-colors"
+                              className="px-4 py-2 text-sm font-medium text-[#004743] border border-[#00A991] rounded-lg hover:bg-[#00A991] hover:text-white transition-colors"
                             >
                               {selectedClientUser ? 'Изменить' : 'Выбрать клиента'}
                             </button>
                           </div>
                           {selectedClientUser && (
-                            <div className="bg-[#273655]/5 rounded-lg p-3">
-                              <div className="text-sm font-medium text-[#273655]">
+                            <div className="bg-[#00A991]/10 rounded-lg p-3">
+                              <div className="text-sm font-medium text-[#004743]">
                                 {selectedClientUser.name || 'Без имени'}
                               </div>
                               <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
@@ -2160,9 +2311,11 @@ const WarehouseData = () => {
 
                             toastOrderRequestSent();
 
-                            // Для админа/менеджера — на запросы, для обычных пользователей — на thank-you
+                            // Для embedded — вызываем callback, для админа/менеджера — на запросы, для обычных пользователей — на thank-you
                             setTimeout(() => {
-                              if (isAdminOrManager) {
+                              if (embedded && onBookingComplete) {
+                                onBookingComplete();
+                              } else if (isAdminOrManager) {
                                 navigate('/personal-account', { state: { activeSection: 'request' } });
                               } else {
                                 navigate('/thank-you');
@@ -2188,9 +2341,11 @@ const WarehouseData = () => {
                                 'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
                                 { autoClose: 5000 }
                               );
-                              setTimeout(() => {
-                                navigate('/personal-account', { state: { activeSection: 'personal' } });
-                              }, 2000);
+                              if (!embedded) {
+                                setTimeout(() => {
+                                  navigate('/personal-account', { state: { activeSection: 'personal' } });
+                                }, 2000);
+                              }
                               setIsCreatingOrder(false);
                               return;
                             }
@@ -2241,9 +2396,30 @@ const WarehouseData = () => {
                             items={allWarehouses.filter(w => w.type !== 'CLOUD')}
                             value={selectedWarehouse ? selectedWarehouse.id : undefined}
                             onChange={(_, item) => {
-                              setSelectedWarehouse(item);
-                              const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
-                              navigate(`/personal-account/${basePath}/warehouses/${item.id}`);
+                              // Сбрасываем состояния при смене склада
+                              setPreviewStorage(null);
+                              setPricePreview(null);
+                              setPriceError(null);
+                              setCloudPricePreview(null);
+                              setCloudPriceError(null);
+                              setOrderError(null);
+                              setServices([]);
+                              setIncludeMoving(false);
+                              setIncludePacking(false);
+                              setSelectedClientUser(null);
+                              
+                              // Сбрасываем warehouse и карту чтобы вызвать полную перезагрузку
+                              setWarehouse(null);
+                              setSelectedWarehouse(null);
+                              setMegaSelectedMap(1);
+                              setKomfortSelectedMap(1);
+                              
+                              if (embedded) {
+                                setEmbeddedWarehouseId(String(item.id));
+                              } else {
+                                const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
+                                navigate(`/personal-account/${basePath}/warehouses/${item.id}`);
+                              }
                             }}
                             placeholder="Выберите склад"
                             searchable={false}
@@ -2408,7 +2584,7 @@ const WarehouseData = () => {
                                     setGazelleService({
                                       id: String(gazelleFrom.id),
                                       type: gazelleFrom.type,
-                                      name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - забор вещей",
+                                      name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - Доставка",
                                       price: gazelleFrom.price,
                                     });
                                   }
@@ -2648,138 +2824,12 @@ const WarehouseData = () => {
                                 {costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸
                               </span>
                             </div>
-                            {/* Показываем информацию о скидке для 6 и 12 месяцев */}
-                            {monthsNumber < 6 && servicePrices['M2_UP_6M'] && servicePrices['M2_6_12M'] && previewStorage && (() => {
-                              // Используем ту же логику для получения площади, что и в расчете цены
-                              const rawArea = parseFloat(
-                                previewStorage.available_volume ??
-                                previewStorage.total_volume ??
-                                previewStorage.area ??
-                                previewStorage.square ??
-                                previewStorage.volume ??
-                                0
-                              );
-                              
-                              if (!rawArea || rawArea <= 0) return null;
-                              
-                              const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
-                              const discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
-                              
-                              if (!basePricePerM2 || !discountPricePerM2) return null;
-                              
-                              const basePrice = basePricePerM2 * rawArea * 6;
-                              const discountPrice = discountPricePerM2 * rawArea * 6;
-                              
-                              if (basePrice <= 0) return null;
-                              
-                              const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
-                              if (discountPercent <= 0) return null;
-                              
-                              return (
-                                <div className="pt-2 border-t border-dashed border-[#273655]/20">
-                                  <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg">
-                                    <span className="text-xs">
-                                      <span className="text-[#6B6B6B]">За 6 мес </span>
-                                      <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
-                                    </span>
-                                    <span className="text-sm font-semibold text-[#273655]">
-                                      {Math.round(discountPrice).toLocaleString()} ₸
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                            {monthsNumber < 12 && servicePrices['M2_UP_6M'] && servicePrices['M2_OVER_12M'] && previewStorage && (() => {
-                              // Используем ту же логику для получения площади, что и в расчете цены
-                              const rawArea = parseFloat(
-                                previewStorage.available_volume ??
-                                previewStorage.total_volume ??
-                                previewStorage.area ??
-                                previewStorage.square ??
-                                previewStorage.volume ??
-                                0
-                              );
-                              
-                              if (!rawArea || rawArea <= 0) return null;
-                              
-                              const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
-                              const discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
-                              
-                              if (!basePricePerM2 || !discountPricePerM2) return null;
-                              
-                              const basePrice = basePricePerM2 * rawArea * 12;
-                              const discountPrice = discountPricePerM2 * rawArea * 12;
-                              
-                              if (basePrice <= 0) return null;
-                              
-                              const discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
-                              if (discountPercent <= 0) return null;
-                              
-                              return (
-                                <div className="flex items-center justify-between px-2 py-1.5 border-2 border-red-500 rounded-lg">
-                                  <span className="text-xs">
-                                    <span className="text-[#6B6B6B]">За 12 мес </span>
-                                    <span className="text-red-600 font-semibold">скидка {discountPercent}%!</span>
-                                  </span>
-                                  <span className="text-sm font-semibold text-[#273655]">
-                                    {Math.round(discountPrice).toLocaleString()} ₸
-                                  </span>
-                                </div>
-                              );
-                            })()}
-                            {(() => {
-                              // Проверяем, применяется ли скидка для выбранного периода
-                              let discountPercent = 0;
-                              let hasDiscount = false;
-                              
-                              if ((monthsNumber === 6 || monthsNumber === 12) && servicePrices['M2_UP_6M'] && previewStorage) {
-                                const rawArea = parseFloat(
-                                  previewStorage.available_volume ??
-                                  previewStorage.total_volume ??
-                                  previewStorage.area ??
-                                  previewStorage.square ??
-                                  previewStorage.volume ??
-                                  0
-                                );
-                                
-                                if (rawArea && rawArea > 0) {
-                                  const basePricePerM2 = parseFloat(servicePrices['M2_UP_6M']) || 0;
-                                  let discountPricePerM2 = 0;
-                                  
-                                  if (monthsNumber === 6) {
-                                    discountPricePerM2 = parseFloat(servicePrices['M2_6_12M']) || 0;
-                                  } else if (monthsNumber === 12) {
-                                    discountPricePerM2 = parseFloat(servicePrices['M2_OVER_12M']) || 0;
-                                  }
-                                  
-                                  if (basePricePerM2 && discountPricePerM2) {
-                                    const basePrice = basePricePerM2 * rawArea * monthsNumber;
-                                    const discountPrice = discountPricePerM2 * rawArea * monthsNumber;
-                                    
-                                    if (basePrice > 0) {
-                                      discountPercent = Math.round(((basePrice - discountPrice) / basePrice) * 100);
-                                      hasDiscount = discountPercent > 0;
-                                    }
-                                  }
-                                }
-                              }
-                              
-                              return (
-                                <div className={`flex items-center justify-between ${hasDiscount ? 'px-2 py-1.5 border-2 border-red-500 rounded-lg' : ''}`}>
-                                  <span className="text-[#6B6B6B]">
-                                    За {monthsNumber} мес
-                                    {hasDiscount && (
-                                      <span className="text-red-600 font-semibold ml-2">
-                                        скидка {discountPercent}%!
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span className="text-lg font-bold text-[#273655]">
-                                    {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
-                                  </span>
-                                </div>
-                              );
-                            })()}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#6B6B6B]">За {monthsNumber} мес</span>
+                              <span className="text-lg font-bold text-[#273655]">
+                                {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
+                              </span>
+                            </div>
                             {pricePreview.isFallback && (
                               <p className="text-xs text-[#C67A00]">
                                 Ориентировочная стоимость по тарифу бокса.
@@ -3096,9 +3146,11 @@ const WarehouseData = () => {
 
                             toastOrderRequestSent();
 
-                            // Для админа/менеджера — на запросы, для обычных пользователей — на thank-you
+                            // Для embedded — вызываем callback, для админа/менеджера — на запросы, для обычных пользователей — на thank-you
                             setTimeout(() => {
-                              if (isAdminOrManager) {
+                              if (embedded && onBookingComplete) {
+                                onBookingComplete();
+                              } else if (isAdminOrManager) {
                                 navigate('/personal-account', { state: { activeSection: 'request' } });
                               } else {
                                 navigate('/thank-you');
@@ -3124,9 +3176,11 @@ const WarehouseData = () => {
                                 'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
                                 { autoClose: 5000 }
                               );
-                              setTimeout(() => {
-                                navigate('/personal-account', { state: { activeSection: 'personal' } });
-                              }, 2000);
+                              if (!embedded) {
+                                setTimeout(() => {
+                                  navigate('/personal-account', { state: { activeSection: 'personal' } });
+                                }, 2000);
+                              }
                               setIsCreatingOrder(false);
                               return;
                             }
@@ -3165,7 +3219,7 @@ const WarehouseData = () => {
       </div>
 
       {/* Модальное окно с полноэкранной картой - только для INDIVIDUAL складов */}
-      {isMapModalOpen && !isCloud && warehouse && (
+      {isMapModalOpen && !isCloud && warehouse && embedded && (
         <div className="fixed inset-0 z-[1200]">
           {isMobileView ? (
             <div className="absolute inset-0 flex flex-col justify-end">

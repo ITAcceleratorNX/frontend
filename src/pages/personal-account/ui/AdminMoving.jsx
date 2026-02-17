@@ -36,7 +36,7 @@ import {
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 // --- Moving statuses helpers ---
 const MOVING_STATUS_TEXT = {
-  PENDING:   'Ожидает забора',
+  PENDING:   'Ожидает доставки',
   COURIER_ASSIGNED: 'Курьер назначен',
   COURIER_IN_TRANSIT: 'Курьер в пути',
   COURIER_AT_CLIENT: 'Курьер у клиента',
@@ -49,7 +49,7 @@ const MOVING_STATUS_TEXT = {
 const getMovingStatusText = (s, direction) => {
   const baseText = MOVING_STATUS_TEXT[s] || s;
   if (s === 'PENDING') {
-    return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+    return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает доставки';
   }
   if (s === 'IN_PROGRESS') {
     return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';

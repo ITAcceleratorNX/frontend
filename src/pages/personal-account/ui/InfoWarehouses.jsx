@@ -162,7 +162,7 @@ const InfoWarehouses = () => {
             <p className="text-gray-600 mb-6">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center px-4 py-2 bg-[#273655] hover:bg-[#1e2c4f] text-white text-sm font-medium rounded-lg transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-[#00A991] hover:bg-[#009882] text-white text-sm font-medium rounded-lg transition-colors"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -199,7 +199,7 @@ const InfoWarehouses = () => {
                 placeholder="Поиск по названию или адресу..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors"
+                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent transition-colors"
               />
             </div>
 
@@ -208,7 +208,7 @@ const InfoWarehouses = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors"
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent transition-colors"
               >
                 <option value="ALL">Все склады</option>
                 <option value="ACTIVE">Активные</option>
@@ -254,7 +254,7 @@ const InfoWarehouses = () => {
                   setSearchTerm('');
                   setStatusFilter('ALL');
                 }}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#273655] bg-[#273655]/5 hover:bg-[#273655]/10 rounded-lg transition-colors"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#004743] bg-[#00A991]/10 hover:bg-[#00A991]/15 rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -282,7 +282,7 @@ const InfoWarehouses = () => {
                   
                   <button
                     onClick={(e) => handleEditClick(warehouse.id, e)}
-                    className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-[#273655] hover:bg-gray-100 rounded-lg transition-all duration-200"
+                    className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-[#004743] hover:bg-gray-100 rounded-lg transition-all duration-200"
                     title="Редактировать склад"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +293,7 @@ const InfoWarehouses = () => {
 
                 {/* Основная информация */}
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#273655] transition-colors">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#004743] transition-colors">
                     {warehouse.name}
                   </h3>
                   
@@ -334,7 +334,7 @@ const InfoWarehouses = () => {
                 </div>
 
                 {/* Индикатор hover */}
-                <div className="absolute inset-0 rounded-xl ring-2 ring-[#273655] ring-opacity-0 group-hover:ring-opacity-20 transition-all duration-200 pointer-events-none"></div>
+                <div className="absolute inset-0 rounded-xl ring-2 ring-[#00A991] ring-opacity-0 group-hover:ring-opacity-20 transition-all duration-200 pointer-events-none"></div>
               </div>
             </div>
           ))}

@@ -95,7 +95,7 @@ const ManagerMovingOrder = () => {
       case 'PENDING':
         return <Badge variant="secondary" className="bg-orange-100 text-orange-800 flex items-center gap-1">
           <Clock className="w-3 h-3" />
-          {order.direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора'}
+          {order.direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает доставки'}
         </Badge>;
       case 'COURIER_ASSIGNED':
         return <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">

@@ -46,7 +46,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
   };
 // --- Moving statuses helpers ---
   const MOVING_STATUS_TEXT = {
-    PENDING:       'Ожидает забора',
+    PENDING:       'Ожидает доставки',
     COURIER_ASSIGNED: 'Курьер назначен',
     COURIER_IN_TRANSIT: 'Курьер в пути',
     COURIER_AT_CLIENT: 'Курьер у клиента',
@@ -58,7 +58,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
   function getMovingStatusText(s, direction) {
     const baseText = MOVING_STATUS_TEXT[s] || s;
     if (s === 'PENDING') {
-      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает забора';
+      return direction === 'TO_CLIENT' ? 'Ожидает доставки' : 'Ожидает доставки';
     }
     if (s === 'IN_PROGRESS') {
       return direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу';
@@ -121,7 +121,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
       case 'GAZELLE':
         return 'Газель';
       case 'GAZELLE_FROM':
-        return 'Газель - забор вещей';
+        return 'Газель - Доставка';
       case 'GAZELLE_TO':
         return 'Газель - возврат вещей';
       case 'STRETCH_FILM':

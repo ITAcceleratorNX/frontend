@@ -67,7 +67,8 @@ export function Dropdown({
     ((item) => (item && typeof item === "object" ? item.description ?? item.address : undefined));
 
   const selectedItem = useMemo(() => {
-    return items.find((i) => String(_getKey(i)) === String(value));
+    const list = Array.isArray(items) ? items : [];
+    return list.find((i) => String(_getKey(i)) === String(value));
   }, [items, value, _getKey]);
 
   return (

@@ -169,7 +169,7 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
     switch (order.status) {
       case 'PENDING':
         return <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает забора'}
+          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает доставки'}
         </Badge>;
       case 'COURIER_ASSIGNED':
         return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Курьер назначен</Badge>;
@@ -179,7 +179,7 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
         return <Badge className="bg-purple-100 text-purple-800">Курьер у клиента</Badge>;
       case 'PENDING':
         return <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает забора'}
+          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает доставки'}
         </Badge>;
       case 'IN_PROGRESS':
         return <Badge className="bg-blue-100 text-blue-800">
