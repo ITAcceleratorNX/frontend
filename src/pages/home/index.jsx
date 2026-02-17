@@ -1220,7 +1220,7 @@ const HomePage = memo(() => {
 
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/thank-you");
+        navigate("/personal-account", { state: { activeSection: "orders" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
@@ -1440,7 +1440,7 @@ const HomePage = memo(() => {
       // Обновляем кэш заказов и переходим на thank-you страницу
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/thank-you");
+        navigate("/personal-account", { state: { activeSection: "orders" } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);

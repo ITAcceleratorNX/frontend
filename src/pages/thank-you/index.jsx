@@ -27,24 +27,17 @@ const ThankYouPage = () => {
 
           {/* Описание */}
           <p className="text-gray-600 text-lg mb-3">
-            Ваш заказ успешно создан.
+            Ваша заявка успешно отправлена!
           </p>
           <p className="text-gray-500 text-base mb-8">
-            СМС от TrustMe для подписания договора придёт после подтверждения заказа менеджером.
-            Оплата будет доступна сразу после подписания договора.
+            Наши менеджеры уже получили вашу заявку и свяжутся с вами в ближайшее время, чтобы обсудить все детали и ответить на вопросы.
           </p>
 
           {/* Кнопки */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => navigate('/personal-account', { state: { activeSection: 'orders' } })}
-              className="px-6 py-3 bg-[#1e2c4f] text-white rounded-xl font-medium hover:bg-[#2a3d6b] transition-colors"
-            >
-              Мои заказы
-            </button>
-            <button
               onClick={() => navigate('/')}
-              className="px-6 py-3 border border-[#1e2c4f] text-[#1e2c4f] rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              className="px-6 py-3 border bg-[#31876D] text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               На главную
             </button>
