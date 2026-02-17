@@ -26,6 +26,8 @@ import { ordersApi } from '../../../shared/api/ordersApi';
 import DatePicker from '../../../shared/ui/DatePicker';
 import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
 import PricingRuleManagement from './PricingRuleManagement';
+import {StoragePricesMatrix} from "../../../../src/pages/personal-account/admin/StoragePricesMatrix.js";
+import {useStoragePrices} from "../../../../src/shared/hooks/useStoragePrices.js";
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -148,6 +150,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const [bulkPriceUpdating, setBulkPriceUpdating] = useState(false);
   const [bulkPriceUpdatedCount, setBulkPriceUpdatedCount] = useState(null);
   const [bulkPriceWarehouseId, setBulkPriceWarehouseId] = useState(warehouseId || '');
+
+  const { refetch, prices } = useStoragePrices();
 
   // Проверка, является ли пользователь менеджером или админом
   const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
@@ -1556,6 +1560,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             showErrorToast('Не удалось обновить цены боксов');
                           } finally {
                             setBulkPriceUpdating(false);
+                            await refetch()
                           }
                         }}
                         className="px-6 py-2.5 bg-[#00A991] text-white text-sm font-medium rounded-lg hover:bg-[#009882] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -1571,6 +1576,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                     </div>
                   </div>
                 </div>
+
+                <StoragePricesMatrix prices={prices} />
               </div>
             )}
 

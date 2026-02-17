@@ -117,4 +117,19 @@ export const warehouseApi = {
       throw error;
     }
   },
+
+  getStoragePrices: async (warehouseId) => {
+    try {
+      const { data } = await api.get("/storages/prices", {
+        params: { warehouse_id: warehouseId }
+      });
+      return data;
+    } catch (error) {
+      console.error(
+          "Ошибка при получении цен для складов:",
+          error.response?.data || error.message
+      );
+      throw error;
+    }
+  }
 }; 
