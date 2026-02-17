@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-const SCROLL_TOP_PATHS = ["/", "/about-warehouse-rental"];
+const SCROLL_TOP_PATHS = ["/", "/about-warehouse-rental", "/public-offer", "/privacy-policy", "/online-payment"];
 
 // Функция для сброса масштаба viewport на мобильных устройствах
 const resetViewportZoom = () => {
