@@ -23,7 +23,7 @@ import { Badge } from '../../../components/ui/badge';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import {useNavigate} from "react-router-dom";
 import DatePicker from '../../../shared/ui/DatePicker';
-import { formatCalendarDate } from '@/shared/lib/utils/date';
+import { formatCalendarDate, getTodayLocalDateString } from '@/shared/lib/utils/date';
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -780,7 +780,7 @@ const CancelSurveyModal = ({
                         value={deliveryDate}
                         onChange={setDeliveryDate}
                         placeholder="Выберите дату доставки"
-                        minDate={new Date().toISOString().split('T')[0]}
+                        minDate={getTodayLocalDateString()}
                         allowFutureDates={true}
                         className="w-full"
                       />

@@ -25,7 +25,7 @@ import { useCreateMoving, useCreateAdditionalServicePayment, useDownloadPaymentR
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import { Zap, CheckCircle, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag, CreditCard } from 'lucide-react';
 import { showSuccessToast } from '../../../shared/lib/toast';
-import { formatCalendarDateLong } from '@/shared/lib/utils/date';
+import { formatCalendarDateLong, getTodayLocalDateString } from '@/shared/lib/utils/date';
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
 import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
@@ -1264,7 +1264,7 @@ const CancelSurveyModal = ({
                           type="date"
                           value={selfPickupDate}
                           onChange={(e) => setSelfPickupDate(e.target.value)}
-                          min={new Date().toISOString().split('T')[0]}
+                          min={getTodayLocalDateString()}
                           className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
                         />
                       </div>
@@ -1280,7 +1280,7 @@ const CancelSurveyModal = ({
                           type="date"
                           value={deliveryDate}
                           onChange={(e) => setDeliveryDate(e.target.value)}
-                          min={new Date().toISOString().split('T')[0]}
+                          min={getTodayLocalDateString()}
                           className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
                         />
                       </div>

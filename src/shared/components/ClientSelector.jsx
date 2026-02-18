@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { getTodayLocalDateString } from '../lib/utils/date';
 
 const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -429,7 +430,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                       type="date"
                       value={formData.bday}
                       onChange={(e) => setFormData({ ...formData, bday: e.target.value })}
-                      max={new Date().toISOString().split('T')[0]}
+                      max={getTodayLocalDateString()}
                       className={`h-12 rounded-2xl border pl-12 transition-colors ${
                         formErrors.bday 
                           ? 'border-red-300 bg-red-50 focus:ring-red-300' 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { pricingRuleApi } from '../../../shared/api/pricingRuleApi';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
-import { formatCalendarDate } from '../../../shared/lib/utils/date';
+import { formatCalendarDate, getTodayLocalDateString } from '../../../shared/lib/utils/date';
 import {
   Plus,
   Edit2,
@@ -44,7 +44,7 @@ const PricingRuleManagement = () => {
     fixed_price: '',
     promo_months: '',
     priority: '0',
-    valid_from: new Date().toISOString().split('T')[0],
+    valid_from: getTodayLocalDateString(),
     valid_until: '',
     is_active: true
   };
@@ -163,7 +163,7 @@ const PricingRuleManagement = () => {
         fixed_price: formData.price_type === 'FIXED_PRICE' ? Number(formData.fixed_price) : null,
         promo_months: formData.promo_months ? Number(formData.promo_months) : null,
         priority: formData.priority ? Number(formData.priority) : 0,
-        valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : new Date().toISOString(),
+        valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : new Date(getTodayLocalDateString() + 'T00:00:00').toISOString(),
         valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null,
         is_active: formData.is_active
       };

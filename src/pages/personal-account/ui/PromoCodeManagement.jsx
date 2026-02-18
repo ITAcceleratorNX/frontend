@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { promoApi } from '../../../shared/api/promoApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
-import { formatCalendarDate } from '../../../shared/lib/utils/date';
+import { formatCalendarDate, getTodayLocalDateString } from '../../../shared/lib/utils/date';
 import { 
   Plus, 
   Edit2, 
@@ -38,7 +38,7 @@ const PromoCodeManagement = () => {
     max_uses: '',
     max_uses_per_user: '1',
     min_order_amount: '',
-    valid_from: new Date().toISOString().split('T')[0],
+    valid_from: getTodayLocalDateString(),
     valid_until: '',
     is_active: true
   });
@@ -88,7 +88,7 @@ const PromoCodeManagement = () => {
       max_uses: '',
       max_uses_per_user: '1',
       min_order_amount: '',
-      valid_from: new Date().toISOString().split('T')[0],
+      valid_from: getTodayLocalDateString(),
       valid_until: '',
       is_active: true
     });
@@ -151,7 +151,7 @@ const PromoCodeManagement = () => {
         max_uses: formData.max_uses ? Number(formData.max_uses) : null,
         max_uses_per_user: Number(formData.max_uses_per_user) || 1,
         min_order_amount: formData.min_order_amount ? Number(formData.min_order_amount) : null,
-        valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : new Date().toISOString(),
+        valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : new Date(getTodayLocalDateString() + 'T00:00:00').toISOString(),
         valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null,
         is_active: formData.is_active
       };

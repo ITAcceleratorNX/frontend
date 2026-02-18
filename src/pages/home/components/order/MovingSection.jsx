@@ -2,6 +2,7 @@ import React from 'react';
 import { Truck } from 'lucide-react';
 import { Switch } from '../../../../components/ui';
 import DatePicker from '../../../../shared/ui/DatePicker';
+import { getTodayLocalDateString } from '../../../../shared/lib/utils/date';
 
 export default function MovingSection({
                                           includeMoving,
@@ -53,7 +54,7 @@ export default function MovingSection({
                             <DatePicker
                                 value={movingPickupDate}
                                 onChange={(value) => setMovingPickupDate(value)}
-                                minDate={new Date().toISOString().split('T')[0]}
+                                minDate={getTodayLocalDateString()}
                                 allowFutureDates={true}
                                 placeholder="Дата забора вещей"
                                 className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-3xl [&_input]:text-[#373737] [&_input]:placeholder:text-gray-400 [&_label]:text-[#373737] [&_button]:text-[#373737] [&_button]:hover:text-[#373737] [&_button]:hover:bg-transparent [&_button]:hover:!-translate-y-1/2 [&_button]:hover:!top-1/2 [&_button]:transition-none [&_button]:cursor-pointer [&>div]:focus-within:ring-2 [&>div]:focus-within:ring-gray-200 [&>div]:focus-within:border-gray-300"
