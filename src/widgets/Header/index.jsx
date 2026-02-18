@@ -28,15 +28,6 @@ export const Header = memo(() => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.log('Header: Состояние авторизации обновлено:', {
-        isAuthenticated,
-        user: user ? `${user.name} (${user.email})` : undefined
-      });
-    }
-  }, [isAuthenticated, user]);
-
   // Обработчик прокрутки
   useEffect(() => {
     const handleScroll = () => {
@@ -61,9 +52,6 @@ export const Header = memo(() => {
 
   // Остальные обработчики остаются без изменений...
   const handleStartAuth = useCallback(() => {
-    if (import.meta.env.DEV) {
-      console.log('Header: Переход на страницу авторизации');
-    }
     setIsMobileMenuOpen(false);
     navigate('/login');
   }, [navigate]);
@@ -73,9 +61,6 @@ export const Header = memo(() => {
   };
 
   const handleCabinetClick = useCallback(() => {
-    if (import.meta.env.DEV) {
-      console.log('Header: Переход в личный кабинет');
-    }
     navigate('/personal-account');
   }, [navigate]);
 
@@ -117,10 +102,6 @@ export const Header = memo(() => {
                   : "bg-[#FFF] backdrop-blur-sm"
           )
       , [isScrolled]);
-
-  if (import.meta.env.DEV) {
-    console.log('Рендеринг компонента Header');
-  }
 
   const socialIcons = (
     <>

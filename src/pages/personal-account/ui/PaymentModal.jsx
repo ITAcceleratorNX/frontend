@@ -3,6 +3,7 @@ import { useCreatePayment } from '../../../shared/lib/hooks/use-payments';
 import { useGetPrices } from '../../../shared/lib/hooks/use-payments';
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
 import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
+import { openTipTopPayWidget } from '../../../shared/lib/tiptoppay-widget';
 import { 
   Dialog, 
   DialogContent, 
@@ -17,6 +18,7 @@ import { Badge } from '../../../components/ui/badge';
 import { Separator } from '../../../components/ui/separator';
 import { CheckCircle, Info, Package } from 'lucide-react';
 import { showErrorToast } from '../../../shared/lib/toast';
+import { formatCalendarDate } from '@/shared/lib/utils/date';
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
 import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
@@ -114,12 +116,14 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
       // Простой вызов API для создания платежа
       const result = await createPaymentMutation.mutateAsync(order.id);
 
-      // Получаем URL для оплаты из ответа API
-      if (result.payment_page_url) {
-        // Перенаправляем пользователя на страницу оплаты
+      if (result.widgetParams) {
+        onSuccess();
+        openTipTopPayWidget(result.widgetParams).catch((err) => {
+          console.error('TipTop Pay widget error:', err);
+          showErrorToast('Не удалось открыть окно оплаты', { autoClose: 2000 });
+        });
+      } else if (result.payment_page_url) {
         window.location.href = result.payment_page_url;
-
-        // Закрываем модальное окно и обновляем данные
         onSuccess();
       }
     } catch (error) {
@@ -211,7 +215,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Период:</span>
                 <span className="text-xs">
-                  {formatDate(order.start_date)} — {formatDate(order.end_date)}
+                  {formatCalendarDate(order.start_date, { day: '2-digit', month: 'short' })} — {formatCalendarDate(order.end_date, { day: '2-digit', month: 'short' })}
                     </span>
                   </div>
             </CardContent>

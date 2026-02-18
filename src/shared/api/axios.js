@@ -1,11 +1,10 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.js';
 
-// Используем прокси URL для локальной разработки
 const isDevelopment = import.meta.env.DEV;
-const API_URL = isDevelopment ? '/api' : 'https://api.extraspace.kz';
 
 export const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -120,7 +119,7 @@ api.interceptors.response.use(
 
 // Функция для создания прямого запроса для отладки проблем с axios
 export const makeDirectRequest = async (url, method = 'GET', data) => {
-  const baseUrl = isDevelopment ? window.location.origin + '/api' : API_URL;
+  const baseUrl = isDevelopment ? window.location.origin + '/api' : API_BASE_URL;
   
   try {
     const response = await fetch(`${baseUrl}${url}`, {

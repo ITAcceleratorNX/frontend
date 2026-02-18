@@ -514,8 +514,7 @@ const UserProfile = () => {
                             className="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-[#00A991] bg-[#00A991]/10 hover:bg-[#00A991]/20 rounded-lg transition-colors"
                             onClick={() => {
                               // TODO: Добавить функционал просмотра заказов пользователя
-                              console.log('Просмотр заказов пользователя:', selectedUser.id);
-                                showInfoToast('Функция в разработке');
+                              showInfoToast('Функция в разработке');
                             }}
                           >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,7 +527,6 @@ const UserProfile = () => {
                             className="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-[#00A991] bg-[#00A991]/10 hover:bg-[#00A991]/20 rounded-lg transition-colors"
                             onClick={() => {
                               // TODO: Добавить функционал просмотра платежей пользователя
-                              console.log('Просмотр платежей пользователя:', selectedUser.id);
                               showInfoToast('Функция в разработке');
                             }}
                           >

@@ -620,8 +620,6 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 }))
             }
 
-            console.log("📤 Отправка обновления заказа:", payload);
-
             await updateOrderMutation.mutateAsync(payload)
             showSuccessToast("Заказ успешно обновлён!", { autoClose: 3000 })
             onSuccess()

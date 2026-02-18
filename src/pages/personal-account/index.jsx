@@ -100,9 +100,6 @@ const PersonalAccountPage = memo(() => {
   useEffect(() => {
     // После завершения загрузки, проверяем аутентификацию
     if (!isLoading && !isAuthenticated) {
-      if (import.meta.env.DEV) {
-        console.log('PersonalAccountPage: Пользователь не аутентифицирован, перенаправление на /login');
-      }
       navigate('/login');
     }
   }, [isAuthenticated, isLoading, navigate]);
@@ -195,11 +192,6 @@ const PersonalAccountPage = memo(() => {
     </div>
   );
   }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab]);
-
-  if (import.meta.env.DEV) {
-    console.log('Рендеринг PersonalAccountPage, статус аутентификации:', 
-      { isAuthenticated, isLoading, activeNav, userRole: user?.role });
-  }
 
   return pageContent;
 });

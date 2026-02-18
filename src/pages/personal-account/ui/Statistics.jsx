@@ -889,15 +889,10 @@ const Statistics = () => {
 
   const handleFilterChange = (field) => (event) => {
     const value = event.target.value;
-    console.log('Filter change:', field, 'value:', value);
-    setFilters((prev) => {
-      const newFilters = {
+    setFilters((prev) => ({
       ...prev,
       [field]: value,
-      };
-      console.log('New filters:', newFilters);
-      return newFilters;
-    });
+    }));
   };
 
   const handleResetFilters = () => {

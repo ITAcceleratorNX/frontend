@@ -107,13 +107,6 @@ const WarehouseOrderPage = memo(() => {
       const isCloudType = selectedWarehouse.type === 'CLOUD';
       setIsCloud(isCloudType);
 
-      console.log('Смена склада:', {
-        warehouseType: selectedWarehouse.type,
-        isCloudType,
-        currentMovingOrdersLength: movingOrders.length,
-        currentMovingOrders: movingOrders
-      });
-
       // Если CLOUD — автоматически включаем перевозку и упаковку
       if (isCloudType) {
         setIsSelectedMoving(true);
@@ -128,7 +121,6 @@ const WarehouseOrderPage = memo(() => {
         }
       } else {
         // Для индивидуальных складов сбрасываем movingOrders
-        console.log('Сброс movingOrders для индивидуального склада');
         setMovingOrders([]);
         setMovingOrderErrors([]);
       }
@@ -214,7 +206,6 @@ const WarehouseOrderPage = memo(() => {
         const data = await warehouseApi.getAllWarehouses();
         setWarehouses(Array.isArray(data) ? data : []);
         if (import.meta.env.DEV) {
-          console.log("Склады загружены:", data);
         }
       } catch (error) {
         console.error("Ошибка при загрузке складов:", error);
@@ -245,7 +236,6 @@ const WarehouseOrderPage = memo(() => {
           });
           setPrices(filteredPrices);
           if (import.meta.env.DEV) {
-            console.log("Цены услуг загружены:", filteredPrices);
           }
         } catch (error) {
           console.error("Ошибка при загрузке цен услуг:", error);
@@ -417,20 +407,11 @@ const WarehouseOrderPage = memo(() => {
 
   // Функция расчета цены аренды склада через новый API
   const calculateStoragePrice = async () => {
-    console.log('calculateStoragePrice вызвана:', {
-      selectedStorage,
-      selectedWarehouse,
-      months,
-      totalVolume
-    });
-    
     if (!selectedStorage) {
-      console.log('selectedStorage не выбран, выходим');
       return;
     }
     
     if (!months) {
-      console.log('months не установлен, выходим');
       return;
     }
     
@@ -448,12 +429,10 @@ const WarehouseOrderPage = memo(() => {
       if (selectedWarehouse?.type === 'CLOUD') {
         // Для облачного хранения используем объем товаров
         volume = parseFloat(totalVolume) || 1;
-        console.log('CLOUD: volume =', volume);
       } else {
         // Для индивидуального хранения используем площадь товаров
         // Если товары не указаны, используем размер бокса
         area = totalVolume > 0 ? totalVolume : (parseFloat(selectedStorage.total_volume) || 1);
-        console.log('INDIVIDUAL: area =', area, 'totalVolume =', totalVolume, 'selectedStorage.total_volume =', selectedStorage.total_volume);
       }
       
       // Используем новый API для расчета стоимости хранения
@@ -462,16 +441,6 @@ const WarehouseOrderPage = memo(() => {
         storageType: storageType,
         months: months
       };
-      
-      console.log('Данные для расчета стоимости хранения:', {
-        selectedStorage,
-        selectedWarehouse,
-        storageType,
-        area,
-        volume,
-        months,
-        requestData
-      });
       
       // Добавляем соответствующие измерения
       if (storageType === 'INDIVIDUAL') {
@@ -490,8 +459,6 @@ const WarehouseOrderPage = memo(() => {
       }
       
       const result = await warehouseApi.calculateBulkPrice(requestData);
-      console.log('Результат расчета стоимости хранения:', result);
-      console.log('Устанавливаем storagePrice =', result.storage.price);
       setStoragePrice(result.storage.price);
       setStoragePricingBreakdown(result.storage.pricingBreakdown || null);
     } catch (error) {
@@ -767,8 +734,6 @@ const WarehouseOrderPage = memo(() => {
       }
 
       const result = await warehouseApi.createOrder(orderData);
-
-      console.log(result);
 
       showSuccessToast(
         'СМС от TrustMe для подписания договора придёт после подтверждения заказа менеджером. Оплата будет доступна сразу после подписания договора.',
@@ -2064,25 +2029,6 @@ const WarehouseOrderPage = memo(() => {
                         movingSelectedButNoOrders ||
                         movingSelectedButNoAddresses ||
                         packageSelectedButNoServices;
-                      
-                      console.log('Кнопка "Создать заявку" - проверка условий:', {
-                        isSubmitting,
-                        selectedStorage: !!selectedStorage,
-                        hasValidItems,
-                        validItemsCount: validItems.length,
-                        volumeExceeded,
-                        totalVolume,
-                        availableVolume: selectedStorage?.available_volume,
-                        movingSelectedButNoOrders,
-                        movingSelectedButNoAddresses,
-                        packageSelectedButNoServices,
-                        isSelectedMoving,
-                        isSelectedPackage,
-                        movingOrdersLength: movingOrders.length,
-                        servicesCount: services.filter(s => s.service_id && s.count > 0).length,
-                        isCloud,
-                        isDisabled
-                      });
                       
                       return isDisabled;
                     })()}

@@ -148,7 +148,6 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
               credentials: 'include'
             });
           } catch (error) {
-            console.log('Ошибка при запросе на выход:', error);
           }
           
           updateToast(logoutToast, "Выход выполнен успешно!", "success");

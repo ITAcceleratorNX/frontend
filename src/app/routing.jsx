@@ -25,18 +25,7 @@ import ManagerMovingOrder from '../pages/personal-account/ui/ManagerMovingOrder'
 import CourierRequest from '../pages/personal-account/ui/CourierRequest';
 import CourierRequestOrder from '../pages/personal-account/ui/CourierRequestOrder';
 
-// Мемоизированный компонент для логирования маршрутов - только в режиме разработки
-const RouteLogger = memo(({ children }) => {
-  const location = useLocation();
-  
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-    console.log('Routing: Текущий маршрут:', location.pathname);
-    }
-  }, [location.pathname]);
-  
-  return children;
-});
+const RouteLogger = memo(({ children }) => children);
 
 RouteLogger.displayName = 'RouteLogger';
 
@@ -56,16 +45,6 @@ const ProtectedRoute = memo(({ children }) => {
   
   // Мемоизируем результат редиректа для предотвращения повторных вычислений
   const authResult = useMemo(() => {
-    // Оптимизированная проверка авторизации - логирование только в режиме разработки
-    if (import.meta.env.DEV) {
-    console.log('ProtectedRoute: Проверка авторизации:', {
-        path: location.pathname,
-      isAuthenticated,
-        isLoading,
-        hasUser: !!user
-    });
-    }
-  
   // Показываем загрузку, пока проверяем статус аутентификации
   if (isLoading) {
       return <LoadingSpinner />;
@@ -74,9 +53,6 @@ const ProtectedRoute = memo(({ children }) => {
   // Если пользователь не авторизован, перенаправляем на страницу входа
     // с сохранением информации о запрошенном маршруте
   if (!isAuthenticated) {
-      if (import.meta.env.DEV) {
-    console.log('ProtectedRoute: Пользователь не авторизован, перенаправляем на /login');
-      }
       return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
@@ -98,10 +74,6 @@ PublicRoute.displayName = 'PublicRoute';
 
 // Мемоизированный компонент маршрутизации
 const Routing = memo(() => {
-  if (import.meta.env.DEV) {
-  console.log('Рендеринг компонента Routing');
-  }
-  
   // Мемоизируем роуты для предотвращения лишних перерисовок
   const publicRoutes = useMemo(() => [
     { path: "/", element: <HomePage /> },

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { showSuccessToast, showErrorToast } from '../toast';
 import { showChatConnectionError, showChatServerError } from '../utils/notifications';
+import { WS_URL } from '../../config/api.js';
 
 export const useWebSocket = () => {
   const { user, isAuthenticated } = useAuth();
@@ -46,7 +47,7 @@ export const useWebSocket = () => {
 
     try {
       isConnectingRef.current = true;
-      const socketUrl = `wss://api.extraspace.kz?userId=${user.id}`;
+      const socketUrl = `${WS_URL}?userId=${user.id}`;
       if (import.meta.env.DEV) {
         console.log('WebSocket: Подключение к', socketUrl);
       }

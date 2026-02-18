@@ -3,11 +3,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { NOTIFICATION_QUERY_KEYS } from './use-notifications';
 import { showInfoToast } from '../toast';
+import { API_BASE_URL } from '../../config/api.js';
 
 // Функция для получения базового URL API
 const getApiBaseUrl = () => {
-  const isDevelopment = import.meta.env.DEV;
-  return isDevelopment ? '/api' : 'https://api.extraspace.kz';
+  return API_BASE_URL;
 };
 
 /**

@@ -23,6 +23,7 @@ import { Badge } from '../../../components/ui/badge';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import {useNavigate} from "react-router-dom";
 import DatePicker from '../../../shared/ui/DatePicker';
+import { formatCalendarDate } from '@/shared/lib/utils/date';
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -648,9 +649,12 @@ const CancelSurveyModal = ({
         orderId,
         serviceType: 'GAZELLE_TO'
       });
-      
-      // После успешной оплаты автоматически отправляем запрос на отмену
-      if (paymentResult?.payment_page_url) {
+
+      if (paymentResult?.widgetParams) {
+        onSubmit();
+        const { openTipTopPayWidget } = await import('../../../shared/lib/tiptoppay-widget');
+        openTipTopPayWidget(paymentResult.widgetParams).catch((err) => console.error('TipTop Pay widget error:', err));
+      } else if (paymentResult?.payment_page_url) {
         onSubmit();
         window.location.href = paymentResult.payment_page_url;
       }
@@ -1030,7 +1034,7 @@ const Contracts = () => {
                       </td>
                       <td className="px-6 py-5 text-gray-600 text-sm">{getWarehouseName(row.warehouse_address)}</td>
                       <td className="px-6 py-5 text-gray-600 text-sm">{row.storage_name || '-'}</td>
-                      <td className="px-6 py-5 text-gray-600 text-sm">{`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</td>
+                      <td className="px-6 py-5 text-gray-600 text-sm">{`${formatCalendarDate(row.rental_period.start_date)} - ${formatCalendarDate(row.rental_period.end_date)}`}</td>
                       <td className="px-6 py-5">
                         <StatusBadge status={row.order_status} type="order" />
                       </td>
@@ -1125,7 +1129,7 @@ const Contracts = () => {
                     </div>
                     <div className="flex items-start gap-2 text-gray-700">
                       <Calendar className="w-4 h-4 mt-0.5 text-gray-500" />
-                      <span><strong>Период аренды:</strong> {`${formatDate(row.rental_period.start_date)} - ${formatDate(row.rental_period.end_date)}`}</span>
+                      <span><strong>Период аренды:</strong> {`${formatCalendarDate(row.rental_period.start_date)} - ${formatCalendarDate(row.rental_period.end_date)}`}</span>
                     </div>
                     <div className="flex items-start gap-2 text-gray-700">
                       <FileText className="w-4 h-4 mt-0.5 text-gray-500" />

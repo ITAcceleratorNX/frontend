@@ -1,7 +1,5 @@
 import api from './axios';
 
-const isDevelopment = import.meta.env.DEV;
-
 export const pricingRuleApi = {
   /**
    * Get all pricing rules (admin/manager only)
@@ -10,13 +8,7 @@ export const pricingRuleApi = {
    */
   getAll: async (filters = {}) => {
     try {
-      if (isDevelopment) {
-        console.log('PricingRuleAPI: Fetching all rules with filters:', filters);
-      }
       const response = await api.get('/pricing-rules', { params: filters });
-      if (isDevelopment) {
-        console.log('PricingRuleAPI: Fetched', response.data?.length || 0, 'rules');
-      }
       return response.data;
     } catch (error) {
       console.error('PricingRuleAPI: Error fetching rules:', error.response?.data || error.message);
@@ -46,13 +38,7 @@ export const pricingRuleApi = {
    */
   create: async (data) => {
     try {
-      if (isDevelopment) {
-        console.log('PricingRuleAPI: Creating rule:', data);
-      }
       const response = await api.post('/pricing-rules', data);
-      if (isDevelopment) {
-        console.log('PricingRuleAPI: Rule created:', response.data);
-      }
       return response.data;
     } catch (error) {
       console.error('PricingRuleAPI: Error creating rule:', error.response?.data || error.message);
@@ -68,9 +54,6 @@ export const pricingRuleApi = {
    */
   update: async (id, data) => {
     try {
-      if (isDevelopment) {
-        console.log('PricingRuleAPI: Updating rule:', id, data);
-      }
       const response = await api.put(`/pricing-rules/${id}`, data);
       return response.data;
     } catch (error) {

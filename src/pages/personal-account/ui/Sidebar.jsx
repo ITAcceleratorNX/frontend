@@ -123,17 +123,8 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
     }
   }, [user, queryClient]);
 
-  // Добавляем отладочную информацию
-  console.log('Sidebar: текущий пользователь:', { 
-    role: user?.role,
-    isAuth: !!user,
-    activeNav
-  });
-
    // Определяем, какие разделы показать в зависимости от роли
    const getNavItemsByRole = (role) => {
-    console.log('getNavItemsByRole вызван с ролью:', role);
-    
     switch (role?.toUpperCase()) {  
       case 'ADMIN':
         return adminNavItems;
@@ -142,7 +133,6 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
       case 'COURIER':  
         return courierNavItems;
       default:
-        console.log('Используются userNavItems для роли:', role);
         return userNavItems;
     }
   };
@@ -196,7 +186,6 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
               credentials: 'include' // Отправляем куки для аутентификации
             });
           } catch (error) {
-            console.log('Ошибка при запросе на выход:', error);
             // Игнорируем ошибку, т.к. куки уже очищены на клиенте
           }
           

@@ -34,13 +34,6 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
     const price = parseFloat(service.price) ?? parseFloat(service.unit_price) ?? 0;
     const count = orderSvc?.count ?? 1;
     const amount = price * count;
-    if (import.meta.env.DEV && amount === 0 && (orderSvc || service.id)) {
-      console.debug('[OrderDetailView] Цена услуги = 0. Ожидаемые поля: service.price или OrderService.total_price. Получено:', {
-        type: service.type,
-        price: service.price,
-        orderService: orderSvc,
-      });
-    }
     return amount;
   };
 

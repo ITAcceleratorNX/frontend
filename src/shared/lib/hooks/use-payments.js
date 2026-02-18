@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsApi } from '../../api/paymentsApi';
+import { openTipTopPayWidget } from '../tiptoppay-widget';
 import { 
   showPaymentCreated, 
   showPaymentError, 
@@ -103,14 +104,19 @@ export const useCreatePayment = () => {
     mutationFn: paymentsApi.createPayment,
     onSuccess: (data, orderId) => {
       console.log('Платеж успешно создан:', data);
-      
-      // Инвалидируем кеш платежей и заказов пользователя
+
       queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
       queryClient.invalidateQueries({ queryKey: ['user-orders'] });
-      
-      // Показываем уведомление об успехе
-      if (data.payment_page_url) {
+
+      if (data.widgetParams) {
         showPaymentCreated();
+        openTipTopPayWidget(data.widgetParams).catch((err) => {
+          console.error('TipTop Pay widget error:', err);
+          showGenericError('Не удалось открыть окно оплаты');
+        });
+      } else if (data.payment_page_url) {
+        showPaymentCreated();
+        window.location.href = data.payment_page_url;
       }
     },
     onError: (error) => {
@@ -138,18 +144,19 @@ export const useCreateManualPayment = () => {
     mutationFn: paymentsApi.createManualPayment,
     onSuccess: (data, orderPaymentId) => {
       console.log('Ручная оплата успешно создана:', data);
-      
-      // Инвалидируем кеш платежей пользователя
+
       queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
-      
-      // Показываем уведомление об успехе и открываем страницу оплаты
-      if (data.payment_page_url) {
+
+      if (data.widgetParams) {
+        showGenericSuccess('Открыто окно оплаты');
+        openTipTopPayWidget(data.widgetParams).catch((err) => {
+          console.error('TipTop Pay widget error:', err);
+          showGenericError('Не удалось открыть окно оплаты');
+        });
+      } else if (data.payment_page_url) {
         showGenericSuccess('Ручная оплата создана! Перенаправляем на страницу оплаты...');
         window.open(data.payment_page_url, '_blank');
-        // Перезагружаем страницу через небольшую задержку, чтобы дать время на открытие URL
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        setTimeout(() => window.location.reload(), 500);
       }
     },
     onError: (error) => {
@@ -259,11 +266,18 @@ export const useCreateAdditionalServicePayment = () => {
     mutationFn: ({ orderId, serviceType }) => paymentsApi.createAdditionalServicePayment(orderId, serviceType),
     onSuccess: (data, variables) => {
       console.log('Платеж для дополнительной услуги успешно создан:', data);
-      
-      // Инвалидируем кеш платежей и заказов пользователя
+
       queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
       queryClient.invalidateQueries({ queryKey: ['user-orders'] });
       queryClient.invalidateQueries({ queryKey: ['contracts', 'details'] });
+
+      if (data.widgetParams) {
+        showGenericSuccess('Открыто окно оплаты');
+        openTipTopPayWidget(data.widgetParams).catch((err) => {
+          console.error('TipTop Pay widget error:', err);
+          showGenericError('Не удалось открыть окно оплаты');
+        });
+      }
     },
     onError: (error, variables) => {
       console.error('Ошибка при создании платежа для дополнительной услуги:', error);

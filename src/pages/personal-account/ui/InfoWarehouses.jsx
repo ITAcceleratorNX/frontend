@@ -24,10 +24,6 @@ const InfoWarehouses = () => {
         const warehousesArray = Array.isArray(data) ? data : [];
         setWarehouses(warehousesArray);
         setFilteredWarehouses(warehousesArray);
-        
-        if (import.meta.env.DEV) {
-          console.log('Склады загружены для панели управления:', data);
-        }
 
         // Автоматически перенаправляем на первый склад
         if (warehousesArray.length > 0) {

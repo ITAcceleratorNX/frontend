@@ -321,8 +321,6 @@ const HomePage = memo(() => {
         if (value && serviceOptions.length > 0) {
           const selectedOption = serviceOptions.find(opt => String(opt.id) === String(value));
           if (selectedOption && selectedOption.type === "GAZELLE_TO") {
-            console.log("✅ GAZELLE_TO выбрана в updateServiceRow");
-            
             // Добавляем moving_order для возврата вещей
             // Дата возврата = дата начала бронирования + количество месяцев
             const startDate = individualBookingStartDate ? new Date(individualBookingStartDate) : new Date();
@@ -334,7 +332,6 @@ const HomePage = memo(() => {
               // Проверяем, нет ли уже такого moving_order
               const exists = prev.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
               if (exists) {
-                console.log("⚠️ moving_order для возврата уже существует");
                 return prev;
               }
               
@@ -344,8 +341,6 @@ const HomePage = memo(() => {
                 direction: "TO_CLIENT",
                 address: movingAddressTo || getMovingAddressFrom || "",
               };
-              
-              console.log("✅ Создан новый moving_order:", newOrder);
               return [...prev, newOrder];
             });
           }
@@ -1135,21 +1130,7 @@ const HomePage = memo(() => {
       // Проверяем наличие GAZELLE_TO в услугах (независимо от includeMoving)
       const hasGazelleTo = finalServices.some(s => {
         const service = availableOptions.find(opt => opt.id === s.service_id);
-        const isGazelleTo = service && service.type === "GAZELLE_TO";
-        console.log("🔍 Проверка услуги:", { 
-          serviceId: s.service_id, 
-          serviceType: service?.type,
-          isGazelleTo 
-        });
-        return isGazelleTo;
-      });
-
-      console.log("🔍 Проверка GAZELLE_TO:", {
-        hasGazelleTo,
-        finalServices,
-        availableOptions: availableOptions.length,
-        movingOrders,
-        movingAddressTo,
+        return service && service.type === "GAZELLE_TO";
       });
 
       // Создаем moving_orders
@@ -1163,12 +1144,8 @@ const HomePage = memo(() => {
       
       // Добавляем возврат вещей, если есть GAZELLE_TO в услугах
       if (hasGazelleTo) {
-        console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
-        
-        // Используем moving_order из состояния или создаем новый
         const returnOrder = movingOrders.find(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
         if (returnOrder) {
-          console.log("✅ Используем существующий moving_order из состояния");
           allMovingOrders.push({
             moving_date: returnOrder.moving_date,
             status: "PENDING",
@@ -1176,7 +1153,6 @@ const HomePage = memo(() => {
             address: returnOrder.address || movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
           });
         } else {
-          console.log("✅ Создаем новый moving_order для возврата");
           // Создаем дату возврата: дата начала бронирования + количество месяцев
           const startDate = new Date(individualBookingStartDate || new Date());
           const returnDate = new Date(startDate);
@@ -1192,8 +1168,6 @@ const HomePage = memo(() => {
         }
       }
       
-      console.log("📦 Финальные moving_orders:", allMovingOrders);
-      
       // Добавляем moving_orders только если они есть
       if (allMovingOrders.length > 0) {
         orderData.moving_orders = allMovingOrders;
@@ -1201,13 +1175,9 @@ const HomePage = memo(() => {
         orderData.is_selected_moving = true;
       }
 
-      console.log("📤 Отправляемые данные заказа:", orderData);
-
       if (finalServices.length > 0) {
         orderData.services = finalServices;
       }
-
-      console.log("📤 Отправляемые данные заказа (home):", orderData);
 
       await warehouseApi.createOrder(orderData);
 
@@ -1633,9 +1603,6 @@ const HomePage = memo(() => {
           setSelectedWarehouse(firstIndividual || data[0]);
         }
 
-        if (import.meta.env.DEV) {
-          console.log("Склады с API загружены:", data);
-        }
       } catch (error) {
         console.error("Ошибка при загрузке складов:", error);
         setSelectedWarehouse(warehouses[0]);
@@ -1713,11 +1680,6 @@ const HomePage = memo(() => {
         
         setTariffPrices(pricesMap);
         setCloudCustomPrices({ low: cloudM3Price, high: cloudM3Price });
-        
-        if (import.meta.env.DEV) {
-          console.log('Цены тарифов облачного хранения загружены:', pricesMap);
-          console.log('Цена за м³ (CLOUD_M3) загружена:', cloudM3Price);
-        }
       } catch (error) {
         console.error('Ошибка при загрузке цен тарифов облачного хранения:', error);
         // Используем дефолтные значения при ошибке

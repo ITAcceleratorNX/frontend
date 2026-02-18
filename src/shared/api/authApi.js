@@ -1,10 +1,9 @@
 import axios from 'axios';
-
-const API_URL = 'https://api.extraspace.kz';
+import { API_BASE_URL } from '../config/api.js';
 
 // Создаем настроенный экземпляр axios для всех запросов
 const axiosApi = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true, // Включаем отправку cookies
   headers: {
     'Content-Type': 'application/json',

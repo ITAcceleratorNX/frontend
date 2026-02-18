@@ -59,7 +59,6 @@ const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
                 setIsResendingCode(true);
                 try {
                   const response = await authApi.sendChangePasswordCode(userEmail);
-                  console.log('Response from sendChangePasswordCode:', response); // Отладочная информация
 
                   if (response.user_exists) {
                     setCodeSent(true);

@@ -32,5 +32,7 @@ export const PAGINATION = {
   CHATS_LIMIT: 10
 };
 
-// WebSocket URL
-export const WS_URL = 'wss://api.extraspace.kz'; 
+import { WS_URL } from '../../../shared/config/api.js';
+
+// WebSocket URL (импортируется из централизованного конфига)
+export { WS_URL }; 

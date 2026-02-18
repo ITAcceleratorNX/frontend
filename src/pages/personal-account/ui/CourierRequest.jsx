@@ -177,10 +177,6 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
         return <Badge className="bg-blue-100 text-blue-800">Курьер в пути к клиенту</Badge>;
       case 'COURIER_AT_CLIENT':
         return <Badge className="bg-purple-100 text-purple-800">Курьер у клиента</Badge>;
-      case 'PENDING':
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-          {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает доставки'}
-        </Badge>;
       case 'IN_PROGRESS':
         return <Badge className="bg-blue-100 text-blue-800">
           {order.direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу'}

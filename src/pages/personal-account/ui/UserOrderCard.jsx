@@ -25,6 +25,7 @@ import { useCreateMoving, useCreateAdditionalServicePayment, useDownloadPaymentR
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import { Zap, CheckCircle, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag, CreditCard } from 'lucide-react';
 import { showSuccessToast } from '../../../shared/lib/toast';
+import { formatCalendarDateLong } from '@/shared/lib/utils/date';
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
 import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
@@ -296,6 +297,10 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
       return 'Некорректная дата';
     }
   };
+  const formatOrderPeriod = (dateString) => {
+    if (!dateString) return 'Не указана';
+    return formatCalendarDateLong(dateString) || 'Некорректная дата';
+  };
 
   const formatPrice = (price) => {
     if (!price) return '0';
@@ -422,27 +427,6 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           <>
             <button
               onClick={() => handlePay(payment)}
-              disabled={createManualPaymentMutation.isLoading}
-              className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
-            >
-              Оплатить
-            </button>
-          </>
-        ) : payment.status === 'UNPAID' && (order.status === 'PROCESSING' || order.status === 'ACTIVE') && payment.payment_page_url ? (
-          <>
-            <button
-              onClick={() => {
-                if (!isOnlinePaymentEnabled) {
-                  setIsPaymentDisabledModalOpen(true);
-                  return;
-                }
-                window.open(payment.payment_page_url, '_blank');
-                showSuccessToast('Перенаправляем на страницу оплаты...', {
-                  position: "top-right",
-                  autoClose: 3000,
-                });
-                window.location.reload();
-              }}
               disabled={createManualPaymentMutation.isLoading}
               className="px-4 py-2 bg-white rounded-3xl text-xs font-medium text-gray-700 hover:bg-white/90 transition-colors"
             >
@@ -596,9 +580,9 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
       <div className={`grid gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'mb-4 min-[360px]:mb-6 grid-cols-1' : 'mb-10 grid-cols-2'}`}>
         <div className="space-y-2">
           <p className="text-white/90 text-xs">Дата начала:</p>
-          <p className="text-white text-sm">{formatDate(order.start_date)}</p>
+          <p className="text-white text-sm">{formatOrderPeriod(order.start_date)}</p>
           <p className="text-white/90 text-xs">Дата окончания:</p>
-          <p className="text-white text-sm">{formatDate(order.end_date)}</p>
+          <p className="text-white text-sm">{formatOrderPeriod(order.end_date)}</p>
         </div>
         <div className="space-y-2">
           <p className="text-white/90 text-xs">Стоимость аренды:</p>
@@ -1156,10 +1140,13 @@ const CancelSurveyModal = ({
         orderId,
         serviceType: 'GAZELLE_TO'
       });
-      
-      // После успешной оплаты автоматически отправляем запрос на отмену
-      if (paymentResult?.payment_page_url) {
-        onSubmit(null); // Для доставки не передаём selfPickupDate
+
+      if (paymentResult?.widgetParams) {
+        onSubmit(null);
+        const { openTipTopPayWidget } = await import('../../../shared/lib/tiptoppay-widget');
+        openTipTopPayWidget(paymentResult.widgetParams).catch((err) => console.error('TipTop Pay widget error:', err));
+      } else if (paymentResult?.payment_page_url) {
+        onSubmit(null);
         window.location.href = paymentResult.payment_page_url;
       }
     } catch (error) {
