@@ -1,5 +1,6 @@
 import React from 'react'
 import { ChevronDown, ChevronUp, Tag, Check, X } from 'lucide-react';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 
 export default function IndividualStorageSummary({
                                            previewStorage,
@@ -191,13 +192,13 @@ export default function IndividualStorageSummary({
                         <div className="pt-4 border-t border-gray-200 space-y-4 text-sm text-[#273655]">
                             {/* Доставка */}
                             {includeMoving && serviceSummary.breakdown.some(item =>
-                                item.label.includes('Забор') || item.label.includes('Доставка')
+                                item.label.includes('Доставка')
                             ) && (
                                 <div className="flex justify-between font-medium">
                                     <span>Доставка</span>
                                     <span>
                     {serviceSummary.breakdown
-                        .filter(item => item.label.includes('Забор') || item.label.includes('Доставка'))
+                        .filter(item => item.label.includes('Доставка'))
                         .reduce((sum, item) => sum + item.amount, 0)
                         .toLocaleString()} ₸
                   </span>
@@ -206,7 +207,7 @@ export default function IndividualStorageSummary({
 
                             {/* Доп. услуги */}
                             {includePacking && serviceSummary.breakdown.some(item =>
-                                !item.label.includes('Забор') && !item.label.includes('Доставка')
+                                !item.label.includes('Доставка')
                             ) && (
                                 <div>
                                     <h4 className="font-bold mb-2">Дополнительные услуги</h4>
@@ -220,7 +221,7 @@ export default function IndividualStorageSummary({
                                                 return (
                                                     <li key={idx} className="flex justify-between">
                             <span>
-                              {option.description || 'Услуга'} × {service.count} шт ×{' '}
+                              {formatServiceDescription(option.description) || 'Услуга'} × {service.count} шт ×{' '}
                                 {option.price.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₸
                             </span>
                                                         <span className="font-medium">{amount.toLocaleString('ru-RU')} ₸</span>
@@ -232,7 +233,7 @@ export default function IndividualStorageSummary({
                                         <span>Итого доп. услуги:</span>
                                         <span>
                       {serviceSummary.breakdown
-                          .filter(item => !item.label.includes('Забор') && !item.label.includes('Доставка'))
+                          .filter(item => !item.label.includes('Доставка'))
                           .reduce((sum, item) => sum + item.amount, 0)
                           .toLocaleString('ru-RU')} ₸
                     </span>

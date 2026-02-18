@@ -341,8 +341,14 @@ const CourierRequest = () => {
       setOrders(newOrders);
     } catch (err) {
       console.error('Ошибка при загрузке заказов:', err);
-      setError('Не удалось загрузить заказы. Попробуйте позже.');
-      showErrorToast('Ошибка загрузки заказов');
+      const status = err?.response?.status;
+      const msg = err?.userMessage || err?.message || (
+        status === 401 ? 'Сессия истекла. Войдите снова.' :
+        status === 403 ? 'Недостаточно прав. Войдите снова.' :
+        'Не удалось загрузить заказы. Попробуйте позже.'
+      );
+      setError(msg);
+      showErrorToast(msg);
     } finally {
       setIsLoading(false);
     }

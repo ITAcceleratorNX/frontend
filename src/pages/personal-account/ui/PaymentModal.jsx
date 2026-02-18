@@ -26,6 +26,7 @@ import markerIcon from '../../../assets/маркер.png';
 import rackRentalIcon from '../../../assets/Аренда_стелажей.png';
 import uslugiMuveraIcon from '../../../assets/услуги_мувера.png';
 import uslugiUpakovkiIcon from '../../../assets/услуги_упаковки.png';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 
 const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -266,7 +267,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
                         <div className="flex-1">
                                 <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-gray-900">
-                              {service.description || getServiceTypeName(service.type)}
+                              {formatServiceDescription(service.description) || getServiceTypeName(service.type)}
                             </span>
                             {service.OrderService && service.OrderService.count > 1 && (
                               <Badge className="text-xs px-1 py-0 bg-[#1e2c4f] text-white">

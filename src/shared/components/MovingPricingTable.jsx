@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { paymentsApi } from '../api/paymentsApi';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 
 const MovingPricingTable = () => {
   const [prices, setPrices] = useState([]);
@@ -109,7 +110,7 @@ const MovingPricingTable = () => {
                       {translateType(priceItem.type)}
                     </td>
                     <td className="px-6 py-4 text-[#666] text-sm">
-                      {priceItem.description}
+                      {formatServiceDescription(priceItem.description)}
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-[#273655]">
                       {formatPrice(priceItem.price)}
@@ -137,7 +138,7 @@ const MovingPricingTable = () => {
                 </span>
               </div>
               <p className="text-[#666] text-sm leading-relaxed">
-                {priceItem.description}
+                {formatServiceDescription(priceItem.description)}
               </p>
             </div>
           ))}

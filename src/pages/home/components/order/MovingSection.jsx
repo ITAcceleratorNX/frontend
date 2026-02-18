@@ -55,12 +55,12 @@ export default function MovingSection({
                                 onChange={(value) => setMovingPickupDate(value)}
                                 minDate={new Date().toISOString().split('T')[0]}
                                 allowFutureDates={true}
-                                placeholder="Дата забора вещей"
+                                placeholder="Дата доставки"
                                 className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-3xl [&_input]:text-[#373737] [&_input]:placeholder:text-gray-400 [&_label]:text-[#373737] [&_button]:text-[#373737] [&_button]:hover:text-[#373737] [&_button]:hover:bg-transparent [&_button]:hover:!-translate-y-1/2 [&_button]:hover:!top-1/2 [&_button]:transition-none [&_button]:cursor-pointer [&>div]:focus-within:ring-2 [&>div]:focus-within:ring-gray-200 [&>div]:focus-within:border-gray-300"
                             />
                         </div>
                         <div className="flex flex-col gap-2 w-full">
-                            <label className="text-sm font-medium text-[#373737]">Адрес забора вещей</label>
+                            <label className="text-sm font-medium text-[#373737]">Адрес доставки</label>
                             <input
                                 type="text"
                                 value={movingStreetFrom}

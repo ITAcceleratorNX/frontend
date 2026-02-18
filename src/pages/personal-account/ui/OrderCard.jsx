@@ -8,6 +8,7 @@ import {
 } from '../../../shared/lib/types/orders';
 import { Tag } from 'lucide-react';
 import EditLocationModal from './EditLocationModal';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
 import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
@@ -579,7 +580,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                                                  <div className="flex-1">
                            <div className="flex items-center gap-2">
                              <div className="font-medium text-gray-900 text-sm">
-                               {service.description || getServiceTypeName(service.type)}
+                               {formatServiceDescription(service.description) || getServiceTypeName(service.type)}
                              </div>
                              {service.OrderService && service.OrderService.count > 1 && (
                                <Badge className="text-xs px-2 py-0 bg-[#1e2c4f] text-white">
