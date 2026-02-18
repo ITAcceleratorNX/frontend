@@ -24,7 +24,7 @@ import markerIcon from '../../../assets/маркер.png';
 import rackRentalIcon from '../../../assets/Аренда_стелажей.png';
 import uslugiMuveraIcon from '../../../assets/услуги_мувера.png';
 import uslugiUpakovkiIcon from '../../../assets/услуги_упаковки.png';
-import {formatCalendarDate} from "src/shared/lib/utils/date.js";
+import { formatCalendarDate } from '../../../shared/lib/utils/date';
 
 const OrderConfirmModal = ({ isOpen, order, onClose }) => {
   const approveOrderMutation = useApproveOrder();
