@@ -6,7 +6,6 @@ import Sidebar from './Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
-import { Separator } from '../../../components/ui/separator';
 import { 
   Dialog, 
   DialogContent, 
@@ -175,12 +174,12 @@ const CourierRequestOrder = () => {
     const buttonProps = {
       onClick: handleActionClick,
       disabled: isUpdating,
-      className: "flex items-center gap-2"
+      className: "flex items-center gap-2 rounded-full px-5 py-2.5 bg-[#00A991] hover:bg-[#009882] text-white"
     };
 
-     if (order.status === 'PENDING') {
+    if (order.status === 'PENDING') {
       return (
-        <Button {...buttonProps} className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90 text-white">
+        <Button {...buttonProps}>
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
           Принять заказ
         </Button>
@@ -188,7 +187,7 @@ const CourierRequestOrder = () => {
     }
     if (order.status === 'COURIER_ASSIGNED') {
       return (
-        <Button {...buttonProps} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button {...buttonProps}>
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />}
           {order.direction === 'TO_CLIENT' ? 'Еду к клиенту' : 'Еду к вам'}
         </Button>
@@ -196,7 +195,7 @@ const CourierRequestOrder = () => {
     }
     if (order.status === 'COURIER_IN_TRANSIT') {
       return (
-        <Button {...buttonProps} className="bg-purple-600 hover:bg-purple-700 text-white">
+        <Button {...buttonProps}>
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
           Прибыл к клиенту
         </Button>
@@ -204,7 +203,7 @@ const CourierRequestOrder = () => {
     }
     if (order.status === 'COURIER_AT_CLIENT') {
       return (
-        <Button {...buttonProps} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button {...buttonProps}>
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Box className="w-4 h-4" />}
           {order.direction === 'TO_CLIENT' ? 'Оставил вещи' : 'Забрал вещи'}
         </Button>
@@ -212,7 +211,7 @@ const CourierRequestOrder = () => {
     }
     if (order.status === 'IN_PROGRESS') {
       return (
-        <Button {...buttonProps} className="bg-green-600 hover:bg-green-700 text-white">
+        <Button {...buttonProps}>
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
           Завершить
         </Button>
@@ -227,57 +226,58 @@ const CourierRequestOrder = () => {
   const getStatusBadge = () => {
     if (!order) return null;
 
+    const badgeBase = "flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium";
     switch (order.status) {
       case 'PENDING':
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800 flex items-center gap-1">
-          <Clock className="w-3 h-3" />
+        return <Badge className={`${badgeBase} bg-[#00A991]/15 text-[#004743]`}>
+          <Clock className="w-3.5 h-3.5 text-[#00A991]" />
           {order.direction === 'TO_CLIENT' ? 'Ожидает на складе' : 'Ожидает доставки'}
         </Badge>;
       case 'COURIER_ASSIGNED':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
-          <User className="w-3 h-3" />
+        return <Badge className={`${badgeBase} bg-[#00A991]/15 text-[#004743]`}>
+          <User className="w-3.5 h-3.5 text-[#00A991]" />
           Курьер назначен
         </Badge>;
       case 'COURIER_IN_TRANSIT':
-        return <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
-          <Truck className="w-3 h-3" />
+        return <Badge className={`${badgeBase} bg-[#00A991]/15 text-[#004743]`}>
+          <Truck className="w-3.5 h-3.5 text-[#00A991]" />
           Курьер в пути {order.direction === 'TO_CLIENT' ? 'к клиенту' : 'к вам'}
         </Badge>;
       case 'COURIER_AT_CLIENT':
-        return <Badge className="bg-purple-100 text-purple-800 flex items-center gap-1">
-          <User className="w-3 h-3" />
+        return <Badge className={`${badgeBase} bg-[#00A991]/15 text-[#004743]`}>
+          <User className="w-3.5 h-3.5 text-[#00A991]" />
           Курьер у клиента
         </Badge>;
       case 'IN_PROGRESS':
-        return <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
-          <Truck className="w-3 h-3" />
+        return <Badge className={`${badgeBase} bg-[#00A991]/15 text-[#004743]`}>
+          <Truck className="w-3.5 h-3.5 text-[#00A991]" />
           {order.direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу'}
         </Badge>;
       case 'DELIVERED':
-        return <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3" />
+        return <Badge className={`${badgeBase} bg-[#00A991]/20 text-[#004743]`}>
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#00A991]" />
           {order.direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад'}
         </Badge>;
       case 'FINISHED':
-        return <Badge className="bg-gray-100 text-gray-800 flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3" />
+        return <Badge className={`${badgeBase} bg-gray-100 text-gray-700`}>
+          <CheckCircle2 className="w-3.5 h-3.5" />
           Завершено
         </Badge>;
       default:
-        return <Badge variant="outline">Неизвестный статус</Badge>;
+        return <Badge variant="outline" className={badgeBase}>Неизвестный статус</Badge>;
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="courierrequests" setActiveNav={handleNavClick} />
-          <main className="flex-1 mr-[110px]">
-            <div className="max-w-5xl mx-auto py-12 px-10">
-              <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin mx-auto mb-4" />
+          <main className="flex-1 min-w-0 md:mr-[110px] bg-gray-50">
+            <div className="max-w-5xl mx-auto w-full py-8 px-4 sm:py-12 sm:px-10">
+              <div className="text-center py-8 sm:py-12">
+                <Loader2 className="w-8 h-8 text-[#00A991] animate-spin mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Загрузка заказа</h3>
                 <p className="text-gray-600">Пожалуйста, подождите...</p>
               </div>
@@ -289,21 +289,21 @@ const CourierRequestOrder = () => {
   }
 
   if (error || !order) {
-  return (
-      <div className="min-h-screen flex flex-col">
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="courierrequests" setActiveNav={handleNavClick} />
-          <main className="flex-1 mr-[110px]">
-            <div className="max-w-5xl mx-auto py-12 px-10">
-              <Card className="border-red-200">
-                <CardContent className="text-center py-12">
-                  <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <main className="flex-1 min-w-0 md:mr-[110px] bg-gray-50">
+            <div className="max-w-5xl mx-auto w-full py-8 px-4 sm:py-12 sm:px-10">
+              <Card className="border-red-200 rounded-xl shadow-sm bg-white">
+                <CardContent className="text-center py-8 sm:py-12 px-4">
+                  <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-500 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
                   <p className="text-gray-600 mb-6">{error || 'Заказ не найден'}</p>
-                  <Button 
+                  <Button
                     onClick={() => navigate('/personal-account', { state: { activeSection: 'courierrequests' } })}
-                    className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90"
+                    className="bg-[#00A991] hover:bg-[#009882] text-white rounded-full px-5 py-2.5"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Вернуться к заказам
@@ -318,47 +318,45 @@ const CourierRequestOrder = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <div className="flex flex-1">
         <Sidebar activeNav="courierrequests" setActiveNav={handleNavClick} />
-        <main className="flex-1 mr-[110px]">
-          <div className="max-w-5xl mx-auto py-12 px-10 space-y-6">
+        <main className="flex-1 min-w-0 md:mr-[110px] bg-gray-50">
+          <div className="max-w-5xl mx-auto w-full py-4 px-3 sm:py-6 sm:px-6 md:py-8 md:px-10 space-y-4 sm:space-y-6">
             {/* Навигация назад */}
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={() => navigate('/personal-account', { state: { activeSection: 'courierrequests' } })}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Назад к заказам
-              </Button>
-              </div>
+            <Button
+              onClick={() => navigate('/personal-account', { state: { activeSection: 'courierrequests' } })}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 rounded-full border-gray-300 text-gray-700 hover:bg-white hover:border-[#00A991] hover:text-[#00A991]"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Назад к заказам
+            </Button>
 
             {/* Заголовок заказа */}
-            <Card className="border-l-4 border-l-[#1e2c4f]">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-[#1e2c4f] rounded-full flex items-center justify-center">
-                      <Package className="w-6 h-6 text-white" />
+            <Card className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-[#00A991]/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Truck className="w-7 h-7 text-[#00A991]" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl text-[#1e2c4f]">
-                        Заказ #{order.movingOrderId}
+                      <CardTitle className="text-2xl font-bold text-gray-900">
+                        Заказ №{order.movingOrderId}
                       </CardTitle>
-                      <p className="text-gray-600">Детали заказа на перевозку</p>
+                      <p className="text-gray-500 text-sm mt-0.5">Детали заказа на перевозку</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     {getStatusBadge()}
                     {order.status !== 'DELIVERED' && order.status !== 'FINISHED' && (
                       <Button
                         variant="outline"
                         onClick={() => setIsIssueModalOpen(true)}
-                        className="flex items-center gap-2 text-orange-600 border-orange-200 hover:bg-orange-50"
+                        className="flex items-center gap-2 rounded-full border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300"
                       >
                         <AlertTriangle className="w-4 h-4" />
                         Проблема
@@ -372,92 +370,79 @@ const CourierRequestOrder = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Информация об адресах */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
-                    <MapPin className="w-5 h-5" />
+              <Card className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <div className="w-9 h-9 rounded-lg bg-[#00A991]/15 flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-[#00A991]" />
+                    </div>
                     Адреса
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    {/* Информация о клиенте */}
-                    <div className="flex items-start gap-2">
-                      <User className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50/80">
+                      <User className="w-4 h-4 text-[#00A991] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Имя клиента</p>
-                        <p className="text-gray-700">{order.userName || 'Не указано'}</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Имя клиента</p>
+                        <p className="text-gray-900 font-medium">{order.userName || 'Не указано'}</p>
                       </div>
                     </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-start gap-2">
-                      <Phone className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50/80">
+                      <Phone className="w-4 h-4 text-[#00A991] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Телефон</p>
-                        <p className="text-gray-700">{order.userPhone || 'Не указан'}</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Телефон</p>
+                        <p className="text-gray-900 font-medium">{order.userPhone || 'Не указан'}</p>
                       </div>
                     </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50/80">
+                      <MapPin className="w-4 h-4 text-[#00A991] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Адрес клиента</p>
-                        <p className="text-gray-700">{order.userAddress || 'Не указан'}</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Адрес клиента</p>
+                        <p className="text-gray-900 font-medium">{order.userAddress || 'Не указан'}</p>
                       </div>
                     </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-start gap-2">
-                      <Building className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50/80">
+                      <Building className="w-4 h-4 text-[#00A991] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Склад</p>
-                        <p className="text-gray-700">
-                          {order.warehouseName 
-                            ? `${order.warehouseName}${order.warehouseAddress ? `, ${order.warehouseAddress}` : ''}` 
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Склад</p>
+                        <p className="text-gray-900 font-medium">
+                          {order.warehouseName
+                            ? `${order.warehouseName}${order.warehouseAddress ? `, ${order.warehouseAddress}` : ''}`
                             : (order.warehouseAddress || 'Не указан')}
                         </p>
                       </div>
                     </div>
-
                     {order.delivery_time_interval && (
-                      <>
-                        <Separator />
-                        <div className="flex items-start gap-2">
-                          <Clock className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Время доставки</p>
-                            <p className="text-gray-700">{order.delivery_time_interval}</p>
-                          </div>
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50/80">
+                        <Clock className="w-4 h-4 text-[#00A991] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Время доставки</p>
+                          <p className="text-gray-900 font-medium">{order.delivery_time_interval}</p>
                         </div>
-                      </>
+                      </div>
                     )}
-
-                    <Separator />
-
-                    <div className="flex items-start gap-2">
-                      <Box className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50/80">
+                      <Box className="w-4 h-4 text-[#00A991] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Хранилище</p>
-                        <p className="text-gray-700">{order.storageName || 'Не указано'}</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Хранилище</p>
+                        <p className="text-gray-900 font-medium">{order.storageName || 'Не указано'}</p>
                       </div>
                     </div>
-                </div>
+                  </div>
                 </CardContent>
               </Card>
 
               {/* Услуги */}
-                {order.serviceDescriptions && Object.keys(order.serviceDescriptions).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
-                      <FileText className="w-5 h-5" />
+              {order.serviceDescriptions && Object.keys(order.serviceDescriptions).length > 0 && (
+                <Card className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                      <div className="w-9 h-9 rounded-lg bg-[#00A991]/15 flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-[#00A991]" />
+                      </div>
                       Услуги
-                      <Badge variant="outline" className="ml-auto">
+                      <Badge variant="outline" className="ml-auto rounded-full border-[#00A991]/40 text-[#004743]">
                         {Object.keys(order.serviceDescriptions).length}
                       </Badge>
                     </CardTitle>
@@ -465,100 +450,99 @@ const CourierRequestOrder = () => {
                   <CardContent>
                     <div className="space-y-2">
                       {Object.entries(order.serviceDescriptions).map(([desc, count], i) => (
-                        <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <div key={i} className="flex items-center gap-2 p-3 bg-[#00A991]/5 rounded-lg border border-[#00A991]/10">
+                          <CheckCircle2 className="w-4 h-4 text-[#00A991] flex-shrink-0" />
                           <span className="text-sm text-gray-700">{desc} — {count} шт.</span>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-                )}
+              )}
             </div>
 
             {/* Предметы для перевозки */}
-                {order.items?.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
-                    <Package className="w-5 h-5" />
+            {order.items?.length > 0 && (
+              <Card className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <div className="w-9 h-9 rounded-lg bg-[#00A991]/15 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-[#00A991]" />
+                    </div>
                     Предметы для перевозки
-                    <Badge variant="outline" className="ml-auto">
+                    <Badge variant="outline" className="ml-auto rounded-full border-[#00A991]/40 text-[#004743]">
                       {order.items.length}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto rounded-lg border border-gray-200">
                     <table className="w-full">
-                        <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">Название</th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">Объём</th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">Маркировка</th>
-                          <th className="text-right py-3 px-4 font-medium text-gray-900">Действия</th>
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50/80">
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">ID</th>
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Название</th>
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Объём</th>
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Маркировка</th>
+                          <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Действия</th>
                         </tr>
-                        </thead>
-                        <tbody>
+                      </thead>
+                      <tbody>
                         {order.items.map((item) => (
-                          <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <tr key={item.id} className="border-b border-gray-100 last:border-0 hover:bg-[#00A991]/5 transition-colors">
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
-                                <Box className="w-4 h-4 text-gray-400" />
+                                <Box className="w-4 h-4 text-[#00A991]/60" />
                                 <span className="font-medium text-gray-900">{item.public_id}</span>
                               </div>
                             </td>
                             <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <Box className="w-4 h-4 text-gray-400" />
-                                <span className="font-medium text-gray-900">{item.name}</span>
-                              </div>
+                              <span className="font-medium text-gray-900">{item.name}</span>
                             </td>
                             <td className="py-3 px-4">
-                              <Badge variant="outline" className="font-mono">
+                              <Badge variant="outline" className="font-mono rounded-full border-gray-300 text-gray-700">
                                 {item.volume} м³
                               </Badge>
                             </td>
                             <td className="py-3 px-4">
-                              <Badge 
+                              <Badge
                                 variant={item.cargo_mark === 'HEAVY' ? 'destructive' : 'secondary'}
-                                className="text-xs"
+                                className="text-xs rounded-full"
                               >
                                 {item.cargo_mark}
                               </Badge>
                             </td>
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center gap-2 justify-end">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-[#00A991] hover:bg-[#00A991]/10 rounded-full"
                                   onClick={() => handleDownloadItem(item.id)}
                                   disabled={downloadItemFile.isPending}
                                 >
                                   <Download className="w-4 h-4 mr-1" />
-                                  <span>Скачать</span>
+                                  Скачать
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleEditLocation(item)}
-                                  className="text-[#1e2c4f] hover:bg-[#1e2c4f]/10"
+                                  className="text-[#00A991] hover:bg-[#00A991]/10 rounded-full"
                                 >
                                   <Edit className="w-4 h-4 mr-1" />
-                                  <span>Местоположение</span>
+                                  Местоположение
                                 </Button>
                               </div>
                             </td>
-                            </tr>
+                          </tr>
                         ))}
-                        </tbody>
-                      </table>
-                    </div>
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
-                )}
+            )}
 
             {/* Модальное окно редактирования локации */}
             <EditLocationModal
@@ -570,10 +554,10 @@ const CourierRequestOrder = () => {
 
             {/* Модальное окно выбора проблемного статуса */}
             <Dialog open={isIssueModalOpen} onOpenChange={setIsIssueModalOpen}>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md rounded-2xl border-gray-200">
                 <DialogHeader>
-                  <DialogTitle>Отметить проблемную ситуацию</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-gray-900">Отметить проблемную ситуацию</DialogTitle>
+                  <DialogDescription className="text-gray-500">
                     Выберите проблему, с которой вы столкнулись при выполнении заказа
                   </DialogDescription>
                 </DialogHeader>
@@ -583,14 +567,14 @@ const CourierRequestOrder = () => {
                     <Button
                       key={issue.value}
                       onClick={() => handleIssueStatusChange(issue.value)}
-                      className="w-full justify-start text-left h-auto py-3 px-4"
+                      className="w-full justify-start text-left h-auto py-3 px-4 rounded-xl border-gray-200 hover:bg-amber-50 hover:border-amber-200"
                       variant="outline"
                       disabled={isUpdating || order?.issue_status === issue.value}
                     >
-                      <AlertTriangle className="w-5 h-5 mr-3 text-orange-600" />
-                      <span className="text-lg font-medium">{issue.label}</span>
+                      <AlertTriangle className="w-5 h-5 mr-3 text-amber-600" />
+                      <span className="text-base font-medium text-gray-900">{issue.label}</span>
                       {order?.issue_status === issue.value && (
-                        <CheckCircle2 className="w-5 h-5 ml-auto text-green-600" />
+                        <CheckCircle2 className="w-5 h-5 ml-auto text-[#00A991]" />
                       )}
                     </Button>
                   ))}
@@ -601,6 +585,7 @@ const CourierRequestOrder = () => {
                     variant="outline"
                     onClick={() => setIsIssueModalOpen(false)}
                     disabled={isUpdating}
+                    className="rounded-full"
                   >
                     Отмена
                   </Button>
