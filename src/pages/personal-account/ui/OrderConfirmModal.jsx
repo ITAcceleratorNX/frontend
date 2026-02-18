@@ -24,6 +24,7 @@ import markerIcon from '../../../assets/маркер.png';
 import rackRentalIcon from '../../../assets/Аренда_стелажей.png';
 import uslugiMuveraIcon from '../../../assets/услуги_мувера.png';
 import uslugiUpakovkiIcon from '../../../assets/услуги_упаковки.png';
+import {formatCalendarDate} from "src/shared/lib/utils/date.js";
 
 const OrderConfirmModal = ({ isOpen, order, onClose }) => {
   const approveOrderMutation = useApproveOrder();
@@ -130,14 +131,7 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
-    try {
-      return new Date(dateString).toLocaleDateString('ru-RU', {
-        day: '2-digit',
-        month: 'short',
-      });
-    } catch (error) {
-      return 'Некорректная дата';
-    }
+    return formatCalendarDate(dateString, { day: '2-digit', month: 'short' });
   };
 
   // Расчет общей стоимости услуг

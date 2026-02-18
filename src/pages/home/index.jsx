@@ -12,6 +12,7 @@ import {
 } from "../../components/ui";
 import DatePicker from "../../shared/ui/DatePicker";
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
+import { getTodayLocalDateString } from "../../shared/lib/utils/date";
 
 import { warehouseApi } from "../../shared/api/warehouseApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
@@ -86,16 +87,8 @@ const HomePage = memo(() => {
   const [activeStorageTab, setActiveStorageTab] = useState("INDIVIDUAL");
   const tabsSectionRef = useRef(null);
   const [individualMonths, setIndividualMonths] = useState("1");
-  const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
-  const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
+  const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => getTodayLocalDateString());
+  const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => getTodayLocalDateString());
   const [includeMoving, setIncludeMoving] = useState(false);
   const [includePacking, setIncludePacking] = useState(false);
   const [cloudMonths, setCloudMonths] = useState("1");
@@ -105,11 +98,7 @@ const HomePage = memo(() => {
   const [movingHouseFrom, setMovingHouseFrom] = useState("");
   const [movingFloorFrom, setMovingFloorFrom] = useState("");
   const [movingApartmentFrom, setMovingApartmentFrom] = useState("");
-  const [movingPickupDate, setMovingPickupDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
+  const [movingPickupDate, setMovingPickupDate] = useState(() => getTodayLocalDateString());
   const [cloudStreetFrom, setCloudStreetFrom] = useState("");
   const [cloudHouseFrom, setCloudHouseFrom] = useState("");
   const [cloudFloorFrom, setCloudFloorFrom] = useState("");
@@ -2224,7 +2213,7 @@ const HomePage = memo(() => {
                       onChange={(value) => {
                         setCloudBookingStartDate(value);
                       }}
-                      minDate={new Date().toISOString().split('T')[0]}
+                      minDate={getTodayLocalDateString()}
                       allowFutureDates={true}
                       placeholder="Дата начала бронирования"
                       className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-2xl [&_input]:text-[#373737]"
@@ -2257,7 +2246,7 @@ const HomePage = memo(() => {
                         <DatePicker
                           value={cloudBookingStartDate}
                           onChange={(value) => { setCloudBookingStartDate(value); }}
-                          minDate={new Date().toISOString().split('T')[0]}
+                          minDate={getTodayLocalDateString()}
                           allowFutureDates={true}
                           placeholder="Дата забора вещей"
                           className="[&>div]:bg-gray-100 [&>div]:border-0 [&>div]:rounded-2xl [&_input]:text-[#373737]"
@@ -2294,7 +2283,7 @@ const HomePage = memo(() => {
                       onChange={(value) => {
                         setCloudBookingStartDate(value);
                       }}
-                      minDate={new Date().toISOString().split('T')[0]}
+                      minDate={getTodayLocalDateString()}
                       allowFutureDates={true}
                       placeholder="Дата начало бронирвания"
                       className="[&_input]:bg-transparent"

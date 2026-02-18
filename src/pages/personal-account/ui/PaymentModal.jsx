@@ -145,14 +145,7 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
-    try {
-      return new Date(dateString).toLocaleDateString('ru-RU', {
-        day: '2-digit',
-        month: 'short',
-      });
-    } catch (error) {
-      return 'Некорректная дата';
-    }
+    return formatCalendarDate(dateString, { day: '2-digit', month: 'short' });
   };
 
   // Расчет общей стоимости услуг

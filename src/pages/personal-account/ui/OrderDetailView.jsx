@@ -10,6 +10,7 @@ import {
 import { getServiceTypeName } from '../../../shared/lib/utils/serviceNames';
 import EditLocationModal from './EditLocationModal';
 import { AlertTriangle, Unlock, Tag } from 'lucide-react';
+import { formatCalendarDate } from '../../../shared/lib/utils/date';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -70,11 +71,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    return formatCalendarDate(dateString);
   };
 
   const formatPrice = (price) => {

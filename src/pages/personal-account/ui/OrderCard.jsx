@@ -8,6 +8,7 @@ import {
 } from '../../../shared/lib/types/orders';
 import { Tag } from 'lucide-react';
 import EditLocationModal from './EditLocationModal';
+import { formatCalendarDate } from '../../../shared/lib/utils/date';
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
 import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
@@ -33,11 +34,7 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
   // Функции для форматирования
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    return formatCalendarDate(dateString);
   };
 
   const formatPrice = (price) => {

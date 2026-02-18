@@ -18,6 +18,7 @@ import { List, Zap, Truck, Edit, Clock, HelpCircle } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
+import { formatCalendarDateTime } from '../../../shared/lib/utils/date';
 import DeliveryCard from './DeliveryCard';
 import instImage from '../../../assets/inst.webp';
 
@@ -170,18 +171,7 @@ const UserDelivery = ({ embeddedMobile = false }) => {
     // Форматирование даты
     const formatDate = (dateString) => {
         if (!dateString) return 'Не указана';
-        try {
-            return new Date(dateString).toLocaleDateString('ru-RU', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (error) {
-            console.error(error);
-            return 'Некорректная дата';
-        }
+        return formatCalendarDateTime(dateString) || 'Некорректная дата';
     };
 
     if (isLoading) {

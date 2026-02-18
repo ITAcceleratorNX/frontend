@@ -7,6 +7,7 @@ import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
+import { formatCalendarDateLong } from '../../../shared/lib/utils/date';
 
 // Компонент модального окна подтверждения удаления
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName, isDeleting }) => {
@@ -214,13 +215,7 @@ const UserProfile = () => {
   // Форматирование даты
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указано';
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatCalendarDateLong(dateString);
   };
 
   // Открытие модального окна удаления

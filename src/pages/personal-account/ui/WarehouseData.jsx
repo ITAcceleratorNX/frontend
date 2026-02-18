@@ -25,6 +25,7 @@ import PendingOrderModal from './PendingOrderModal';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import DatePicker from '../../../shared/ui/DatePicker';
 import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
+import { getTodayLocalDateString } from '../../../shared/lib/utils/date';
 import PricingRuleManagement from './PricingRuleManagement';
 import {StoragePricesMatrix} from "../../../../src/pages/personal-account/admin/StoragePricesMatrix.js";
 import {useStoragePrices} from "../../../../src/shared/hooks/useStoragePrices.js";
@@ -85,36 +86,20 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [individualMonths, setIndividualMonths] = useState('1');
-  const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
+  const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => getTodayLocalDateString());
   const [cloudMonths, setCloudMonths] = useState('1');
-  const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
+  const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => getTodayLocalDateString());
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
   const [includeMoving, setIncludeMoving] = useState(false);
   const [includePacking, setIncludePacking] = useState(false);
   const [movingAddressFrom, setMovingAddressFrom] = useState('');
-  const [movingPickupDate, setMovingPickupDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
+  const [movingPickupDate, setMovingPickupDate] = useState(() => getTodayLocalDateString());
   // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
   const [movingOrders, setMovingOrders] = useState([]);
   // Состояние для адреса возврата (GAZELLE_TO)
   const [movingAddressTo, setMovingAddressTo] = useState('');
   const [cloudPickupAddress, setCloudPickupAddress] = useState('');
-  const [cloudPickupDate, setCloudPickupDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
+  const [cloudPickupDate, setCloudPickupDate] = useState(() => getTodayLocalDateString());
   const [previewStorage, setPreviewStorage] = useState(null);
   const [pricePreview, setPricePreview] = useState(null);
   const [isPriceCalculating, setIsPriceCalculating] = useState(false);
@@ -2080,7 +2065,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         <DatePicker
                           value={cloudBookingStartDate}
                           onChange={(value) => setCloudBookingStartDate(value)}
-                          minDate={new Date().toISOString().split('T')[0]}
+                          minDate={getTodayLocalDateString()}
                           allowFutureDates={true}
                           placeholder="ДД.ММ.ГГГГ"
                         />
@@ -2111,7 +2096,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           <DatePicker
                             value={cloudPickupDate}
                             onChange={(value) => setCloudPickupDate(value)}
-                            minDate={new Date().toISOString().split('T')[0]}
+                            minDate={getTodayLocalDateString()}
                             allowFutureDates={true}
                             placeholder="ДД.ММ.ГГГГ"
                           />
@@ -2548,7 +2533,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                         <DatePicker
                           value={individualBookingStartDate}
                           onChange={(value) => setIndividualBookingStartDate(value)}
-                          minDate={new Date().toISOString().split('T')[0]}
+                          minDate={getTodayLocalDateString()}
                           allowFutureDates={true}
                           placeholder="ДД.ММ.ГГГГ"
                         />
@@ -2604,7 +2589,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                               <DatePicker
                                 value={movingPickupDate}
                                 onChange={(value) => setMovingPickupDate(value)}
-                                minDate={new Date().toISOString().split('T')[0]}
+                                minDate={getTodayLocalDateString()}
                                 allowFutureDates={true}
                                 placeholder="ДД.ММ.ГГГГ"
                               />

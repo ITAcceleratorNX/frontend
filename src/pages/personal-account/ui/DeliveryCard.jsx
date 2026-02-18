@@ -2,6 +2,7 @@ import React from 'react';
 import { Truck, MapPin, Clock, User, Phone } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
+import { formatCalendarDateLong } from '../../../shared/lib/utils/date';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -14,16 +15,8 @@ const getStorageTypeText = (type) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Не указана';
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }) + ' г.';
-  } catch (error) {
-    return 'Некорректная дата';
-  }
+  const formatted = formatCalendarDateLong(dateString);
+  return formatted ? `${formatted} г.` : 'Некорректная дата';
 };
 
 const getStatusText = (status, direction) => {

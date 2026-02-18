@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { promoApi } from '../../../shared/api/promoApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
+import { formatCalendarDate } from '../../../shared/lib/utils/date';
 import { 
   Plus, 
   Edit2, 
@@ -194,11 +195,7 @@ const PromoCodeManagement = () => {
   // Форматирование даты
   const formatDate = (dateString) => {
     if (!dateString) return '—';
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    return formatCalendarDate(dateString);
   };
 
   // Проверка валидности промокода

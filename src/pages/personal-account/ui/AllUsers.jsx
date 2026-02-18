@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
+import { formatCalendarDate } from '../../../shared/lib/utils/date';
 
 // Компонент модального окна подтверждения удаления
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName, isDeleting }) => {
@@ -218,11 +219,7 @@ const AllUsers = () => {
   // Форматирование даты
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указано';
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatCalendarDate(dateString, { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   // Фильтрация пользователей

@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DatePicker from "../../shared/ui/DatePicker";
+import { getTodayLocalDateString } from "../../shared/lib/utils/date";
 
 const WarehouseOrderPage = memo(() => {
   const navigate = useNavigate();
@@ -57,12 +58,7 @@ const WarehouseOrderPage = memo(() => {
     { name: "", length: "", width: "", height: "", volume: "", cargo_mark: "NO" },
   ]);
   const [months, setMonths] = useState(1);
-  const [bookingStartDate, setBookingStartDate] = useState(() => {
-    // Устанавливаем минимальную дату - сегодня
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
-  });
+  const [bookingStartDate, setBookingStartDate] = useState(() => getTodayLocalDateString());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCloudVolume, setSelectedCloudVolume] = useState(3);
   // Состояния для дополнительных услуг
@@ -1021,7 +1017,7 @@ const WarehouseOrderPage = memo(() => {
                       label="Дата начала бронирования"
                       value={bookingStartDate}
                       onChange={(value) => setBookingStartDate(value)}
-                      minDate={new Date().toISOString().split('T')[0]}
+                      minDate={getTodayLocalDateString()}
                       allowFutureDates={true}
                       placeholder="ДД.ММ.ГГГГ"
                     />
@@ -1214,7 +1210,7 @@ const WarehouseOrderPage = memo(() => {
                       label="Дата начала бронирования"
                       value={bookingStartDate}
                       onChange={(value) => setBookingStartDate(value)}
-                      minDate={new Date().toISOString().split('T')[0]}
+                      minDate={getTodayLocalDateString()}
                       allowFutureDates={true}
                       placeholder="ДД.ММ.ГГГГ"
                     />
@@ -1592,7 +1588,7 @@ const WarehouseOrderPage = memo(() => {
                                   updateMovingOrder(index, 'moving_date', newDate.toISOString());
                                 }
                               }}
-                              minDate={order.status === 'PENDING' && order.direction === 'TO_WAREHOUSE' ? new Date().toISOString().split('T')[0] : undefined}
+                              minDate={order.status === 'PENDING' && order.direction === 'TO_WAREHOUSE' ? getTodayLocalDateString() : undefined}
                               allowFutureDates={true}
                               placeholder="ДД.ММ.ГГГГ"
                             />
@@ -1800,7 +1796,7 @@ const WarehouseOrderPage = memo(() => {
                       label="Дата начала бронирования"
                       value={bookingStartDate}
                       onChange={(value) => setBookingStartDate(value)}
-                      minDate={new Date().toISOString().split('T')[0]}
+                      minDate={getTodayLocalDateString()}
                       allowFutureDates={true}
                       placeholder="ДД.ММ.ГГГГ"
                     />

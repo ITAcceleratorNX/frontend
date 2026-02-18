@@ -5,6 +5,7 @@ import { showSuccessToast } from '../../../shared/lib/toast';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
 import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
+import { formatCalendarDateLong } from '../../../shared/lib/utils/date';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -21,16 +22,8 @@ const getVolumeUnit = (storageType) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Не указана';
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }) + ' г.';
-  } catch (error) {
-    return 'Некорректная дата';
-  }
+  const formatted = formatCalendarDateLong(dateString);
+  return formatted ? `${formatted} г.` : 'Некорректная дата';
 };
 
 const formatPrice = (price) => {

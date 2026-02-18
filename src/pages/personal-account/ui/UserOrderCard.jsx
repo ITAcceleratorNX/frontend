@@ -287,15 +287,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указана';
-    try {
-      return new Date(dateString).toLocaleDateString('ru-RU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    } catch (error) {
-      return 'Некорректная дата';
-    }
+    return formatCalendarDateLong(dateString) || 'Некорректная дата';
   };
   const formatOrderPeriod = (dateString) => {
     if (!dateString) return 'Не указана';

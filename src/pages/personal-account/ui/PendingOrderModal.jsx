@@ -25,6 +25,7 @@ import { ordersApi } from '../../../shared/api/ordersApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { useCancelOrder } from '../../../shared/lib/hooks/use-orders';
 import {warehouseApi as storageApi} from "../../.././../src/shared/api/warehouseApi.js";
+import { formatCalendarDateTime } from '../../../shared/lib/utils/date';
 
 const getServiceTypeName = (type) => {
   if (!type) return 'Услуга';
@@ -158,19 +159,8 @@ const calculateMonths = (startDate, endDate) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return '-';
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '-';
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (error) {
-    return '-';
-  }
+  const formatted = formatCalendarDateTime(dateString);
+  return formatted || '-';
 };
 
 const formatPrice = (price) => {
