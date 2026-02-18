@@ -11,6 +11,13 @@ export const ORDERS_QUERY_KEYS = {
   ORDER_BY_ID: (id) => ['orders', 'detail', id]
 };
 
+// Не повторять запрос при ошибках авторизации
+const shouldRetryOrders = (failureCount, error) => {
+  const status = error?.response?.status;
+  if (status === 401 || status === 403) return false;
+  return failureCount < 2;
+};
+
 /**
  * Хук для получения всех заказов (для MANAGER и ADMIN)
  */
@@ -20,7 +27,7 @@ export const useAllOrders = (page = 1, options = {}) => {
     queryFn: () => ordersApi.getAllOrders(page),
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
-    retry: 2,
+    retry: shouldRetryOrders,
     retryDelay: 1000,
     refetchOnWindowFocus: false,
     ...options
@@ -43,7 +50,7 @@ export const useUserOrders = (options = {}) => {
     queryFn: ordersApi.getUserOrders,
     staleTime: 3 * 60 * 1000, // 3 минуты
     cacheTime: 10 * 60 * 1000, // 10 минут
-    retry: 2,
+    retry: shouldRetryOrders,
     retryDelay: 1000,
     refetchOnWindowFocus: false,
     ...options
@@ -152,15 +159,16 @@ export const useBulkUpdateOrders = () => {
 /**
  * Хук для получения статистики заказов
  */
-export const useOrdersStats = () => {
+export const useOrdersStats = (options = {}) => {
   const { data: statsData, isLoading, error } = useQuery({
     queryKey: ['orders', 'stats'],
     queryFn: ordersApi.getOrdersStats,
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
-    retry: 2,
+    retry: shouldRetryOrders,
     retryDelay: 1000,
     refetchOnWindowFocus: false,
+    ...options
   });
 
   const stats = React.useMemo(() => {

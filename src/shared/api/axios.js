@@ -56,49 +56,52 @@ api.interceptors.response.use(
   (error) => {
     // Критичные ошибки логируем всегда
     console.error('[API Response Error]', error.response?.status, error.response?.data || error.message);
-    
-    // Обработка 401 ошибки (Unauthorized)
-    if (error.response && error.response.status === 401) {
-      // Проверяем, не связан ли запрос с авторизацией
-      const isAuthEndpoint = error.config.url && (
-        error.config.url.includes('/auth/login') ||
-        error.config.url.includes('/auth/register') ||
-        error.config.url.includes('/auth/google')
-      );
-      
-      // Не перенаправляем, если это запрос на авторизацию
-      if (!isAuthEndpoint && !redirectInProgress) {
-        // Проверяем, находимся ли мы уже на странице логина
-        const isLoginPage = window.location.pathname.includes('/login');
-        
-        // Если у нас есть функция перенаправления и мы не на странице входа
-        if (navigateToLogin && !isLoginPage) {
-          if (isDevelopment) {
-          console.log('[Auth] Перенаправление на страницу входа из-за 401 ошибки');
-          }
-          
-          // Устанавливаем флаг, чтобы избежать множественных перенаправлений
-          redirectInProgress = true;
-          
-          // Очистка куки и состояния авторизации
-          document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          
-          // Перенаправление на страницу входа
-          navigateToLogin();
-          
-          // Сбрасываем флаг перенаправления через задержку
-          setTimeout(() => {
-            redirectInProgress = false;
-          }, 500);
-          
-          // Возвращаем новый rejected promise для предотвращения дальнейшего выполнения
-          return Promise.reject(new Error('Session expired'));
+
+    const status = error.response?.status;
+    const isAuthEndpoint = error.config?.url && (
+      error.config.url.includes('/auth/login') ||
+      error.config.url.includes('/auth/register') ||
+      error.config.url.includes('/auth/google')
+    );
+
+    // Обработка 401 (Unauthorized) и 403 (Forbidden) — сессия истекла или нет доступа
+    if (error.response && (status === 401 || status === 403) && !isAuthEndpoint && !redirectInProgress) {
+      const isLoginPage = window.location.pathname.includes('/login');
+
+      if (navigateToLogin && !isLoginPage) {
+        if (isDevelopment) {
+          console.log(`[Auth] Перенаправление на страницу входа из-за ${status} ошибки`);
         }
+
+        redirectInProgress = true;
+
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+        navigateToLogin();
+
+        setTimeout(() => {
+          redirectInProgress = false;
+        }, 500);
+
+        const message = status === 401 ? 'Сессия истекла. Войдите снова.' : 'Нет доступа. Войдите снова.';
+        return Promise.reject(new Error(message));
       }
-    } 
-    else if (error.response) {
+    }
+
+    // Добавляем понятное сообщение для отображения в UI
+    if (error.response && !error.userMessage) {
+      if (status === 401) {
+        error.userMessage = 'Сессия истекла. Войдите снова.';
+      } else if (status === 403) {
+        error.userMessage = 'Недостаточно прав для этого действия.';
+      } else if (status >= 500) {
+        error.userMessage = 'Ошибка сервера. Попробуйте позже.';
+      }
+    }
+    
+    if (error.response) {
       // Детали других ошибок логируем только в режиме разработки
       if (isDevelopment) {
       console.log(`[API Error] Статус ${error.response.status}:`, {

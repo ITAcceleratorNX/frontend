@@ -98,6 +98,9 @@ const OrderManagement = () => {
     }, 0);
   };
 
+  // Запросы только когда пользователь загружен и имеет права
+  const canFetchOrders = !!user && (user.role === 'ADMIN' || user.role === 'MANAGER');
+
   // Хуки для данных
   const {
     data: ordersData,
@@ -105,6 +108,7 @@ const OrderManagement = () => {
     error: allError,
     refetch
   } = useAllOrders(currentPage, {
+    enabled: canFetchOrders,
     onError: (error) => {
       showOrderLoadError();
       console.error('Ошибка загрузки заказов:', error);
@@ -144,7 +148,7 @@ const OrderManagement = () => {
   }, [ordersToShow, statusFilter]);
 
   // Получаем статистику отдельно
-  const { stats: ordersStats } = useOrdersStats();
+  const { stats: ordersStats } = useOrdersStats({ enabled: canFetchOrders });
 
   // Статистика заказов
   const statistics = useMemo(() => ({
@@ -331,6 +335,13 @@ const OrderManagement = () => {
   }
 
   if (error) {
+    const status = error?.response?.status;
+    const displayMessage = error?.userMessage || error?.message || (
+      status === 401 ? 'Сессия истекла. Войдите снова.' :
+      status === 403 ? 'Недостаточно прав для просмотра заказов.' :
+      'Произошла ошибка при загрузке заказов'
+    );
+
     return (
       <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="bg-white rounded-2xl sm:rounded-3xl p-8 sm:p-12 shadow-sm border border-rose-100">
@@ -339,7 +350,7 @@ const OrderManagement = () => {
               <X className="w-8 h-8 text-rose-500" />
             </div>
             <div className="text-rose-700 font-medium text-center">
-              {error?.message || 'Произошла ошибка при загрузке заказов'}
+              {displayMessage}
             </div>
             <button
               onClick={() => refetch()}
