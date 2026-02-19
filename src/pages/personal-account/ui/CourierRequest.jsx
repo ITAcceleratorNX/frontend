@@ -19,7 +19,9 @@ import {
   Clock, 
   CheckCircle2, 
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Phone,
+  User
 } from 'lucide-react';
 import { showErrorToast, toastCourierStatus } from '../../../shared/lib/toast';
 
@@ -61,6 +63,21 @@ const formatTimeAgo = (dateString) => {
   } catch (error) {
     return '';
   }
+};
+
+// Функция перевода статуса на русский
+const getStatusText = (status) => {
+  const statusMap = {
+    'PENDING': 'Ожидает',
+    'COURIER_ASSIGNED': 'Курьер назначен',
+    'COURIER_IN_TRANSIT': 'Курьер в пути',
+    'COURIER_AT_CLIENT': 'Курьер у клиента',
+    'IN_PROGRESS': 'В процессе',
+    'DELIVERED': 'Доставлено на склад',
+    'FINISHED': 'Завершено',
+    'CANCELLED': 'Отменено'
+  };
+  return statusMap[status] || status;
 };
 
 const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = false }) => {
@@ -255,6 +272,31 @@ const OrderCard = ({ order, onStatusChange, isLoading = false, isDelivered = fal
             Заказ №{order.movingOrderId}
           </CardTitle>
         </div>
+
+        {/* Статус */}
+        {order.status && (
+          <div className="mb-3">
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-[#00A991]/10 text-[#00A991] border-[#00A991]/20">
+              {getStatusText(order.status)}
+            </Badge>
+          </div>
+        )}
+
+        {/* ФИО Клиента */}
+        {order.userName && (
+          <div className="flex items-center gap-2 mb-2">
+            <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{order.userName}</span>
+          </div>
+        )}
+
+        {/* Номер телефона */}
+        {order.userPhone && (
+          <div className="flex items-center gap-2 mb-3">
+            <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{order.userPhone}</span>
+          </div>
+        )}
 
         {/* Направление и расстояние */}
         {directionText && (order.status === 'COURIER_IN_TRANSIT' || order.status === 'COURIER_AT_CLIENT' || order.status === 'IN_PROGRESS' || order.status === 'COURIER_ASSIGNED') && (

@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronDown, ChevronUp, Tag, Check, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Tag, Check, X, Gift } from 'lucide-react';
 import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 
 export default function IndividualStorageSummary({
@@ -23,6 +23,7 @@ export default function IndividualStorageSummary({
                                            serviceOptions,
                                            serviceSummary,
                                            isPriceCalculating,
+                                           monthsNumber,
                                            setShowOrderDetails,
                                            setShowPromoInput,
                                            setPromoCodeInput,
@@ -122,69 +123,53 @@ export default function IndividualStorageSummary({
                         )}
                     </div>
 
-                    {/* Информация об акции */}
-                    <div className="flex items-center justify-between">
-                        {costSummary.pricingBreakdown ? (
-                            <div className="space-y-1">
-                                <div className="text-sm font-semibold text-green-600">
-                                    Акция: {costSummary.pricingBreakdown.ruleName}
+                    {/* Надпись акции в зависимости от срока аренды */}
+                    {monthsNumber !== undefined && monthsNumber !== null && monthsNumber > 0 && (
+                        <div className={`p-4 rounded-2xl ${
+                            monthsNumber < 3
+                                ? 'bg-gradient-to-r from-[#31876D]/5 to-[#31876D]/10 border border-[#31876D]/20'
+                                : 'bg-gradient-to-r from-[#31876D]/10 to-[#26B3AB]/10 border border-[#31876D]/30'
+                        }`}>
+                            <div className="flex items-start gap-3">
+                                <Gift className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                                    monthsNumber < 3 ? 'text-[#31876D]' : 'text-[#31876D]'
+                                }`} />
+                                <div className="flex-1">
+                                    {monthsNumber < 3 ? (
+                                        <p className="text-sm font-medium text-[#273655] leading-relaxed">
+                                            <span className="font-semibold text-[#31876D]">Забронируйте бокс от 3 месяцев</span> — и получите первые 2 месяца по <span className="font-bold text-[#31876D]">5 990 ₸/м²</span>
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm font-medium text-[#273655] leading-relaxed">
+                                            <span className="font-semibold text-[#31876D]">Акция применена:</span> 2 первых месяца по <span className="font-bold text-[#31876D]">5 990 ₸/м²</span>
+                                        </p>
+                                    )}
                                 </div>
+                            </div>
+                        </div>
+                    )}
 
-                                {costSummary.pricingBreakdown.promoMonths ? (
+                    {/* Информация об акции */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+
+                            <button
+                                type="button"
+                                onClick={() => setShowOrderDetails(!showOrderDetails)}
+                                className="text-sm text-[#31876D] hover:text-[#276b57] flex items-center gap-1 underline"
+                                aria-expanded={showOrderDetails}
+                            >
+                                {showOrderDetails ? (
                                     <>
-                                        <div className="text-sm text-gray-600">
-                                            Первые {costSummary.pricingBreakdown.promoMonths} мес:{' '}
-                                            <span className="font-semibold text-green-600">
-                        {Math.round(costSummary.pricingBreakdown.promoMonthlyAmount).toLocaleString()} ₸/мес
-                      </span>
-                                            <span className="text-xs text-gray-400 ml-1">
-                        ({Number(costSummary.pricingBreakdown.promoPrice).toLocaleString()} ₸/м²)
-                      </span>
-                                        </div>
-                                        <div className="text-sm text-gray-600">
-                                            Далее:{' '}
-                                            <span className="font-semibold">
-                        {Math.round(costSummary.pricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸/мес
-                      </span>
-                                        </div>
+                                        Скрыть подробности <ChevronUp className="w-4 h-4" />
                                     </>
                                 ) : (
-                                    <div className="text-sm text-gray-600">
-                                        Стоимость в месяц:{' '}
-                                        <span className="font-semibold text-green-600">
-                      {Math.round(costSummary.pricingBreakdown.standardMonthlyAmount).toLocaleString()} ₸/мес
-                    </span>
-                                        <span className="text-xs text-gray-400 ml-1">
-                      ({Number(costSummary.pricingBreakdown.standardPrice).toLocaleString()} ₸/м²)
-                    </span>
-                                    </div>
+                                    <>
+                                        Показать полностью <ChevronDown className="w-4 h-4" />
+                                    </>
                                 )}
-                            </div>
-                        ) : (
-                            <div className="text-sm text-gray-600">
-                                Стоимость хранения в месяц:{' '}
-                                <span className="font-semibold text-[#273655]">
-                  {costSummary.baseMonthly?.toLocaleString() ?? '—'} ₸
-                </span>
-                            </div>
-                        )}
-
-                        <button
-                            type="button"
-                            onClick={() => setShowOrderDetails(!showOrderDetails)}
-                            className="text-sm text-[#31876D] hover:text-[#276b57] flex items-center gap-1 underline"
-                            aria-expanded={showOrderDetails}
-                        >
-                            {showOrderDetails ? (
-                                <>
-                                    Скрыть подробности <ChevronUp className="w-4 h-4" />
-                                </>
-                            ) : (
-                                <>
-                                    Показать полностью <ChevronDown className="w-4 h-4" />
-                                </>
-                            )}
-                        </button>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Детали заказа */}

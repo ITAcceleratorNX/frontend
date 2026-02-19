@@ -2081,6 +2081,7 @@ const HomePage = memo(() => {
                       costSummary={costSummary}
                       finalIndividualTotal={finalIndividualTotal}
                       isPriceCalculating={isPriceCalculating}
+                      monthsNumber={monthsNumber}
 
                       // промокод
                       promoSuccess={promoSuccess}
