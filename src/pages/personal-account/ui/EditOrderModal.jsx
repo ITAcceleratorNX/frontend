@@ -16,7 +16,7 @@ import { useUpdateOrder } from "@/shared/lib/hooks/useUpdateOrder"
 import { paymentsApi } from "@/shared/api/paymentsApi"
 import dayjs from "dayjs";
 import {useAuth} from "@/shared/index.js";
-import { getServiceTypeName } from "@/shared/lib/utils/serviceNames";
+import { getServiceTypeName, formatServiceDescription } from "@/shared/lib/utils/serviceNames";
 import { RentalPeriodSelect } from "@/shared/ui/RentalPeriodSelect";
 import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
 import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
@@ -260,7 +260,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                 const filteredPrices = pricesData.filter((price) => !excludedTypes.includes(price.type))
                 setPrices(filteredPrices)
                 setServiceOptions(filteredPrices)
-                // Ищем GAZELLE_FROM (для забора вещей)
+                // Ищем GAZELLE_FROM (для доставки)
                 const gazelleFrom = filteredPrices.find((p) => p.type === "GAZELLE_FROM")
                 if (gazelleFrom) {
                     setGazelleService({ 
@@ -289,7 +289,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
         
         let updated = [...currentServices];
         
-        // Синхронизируем GAZELLE_FROM (забор вещей)
+        // Синхронизируем GAZELLE_FROM (доставка)
         if (gazelleService && gazelleService.type === 'GAZELLE_FROM') {
             const existingIndex = updated.findIndex((s) => s.service_id === gazelleService.id);
             if (hasPendingFrom) {
@@ -1017,7 +1017,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                                                     key={price.id}
                                                                                     value={String(price.id)}
                                                                                 >
-                                                                                    {getServiceTypeName(price.type) || price.description || "Услуга"} (₸{price.price})
+                                                                                    {getServiceTypeName(price.type) || formatServiceDescription(price.description) || "Услуга"} (₸{price.price})
                                                                                 </SelectItem>
                                                                             ))}
                                                                     </SelectContent>

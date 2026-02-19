@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { 
@@ -14,7 +14,7 @@ import {
 } from '../../../components/ui/dialog';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { List, Zap, Truck, Edit, Clock, HelpCircle } from 'lucide-react';
+import { List, Clock, Truck, CheckCircle, Edit, HelpCircle } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
@@ -22,16 +22,52 @@ import { formatCalendarDateTime } from '../../../shared/lib/utils/date';
 import DeliveryCard from './DeliveryCard';
 import instImage from '../../../assets/inst.webp';
 
+// Константы разделов доставки
+export const DELIVERY_SECTIONS = {
+  ALL: 'all',
+  AWAITING_COURIER: 'awaitingCourier',
+  COURIER_ON_THE_WAY: 'courierOnTheWay',
+  COMPLETED: 'completed',
+};
+
+// Маппинг статусов на разделы
+const getSectionByStatus = (status) => {
+  if (['PENDING', 'COURIER_ASSIGNED'].includes(status)) {
+    return DELIVERY_SECTIONS.AWAITING_COURIER;
+  }
+  if (['COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(status)) {
+    return DELIVERY_SECTIONS.COURIER_ON_THE_WAY;
+  }
+  if (['DELIVERED', 'FINISHED'].includes(status)) {
+    return DELIVERY_SECTIONS.COMPLETED;
+  }
+  return DELIVERY_SECTIONS.ALL; // CANCELLED и другие остаются в "Все"
+};
+
 const DELIVERY_FILTER_OPTIONS = [
-  { value: 'all', label: 'Все' },
-  { value: 'inProgress', label: 'В процессе' },
-  { value: 'delivered', label: 'Доставлено' },
+  { value: DELIVERY_SECTIONS.ALL, label: 'Все', icon: List },
+  { value: DELIVERY_SECTIONS.AWAITING_COURIER, label: 'Ожидает курьера', icon: Clock },
+  { value: DELIVERY_SECTIONS.COURIER_ON_THE_WAY, label: 'Курьер в пути', icon: Truck },
+  { value: DELIVERY_SECTIONS.COMPLETED, label: 'Завершено', icon: CheckCircle },
 ];
 
 const UserDelivery = ({ embeddedMobile = false }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [activeFilter, setActiveFilter] = useState('all');
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
+    const [activeFilter, setActiveFilter] = useState(() => {
+        // Проверяем URL параметр
+        const sectionParam = searchParams.get('section');
+        if (sectionParam && Object.values(DELIVERY_SECTIONS).includes(sectionParam)) {
+            return sectionParam;
+        }
+        // Проверяем state из навигации
+        if (location.state?.deliverySection && Object.values(DELIVERY_SECTIONS).includes(location.state.deliverySection)) {
+            return location.state.deliverySection;
+        }
+        return DELIVERY_SECTIONS.ALL;
+    });
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedDelivery, setSelectedDelivery] = useState(null);
     const [editForm, setEditForm] = useState({
@@ -63,6 +99,19 @@ const UserDelivery = ({ embeddedMobile = false }) => {
         refetchOnWindowFocus: false,
     });
 
+    // Автоматическое открытие раздела по статусу доставки из state
+    useEffect(() => {
+        if (location.state?.deliveryId && deliveries.length > 0) {
+            const targetDelivery = deliveries.find(d => d.id === location.state.deliveryId);
+            if (targetDelivery) {
+                const section = getSectionByStatus(targetDelivery.status);
+                setActiveFilter(section);
+                // Очищаем state после использования
+                navigate(location.pathname, { replace: true, state: null });
+            }
+        }
+    }, [deliveries, location.state, navigate, location.pathname]);
+
     // Мутация для обновления доставки
     const updateDeliveryMutation = useMutation({
         mutationFn: ({ movingOrderId, data }) => ordersApi.updateDelivery(movingOrderId, data),
@@ -85,30 +134,45 @@ const UserDelivery = ({ embeddedMobile = false }) => {
         if (!deliveries) return [];
         
         switch (activeFilter) {
-            case 'inProgress':
+            case DELIVERY_SECTIONS.AWAITING_COURIER:
                 return deliveries.filter(d =>
-                    ['PENDING', 'COURIER_ASSIGNED', 'COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(d.status)
+                    ['PENDING', 'COURIER_ASSIGNED'].includes(d.status)
                 );
-            case 'delivered':
+            case DELIVERY_SECTIONS.COURIER_ON_THE_WAY:
                 return deliveries.filter(d =>
-                    ['DELIVERED'].includes(d.status)
+                    ['COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(d.status)
+                );
+            case DELIVERY_SECTIONS.COMPLETED:
+                return deliveries.filter(d =>
+                    ['DELIVERED', 'FINISHED'].includes(d.status)
                 );
             default:
-                return deliveries;
+                return deliveries; // Все, включая CANCELLED
         }
     }, [deliveries, activeFilter]);
 
     // Статистика доставок
     const stats = useMemo(() => {
-        if (!deliveries.length) return { total: 0, inProgress: 0, delivered: 0, addresses: 0 };
+        if (!deliveries.length) {
+            return {
+                total: 0,
+                awaitingCourier: 0,
+                courierOnTheWay: 0,
+                completed: 0,
+                addresses: 0
+            };
+        }
 
         return {
             total: deliveries.length,
-            inProgress: deliveries.filter(d =>
-                ['PENDING', 'COURIER_ASSIGNED', 'COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(d.status)
+            awaitingCourier: deliveries.filter(d =>
+                ['PENDING', 'COURIER_ASSIGNED'].includes(d.status)
             ).length,
-            delivered: deliveries.filter(d =>
-                ['DELIVERED'].includes(d.status)
+            courierOnTheWay: deliveries.filter(d =>
+                ['COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(d.status)
+            ).length,
+            completed: deliveries.filter(d =>
+                ['DELIVERED', 'FINISHED'].includes(d.status)
             ).length,
             addresses: new Set(deliveries.map(d => d.address).filter(Boolean)).size
         };
@@ -192,7 +256,7 @@ const UserDelivery = ({ embeddedMobile = false }) => {
         );
     }
 
-    const summaryLine = `Всего доставок: ${stats.total}; В процессе: ${stats.inProgress}; Доставлено: ${stats.delivered}; Адресов: ${stats.addresses}`;
+    const summaryLine = `Всего доставок: ${stats.total}; Ожидает курьера: ${stats.awaitingCourier}; Курьер в пути: ${stats.courierOnTheWay}; Завершено: ${stats.completed}; Адресов: ${stats.addresses}`;
 
     const deliveriesContent = (
         <>
@@ -203,15 +267,25 @@ const UserDelivery = ({ embeddedMobile = false }) => {
                         {embeddedMobile && (
                             <Select value={activeFilter} onValueChange={setActiveFilter}>
                                 <SelectTrigger className="w-[100px] min-[360px]:w-[120px] min-[400px]:w-[130px] h-8 min-[360px]:h-9 bg-white border border-[#00A991]/70 rounded-xl flex items-center gap-1.5 flex-shrink-0 text-gray-700 shadow-none [&>svg]:text-[#00A991]">
-                                    <List className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 text-[#00A991] flex-shrink-0" />
+                                    {(() => {
+                                        const currentOption = DELIVERY_FILTER_OPTIONS.find(opt => opt.value === activeFilter);
+                                        const Icon = currentOption?.icon || List;
+                                        return <Icon className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 text-[#00A991] flex-shrink-0" />;
+                                    })()}
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {DELIVERY_FILTER_OPTIONS.map((opt) => (
-                                        <SelectItem key={opt.value} value={opt.value}>
-                                            {opt.label}
-                                        </SelectItem>
-                                    ))}
+                                    {DELIVERY_FILTER_OPTIONS.map((opt) => {
+                                        const Icon = opt.icon;
+                                        return (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className="w-4 h-4" />
+                                                    <span>{opt.label}</span>
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })}
                                 </SelectContent>
                             </Select>
                         )}
@@ -223,27 +297,19 @@ const UserDelivery = ({ embeddedMobile = false }) => {
                 {!embeddedMobile && (
                     <Tabs value={activeFilter} onValueChange={setActiveFilter}>
                         <TabsList className="bg-white px-2 py-4 rounded-[32px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] h-auto">
-                            <TabsTrigger
-                                value="all"
-                                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                            >
-                                <List className="w-4 h-4" />
-                                <span>Все</span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="inProgress"
-                                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                            >
-                                <Zap className="w-4 h-4" />
-                                <span>В процессе</span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="delivered"
-                                className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
-                            >
-                                <Truck className="w-4 h-4" />
-                                <span>Доставлено</span>
-                            </TabsTrigger>
+                            {DELIVERY_FILTER_OPTIONS.map((opt) => {
+                                const Icon = opt.icon;
+                                return (
+                                    <TabsTrigger
+                                        key={opt.value}
+                                        value={opt.value}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors"
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        <span>{opt.label}</span>
+                                    </TabsTrigger>
+                                );
+                            })}
                         </TabsList>
                     </Tabs>
                 )}
@@ -391,12 +457,16 @@ const UserDelivery = ({ embeddedMobile = false }) => {
                                 <div className="text-4xl font-bold text-[#004743]">{stats.total}</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-sm text-gray-600 mb-1">В процессе:</div>
-                                <div className="text-4xl font-bold text-[#004743]">{stats.inProgress}</div>
+                                <div className="text-sm text-gray-600 mb-1">Ожидает курьера:</div>
+                                <div className="text-4xl font-bold text-[#004743]">{stats.awaitingCourier}</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-sm text-gray-600 mb-1">Доставлено:</div>
-                                <div className="text-4xl font-bold text-[#004743]">{stats.delivered}</div>
+                                <div className="text-sm text-gray-600 mb-1">Курьер в пути:</div>
+                                <div className="text-4xl font-bold text-[#004743]">{stats.courierOnTheWay}</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-sm text-gray-600 mb-1">Завершено:</div>
+                                <div className="text-4xl font-bold text-[#004743]">{stats.completed}</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-sm text-gray-600 mb-1">Адресов:</div>

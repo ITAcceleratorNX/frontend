@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 import { useCancelOrder } from '../../../shared/lib/hooks/use-orders';
 import {warehouseApi as storageApi} from "../../.././../src/shared/api/warehouseApi.js";
 import { formatCalendarDateTime } from '../../../shared/lib/utils/date';
@@ -520,7 +521,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                           <div key={service?.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                             <div className="flex-1">
                               <span className="text-sm font-medium">
-                                {getServiceTypeName(service?.type) || service?.description || `Услуга ${index + 1}`}
+                                {getServiceTypeName(service?.type) || formatServiceDescription(service?.description) || `Услуга ${index + 1}`}
                               </span>
                               <span className="text-xs text-gray-500 ml-2">x{count}</span>
                             </div>

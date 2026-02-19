@@ -19,17 +19,51 @@ const formatDate = (dateString) => {
   return formatted ? `${formatted} г.` : 'Некорректная дата';
 };
 
-const getStatusText = (status, direction) => {
-  const statusMap = {
-    'PENDING': direction === 'TO_CLIENT' ? 'Ожидает отправки со склада' : 'Ожидает доставки на склад',
-    'IN_PROGRESS': direction === 'TO_CLIENT' ? 'В пути к клиенту' : 'В пути к складу',
-    'DELIVERED': direction === 'TO_CLIENT' ? 'Доставлено клиенту' : 'Доставлено на склад',
-    'COURIER_ASSIGNED': 'Курьер назначен',
-    'COURIER_IN_TRANSIT': 'Курьер в пути к вам',
-    'COURIER_AT_CLIENT': 'Курьер у вас',
-    'FINISHED': 'Завершено'
+const getStatusText = (status, direction, deliveryTimeInterval = null, movingDate = null) => {
+  // Форматируем дату для проверки "сегодня"
+  const isToday = (dateString) => {
+    if (!dateString) return false;
+    try {
+      const date = new Date(dateString);
+      const today = new Date();
+      return date.toDateString() === today.toDateString();
+    } catch {
+      return false;
+    }
   };
-  return statusMap[status] || status;
+
+  const formatTimeText = () => {
+    if (!deliveryTimeInterval) return '';
+    const dateText = movingDate && isToday(movingDate) ? 'сегодня' : '';
+    return dateText ? `, приедет ${dateText} в ${deliveryTimeInterval}` : `, приедет в ${deliveryTimeInterval}`;
+  };
+
+  switch (status) {
+    case 'PENDING':
+      return 'Ожидает назначения курьера';
+    case 'COURIER_ASSIGNED':
+      return deliveryTimeInterval 
+        ? `Курьер назначен${formatTimeText()}`
+        : 'Курьер назначен';
+    case 'COURIER_IN_TRANSIT':
+      return 'Курьер едет к вам';
+    case 'COURIER_AT_CLIENT':
+      return 'Курьер у вас';
+    case 'IN_PROGRESS':
+      return direction === 'TO_WAREHOUSE' 
+        ? 'Курьер везёт вещи на склад'
+        : 'Курьер везёт вещи к вам';
+    case 'DELIVERED':
+      return direction === 'TO_WAREHOUSE'
+        ? 'Доставлено на склад'
+        : 'Доставлено вам';
+    case 'FINISHED':
+      return 'Завершено';
+    case 'CANCELLED':
+      return 'Отменено';
+    default:
+      return status;
+  }
 };
 
 const DeliveryCard = ({ delivery, onSelectTimeClick, embeddedMobile = false }) => {
@@ -45,10 +79,10 @@ const DeliveryCard = ({ delivery, onSelectTimeClick, embeddedMobile = false }) =
     allowedStatuses.includes(delivery.status) &&
     !delivery.delivery_time_interval;
   
-  // Определяем фон карточки: зеленый градиент для доставленных, серый для в процессе
+  // Определяем фон карточки: зеленый градиент для завершенных, серый для в процессе
   const getCardBackground = () => {
-    if (delivery.status === 'DELIVERED') {
-      return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для доставленных
+    if (['DELIVERED', 'FINISHED'].includes(delivery.status)) {
+      return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для завершенных
     }
     return 'bg-[#999999]'; // Серый для в процессе
   };
@@ -99,7 +133,14 @@ const DeliveryCard = ({ delivery, onSelectTimeClick, embeddedMobile = false }) =
         {/* Статус доставки */}
         <div className="flex items-center gap-2">
           <Truck className="w-5 h-5" />
-          <span className="text-lg font-semibold">{getStatusText(delivery.status, delivery.direction)}</span>
+          <span className="text-lg font-semibold">
+            {getStatusText(
+              delivery.status,
+              delivery.direction,
+              delivery.delivery_time_interval,
+              delivery.moving_date
+            )}
+          </span>
         </div>
 
         {/* Дата доставки */}

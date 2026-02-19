@@ -39,6 +39,7 @@ import { showExtendOrderSuccess, showCancelExtensionSuccess, showExtendOrderErro
 import OrderDeleteModal from './OrderDeleteModal';
 import {useNavigate} from "react-router-dom";
 import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
@@ -771,7 +772,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
                         <p className="text-[#737373] font-medium text-sm">
                           {service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO' 
                             ? getServiceTypeName(service.type)
-                            : (service.description || getServiceTypeName(service.type))}
+                            : (formatServiceDescription(service.description) || getServiceTypeName(service.type))}
                         </p>
                         {(order.storage?.storage_type === 'CLOUD' && service.type !== 'GAZELLE_TO') ? (
                           <p className="text-red-600 text-xs mt-1 font-semibold">Бесплатно</p>

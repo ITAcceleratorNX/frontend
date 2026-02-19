@@ -30,6 +30,7 @@ import {
   toastOrderRequestSent,
 } from "../../shared/lib/toast";
 import {getServiceTypeName} from "../../../src/pages/home/components/order/PackingServicesSection.jsx";
+import {formatServiceDescription} from "@/shared/lib/utils/serviceNames";
 
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import CallbackRequestSection from "@/shared/components/CallbackRequestSection.jsx";
@@ -157,7 +158,7 @@ const HomePage = memo(() => {
   const [currentTariffIndex, setCurrentTariffIndex] = useState(0);
   const [tariffsPerView, setTariffsPerView] = useState(4);
   const [selectedTariff, setSelectedTariff] = useState(null);
-  // Состояние для цены доставки (только забор вещей)
+  // Состояние для цены доставки
   const [gazelleFromPrice, setGazelleFromPrice] = useState(null);
   // Состояние для цен тарифов облачного хранения из API
   const [tariffPrices, setTariffPrices] = useState({});
@@ -375,7 +376,7 @@ const HomePage = memo(() => {
     let total = 0;
 
     if (includeMoving && gazelleService && gazelleFromPrice !== null) {
-      // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
+      // Для индивидуального хранения: только GAZELLE_FROM (доставка)
       total += gazelleFromPrice;
       breakdown.push({
         label: "Доставка (с клиента на склад)",
@@ -393,7 +394,7 @@ const HomePage = memo(() => {
         const count = Number(service.count) || 1;
         const amount = unitPrice * count;
         total += amount;
-        const serviceName = option?.description || getServiceTypeName(option?.type) || "Услуга";
+        const serviceName = formatServiceDescription(option?.description) || getServiceTypeName(option?.type) || "Услуга";
         breakdown.push({
           label: count > 1 ? `${serviceName} (${count} шт.)` : serviceName,
           amount,
@@ -473,7 +474,7 @@ const HomePage = memo(() => {
   }, [cloudStorage, cloudMonthsNumber, cloudStreetFrom, cloudVolume, selectedTariff]);
 
   useMemo(() => {
-    // Для индивидуального хранения: только GAZELLE_FROM (забор вещей)
+    // Для индивидуального хранения: только GAZELLE_FROM (доставка)
     if (gazelleFromPrice !== null) {
       return gazelleFromPrice;
     }
@@ -854,15 +855,15 @@ const HomePage = memo(() => {
   ]);
 
   const buildMovingOrders = useCallback((address, months, pickupDateString = null) => {
-    // Используем переданную дату забора или текущую дату
+    // Используем переданную дату доставки или текущую дату
     const pickupDate = pickupDateString 
       ? new Date(pickupDateString)
       : new Date();
     
-    // Устанавливаем время на начало дня для даты забора
-    pickupDate.setHours(10, 0, 0, 0); // 10:00 утра для забора
+    // Устанавливаем время на начало дня для даты доставки
+    pickupDate.setHours(10, 0, 0, 0); // 10:00 утра для доставки
 
-    // Возвращаем забор вещей (PENDING с direction TO_WAREHOUSE)
+    // Возвращаем доставку (PENDING с direction TO_WAREHOUSE)
     return [
       {
         moving_date: pickupDate.toISOString(),
@@ -1070,7 +1071,7 @@ const HomePage = memo(() => {
         );
 
       if (includeMoving) {
-        // Ищем GAZELLE_FROM (забор вещей)
+        // Ищем GAZELLE_FROM (доставка)
         const gazelleFromOption =
           gazelleService ||
           availableOptions?.find((option) => option.type === "GAZELLE_FROM");
@@ -1126,7 +1127,7 @@ const HomePage = memo(() => {
       const allMovingOrders = [];
       
       if (includeMoving) {
-        // Добавляем забор вещей (PENDING с direction TO_WAREHOUSE)
+        // Добавляем доставку (PENDING с direction TO_WAREHOUSE)
         const pickupOrder = buildMovingOrders(trimmedAddress, monthsNumber, movingPickupDate)[0];
         allMovingOrders.push(pickupOrder);
       }
@@ -1378,12 +1379,12 @@ const HomePage = memo(() => {
 
       console.error("availableOptions: ", availableOptions);
 
-      // Добавляем услугу "Газель - забор" для перевозки (только GAZELLE_FROM)
+      // Добавляем услугу "Газель - Доставка" для перевозки (только GAZELLE_FROM)
       if (hasGazelleForCloud) {
         orderData.services = [
           {
             service_id: Number(gazelleFromId),
-            count: 1, // только забор вещей
+            count: 1, // только доставка
           },
         ];
       }
@@ -1954,12 +1955,6 @@ const HomePage = memo(() => {
       {/* Секция: Быстрое бронирование */}
       < QuickBookingSection />
 
-      {/* Секция: Форматы хранения */}
-      < StorageFormatsSection onMore={() => openCallbackModal("callback")} />
-
-      {/* Отступ с фоном хэдера */}
-      <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
-
       {/* Секция: Хранение в городе */}
       <section ref={tabsSectionRef} className="w-full bg-[#FFF] py-6 sm:py-8">
         <div className="container mx-auto px-2 sm:px-2 lg:px-3 xl:px-3 max-w-7xl">
@@ -2237,23 +2232,23 @@ const HomePage = memo(() => {
                   <div className="mb-6">
                     <h3 className="text-lg font-bold text-[#273655] mb-3">Дополнительные услуги</h3>
                     <p className="text-sm text-[#555A65] mb-4">
-                      Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес забора.
+                      Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес доставки.
                     </p>
                     <p className="text-sm text-[#555A65] mb-4">Перевозка и упаковка включены в стоимость.</p>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm text-[#373737] mb-1">Дата забора вещей</label>
+                        <label className="block text-sm text-[#373737] mb-1">Дата доставки</label>
                         <DatePicker
                           value={cloudBookingStartDate}
                           onChange={(value) => { setCloudBookingStartDate(value); }}
                           minDate={getTodayLocalDateString()}
                           allowFutureDates={true}
-                          placeholder="Дата забора вещей"
+                          placeholder="Дата доставки"
                           className="[&>div]:bg-gray-100 [&>div]:border-0 [&>div]:rounded-2xl [&_input]:text-[#373737]"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-[#373737] mb-1">Адрес забора вещей</label>
+                        <label className="block text-sm text-[#373737] mb-1">Адрес доставки</label>
                       <input
                         type="text"
                         value={cloudStreetFrom}
@@ -2341,6 +2336,12 @@ const HomePage = memo(() => {
           </Tabs>
         </div>
       </section>
+
+      {/* Отступ с фоном хэдера */}
+      <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
+
+      {/* Секция: Форматы хранения */}
+      <StorageFormatsSection onMore={() => openCallbackModal("callback")} />
 
       {/* Отступ с фоном хэдера */}
       <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>

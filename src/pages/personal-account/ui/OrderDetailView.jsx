@@ -7,7 +7,7 @@ import {
   getOrderStatusText,
   getCargoMarkText
 } from '../../../shared/lib/types/orders';
-import { getServiceTypeName } from '../../../shared/lib/utils/serviceNames';
+import { getServiceTypeName, formatServiceDescription } from '../../../shared/lib/utils/serviceNames';
 import EditLocationModal from './EditLocationModal';
 import { AlertTriangle, Unlock, Tag } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
@@ -340,7 +340,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                   {order.services.map((service, index) => (
                     <div key={service.id || index} className="flex justify-between items-center py-1 text-xs">
                       <span className="text-gray-600">
-                        {getServiceTypeName(service.type) || service.description || service.type}
+                        {getServiceTypeName(service.type) || formatServiceDescription(service.description) || service.type}
                         {service.OrderService?.count > 1 && ` ×${service.OrderService.count}`}
                       </span>
                       <span className="font-medium text-gray-900">
@@ -415,7 +415,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 <div key={service.id || index} className="bg-white rounded-md p-4 border border-gray-200 hover:border-gray-300 transition-colors">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-900">
-                      {service.description || service.type}
+                      {formatServiceDescription(service.description) || service.type}
                     </span>
                     {service.OrderService && service.OrderService.count > 1 && (
                       <Badge variant="secondary" className="text-xs">

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Bell, Settings, Loader2, AlertCircle, Search, X } from 'lucide-react';
+import { Bell, Loader2, AlertCircle, Search, X } from 'lucide-react';
 import { useNotifications } from '../../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './UserNotifications';
 import { Input } from '../../../../components/ui/input';
 import { Button } from '../../../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import { Card, CardContent } from '../../../../components/ui/card';
 
 const CourierNotifications = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +18,6 @@ const CourierNotifications = () => {
   });
   const [isSearching, setIsSearching] = useState(false);
 
-  // Используем хук для получения данных уведомлений
   const {
     notifications,
     isLoading,
@@ -25,14 +25,12 @@ const CourierNotifications = () => {
     markAsRead
   } = useNotifications();
 
-  // Отладочный вывод для проверки структуры данных (только в development)
   useEffect(() => {
     if (import.meta.env.DEV) {
       console.log('CourierNotifications - полученные данные:', notifications);
     }
   }, [notifications]);
 
-  // Функция применения фильтров
   const applyFilters = () => {
     setIsSearching(true);
     setTimeout(() => {
@@ -42,34 +40,30 @@ const CourierNotifications = () => {
         read: filterRead
       });
       setIsSearching(false);
-    }, 300); // Небольшая задержка для плавности
+    }, 300);
   };
 
-  // Фильтрация уведомлений на основе примененных фильтров
   const filteredNotifications = useMemo(() => {
     if (!notifications) return [];
-    
+
     return notifications.filter(notification => {
-      // Поиск по тексту
       if (appliedFilters.query) {
         const searchLower = appliedFilters.query.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           notification.title?.toLowerCase().includes(searchLower) ||
           notification.message?.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
       }
-      
-      // Фильтр по типу
+
       if (appliedFilters.type !== 'all' && notification.notification_type !== appliedFilters.type) {
         return false;
       }
-      
-      // Фильтр по статусу прочтения
+
       if (appliedFilters.read !== 'all') {
         const isRead = appliedFilters.read === 'true';
         if (notification.is_read !== isRead) return false;
       }
-      
+
       return true;
     });
   }, [notifications, appliedFilters]);
@@ -91,181 +85,163 @@ const CourierNotifications = () => {
   const hasActiveFilters = appliedFilters.query || appliedFilters.type !== 'all' || appliedFilters.read !== 'all';
   const hasUnappliedChanges = searchQuery !== appliedFilters.query || filterType !== appliedFilters.type || filterRead !== appliedFilters.read;
 
-  // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[600px]">
+      <div className="flex items-center justify-center min-h-[400px] sm:min-h-[500px] px-3">
         <div className="flex flex-col items-center gap-4 text-center">
-          <Loader2 className="w-12 h-12 text-[#1e2c4f] animate-spin" />
+          <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 text-[#00A991] animate-spin" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Загрузка уведомлений
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Пожалуйста, подождите...
-            </p>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Загрузка уведомлений</h3>
+            <p className="text-sm text-gray-500 mt-1">Пожалуйста, подождите...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Show error state
   if (error) {
     return (
-      <div className="min-h-[600px] flex items-center justify-center">
-        <div className="text-center space-y-4 max-w-md mx-auto">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-            <AlertCircle className="w-12 h-12 text-red-600" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-gray-900">Ошибка загрузки</h3>
-            <p className="text-gray-600">Не удалось загрузить уведомления</p>
-            <p className="text-sm text-gray-500">{error.message}</p>
-          </div>
-          <button 
-            onClick={() => window.location.reload()}
-            className="inline-flex items-center px-6 py-3 bg-[#1e2c4f] text-white rounded-lg hover:bg-[#1e2c4f]/90 transition-colors font-medium"
-          >
-            Попробовать снова
-          </button>
-        </div>
+      <div className="min-h-[400px] sm:min-h-[500px] flex items-center justify-center px-3">
+        <Card className="max-w-md w-full rounded-xl border-red-200 bg-white">
+          <CardContent className="text-center py-8 sm:py-10 px-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" />
+            </div>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
+            <p className="text-sm sm:text-base text-gray-600 mb-1">Не удалось загрузить уведомления</p>
+            <p className="text-xs sm:text-sm text-gray-500 mb-6">{error.message}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-[#00A991] hover:bg-[#009882] text-white rounded-full px-5 py-2.5"
+            >
+              Попробовать снова
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#1e2c4f] to-[#2d3f5f] rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <Bell className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold mb-1">Мои уведомления</h1>
-              <p className="text-white/80">
-                {notifications?.length > 0 
-                  ? `${hasActiveFilters ? 'Найдено' : 'Всего уведомлений'}: ${totalCount}${unreadCount > 0 ? ` • Непрочитанных: ${unreadCount}` : ''}`
-                  : 'У вас пока нет уведомлений'
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Статистика */}
-        {notifications?.length > 0 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span className="text-white/80">Непрочитанные: {unreadCount}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-white/80">Прочитанные: {totalCount - unreadCount}</span>
-              </div>
-            </div>
-            {hasActiveFilters && (
-              <div className="text-sm text-white/80">
-                Показано {totalCount} из {notifications.length}
-              </div>
-            )}
-          </div>
-        )}
+    <div className="space-y-4 sm:space-y-6 w-full max-w-4xl mx-auto min-w-0 px-0 sm:px-2">
+      {/* Header — в стиле раздела Запросы */}
+      <div className="space-y-1 sm:space-y-2">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Мои уведомления</h1>
+        <p className="text-sm sm:text-base text-gray-600">
+          {notifications?.length > 0
+            ? `${hasActiveFilters ? 'Найдено' : 'Всего'}: ${totalCount}${unreadCount > 0 ? ` · Непрочитанных: ${unreadCount}` : ''}`
+            : 'У вас пока нет уведомлений'}
+        </p>
       </div>
 
-      {/* Поиск и фильтры */}
-      {notifications && (
-        <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
-          <div className="flex gap-2 items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Поиск по заголовку и сообщению..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Все типы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
-                <SelectItem value="general">Общие</SelectItem>
-                <SelectItem value="payment">Платежи</SelectItem>
-                <SelectItem value="contract">Договоры</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filterRead} onValueChange={setFilterRead}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Все статусы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="false">Непрочитанные</SelectItem>
-                <SelectItem value="true">Прочитанные</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              onClick={applyFilters}
-              disabled={!hasUnappliedChanges}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Search className="h-4 w-4 mr-1" />
-              Поиск
-            </Button>
-
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-                className="text-red-600 hover:text-red-700"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Очистить
-              </Button>
-            )}
+      {/* Статистика — компактная полоска */}
+      {notifications?.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 py-2 px-3 sm:px-4 rounded-xl bg-white border border-gray-200">
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 bg-[#00A991] rounded-full" />
+            <span className="text-gray-600">Непрочитанные: <span className="font-medium text-gray-900">{unreadCount}</span></span>
           </div>
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 bg-gray-300 rounded-full" />
+            <span className="text-gray-600">Прочитанные: <span className="font-medium text-gray-900">{totalCount - unreadCount}</span></span>
+          </div>
+          {hasActiveFilters && (
+            <span className="text-xs sm:text-sm text-gray-500 ml-auto">
+              Показано {totalCount} из {notifications.length}
+            </span>
+          )}
         </div>
       )}
 
-      {/* Content */}
-      <div className="bg-white rounded-xl border border-gray-200 min-h-[500px]">
+      {/* Поиск и фильтры — адаптивно */}
+      {notifications && notifications.length > 0 && (
+        <Card className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+          <CardContent className="p-3 sm:p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Поиск по заголовку и сообщению..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 rounded-lg h-10"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-full sm:w-[140px] rounded-lg border-gray-200">
+                    <SelectValue placeholder="Все типы" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все типы</SelectItem>
+                    <SelectItem value="general">Общие</SelectItem>
+                    <SelectItem value="payment">Платежи</SelectItem>
+                    <SelectItem value="contract">Договоры</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterRead} onValueChange={setFilterRead}>
+                  <SelectTrigger className="w-full sm:w-[140px] rounded-lg border-gray-200">
+                    <SelectValue placeholder="Все статусы" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все статусы</SelectItem>
+                    <SelectItem value="false">Непрочитанные</SelectItem>
+                    <SelectItem value="true">Прочитанные</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={applyFilters}
+                  disabled={!hasUnappliedChanges}
+                  className="bg-[#00A991] hover:bg-[#009882] text-white rounded-full px-4 py-2 h-10 shrink-0"
+                >
+                  <Search className="h-4 w-4 mr-1 sm:mr-2" />
+                  Поиск
+                </Button>
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="rounded-full border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  >
+                    <X className="h-4 w-4 mr-1 sm:mr-2" />
+                    Очистить
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Список уведомлений */}
+      <Card className="rounded-xl border border-gray-200 bg-white min-h-[300px] sm:min-h-[400px]">
         {notifications?.length === 0 ? (
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-12 sm:py-16 px-4">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                <Bell className="w-8 h-8 text-gray-400" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#00A991]/10 rounded-full flex items-center justify-center mx-auto">
+                <Bell className="w-7 h-7 sm:w-8 sm:h-8 text-[#00A991]" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-gray-900">Пока нет уведомлений</h3>
-                <p className="text-gray-500 max-w-sm">
-                  Когда у вас появятся новые уведомления, они будут отображаться здесь
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Пока нет уведомлений</h3>
+                <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                  Когда появятся новые уведомления, они отобразятся здесь
                 </p>
               </div>
             </div>
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-12 sm:py-16 px-4">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                <Search className="w-8 h-8 text-gray-400" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                <Search className="w-7 h-7 sm:w-8 sm:h-8 text-gray-400" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-gray-900">Ничего не найдено</h3>
-                <p className="text-gray-500 max-w-sm">
-                  Попробуйте изменить параметры поиска или очистить фильтры
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Ничего не найдено</h3>
+                <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                  Измените параметры поиска или очистите фильтры
                 </p>
                 {hasActiveFilters && (
-                  <Button onClick={clearFilters} variant="outline" className="mt-2">
+                  <Button onClick={clearFilters} variant="outline" className="mt-2 rounded-full border-[#00A991]/40 text-[#004743] hover:bg-[#00A991]/10">
                     Очистить фильтры
                   </Button>
                 )}
@@ -273,25 +249,25 @@ const CourierNotifications = () => {
             </div>
           </div>
         ) : (
-          <div className="p-6">
+          <div className="p-3 sm:p-4 md:p-6">
             {isSearching ? (
               <div className="flex items-center justify-center py-8">
-                <div className="flex items-center space-x-2 text-gray-500">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Loader2 className="w-5 h-5 animate-spin text-[#00A991]" />
                   <span className="text-sm">Поиск...</span>
                 </div>
               </div>
             ) : (
-              <UserNotifications 
+              <UserNotifications
                 notifications={filteredNotifications || []}
                 onMarkAsRead={markAsRead}
               />
             )}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };
 
-export default CourierNotifications; 
+export default CourierNotifications;

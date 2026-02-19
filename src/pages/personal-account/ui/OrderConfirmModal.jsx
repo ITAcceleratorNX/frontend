@@ -14,6 +14,7 @@ import { Separator } from '../../../components/ui/separator';
 import { CheckCircle, Package, Tag } from 'lucide-react';
 import { useApproveOrder } from '../../../shared/lib/hooks/use-orders';
 import { getCargoMarkText } from '../../../shared/lib/types/orders';
+import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 import { showErrorToast } from '../../../shared/lib/toast';
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
@@ -253,7 +254,7 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-900">
-                              {service.description || getServiceTypeName(service.type)}
+                              {formatServiceDescription(service.description) || getServiceTypeName(service.type)}
                             </span>
                             {service.OrderService && service.OrderService.count > 1 && (
                               <Badge className="text-xs px-1 py-0 bg-[#1e2c4f] text-white">
