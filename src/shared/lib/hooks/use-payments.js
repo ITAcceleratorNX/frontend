@@ -349,14 +349,21 @@ export const useGetPrices = (options = {}) => {
 export const useDownloadPaymentReceipt = () => {
   return useMutation({
     mutationFn: async (orderPaymentId) => {
-      const blob = await paymentsApi.getPaymentReceipt(orderPaymentId);
+      const result = await paymentsApi.getPaymentReceipt(orderPaymentId);
+
+      if (result.isJson) {
+        throw new Error(result.data?.message || 'Чек не является PDF');
+      }
+
+      const blob = result.data;
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `receipt-${orderPaymentId}.pdf`);
       document.body.appendChild(link);
       link.click();
-      link.parentNode.removeChild(link);
+      link.remove();
       window.URL.revokeObjectURL(url);
     },
     onSuccess: () => {
@@ -368,4 +375,4 @@ export const useDownloadPaymentReceipt = () => {
       showGenericError(errorMessage);
     },
   });
-}; 
+};

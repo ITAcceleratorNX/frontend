@@ -108,11 +108,23 @@ export const paymentsApi = {
   getPaymentReceipt: async (orderPaymentId) => {
     try {
       const response = await api.get(`/payments/${orderPaymentId}/receipt`, {
-        responseType: 'blob', // Важно для получения файла
+        responseType: 'blob',
       });
-      return response.data;
+
+      const contentType = response.headers['content-type'];
+
+      // Если пришёл JSON
+      if (contentType.includes('application/json')) {
+        const text = await response.data.text();
+        const json = JSON.parse(text);
+        return { isJson: true, data: json };
+      }
+
+      // Если PDF
+      return { isJson: false, data: response.data };
+
     } catch (error) {
-      console.error('PaymentsAPI: Ошибка при получении PDF-чека:', error.response?.data || error.message);
+      console.error('PaymentsAPI: Ошибка при получении чека:', error);
       throw error;
     }
   }
