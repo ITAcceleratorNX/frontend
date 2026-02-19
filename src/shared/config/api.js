@@ -17,12 +17,12 @@ const PRODUCTION_API_URL = 'https://api.extraspace.kz';
 
 // URL бэкенда для development (localhost)
 // ВАЖНО: Должен совпадать с API_PROXY_TARGET в vite.config.js
-const DEVELOPMENT_API_URL = 'http://localhost:8080';
+const DEVELOPMENT_API_URL = 'https://api.extraspace.kz';
 
 // ============================================
 
 // Используем прокси в development, прямой URL в production
-export const API_BASE_URL = "http://localhost:8080";
+export const API_BASE_URL = "https://api.extraspace.kz";
 
 // Прямой URL для случаев, когда прокси не используется (SSE, WebSocket и т.д.)
 export const API_DIRECT_URL = isDevelopment ? DEVELOPMENT_API_URL : PRODUCTION_API_URL;
