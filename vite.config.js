@@ -11,7 +11,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5173;
 // ВАЖНО: Если меняете API URL, обновите также src/shared/config/api.js
 // Proxy target для development (должен совпадать с DEVELOPMENT_API_URL в api.js)
 // Можно задать через переменную окружения: VITE_API_URL=http://localhost:3000
-const API_PROXY_TARGET = process.env.VITE_API_URL || 'http://localhost:3000';
+const API_PROXY_TARGET = process.env.VITE_API_URL || 'https://api.extraspace.kz';
 
 // https://vitejs.dev/config/
 export default defineConfig({
