@@ -1511,9 +1511,13 @@ const HomePage = memo(() => {
     }, 100);
   }, []);
 
+  const scrollToCallbackSection = useCallback(() => {
+    document.getElementById('callback-request-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const handleCallbackRequestClick = useCallback(() => {
-    openCallbackModal('callback');
-  }, [openCallbackModal]);
+    scrollToCallbackSection();
+  }, [scrollToCallbackSection]);
 
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
@@ -2342,7 +2346,7 @@ const HomePage = memo(() => {
       <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
 
       {/* Секция: Форматы хранения */}
-      <StorageFormatsSection onMore={() => openCallbackModal("callback")} />
+      <StorageFormatsSection onMore={scrollToCallbackSection} />
 
       {/* Отступ с фоном хэдера */}
       <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>

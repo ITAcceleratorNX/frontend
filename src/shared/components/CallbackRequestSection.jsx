@@ -89,7 +89,7 @@ const CallbackRequestSection = ({ showRegisterPrompt = false }) => {
   };
 
   return (
-    <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
+    <section id="callback-request-section" className="w-full bg-white py-12 sm:py-16 lg:py-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto rounded-3xl bg-[#F7FAF9] p-8 sm:p-10 lg:p-12 shadow-sm">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
