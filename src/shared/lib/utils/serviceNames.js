@@ -6,7 +6,10 @@
  */
 export const formatServiceDescription = (desc) => {
   if (!desc || typeof desc !== "string") return desc || "";
-  return desc.replace(/\d+\s*[*×xX]\s*\d+\s*[*×xX]\s*\d+/g, "").trim();
+  let result = desc.replace(/\d+\s*[*×xX]\s*\d+\s*[*×xX]\s*\d+/g, "").trim();
+  // Замена для Заказанных услуг в личном кабинете менеджера
+  result = result.replace(/Газель - забор вещей\s*(\(с клиента на склад\))?/g, "Газель - доставка (с клиента на склад)");
+  return result;
 };
 
 /**
