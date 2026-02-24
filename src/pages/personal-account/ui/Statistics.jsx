@@ -1,6 +1,14 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import clsx from 'clsx';
 import { useQuery } from '@tanstack/react-query';
+import {
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Sector,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts';
 import { statisticsApi } from '../../../shared/api/statisticsApi';
 
 const INITIAL_FILTERS = {
@@ -334,21 +342,6 @@ const formatCompactNumber = (value) => {
     return `${(num / 1000).toFixed(1).replace('.0', '')}K`;
   }
   return num.toString();
-};
-
-const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-  return {
-    x: centerX + radius * Math.cos(angleInRadians),
-    y: centerY + radius * Math.sin(angleInRadians),
-  };
-};
-
-const describeArc = (x, y, radius, startAngle, endAngle) => {
-  const start = polarToCartesian(x, y, radius, endAngle);
-  const end = polarToCartesian(x, y, radius, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
-  return ['M', start.x, start.y, 'A', radius, radius, 0, largeArcFlag, 0, end.x, end.y, 'L', x, y, 'Z'].join(' ');
 };
 
 const computeHash = (value) => {
@@ -703,62 +696,266 @@ const LineChart = ({ data }) => {
   );
 };
 
-const PieChart = ({ data, highlightedKey, totalCount }) => {
-  const size = 280;
-  const radius = size / 2 - 12;
-  const center = size / 2;
-  const total = data.reduce((acc, item) => acc + item.value, 0);
-  let startAngle = 0;
+const PIE_DEFAULT_COLORS = ['#3B82F6', '#22C55E', '#0EA5E9', '#F97316', '#6366F1', '#F59E0B'];
+const RADIAN = Math.PI / 180;
 
-  const slices = data.map((item) => {
-    const angle = (item.value / total) * 360;
-    const endAngle = startAngle + angle;
-    const path = describeArc(center, center, radius, startAngle, endAngle);
-    const midAngle = startAngle + angle / 2;
-    startAngle = endAngle;
+function renderActiveShape(props) {
+  const {
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    startAngle,
+    endAngle,
+    fill,
+    payload,
+    percent,
+    value,
+  } = props;
 
-    const labelPoint = polarToCartesian(center, center, radius * 0.6, midAngle);
-    return {
-      ...item,
-      path,
-      labelPoint,
-    };
-  });
+  const isSmall = outerRadius < 100;
+  const pad = isSmall ? 6 : 10;
+  const padLine = isSmall ? 18 : 30;
+  const padEnd = isSmall ? 14 : 22;
+  const fontSizeLabel = isSmall ? 14 : 18;
+  const fontSizeValue = isSmall ? 11 : 14;
+  const fontSizeCallout = isSmall ? 12 : 15;
+  const fontSizeSub = isSmall ? 10 : 12;
 
-  // Используем переданное общее количество или сумму count из данных
-  const displayTotal = totalCount ?? data.reduce((acc, item) => acc + (item.count || 0), 0);
+  const sin = Math.sin(-RADIAN * midAngle);
+  const cos = Math.cos(-RADIAN * midAngle);
+  const sx = cx + (outerRadius + pad) * cos;
+  const sy = cy + (outerRadius + pad) * sin;
+  const mx = cx + (outerRadius + padLine) * cos;
+  const my = cy + (outerRadius + padLine) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * padEnd;
+  const ey = my;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-72">
-      <circle cx={center} cy={center} r={radius} fill="#F8FAFC" />
-      {slices.map((slice) => (
-        <path
-          key={slice.label}
-          d={slice.path}
-          fill={slice.color}
-          opacity={highlightedKey === 'all' || highlightedKey === slice.key ? 0.95 : 0.65}
-        />
-      ))}
-      <circle cx={center} cy={center} r={radius * 0.45} fill="white" />
-      <text x={center} y={center - 6} textAnchor="middle" fontSize="14" fill="#1E293B">
-        Всего визитов
+    <g>
+      <text
+        x={cx}
+        y={cy + (isSmall ? -4 : -8)}
+        textAnchor="middle"
+        fill={fill}
+        style={{ fontSize: fontSizeLabel, fontWeight: 700 }}
+      >
+        {payload.label}
       </text>
-      <text x={center} y={center + 14} textAnchor="middle" fontSize="22" fontWeight="600" fill="#1E293B">
-        {formatNumber(displayTotal)}
+      <text
+        x={cx}
+        y={cy + (isSmall ? 10 : 16)}
+        textAnchor="middle"
+        fill="#64748B"
+        style={{ fontSize: fontSizeValue, fontWeight: 500 }}
+      >
+        {value}%
       </text>
-      {slices.map((slice) => (
-        <text
-          key={`${slice.label}-label`}
-          x={slice.labelPoint.x}
-          y={slice.labelPoint.y}
-          textAnchor="middle"
-          fontSize="12"
-          fill="#0F172A"
-        >
-          {slice.value}%
-        </text>
-      ))}
-    </svg>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + (isSmall ? 4 : 8)}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))' }}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + (isSmall ? 8 : 12)}
+        outerRadius={outerRadius + (isSmall ? 12 : 16)}
+        fill={fill}
+        opacity={0.4}
+      />
+      <path
+        d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
+        stroke={fill}
+        fill="none"
+        strokeWidth={isSmall ? 1.5 : 2}
+      />
+      <circle cx={ex} cy={ey} r={isSmall ? 2.5 : 3} fill={fill} stroke="none" />
+      <text
+        x={ex + (cos >= 0 ? 1 : -1) * (isSmall ? 8 : 12)}
+        y={ey}
+        textAnchor={textAnchor}
+        fill="#0F172A"
+        style={{ fontSize: fontSizeCallout, fontWeight: 700 }}
+      >
+        {value}%
+      </text>
+      <text
+        x={ex + (cos >= 0 ? 1 : -1) * (isSmall ? 8 : 12)}
+        y={ey + (isSmall ? 12 : 18)}
+        textAnchor={textAnchor}
+        fill="#94A3B8"
+        style={{ fontSize: fontSizeSub, fontWeight: 500 }}
+      >
+        {`(${(percent * 100).toFixed(1)}%)`}
+      </text>
+    </g>
+  );
+}
+
+function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent, value }) {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+  const x = cx + radius * Math.cos(-RADIAN * midAngle);
+  const y = cy + radius * Math.sin(-RADIAN * midAngle);
+
+  if (percent < 0.05) return null;
+
+  const isSmall = outerRadius < 100;
+  const fontSize = isSmall ? (percent > 0.1 ? 12 : 10) : (percent > 0.1 ? 15 : 12);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      style={{
+        fontSize,
+        fontWeight: 700,
+        textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+      }}
+    >
+      {value}%
+    </text>
+  );
+}
+
+function PieChartTooltip({ active, payload }) {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-lg sm:px-4 sm:py-3">
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-full sm:h-3 sm:w-3"
+            style={{ backgroundColor: data.payload.color ?? PIE_DEFAULT_COLORS[0] }}
+          />
+          <span className="text-xs font-semibold text-slate-900 sm:text-sm">{data.payload.label}</span>
+        </div>
+        <p className="mt-0.5 text-lg font-bold text-slate-900 sm:mt-1 sm:text-2xl">{data.value}%</p>
+      </div>
+    );
+  }
+  return null;
+}
+
+const PieChart = ({ data, highlightedKey = 'all', totalCount }) => {
+  const [activeIndex, setActiveIndex] = useState(undefined);
+  const containerRef = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0]?.contentRect ?? {};
+      setSize({ width: width || 0, height: height || 0 });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const onPieEnter = useCallback((_, index) => {
+    setActiveIndex(index);
+  }, []);
+
+  const onPieLeave = useCallback(() => {
+    setActiveIndex(undefined);
+  }, []);
+
+  const chartData = Array.isArray(data) ? data : [];
+  const displayTotal = totalCount ?? chartData.reduce((acc, item) => acc + (item.count || 0), 0);
+
+  const minSide = Math.min(size.width, size.height) || 280;
+  const outerRadius = Math.max(0, minSide / 2 - 16);
+  const innerRadius = Math.max(0, outerRadius * 0.54);
+
+  if (chartData.length === 0) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-4 sm:gap-8">
+      <div
+        ref={containerRef}
+        className="relative w-full max-w-[480px] touch-manipulation"
+        style={{ height: 'min(80vw, 400px)', minHeight: 240, maxHeight: 400 }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <RechartsPieChart>
+            <Pie
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              innerRadius={innerRadius}
+              outerRadius={outerRadius}
+              paddingAngle={2}
+              dataKey="value"
+              nameKey="label"
+              label={activeIndex === undefined ? renderCustomLabel : false}
+              labelLine={false}
+              onMouseEnter={onPieEnter}
+              onMouseLeave={onPieLeave}
+              onTouchStart={onPieEnter}
+              onTouchEnd={onPieLeave}
+              animationBegin={0}
+              animationDuration={800}
+              animationEasing="ease-out"
+              stroke="none"
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${entry.key ?? entry.label}-${index}`}
+                  fill={entry.color ?? PIE_DEFAULT_COLORS[index % PIE_DEFAULT_COLORS.length]}
+                  opacity={
+                    highlightedKey === 'all' || highlightedKey === (entry.key ?? entry.label)
+                      ? 1
+                      : 0.4
+                  }
+                  style={{
+                    transition: 'opacity 0.3s ease, transform 0.3s ease',
+                    cursor: 'pointer',
+                  }}
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<PieChartTooltip />} />
+          </RechartsPieChart>
+        </ResponsiveContainer>
+
+        {activeIndex === undefined && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-xl font-bold text-slate-900 sm:text-3xl">{formatNumber(displayTotal)}</p>
+              <p className="text-xs font-medium text-slate-500 sm:text-sm">Всего визитов</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 sm:gap-x-6 sm:gap-y-3">
+        {chartData.map((item, idx) => (
+          <div key={item.key ?? item.label} className="flex items-center gap-1.5 sm:gap-2">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full shadow-sm sm:h-3 sm:w-3"
+              style={{ backgroundColor: item.color ?? PIE_DEFAULT_COLORS[idx % PIE_DEFAULT_COLORS.length] }}
+            />
+            <span className="text-xs font-medium text-slate-900 sm:text-sm">{item.label}</span>
+            <span className="text-xs font-bold text-slate-500 sm:text-sm">{item.value}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -1138,7 +1335,7 @@ const Statistics = () => {
           <div className="text-slate-500">Загрузка графиков...</div>
         </div>
       ) : (
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 pb-4">
             <h2 className="text-lg font-semibold text-slate-900">Заявки и продажи</h2>
@@ -1185,23 +1382,6 @@ const Statistics = () => {
             {leadSources && leadSources.length > 0 ? (
               <>
           <PieChart data={leadSources} highlightedKey={filters.leadSource} totalCount={leadSources.totalCount} />
-          <div className="mt-4 space-y-2">
-            {leadSources.map((item) => (
-              <div key={item.label} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span
-                    className="inline-block h-3 w-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  {item.label}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-900">{formatNumber(item.count)}</span>
-                  <span className="text-slate-500">({item.value}%)</span>
-                </div>
-              </div>
-            ))}
-          </div>
               </>
             ) : (
               <div className="py-12 text-center text-slate-500">Нет данных для отображения</div>
