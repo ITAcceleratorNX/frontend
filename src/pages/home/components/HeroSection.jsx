@@ -14,9 +14,9 @@ export default function HeroSection({ handleHeroBookingClick }) {
                 className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/60" aria-hidden />
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-8 sm:pb-12 lg:pb-16 relative z-10 flex-1 flex flex-col min-h-0">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-8 sm:pb-12 lg:pb-16 relative z-10 flex-1 flex flex-col min-h-0">
                 <section className="grid grid-cols-1 grid-rows-[1fr_auto] flex-1 min-h-0 items-center text-center">
-                    <div className="flex flex-col items-center justify-start">
+                    <div className="flex flex-col items-center justify-start -mt-16 sm:-mt-24 lg:-mt-28">
                         <h1 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
                             храните там, где удобно
                         </h1>
