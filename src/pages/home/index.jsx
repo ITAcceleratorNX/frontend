@@ -2204,239 +2204,264 @@ const HomePage = memo(() => {
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="CLOUD" className="mt-8">
-              {/* Секция Тарифы */}
-              <CloudTariffs
-                  customTariff={customTariff}
-                  regularTariffs={regularTariffs}
-                  selectedTariff={selectedTariff}
-                  setSelectedTariff={setSelectedTariff}
-                  tariffsPerView={tariffsPerView}
-                  currentTariffIndex={currentTariffIndex}
-                  maxTariffIndex={maxTariffIndex}
-                  handleTariffPrev={handleTariffPrev}
-                  handleTariffNext={handleTariffNext}
-                  setCloudDimensions={setCloudDimensions}
-                  setCloudVolumeDirect={setCloudVolumeDirect}
-              />
-
-              <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 items-stretch">
-                {/* Левая колонка - Габариты, Итог, Кнопка бронирования */}
-                <div className="flex flex-col order-1 lg:order-1">
-                  <h2 className="text-2xl font-bold text-[#202422] mb-6">
-                    {selectedTariff?.isCustom 
-                      ? 'Укажите габариты вещей' 
-                      : selectedTariff 
-                        ? 'Информация о тарифе' 
-                        : 'Выберите тариф или укажите габариты'}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8">
+                <div className="flex flex-col items-center text-center max-w-lg mx-auto">
+                  <div className="w-14 h-14 rounded-full bg-[#31876D]/10 flex items-center justify-center mb-4">
+                    <svg className="w-7 h-7 text-[#31876D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold text-[#202422] mb-2">
+                    Облачное хранение временно недоступно
                   </h2>
-                  
-                  {/* Поля габаритов - белый фон, серая рамка */}
-                  <CloudDimensions
-                      selectedTariff={selectedTariff}
-                      cloudDimensions={cloudDimensions}
-                      setCloudDimensions={setCloudDimensions}
-                      cloudVolumeDirect={cloudVolumeDirect}
-                  />
-
-                  {/* Блок ИТОГ */}
-                  <CloudStorageSummary
-                      selectedTariff={selectedTariff}
-                      cloudDimensions={cloudDimensions}
-                      cloudVolume={cloudVolume}
-                      cloudPricePreview={cloudPricePreview}
-                      finalCloudTotal={finalCloudTotal}
-                      cloudMonthsNumber={cloudMonthsNumber}
-                      showCloudPromoInput={showCloudPromoInput}
-                      cloudPromoSuccess={cloudPromoSuccess}
-                      cloudPromoDiscount={cloudPromoDiscount}
-                      cloudPromoDiscountPercent={cloudPromoDiscountPercent}
-                      cloudPromoCode={cloudPromoCode}
-                      cloudPromoCodeInput={cloudPromoCodeInput}
-                      cloudPromoError={cloudPromoError}
-                      isValidatingCloudPromo={isValidatingCloudPromo}
-                      setShowCloudPromoInput={setShowCloudPromoInput}
-                      setCloudPromoCodeInput={setCloudPromoCodeInput}
-                      setCloudPromoError={setCloudPromoError}
-                      handleApplyCloudPromoCode={handleApplyCloudPromoCode}
-                      handleRemoveCloudPromoCode={handleRemoveCloudPromoCode}
-                  />
-
-                  {/* Блок выбора клиента для менеджеров/админов */}
-                  {isAdminOrManager && (
-                    <div className="mb-4 rounded-2xl border border-gray-200 p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-[#202422] font-semibold">
-                          <User className="w-5 h-5 shrink-0" />
-                          <span>Клиент</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setIsClientSelectorOpen(true)}
-                          className="px-4 py-2 text-sm font-medium text-[#31876D] border border-[#31876D] rounded-lg hover:bg-[#31876D] hover:text-white transition-colors"
-                        >
-                          {selectedClientUser ? "Изменить" : "Выбрать клиента"}
-                        </button>
-                      </div>
-                      {selectedClientUser && (
-                        <div className="bg-[#31876D]/10 rounded-lg p-3">
-                          <div className="text-sm font-medium text-[#202422]">
-                            {selectedClientUser.name || "Без имени"}
-                          </div>
-                          <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
-                          {selectedClientUser.phone && (
-                            <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Кнопка бронирования - в левой колонке */}
-                          <button
-                    onClick={handleCloudBookingClick}
-                    disabled={!isCloudFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser && !isCloudFormReady)}
-                    className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
-                          </button>
-                      </div>
-
-                {/* Правая колонка - Дата, Срок аренды, Доп. услуги, Кнопка обратного звонка */}
-                <div className="flex flex-col order-2 lg:order-2 lg:pt-14">
-                  {/* Дата начала бронирования */}
-                  <div className="mb-3">
-                    <DatePicker
-                      value={cloudBookingStartDate}
-                      onChange={(value) => {
-                        setCloudBookingStartDate(value);
-                      }}
-                      minDate={getTodayLocalDateString()}
-                      allowFutureDates={true}
-                      placeholder="Дата начала бронирования"
-                      className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-2xl [&_input]:text-[#373737]"
-                    />
-                  </div>
-
-                  {/* Срок аренды */}
-                  <div className="mb-6">
-                    <RentalPeriodSelect
-                      value={cloudMonths}
-                      onChange={(value) => {
-                        setCloudMonths(value);
-                      }}
-                      label="Срок аренды:"
-                      variant="cloud-home"
-                      showLabelInside={true}
-                    />
-                  </div>
-
-                  {/* Дополнительные услуги */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold text-[#273655] mb-3">Дополнительные услуги</h3>
-                    <p className="text-sm text-[#555A65] mb-4">
-                      Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес доставки.
-                    </p>
-                    <p className="text-sm text-[#555A65] mb-4">Перевозка и упаковка включены в стоимость.</p>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm text-[#373737] mb-1">Дата доставки</label>
-                        <DatePicker
-                          value={cloudBookingStartDate}
-                          onChange={(value) => { setCloudBookingStartDate(value); }}
-                          minDate={getTodayLocalDateString()}
-                          allowFutureDates={true}
-                          placeholder="Дата доставки"
-                          className="[&>div]:bg-gray-100 [&>div]:border-0 [&>div]:rounded-2xl [&_input]:text-[#373737]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm text-[#373737] mb-1">Адрес доставки</label>
-                      <input
-                        type="text"
-                        value={cloudStreetFrom}
-                          onChange={(e) => { setCloudStreetFrom(e.target.value); }}
-                          placeholder="Например: г. Алматы, Абая 25"
-                          className="w-full h-[52px] rounded-2xl bg-gray-100 border-0 px-4 text-sm text-[#373737] placeholder:text-gray-400"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Кнопка обратного звонка */}
+                  <p className="text-gray-600 mb-6">
+                    Сейчас оформить заказ на облачное хранение нельзя. Если вам нужна эта услуга или есть вопросы — обратитесь к менеджеру: мы подскажем, когда сервис снова будет доступен, и поможем с выбором.
+                  </p>
                   <button
+                    type="button"
                     onClick={handleCallbackRequestClick}
-                    className="w-full bg-white border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-50 transition-colors"
+                    className="w-full sm:w-auto bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity"
                   >
-                    Заказать обратный звонок
-                  </button>
-                </div>
-
-                {/* Дубликат - скрыт, т.к. правая колонка (order-2) уже содержит весь контент */}
-                <div className="hidden">
-                  {/* Дата начала бронирования */}
-                  <div className="mb-6">
-                    <DatePicker
-                      value={cloudBookingStartDate}
-                      onChange={(value) => {
-                        setCloudBookingStartDate(value);
-                      }}
-                      minDate={getTodayLocalDateString()}
-                      allowFutureDates={true}
-                      placeholder="Дата начало бронирвания"
-                      className="[&_input]:bg-transparent"
-                    />
-                  </div>
-                  
-                  {/* Срок аренды */}
-                  <div className="mb-6">
-                    <RentalPeriodSelect
-                      value={cloudMonths}
-                      onChange={(value) => {
-                        setCloudMonths(value);
-                      }}
-                      label="Срок аренды:"
-                      variant="cloud-home"
-                      showLabelInside={true}
-                    />
-                  </div>
-                  
-                  {/* Адрес откуда забрать вещи */}
-                  <div className="mb-6 w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">
-                    <div className="flex flex-col gap-2 w-full">
-                      <label className="text-s text-white/90">Адрес откуда забрать вещи</label>
-                      <input
-                        type="text"
-                        value={cloudStreetFrom}
-                        onChange={(e) => {
-                          setCloudStreetFrom(e.target.value);
-                        }}
-                        placeholder="Микрорайон или улица"
-                        className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Кнопка бронирования - для десктопа */}
-                  <button
-                    onClick={handleCloudBookingClick}
-                    disabled={!isCloudFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser)}
-                    className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-3"
-                  >
-                    {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
-                  </button>
-                  
-                  {/* Кнопка обратного звонка */}
-                  <button
-                    onClick={handleCallbackRequestClick}
-                    className="w-full bg-transparent border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-100/50 transition-colors"
-                  >
-                    Заказать обратный звонок
+                    Связаться с менеджером
                   </button>
                 </div>
               </div>
             </TabsContent>
+            
+            {/*<TabsContent value="CLOUD" className="mt-8">*/}
+            {/*  /!* Секция Тарифы *!/*/}
+            {/*  <CloudTariffs*/}
+            {/*      customTariff={customTariff}*/}
+            {/*      regularTariffs={regularTariffs}*/}
+            {/*      selectedTariff={selectedTariff}*/}
+            {/*      setSelectedTariff={setSelectedTariff}*/}
+            {/*      tariffsPerView={tariffsPerView}*/}
+            {/*      currentTariffIndex={currentTariffIndex}*/}
+            {/*      maxTariffIndex={maxTariffIndex}*/}
+            {/*      handleTariffPrev={handleTariffPrev}*/}
+            {/*      handleTariffNext={handleTariffNext}*/}
+            {/*      setCloudDimensions={setCloudDimensions}*/}
+            {/*      setCloudVolumeDirect={setCloudVolumeDirect}*/}
+            {/*  />*/}
+
+            {/*  <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 items-stretch">*/}
+            {/*    /!* Левая колонка - Габариты, Итог, Кнопка бронирования *!/*/}
+            {/*    <div className="flex flex-col order-1 lg:order-1">*/}
+            {/*      <h2 className="text-2xl font-bold text-[#202422] mb-6">*/}
+            {/*        {selectedTariff?.isCustom */}
+            {/*          ? 'Укажите габариты вещей' */}
+            {/*          : selectedTariff */}
+            {/*            ? 'Информация о тарифе' */}
+            {/*            : 'Выберите тариф или укажите габариты'}*/}
+            {/*      </h2>*/}
+            {/*      */}
+            {/*      /!* Поля габаритов - белый фон, серая рамка *!/*/}
+            {/*      <CloudDimensions*/}
+            {/*          selectedTariff={selectedTariff}*/}
+            {/*          cloudDimensions={cloudDimensions}*/}
+            {/*          setCloudDimensions={setCloudDimensions}*/}
+            {/*          cloudVolumeDirect={cloudVolumeDirect}*/}
+            {/*      />*/}
+
+            {/*      /!* Блок ИТОГ *!/*/}
+            {/*      <CloudStorageSummary*/}
+            {/*          selectedTariff={selectedTariff}*/}
+            {/*          cloudDimensions={cloudDimensions}*/}
+            {/*          cloudVolume={cloudVolume}*/}
+            {/*          cloudPricePreview={cloudPricePreview}*/}
+            {/*          finalCloudTotal={finalCloudTotal}*/}
+            {/*          cloudMonthsNumber={cloudMonthsNumber}*/}
+            {/*          showCloudPromoInput={showCloudPromoInput}*/}
+            {/*          cloudPromoSuccess={cloudPromoSuccess}*/}
+            {/*          cloudPromoDiscount={cloudPromoDiscount}*/}
+            {/*          cloudPromoDiscountPercent={cloudPromoDiscountPercent}*/}
+            {/*          cloudPromoCode={cloudPromoCode}*/}
+            {/*          cloudPromoCodeInput={cloudPromoCodeInput}*/}
+            {/*          cloudPromoError={cloudPromoError}*/}
+            {/*          isValidatingCloudPromo={isValidatingCloudPromo}*/}
+            {/*          setShowCloudPromoInput={setShowCloudPromoInput}*/}
+            {/*          setCloudPromoCodeInput={setCloudPromoCodeInput}*/}
+            {/*          setCloudPromoError={setCloudPromoError}*/}
+            {/*          handleApplyCloudPromoCode={handleApplyCloudPromoCode}*/}
+            {/*          handleRemoveCloudPromoCode={handleRemoveCloudPromoCode}*/}
+            {/*      />*/}
+
+            {/*      /!* Блок выбора клиента для менеджеров/админов *!/*/}
+            {/*      {isAdminOrManager && (*/}
+            {/*        <div className="mb-4 rounded-2xl border border-gray-200 p-4 space-y-3">*/}
+            {/*          <div className="flex items-center justify-between">*/}
+            {/*            <div className="flex items-center gap-2 text-[#202422] font-semibold">*/}
+            {/*              <User className="w-5 h-5 shrink-0" />*/}
+            {/*              <span>Клиент</span>*/}
+            {/*            </div>*/}
+            {/*            <button*/}
+            {/*              type="button"*/}
+            {/*              onClick={() => setIsClientSelectorOpen(true)}*/}
+            {/*              className="px-4 py-2 text-sm font-medium text-[#31876D] border border-[#31876D] rounded-lg hover:bg-[#31876D] hover:text-white transition-colors"*/}
+            {/*            >*/}
+            {/*              {selectedClientUser ? "Изменить" : "Выбрать клиента"}*/}
+            {/*            </button>*/}
+            {/*          </div>*/}
+            {/*          {selectedClientUser && (*/}
+            {/*            <div className="bg-[#31876D]/10 rounded-lg p-3">*/}
+            {/*              <div className="text-sm font-medium text-[#202422]">*/}
+            {/*                {selectedClientUser.name || "Без имени"}*/}
+            {/*              </div>*/}
+            {/*              <div className="text-xs text-gray-600">{selectedClientUser.email}</div>*/}
+            {/*              {selectedClientUser.phone && (*/}
+            {/*                <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>*/}
+            {/*              )}*/}
+            {/*            </div>*/}
+            {/*          )}*/}
+            {/*        </div>*/}
+            {/*      )}*/}
+
+            {/*      /!* Кнопка бронирования - в левой колонке *!/*/}
+            {/*              <button*/}
+            {/*        onClick={handleCloudBookingClick}*/}
+            {/*        disabled={!isCloudFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser && !isCloudFormReady)}*/}
+            {/*        className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"*/}
+            {/*      >*/}
+            {/*        {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}*/}
+            {/*              </button>*/}
+            {/*          </div>*/}
+
+            {/*    /!* Правая колонка - Дата, Срок аренды, Доп. услуги, Кнопка обратного звонка *!/*/}
+            {/*    <div className="flex flex-col order-2 lg:order-2 lg:pt-14">*/}
+            {/*      /!* Дата начала бронирования *!/*/}
+            {/*      <div className="mb-3">*/}
+            {/*        <DatePicker*/}
+            {/*          value={cloudBookingStartDate}*/}
+            {/*          onChange={(value) => {*/}
+            {/*            setCloudBookingStartDate(value);*/}
+            {/*          }}*/}
+            {/*          minDate={getTodayLocalDateString()}*/}
+            {/*          allowFutureDates={true}*/}
+            {/*          placeholder="Дата начала бронирования"*/}
+            {/*          className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-2xl [&_input]:text-[#373737]"*/}
+            {/*        />*/}
+            {/*      </div>*/}
+
+            {/*      /!* Срок аренды *!/*/}
+            {/*      <div className="mb-6">*/}
+            {/*        <RentalPeriodSelect*/}
+            {/*          value={cloudMonths}*/}
+            {/*          onChange={(value) => {*/}
+            {/*            setCloudMonths(value);*/}
+            {/*          }}*/}
+            {/*          label="Срок аренды:"*/}
+            {/*          variant="cloud-home"*/}
+            {/*          showLabelInside={true}*/}
+            {/*        />*/}
+            {/*      </div>*/}
+
+            {/*      /!* Дополнительные услуги *!/*/}
+            {/*      <div className="mb-6">*/}
+            {/*        <h3 className="text-lg font-bold text-[#273655] mb-3">Дополнительные услуги</h3>*/}
+            {/*        <p className="text-sm text-[#555A65] mb-4">*/}
+            {/*          Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес доставки.*/}
+            {/*        </p>*/}
+            {/*        <p className="text-sm text-[#555A65] mb-4">Перевозка и упаковка включены в стоимость.</p>*/}
+            {/*        <div className="space-y-3">*/}
+            {/*          <div>*/}
+            {/*            <label className="block text-sm text-[#373737] mb-1">Дата доставки</label>*/}
+            {/*            <DatePicker*/}
+            {/*              value={cloudBookingStartDate}*/}
+            {/*              onChange={(value) => { setCloudBookingStartDate(value); }}*/}
+            {/*              minDate={getTodayLocalDateString()}*/}
+            {/*              allowFutureDates={true}*/}
+            {/*              placeholder="Дата доставки"*/}
+            {/*              className="[&>div]:bg-gray-100 [&>div]:border-0 [&>div]:rounded-2xl [&_input]:text-[#373737]"*/}
+            {/*            />*/}
+            {/*          </div>*/}
+            {/*          <div>*/}
+            {/*            <label className="block text-sm text-[#373737] mb-1">Адрес доставки</label>*/}
+            {/*          <input*/}
+            {/*            type="text"*/}
+            {/*            value={cloudStreetFrom}*/}
+            {/*              onChange={(e) => { setCloudStreetFrom(e.target.value); }}*/}
+            {/*              placeholder="Например: г. Алматы, Абая 25"*/}
+            {/*              className="w-full h-[52px] rounded-2xl bg-gray-100 border-0 px-4 text-sm text-[#373737] placeholder:text-gray-400"*/}
+            {/*            />*/}
+            {/*          </div>*/}
+            {/*        </div>*/}
+            {/*      </div>*/}
+
+            {/*      /!* Кнопка обратного звонка *!/*/}
+            {/*      <button*/}
+            {/*        onClick={handleCallbackRequestClick}*/}
+            {/*        className="w-full bg-white border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-50 transition-colors"*/}
+            {/*      >*/}
+            {/*        Заказать обратный звонок*/}
+            {/*      </button>*/}
+            {/*    </div>*/}
+
+            {/*    /!* Дубликат - скрыт, т.к. правая колонка (order-2) уже содержит весь контент *!/*/}
+            {/*    <div className="hidden">*/}
+            {/*      /!* Дата начала бронирования *!/*/}
+            {/*      <div className="mb-6">*/}
+            {/*        <DatePicker*/}
+            {/*          value={cloudBookingStartDate}*/}
+            {/*          onChange={(value) => {*/}
+            {/*            setCloudBookingStartDate(value);*/}
+            {/*          }}*/}
+            {/*          minDate={getTodayLocalDateString()}*/}
+            {/*          allowFutureDates={true}*/}
+            {/*          placeholder="Дата начало бронирвания"*/}
+            {/*          className="[&_input]:bg-transparent"*/}
+            {/*        />*/}
+            {/*      </div>*/}
+            {/*      */}
+            {/*      /!* Срок аренды *!/*/}
+            {/*      <div className="mb-6">*/}
+            {/*        <RentalPeriodSelect*/}
+            {/*          value={cloudMonths}*/}
+            {/*          onChange={(value) => {*/}
+            {/*            setCloudMonths(value);*/}
+            {/*          }}*/}
+            {/*          label="Срок аренды:"*/}
+            {/*          variant="cloud-home"*/}
+            {/*          showLabelInside={true}*/}
+            {/*        />*/}
+            {/*      </div>*/}
+            {/*      */}
+            {/*      /!* Адрес откуда забрать вещи *!/*/}
+            {/*      <div className="mb-6 w-full max-w-full bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-3xl p-4 sm:p-6 shadow-lg">*/}
+            {/*        <div className="flex flex-col gap-2 w-full">*/}
+            {/*          <label className="text-s text-white/90">Адрес откуда забрать вещи</label>*/}
+            {/*          <input*/}
+            {/*            type="text"*/}
+            {/*            value={cloudStreetFrom}*/}
+            {/*            onChange={(e) => {*/}
+            {/*              setCloudStreetFrom(e.target.value);*/}
+            {/*            }}*/}
+            {/*            placeholder="Микрорайон или улица"*/}
+            {/*            className="w-full h-[42px] rounded-3xl border border-white bg-gradient-to-r from-[#26B3AB] to-[#104D4A] px-3 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-0"*/}
+            {/*          />*/}
+            {/*        </div>*/}
+            {/*      </div>*/}
+            {/*      */}
+            {/*      /!* Кнопка бронирования - для десктопа *!/*/}
+            {/*      <button*/}
+            {/*        onClick={handleCloudBookingClick}*/}
+            {/*        disabled={!isCloudFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser)}*/}
+            {/*        className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-3"*/}
+            {/*      >*/}
+            {/*        {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}*/}
+            {/*      </button>*/}
+            {/*      */}
+            {/*      /!* Кнопка обратного звонка *!/*/}
+            {/*      <button*/}
+            {/*        onClick={handleCallbackRequestClick}*/}
+            {/*        className="w-full bg-transparent border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-100/50 transition-colors"*/}
+            {/*      >*/}
+            {/*        Заказать обратный звонок*/}
+            {/*      </button>*/}
+            {/*    </div>*/}
+            {/*  </div>*/}
+            {/*</TabsContent>*/}
           </Tabs>
         </div>
       </section>
