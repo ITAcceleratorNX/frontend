@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
-import { Separator } from '../../../components/ui/separator';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../components/ui/tabs';
 import {
   Dialog, 
   DialogContent, 
@@ -24,14 +24,14 @@ import { api, getDeliveredOrdersPaginated } from '../../../shared/api/axios';
 import { usersApi } from '../../../shared/api/usersApi';
 import {
   Truck,
-  Package,
   MapPin,
   Clock,
   CheckCircle2,
   Loader2,
   AlertCircle,
   User,
-  Building
+  Building,
+  Phone
 } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 // --- Moving statuses helpers ---
@@ -60,36 +60,11 @@ const getMovingStatusText = (s, direction) => {
   return baseText;
 };
 
-const getMovingStatusBadgeClass = (s) => {
-  if (s === 'CANCELLED') return 'bg-red-100 text-red-800 border border-red-200';
-  if (s === 'DELIVERED' || s === 'FINISHED') return 'bg-green-100 text-green-800 border border-green-200';
-  if (s === 'IN_PROGRESS' || s === 'COURIER_IN_TRANSIT' || s === 'COURIER_AT_CLIENT') return 'bg-blue-100 text-blue-800 border border-blue-200';
-  if (s === 'PENDING' || s === 'COURIER_ASSIGNED') return 'bg-amber-100 text-amber-800 border border-amber-200';
-  return 'bg-gray-100 text-gray-700 border border-gray-200';
+const MANAGER_SECTIONS = {
+  NEW: 'new',
+  IN_PROGRESS: 'inProgress',
+  COMPLETED: 'completed',
 };
-const columns = [
-  {
-    title: 'Ожидает грузчика',
-    status: 'PENDING',
-    icon: Clock,
-    color: 'from-orange-50 to-amber-50',
-    borderColor: 'border-orange-200'
-  },
-  {
-    title: 'В процессе доставки',
-    status: 'IN_PROGRESS',
-    icon: Truck,
-    color: 'from-blue-50 to-indigo-50',
-    borderColor: 'border-blue-200'
-  },
-  {
-    title: 'Завершённые заказы',
-    status: 'DELIVERED',
-    icon: CheckCircle2,
-    color: 'from-green-50 to-emerald-50',
-    borderColor: 'border-green-200'
-  },
-];
 
 const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAssign }) => {
   const navigate = useNavigate();
@@ -98,22 +73,18 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAss
     navigate(`/admin/moving/order/${order.movingOrderId}`);
   };
 
-  // Кнопка назначения курьера
   const handleAssignCourierClick = (e) => {
     e.stopPropagation();
-    if (onCourierAssign) {
-      onCourierAssign(order);
-    }
+    if (onCourierAssign) onCourierAssign(order);
   };
 
   const getActionButton = () => {
-    // Показываем кнопку назначения курьера только для заказов, ожидающих курьера
     if (order.status === 'PENDING' && !order.courier) {
       return (
         <Button
           onClick={handleAssignCourierClick}
           disabled={isLoading}
-          className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90 text-white h-8 text-xs"
+          className="bg-[#00A991] hover:bg-[#009882] text-white rounded-full px-4 py-2"
         >
           Назначить курьера
         </Button>
@@ -122,106 +93,97 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAss
     return null;
   };
 
-  const getStatusBadge = () => (
-      <Badge className={`text-xs ${getMovingStatusBadgeClass(order.status)}`}>
-        {getMovingStatusText(order.status, order.direction)}
-      </Badge>
-  );
-
-
   return (
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 border-l-4 border-l-[#1e2c4f]">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CardTitle className="text-lg text-[#1e2c4f] flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Заказ #{order.movingOrderId}
-              </CardTitle>
-              {getStatusBadge()}
-            </div>
+    <Card
+      className="group cursor-pointer hover:shadow-md active:scale-[0.99] transition-all duration-200 bg-white rounded-xl border border-gray-200 min-w-0"
+      onClick={handleCardClick}
+    >
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start justify-between mb-4">
+          <CardTitle className="text-lg font-bold text-gray-900">
+            Заказ №{order.movingOrderId}
+          </CardTitle>
+        </div>
+
+        {order.status && (
+          <div className="mb-3">
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-[#00A991]/10 text-[#00A991] border-[#00A991]/20">
+              {getMovingStatusText(order.status, order.direction)}
+            </Badge>
           </div>
-        </CardHeader>
+        )}
 
-        <CardContent className="space-y-4" onClick={handleCardClick}>
-          {/* Адреса */}
-          <div className="space-y-2">
-            <div className="flex items-start gap-2 text-sm">
-              <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-gray-600">Клиент:</span>
-                <p className="font-medium text-gray-900">{order?.userAddress || 'Не указан'}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2 text-sm">
-              <Building className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-gray-600">Склад:</span>
-                <p className="font-medium text-gray-900">
-                  {order?.warehouseName 
-                    ? `${order.warehouseName}${order?.warehouseAddress ? `, ${order.warehouseAddress}` : ''}` 
-                    : (order?.warehouseAddress || 'Не указан')}
-                </p>
-              </div>
-            </div>
-
-            {order?.courier && (
-              <div className="flex items-start gap-2 text-sm">
-                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="text-gray-600">Курьер:</span>
-                  <p className="font-medium text-gray-900">
-                    {order.courier.name}
-                    {order.courier.phone && ` (${order.courier.phone})`}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-start gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-gray-600">Хранилище:</span>
-                <p className="font-medium text-gray-900">{order?.storageName || 'Не указано'}</p>
-              </div>
-            </div>
-
-            {order?.delivery_time_interval && (
-              <div className="flex items-start gap-2 text-sm">
-                <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="text-gray-600">Время доставки:</span>
-                  <p className="font-medium text-gray-900">{order.delivery_time_interval}</p>
-                </div>
-              </div>
-            )}
-
-            {order?.direction && (
-              <div className="flex items-start gap-2 text-sm">
-                <Truck className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="text-gray-600">Направление:</span>
-                  <p className="font-medium text-gray-900">
-                    {order.direction === 'TO_CLIENT' ? 'К клиенту' : 'К складу'}
-                  </p>
-                </div>
-              </div>
-            )}
+        {order.userName && (
+          <div className="flex items-center gap-2 mb-2">
+            <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{order.userName}</span>
           </div>
+        )}
 
-          <Separator />
-
-          {/* Кнопка назначения курьера */}
-          <div className="flex justify-end">
-            {getActionButton()}
+        {order.userPhone && (
+          <div className="flex items-center gap-2 mb-2">
+            <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{order.userPhone}</span>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        <div className="flex items-start gap-2 mb-2">
+          <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+          <span className="text-sm text-gray-700">{order?.userAddress || 'Адрес не указан'}</span>
+        </div>
+
+        <div className="flex items-start gap-2 mb-2">
+          <Building className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+          <span className="text-sm text-gray-700">
+            {order?.warehouseName
+              ? `${order.warehouseName}${order?.warehouseAddress ? `, ${order.warehouseAddress}` : ''}`
+              : (order?.warehouseAddress || 'Не указан')}
+          </span>
+        </div>
+
+        {order?.courier && (
+          <div className="flex items-center gap-2 mb-2">
+            <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">
+              {order.courier.name}
+              {order.courier.phone && ` • ${order.courier.phone}`}
+            </span>
+          </div>
+        )}
+
+        {order?.storageName && (
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{order.storageName}</span>
+          </div>
+        )}
+
+        {order?.delivery_time_interval && (
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">{order.delivery_time_interval}</span>
+          </div>
+        )}
+
+        {order?.direction && (
+          <div className="flex items-center gap-2 mb-4">
+            <Truck className="w-4 h-4 text-[#00A991] flex-shrink-0" />
+            <span className="text-sm text-gray-700">
+              {order.direction === 'TO_CLIENT' ? 'К клиенту' : 'К складу'}
+            </span>
+          </div>
+        )}
+
+        <div className="flex justify-end pt-2">
+          {getActionButton()}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
 const ManagerMoving = () => {
+  const [activeTab, setActiveTab] = useState(MANAGER_SECTIONS.NEW);
   const [orders, setOrders] = useState({
     PENDING: [],
     IN_PROGRESS: [],
@@ -414,216 +376,236 @@ const ManagerMoving = () => {
 
   if (isLoading) {
     return (
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Загрузка заказов</h3>
-            <p className="text-gray-600">Пожалуйста, подождите...</p>
-          </div>
+      <div className="max-w-7xl mx-auto w-full px-3 py-6 sm:p-6 min-w-0">
+        <div className="text-center py-8 sm:py-12">
+          <Loader2 className="w-8 h-8 text-[#00A991] animate-spin mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Загрузка заказов</h3>
+          <p className="text-sm sm:text-base text-gray-600">Пожалуйста, подождите...</p>
         </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-        <div className="max-w-7xl mx-auto p-6">
-          <Card className="border-red-200">
-            <CardContent className="text-center py-12">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <Button onClick={fetchOrders} className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90">
-                <Loader2 className="w-4 h-4 mr-2" />
-                Попробовать снова
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="max-w-7xl mx-auto w-full px-3 py-6 sm:p-6 min-w-0">
+        <Card className="rounded-xl border-red-200 bg-white">
+          <CardContent className="text-center py-8 sm:py-12 px-4">
+            <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
+            <p className="text-sm sm:text-base text-gray-600 mb-6">{error}</p>
+            <Button onClick={fetchOrders} className="bg-[#00A991] hover:bg-[#009882] rounded-full px-5 py-2.5">
+              <Loader2 className="w-4 h-4 mr-2" />
+              Попробовать снова
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  // Обновляем статистику
-  const allOrders = {
-    PENDING: orders.PENDING || [],
-    IN_PROGRESS: orders.IN_PROGRESS || [],
-    DELIVERED: deliveredOrders.results || [],
+  const getFilteredOrders = () => {
+    switch (activeTab) {
+      case MANAGER_SECTIONS.NEW:
+        return orders.PENDING || [];
+      case MANAGER_SECTIONS.IN_PROGRESS:
+        return orders.IN_PROGRESS || [];
+      case MANAGER_SECTIONS.COMPLETED:
+        return deliveredOrders.results || [];
+      default:
+        return [];
+    }
   };
 
+  const filteredOrders = getFilteredOrders();
+
   return (
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Все заказы на перевозку</h1>
-          <p className="text-gray-600">Просмотр заказов на перевозку (только чтение)</p>
+    <div className="max-w-7xl mx-auto w-full px-3 py-4 sm:px-4 sm:py-5 md:p-6 space-y-4 sm:space-y-6 min-w-0">
+      <div className="space-y-1 sm:space-y-2">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Заказы на перевозку</h1>
+        <p className="text-sm sm:text-base text-gray-600">Управление заказами на перевозку</p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="bg-white px-2 py-3 sm:py-4 rounded-[32px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] h-auto inline-flex w-max min-w-full sm:min-w-0 sm:w-full mb-4">
+            <TabsTrigger
+              value={MANAGER_SECTIONS.NEW}
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base whitespace-nowrap data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors touch-manipulation"
+            >
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span>Новые</span>
+              {orders.PENDING?.length > 0 && (
+                <Badge variant="outline" className="ml-0.5 text-xs px-1.5 py-0">
+                  {orders.PENDING.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value={MANAGER_SECTIONS.IN_PROGRESS}
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base whitespace-nowrap data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors touch-manipulation"
+            >
+              <Truck className="w-4 h-4 flex-shrink-0" />
+              <span>В работе</span>
+              {orders.IN_PROGRESS?.length > 0 && (
+                <Badge variant="outline" className="ml-0.5 text-xs px-1.5 py-0">
+                  {orders.IN_PROGRESS.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value={MANAGER_SECTIONS.COMPLETED}
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base whitespace-nowrap data-[state=active]:bg-[#00A991]/20 data-[state=active]:text-[#00A991] data-[state=inactive]:text-gray-600 data-[state=inactive]:bg-transparent hover:bg-gray-50 transition-colors touch-manipulation"
+            >
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              <span>Завершённые</span>
+              {deliveredOrders.total > 0 && (
+                <Badge variant="outline" className="ml-0.5 text-xs px-1.5 py-0">
+                  {deliveredOrders.total}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
         </div>
 
-        {/* Статистика */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {columns.map((col) => {
-            const Icon = col.icon;
-            const count = col.status === 'DELIVERED'
-                ? deliveredOrders.total
-                : allOrders[col.status]?.length || 0;
+        <TabsContent value={MANAGER_SECTIONS.NEW} className="mt-4 sm:mt-6">
+          {isLoading ? (
+            <div className="text-center py-8 sm:py-12">
+              <Loader2 className="w-8 h-8 text-[#00A991] animate-spin mx-auto mb-4" />
+              <p className="text-sm sm:text-base text-gray-600">Загрузка заказов...</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <Card className="rounded-xl border-dashed border-2 border-gray-200 bg-white">
+              <CardContent className="text-center py-8 sm:py-12 px-4">
+                <Clock className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <p className="text-base sm:text-lg font-medium text-gray-500 mb-1 sm:mb-2">Нет новых заказов</p>
+                <p className="text-sm text-gray-400">Заказы, ожидающие назначения курьера, появятся здесь</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {filteredOrders.map((order) => (
+                <OrderCard
+                  key={order.movingOrderId}
+                  order={order}
+                  isLoading={isLoading}
+                  onCourierAssign={handleAssignCourier}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-            return (
-                <Card key={col.status} className={`bg-gradient-to-br ${col.color} ${col.borderColor} border`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">{col.title}</p>
-                        <p className="text-2xl font-bold text-gray-900">{count}</p>
-                      </div>
-                      <Icon className="w-8 h-8 text-[#1e2c4f]" />
-                    </div>
-                  </CardContent>
-                </Card>
-            );
-          })}
-        </div>
+        <TabsContent value={MANAGER_SECTIONS.IN_PROGRESS} className="mt-4 sm:mt-6">
+          {isLoading ? (
+            <div className="text-center py-8 sm:py-12">
+              <Loader2 className="w-8 h-8 text-[#00A991] animate-spin mx-auto mb-4" />
+              <p className="text-sm sm:text-base text-gray-600">Загрузка заказов...</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <Card className="rounded-xl border-dashed border-2 border-gray-200 bg-white">
+              <CardContent className="text-center py-8 sm:py-12 px-4">
+                <Truck className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <p className="text-base sm:text-lg font-medium text-gray-500 mb-1 sm:mb-2">Нет заказов в работе</p>
+                <p className="text-sm text-gray-400">Заказы в процессе доставки появятся здесь</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {filteredOrders.map((order) => (
+                <OrderCard
+                  key={order.movingOrderId}
+                  order={order}
+                  isLoading={isLoading}
+                  onCourierAssign={handleAssignCourier}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-        {/* Колонки заказов */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Колонки для ожидающих и в процессе */}
-          {columns.slice(0, 2).map((col) => {
-            const Icon = col.icon;
-            const columnOrders = orders[col.status] || [];
+        <TabsContent value={MANAGER_SECTIONS.COMPLETED} className="mt-4 sm:mt-6">
+          {isDeliveredLoading ? (
+            <div className="text-center py-8 sm:py-12">
+              <Loader2 className="w-8 h-8 text-[#00A991] animate-spin mx-auto mb-4" />
+              <p className="text-sm sm:text-base text-gray-600">Загрузка заказов...</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <Card className="rounded-xl border-dashed border-2 border-gray-200 bg-white">
+              <CardContent className="text-center py-8 sm:py-12 px-4">
+                <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <p className="text-base sm:text-lg font-medium text-gray-500 mb-1 sm:mb-2">Нет завершённых заказов</p>
+                <p className="text-sm text-gray-400">Завершённые доставки появятся здесь</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {filteredOrders.map((order) => (
+                  <OrderCard
+                    key={order.movingOrderId}
+                    order={order}
+                    isLoading={isDeliveredLoading}
+                    isDelivered={true}
+                  />
+                ))}
+              </div>
+              {activeTab === MANAGER_SECTIONS.COMPLETED && renderPagination()}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
 
-            return (
-                <div key={col.status} className="space-y-4">
-                  <Card className={`bg-gradient-to-br ${col.color} ${col.borderColor} border`}>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
-                        <Icon className="w-5 h-5" />
-                        {col.title}
-                        <Badge variant="outline" className="ml-auto">
-                          {columnOrders.length}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
+      <Dialog open={courierModalOpen} onOpenChange={setCourierModalOpen}>
+        <DialogContent className="max-w-md rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Назначить курьера</DialogTitle>
+            <DialogDescription>
+              Выберите курьера для заказа №{selectedOrder?.movingOrderId}
+            </DialogDescription>
+          </DialogHeader>
 
-                  <div className="space-y-4">
-                    {columnOrders.length === 0 ? (
-                        <Card className="border-dashed border-2 border-gray-200">
-                          <CardContent className="text-center py-8">
-                            <Icon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-500 text-sm">Нет заказов</p>
-                          </CardContent>
-                        </Card>
-                    ) : (
-                        columnOrders.map((order) => (
-                            <OrderCard
-                                key={order.movingOrderId}
-                                order={order}
-                                isLoading={isLoading}
-                                onCourierAssign={handleAssignCourier}
-                            />
-                        ))
+          <div className="space-y-2 py-4 max-h-96 overflow-y-auto">
+            {isLoadingCouriers ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-6 h-6 text-[#00A991] animate-spin mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Загрузка курьеров...</p>
+              </div>
+            ) : couriers.length === 0 ? (
+              <p className="text-center py-8 text-gray-500">Нет доступных курьеров</p>
+            ) : (
+              couriers.map((courier) => (
+                <Button
+                  key={courier.id}
+                  onClick={() => handleCourierSelect(courier.id)}
+                  className="w-full justify-start text-left h-auto py-3 px-4"
+                  variant="outline"
+                  disabled={isAssigning}
+                >
+                  <User className="w-5 h-5 mr-3 text-[#00A991]" />
+                  <div className="flex-1">
+                    <p className="font-medium">{courier.name || 'Без имени'}</p>
+                    {courier.phone && (
+                      <p className="text-sm text-gray-500">{courier.phone}</p>
                     )}
                   </div>
-                </div>
-            );
-          })}
-
-          {/* Колонка для завершённых заказов с пагинацией */}
-          <div className="space-y-4">
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 border">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-[#1e2c4f]">
-                  <CheckCircle2 className="w-5 h-5" />
-                  Завершённые заказы
-                  <Badge variant="outline" className="ml-auto">
-                    {deliveredOrders.total}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-            </Card>
-
-            <div className="space-y-4">
-              {isDeliveredLoading ? (
-                  <Card className="border-dashed border-2 border-gray-200">
-                    <CardContent className="text-center py-8">
-                      <Loader2 className="w-8 h-8 text-[#1e2c4f] animate-spin mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">Загрузка...</p>
-                    </CardContent>
-                  </Card>
-              ) : deliveredOrders.results.length === 0 ? (
-                  <Card className="border-dashed border-2 border-gray-200">
-                    <CardContent className="text-center py-8">
-                      <CheckCircle2 className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">Нет завершённых заказов</p>
-                    </CardContent>
-                  </Card>
-              ) : (
-                  <>
-                    {deliveredOrders.results.map((order) => (
-                        <OrderCard
-                            key={order.movingOrderId}
-                            order={order}
-                            isLoading={isDeliveredLoading}
-                            isDelivered={true}
-                        />
-                    ))}
-
-                    {/* Пагинация */}
-                    {renderPagination()}
-                  </>
-              )}
-            </div>
+                </Button>
+              ))
+            )}
           </div>
-        </div>
 
-        {/* Модальное окно назначения курьера */}
-        <Dialog open={courierModalOpen} onOpenChange={setCourierModalOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Назначить курьера</DialogTitle>
-              <DialogDescription>
-                Выберите курьера для заказа #{selectedOrder?.movingOrderId}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-2 py-4 max-h-96 overflow-y-auto">
-              {isLoadingCouriers ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">Загрузка курьеров...</p>
-                </div>
-              ) : couriers.length === 0 ? (
-                <p className="text-center py-8 text-gray-500">Нет доступных курьеров</p>
-              ) : (
-                couriers.map((courier) => (
-                  <Button
-                    key={courier.id}
-                    onClick={() => handleCourierSelect(courier.id)}
-                    className="w-full justify-start text-left h-auto py-3 px-4"
-                    variant="outline"
-                    disabled={isAssigning}
-                  >
-                    <User className="w-5 h-5 mr-3 text-[#1e2c4f]" />
-                    <div className="flex-1">
-                      <p className="font-medium">{courier.name || 'Без имени'}</p>
-                      {courier.phone && (
-                        <p className="text-sm text-gray-500">{courier.phone}</p>
-                      )}
-                    </div>
-                  </Button>
-                ))
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setCourierModalOpen(false)}
-                disabled={isAssigning}
-              >
-                Отмена
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCourierModalOpen(false)}
+              disabled={isAssigning}
+            >
+              Отмена
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
