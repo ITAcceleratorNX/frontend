@@ -1,9 +1,7 @@
 import React from 'react';
 import {useState, useMemo, useEffect} from 'react';
 import { Input } from '../../../components/ui/input';
-import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '../../../components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import {
@@ -85,7 +83,6 @@ const OrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
-  const [isBookingPanelOpen, setIsBookingPanelOpen] = useState(false);
 
   // Функция для расчёта суммы услуг заказа
   const getOrderServicesTotal = (order) => {
@@ -378,16 +375,6 @@ const OrderManagement = () => {
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm mt-1 ml-10 sm:ml-[52px]">Просмотр и управление всеми заказами</p>
         </div>
-        {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
-          <button
-            onClick={() => setIsBookingPanelOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#00A991] to-[#004743] text-white font-medium text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[#00A991]/20 whitespace-nowrap self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden xs:inline">Добавить клиента</span>
-            <span className="xs:hidden">Добавить</span>
-          </button>
-        )}
       </div>
 
       {/* Статистика */}
@@ -786,26 +773,6 @@ const OrderManagement = () => {
               />
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Модальное окно добавления клиента */}
-      <Dialog open={isBookingPanelOpen} onOpenChange={setIsBookingPanelOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] max-h-[90vh] overflow-y-auto p-0 rounded-2xl sm:rounded-3xl border-none">
-          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 border-b">
-            <DialogTitle className="text-lg sm:text-2xl font-semibold text-[#273655]">
-              Добавить клиента — Бронирование бокса
-            </DialogTitle>
-          </DialogHeader>
-          <div className="px-3 sm:px-4 py-3 sm:py-4">
-            <WarehouseData
-              embedded={true}
-              onBookingComplete={() => {
-                setIsBookingPanelOpen(false);
-                refetch();
-              }}
-            />
-          </div>
         </DialogContent>
       </Dialog>
     </div>

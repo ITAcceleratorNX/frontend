@@ -313,18 +313,17 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[92vw] max-w-[420px] sm:max-w-3xl max-h-[85vh] rounded-3xl border-none p-0 bg-white shadow-xl overflow-hidden flex flex-col">
         {order ? (
           <>
-            {/* EXISTING CONTENT OF THE MODAL – keep everything as is */}
-            <DialogHeader>
+            <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                  <div className="w-12 h-12 rounded-full bg-[#31876D]/10 flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6 text-[#31876D]" />
                   </div>
                   <div>
-                    <DialogTitle className="text-xl font-bold text-[#273655]">
+                    <DialogTitle className="text-xl font-bold text-[#202422]">
                       Информация о заказе
                     </DialogTitle>
                     <DialogDescription className="text-sm text-gray-600 mt-1">
@@ -334,11 +333,11 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                 </div>
               </div>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 px-6 pb-6 overflow-y-auto flex-1 min-h-0">
               {/* Основная информация о заказе */}
-              <Card className="border-gray-200">
+              <Card className="border-gray-200 rounded-2xl">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-semibold text-[#273655] flex items-center gap-2">
+                  <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
                     <Package className="w-4 h-4" />
                     Детали заказа
                   </CardTitle>
@@ -431,9 +430,9 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               </Card>
               {/* Информация о клиенте */}
               {order?.user && (
-                <Card className="border-gray-200">
+                <Card className="border-gray-200 rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold text-[#273655] flex items-center gap-2">
+                    <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
                       <User className="w-4 h-4" />
                       Информация о клиенте
                     </CardTitle>
@@ -466,9 +465,9 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               )}
               {/* Предметы заказа */}
               {order?.items && Array.isArray(order?.items) && order?.items.length > 0 && (
-                <Card className="border-gray-200">
+                <Card className="border-gray-200 rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold text-[#273655]">
+                    <CardTitle className="text-base font-semibold text-[#202422]">
                       Предметы заказа ({order?.items.length})
                     </CardTitle>
                   </CardHeader>
@@ -501,9 +500,9 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               )}
               {/* Услуги */}
               {order?.services && Array.isArray(order?.services) && order?.services?.length > 0 && (
-                <Card className="border-gray-200">
+                <Card className="border-gray-200 rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold text-[#273655] flex items-center gap-2">
+                    <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
                       <Truck className="w-4 h-4" />
                       Услуги ({order?.services.length})
                     </CardTitle>
@@ -537,9 +536,9 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               )}
               {/* Перевозки */}
               {order?.moving_orders && Array.isArray(order?.moving_orders) && order?.moving_orders.length > 0 && (
-                <Card className="border-gray-200">
+                <Card className="border-gray-200 rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold text-[#273655] flex items-center gap-2">
+                    <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
                       <Truck className="w-4 h-4" />
                       Перевозки ({order?.moving_orders.length})
                     </CardTitle>
@@ -567,7 +566,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                 </Card>
               )}
               {/* Стоимость */}
-              <Card className="border-[#273655]/20 bg-[#273655]/5">
+              <Card className="border-[#31876D]/20 bg-[#31876D]/10 rounded-2xl">
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -581,19 +580,19 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                       </div>
                     )}
                     <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                      <span className="text-base font-semibold text-[#273655]">Итого:</span>
-                      <span className="text-lg font-bold text-[#273655]">{formatPrice(totalPrice)}</span>
+                      <span className="text-base font-semibold text-[#202422]">Итого:</span>
+                      <span className="text-lg font-bold text-[#31876D]">{formatPrice(totalPrice)}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-            <DialogFooter className="flex gap-3 pt-4 border-t">
+            <DialogFooter className="flex-shrink-0 flex gap-3 px-6 py-4 border-t border-gray-100">
               <Button
                 variant="outline"
                 onClick={onClose}
                 disabled={isUnbooking || cancelOrderMutation.isPending}
-                className="flex-1"
+                className="flex-1 h-12 rounded-3xl border-gray-200 text-[#202422] hover:bg-gray-100"
               >
                 Закрыть
               </Button>
@@ -602,7 +601,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                   variant="destructive"
                   onClick={handleCancelOrderClick}
                   disabled={isUnbooking || cancelOrderMutation.isPending}
-                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
                 >
                   <div className="flex items-center gap-2">
                     <FileX className="w-4 h-4" />
@@ -615,7 +614,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                   variant="destructive"
                   onClick={handleUnbookClick}
                   disabled={isUnbooking || cancelOrderMutation.isPending}
-                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
                 >
                   <div className="flex items-center gap-2">
                     <Trash2 className="w-4 h-4" />
@@ -626,14 +625,14 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
             </DialogFooter>
           </>
         ) : (
-          <div className="space-y-6">
-            <DialogHeader>
+          <div className="flex flex-col h-full">
+            <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-gray-600" />
+                <div className="w-12 h-12 rounded-full bg-[#31876D]/10 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-[#31876D]" />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold text-[#273655]">
+                  <DialogTitle className="text-xl font-bold text-[#202422]">
                     Бокс недоступен
                   </DialogTitle>
                   <DialogDescription className="text-sm text-gray-600 mt-1">
@@ -642,24 +641,26 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                 </div>
               </div>
             </DialogHeader>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-              <p className="text-sm text-yellow-800">
-                Вы можете принудительно разбронировать этот бокс. Используйте это действие,
-                только если уверены, что бокс фактически свободен.
-              </p>
+            <div className="px-6 flex-1">
+              <div className="bg-[#31876D]/10 border border-[#31876D]/20 rounded-2xl p-4">
+                <p className="text-sm text-[#202422]">
+                  Вы можете принудительно разбронировать этот бокс. Используйте это действие,
+                  только если уверены, что бокс фактически свободен.
+                </p>
+              </div>
             </div>
-            <DialogFooter className="flex gap-3 pt-4 border-t">
+            <DialogFooter className="flex gap-3 px-6 py-4 border-t border-gray-100">
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="flex-1"
+                className="flex-1 h-12 rounded-3xl border-gray-200 text-[#202422] hover:bg-gray-100"
               >
                 Закрыть
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleForceUnbook}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
               >
                 <div className="flex items-center gap-2">
                   <Trash2 className="w-4 h-4" />
@@ -673,20 +674,20 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
 
       {/* Модальное окно подтверждения разбронирования */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={handleCancelConfirm}>
-        <DialogContent className="max-w-md w-full rounded-2xl z-[1400]">
-          <DialogHeader className="space-y-3 pb-4">
+        <DialogContent className="max-w-md w-full rounded-3xl border-none p-0 shadow-xl z-[1400]">
+          <DialogHeader className="space-y-3 px-6 pt-6 pb-4">
             <div className="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 rounded-full">
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
-            <DialogTitle className="text-xl font-bold text-gray-900 text-center">
+            <DialogTitle className="text-xl font-bold text-[#202422] text-center">
               Разбронирование бокса
             </DialogTitle>
             <DialogDescription className="text-center text-gray-600">
               Вы уверены, что хотите разбронировать этот бокс?
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+          <div className="px-6 py-4">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
@@ -700,7 +701,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               </div>
             </div>
             {order && order?.storage && (
-              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+              <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Заказ:</span>
                   <Badge variant="outline" className="text-sm">#{order?.id}</Badge>
@@ -718,12 +719,12 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               </div>
             )}
           </div>
-          <DialogFooter className="flex gap-3">
+          <DialogFooter className="flex gap-3 px-6 pb-6">
             <Button
               variant="outline"
               onClick={handleCancelConfirm}
               disabled={isUnbooking}
-              className="flex-1"
+              className="flex-1 h-12 rounded-3xl border-gray-200 text-[#202422] hover:bg-gray-100"
             >
               Отмена
             </Button>
@@ -731,7 +732,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               variant="destructive"
               onClick={handleConfirmUnbook}
               disabled={isUnbooking}
-              className="flex-1 bg-red-600 hover:bg-red-700"
+              className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
             >
               {isUnbooking ? (
                 <div className="flex items-center gap-2">
@@ -750,21 +751,21 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
       </Dialog>
       {/* Модальное окно опроса о причине расторжения */}
       <Dialog open={isCancelSurveyOpen} onOpenChange={(open) => !open && handleCloseCancelSurvey()}>
-        <DialogContent className="sm:max-w-[560px]">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-[#273655]">Почему решили расторгнуть контракт?</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-[560px] rounded-3xl border-none p-0 shadow-xl">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="text-xl font-bold text-[#202422]">Почему решили расторгнуть контракт?</DialogTitle>
+            <DialogDescription className="text-gray-600">
               Ваш ответ поможет улучшить сервис и условия хранения. Пожалуйста, выберите подходящую причину.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 px-6">
             {CANCEL_REASON_OPTIONS.map((option) => (
               <label
                 key={option.value}
                 className={`flex items-start gap-3 rounded-2xl border px-4 py-3 cursor-pointer transition ${
                   selectedCancelReason === option.value
-                    ? 'border-[#1e2c4f] bg-[#f5f7ff]'
-                    : 'border-gray-200 hover:border-[#c7d2fe]'
+                    ? 'border-[#31876D] bg-[#31876D]/10'
+                    : 'border-gray-200 hover:border-[#31876D]/40'
                 }`}
               >
                 <input
@@ -779,10 +780,10 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
             ))}
           </div>
           {selectedCancelReason === 'other' && (
-            <div className="space-y-2">
+            <div className="space-y-2 px-6">
               <p className="text-sm font-medium text-gray-700">Расскажите подробнее</p>
               <textarea
-                className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:border-[#1e2c4f] focus:outline-none"
+                className="w-full rounded-2xl border border-gray-200 px-4 py-2 text-sm focus:border-[#31876D]/50 focus:ring-2 focus:ring-[#31876D]/30 focus:outline-none"
                 rows={4}
                 placeholder="Например: хочу поделиться предложениями по улучшению..."
                 value={cancelReasonComment}
@@ -790,20 +791,20 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
               />
             </div>
           )}
-          {cancelFormError && <p className="text-sm text-red-600">{cancelFormError}</p>}
-          <DialogFooter className="gap-2 sm:gap-4">
+          {cancelFormError && <p className="text-sm text-red-600 px-6">{cancelFormError}</p>}
+          <DialogFooter className="gap-2 sm:gap-4 px-6 pb-6">
             <Button 
               variant="outline" 
               onClick={handleCloseCancelSurvey} 
               disabled={cancelOrderMutation.isPending}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto h-12 rounded-3xl border-gray-200 text-[#202422] hover:bg-gray-100"
             >
               Отмена
             </Button>
             <Button
               onClick={handleSubmitCancelOrder}
               disabled={cancelOrderMutation.isPending}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-red-500"
+              className="w-full sm:w-auto h-12 rounded-3xl bg-red-600 hover:bg-red-700 focus:ring-red-500"
             >
               {cancelOrderMutation.isPending ? (
                 <div className="flex items-center gap-2">

@@ -2,7 +2,7 @@ import React, { useState, memo, useMemo, useEffect, useCallback, useRef } from "
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Box, Moon, Camera, Wifi, Maximize, Thermometer
+  Box, Moon, Camera, Wifi, Maximize, Thermometer, User
 } from "lucide-react";
 
 
@@ -15,6 +15,7 @@ import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import { getTodayLocalDateString } from "../../shared/lib/utils/date";
 
 import { warehouseApi } from "../../shared/api/warehouseApi";
+import { ordersApi } from "../../shared/api/ordersApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
 import { promoApi } from "../../shared/api/promoApi";
 import { trackVisit } from "@/shared/api/visitsApi";
@@ -34,7 +35,9 @@ import {formatServiceDescription} from "@/shared/lib/utils/serviceNames";
 
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import CallbackRequestSection from "@/shared/components/CallbackRequestSection.jsx";
+import ClientSelector from "@/shared/components/ClientSelector.jsx";
 import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
+import PendingOrderModal from "@/pages/personal-account/ui/PendingOrderModal.jsx";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 
 
@@ -82,6 +85,14 @@ const HomePage = memo(() => {
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
   const isUserRole = user?.role === "USER";
+  const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
+
+  const [selectedClientUser, setSelectedClientUser] = useState(null);
+  const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState(null);
+  const [isPendingOrderModalOpen, setIsPendingOrderModalOpen] = useState(false);
+  const [isLoadingPendingOrder, setIsLoadingPendingOrder] = useState(false);
+  const [isUnbooking, setIsUnbooking] = useState(false);
 
   const [apiWarehouses, setApiWarehouses] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
@@ -430,6 +441,7 @@ const HomePage = memo(() => {
   );
 
   const isIndividualFormReady = useMemo(() => {
+    if (previewStorage && previewStorage?.status !== 'VACANT') return false;
     if (!previewStorage || !monthsNumber || monthsNumber <= 0) return false;
     if (includeMoving && !movingStreetFrom.trim()) return false;
     if (includePacking && packagingServicesForOrder.length === 0) return false;
@@ -985,13 +997,13 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (!isUserRole) {
-      showErrorToast("Создание заказа доступно только клиентам с ролью USER.");
+    if (!isUserRole && !(isAdminOrManager && selectedClientUser)) {
+      showErrorToast("Создание заказа доступно только клиентам с ролью USER или менеджерам с выбранным клиентом.");
       return;
     }
 
-    // Проверка профиля перед отправкой заказа
-    if (user) {
+    // Проверка профиля перед отправкой заказа (только для USER, менеджеры создают заказ для клиента)
+    if (isUserRole && user) {
       const profileValidation = validateUserProfile(user);
       if (!profileValidation.isValid) {
         // Формируем сообщение в зависимости от типа ошибки
@@ -1112,6 +1124,10 @@ const HomePage = memo(() => {
         payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
 
+      if (isAdminOrManager && selectedClientUser) {
+        orderData.user_id = selectedClientUser.id;
+      }
+
       // Добавляем промокод, если он применен
       if (promoSuccess && promoCode) {
         orderData.promo_code = promoCode;
@@ -1175,12 +1191,12 @@ const HomePage = memo(() => {
       setIsPaymentPreviewOpen(false);
       setPaymentPreviewType(null);
 
-      // Обновляем кэш заказов и переходим на thank-you страницу
       toastOrderRequestSent();
 
+      const redirectSection = isAdminOrManager ? "request" : "orders";
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/personal-account", { state: { activeSection: "orders" } });
+        navigate("/personal-account", { state: { activeSection: redirectSection } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
@@ -1230,6 +1246,8 @@ const HomePage = memo(() => {
     isAuthenticated,
     isSubmittingOrder,
     isUserRole,
+    isAdminOrManager,
+    selectedClientUser,
     monthsNumber,
     navigate,
     packagingServicesForOrder,
@@ -1256,32 +1274,24 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (!isUserRole) {
-      showErrorToast("Создание заказа доступно только клиентам с ролью USER.");
+    if (!isUserRole && !(isAdminOrManager && selectedClientUser)) {
+      showErrorToast("Создание заказа доступно только клиентам с ролью USER или менеджерам с выбранным клиентом.");
       return;
     }
 
-    // Проверка профиля перед отправкой заказа
-    if (user) {
+    // Проверка профиля перед отправкой заказа (только для USER)
+    if (isUserRole && user) {
       const profileValidation = validateUserProfile(user);
       if (!profileValidation.isValid) {
-        // Формируем сообщение в зависимости от типа ошибки
         let errorMessage = profileValidation.message;
-        
-        // Если проблема только в верификации телефона
         if (profileValidation.phoneNotVerified && 
             profileValidation.missingFields.length === 0 && 
             profileValidation.invalidFields.length === 0) {
           errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
         }
-        
         showErrorToast(errorMessage);
         setTimeout(() => {
-          navigate("/personal-account", { 
-            state: { 
-              activeSection: "personal",
-            }
-          });
+          navigate("/personal-account", { state: { activeSection: "personal" } });
         }, 2000);
         return;
       }
@@ -1372,6 +1382,10 @@ const HomePage = memo(() => {
         payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
 
+      if (isAdminOrManager && selectedClientUser) {
+        orderData.user_id = selectedClientUser.id;
+      }
+
       // Добавляем промокод, если он применен
       if (cloudPromoSuccess && cloudPromoCode) {
         orderData.promo_code = cloudPromoCode;
@@ -1397,10 +1411,10 @@ const HomePage = memo(() => {
 
       toastOrderRequestSent();
 
-      // Обновляем кэш заказов и переходим на thank-you страницу
+      const cloudRedirectSection = isAdminOrManager ? "request" : "orders";
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/personal-account", { state: { activeSection: "orders" } });
+        navigate("/personal-account", { state: { activeSection: cloudRedirectSection } });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);
@@ -1452,6 +1466,8 @@ const HomePage = memo(() => {
     isAuthenticated,
     isSubmittingOrder,
     isUserRole,
+    isAdminOrManager,
+    selectedClientUser,
     navigate,
     selectedTariff,
     serviceOptions,
@@ -1871,6 +1887,29 @@ const HomePage = memo(() => {
     }
   }, [previewStorage]);
 
+  const handleBoxSelect = useCallback(async (storage) => {
+    if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
+      setIsLoadingPendingOrder(true);
+      try {
+        const order = await ordersApi.getPendingOrderByStorageId(storage.id);
+        setPendingOrder(order);
+        setIsPendingOrderModalOpen(true);
+        setPreviewStorage(storage);
+      } catch (error) {
+        if (error?.response?.status === 404) {
+          setPendingOrder(null);
+          setIsPendingOrderModalOpen(true);
+        } else {
+          console.error('Ошибка при загрузке заказа:', error);
+        }
+      } finally {
+        setIsLoadingPendingOrder(false);
+      }
+    } else {
+      setPreviewStorage(storage);
+    }
+  }, [isAdminOrManager]);
+
   const renderWarehouseScheme = ({ isFullscreen = false } = {}) => {
     if (!selectedWarehouse) {
       return (
@@ -1908,7 +1947,7 @@ const HomePage = memo(() => {
               ref={isFullscreen ? mapRef : null}
               warehouse={selectedWarehouse}
               storageBoxes={storageBoxes}
-              onBoxSelect={setPreviewStorage}
+              onBoxSelect={handleBoxSelect}
               selectedStorage={previewStorage}
               selectedMap={
                 selectedWarehouse?.name?.toLowerCase().includes('mega') 
@@ -2115,12 +2154,42 @@ const HomePage = memo(() => {
                       handleApplyPromoCode={handleApplyPromoCode}
                       handleRemovePromoCode={handleRemovePromoCode}
                   />
+
+                  {/* Блок выбора клиента для менеджеров/админов */}
+                  {isAdminOrManager && (
+                    <div className="mt-6 rounded-2xl border border-gray-200 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-[#202422] font-semibold">
+                          <User className="w-5 h-5 shrink-0" />
+                          <span>Клиент</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsClientSelectorOpen(true)}
+                          className="px-4 py-2 text-sm font-medium text-[#31876D] border border-[#31876D] rounded-lg hover:bg-[#31876D] hover:text-white transition-colors"
+                        >
+                          {selectedClientUser ? "Изменить" : "Выбрать клиента"}
+                        </button>
+                      </div>
+                      {selectedClientUser && (
+                        <div className="bg-[#31876D]/10 rounded-lg p-3">
+                          <div className="text-sm font-medium text-[#202422]">
+                            {selectedClientUser.name || "Без имени"}
+                          </div>
+                          <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
+                          {selectedClientUser.phone && (
+                            <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   {/* Кнопки действий */}
                   <div className="mt-6 space-y-3">
                     <button
                       onClick={handleIndividualBookingClick}
-                      disabled={!isIndividualFormReady || isSubmittingOrder}
+                      disabled={!isIndividualFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser)}
                       className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
@@ -2194,10 +2263,40 @@ const HomePage = memo(() => {
                       handleRemoveCloudPromoCode={handleRemoveCloudPromoCode}
                   />
 
+                  {/* Блок выбора клиента для менеджеров/админов */}
+                  {isAdminOrManager && (
+                    <div className="mb-4 rounded-2xl border border-gray-200 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-[#202422] font-semibold">
+                          <User className="w-5 h-5 shrink-0" />
+                          <span>Клиент</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsClientSelectorOpen(true)}
+                          className="px-4 py-2 text-sm font-medium text-[#31876D] border border-[#31876D] rounded-lg hover:bg-[#31876D] hover:text-white transition-colors"
+                        >
+                          {selectedClientUser ? "Изменить" : "Выбрать клиента"}
+                        </button>
+                      </div>
+                      {selectedClientUser && (
+                        <div className="bg-[#31876D]/10 rounded-lg p-3">
+                          <div className="text-sm font-medium text-[#202422]">
+                            {selectedClientUser.name || "Без имени"}
+                          </div>
+                          <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
+                          {selectedClientUser.phone && (
+                            <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Кнопка бронирования - в левой колонке */}
                           <button
                     onClick={handleCloudBookingClick}
-                    disabled={!isCloudFormReady || isSubmittingOrder}
+                    disabled={!isCloudFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser && !isCloudFormReady)}
                     className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
@@ -2322,7 +2421,7 @@ const HomePage = memo(() => {
                   {/* Кнопка бронирования - для десктопа */}
                   <button
                     onClick={handleCloudBookingClick}
-                    disabled={!isCloudFormReady || isSubmittingOrder}
+                    disabled={!isCloudFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser)}
                     className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-3"
                   >
                     {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
@@ -2379,6 +2478,18 @@ const HomePage = memo(() => {
         }}
       />
 
+      {isAdminOrManager && (
+        <ClientSelector
+          isOpen={isClientSelectorOpen}
+          onClose={() => setIsClientSelectorOpen(false)}
+          selectedUser={selectedClientUser}
+          onUserSelect={(client) => {
+            setSelectedClientUser(client);
+            if (client) setIsClientSelectorOpen(false);
+          }}
+        />
+      )}
+
       {/* Модалка предпросмотра платежей */}
       <PaymentPreviewModal
         isOpen={isPaymentPreviewOpen}
@@ -2430,6 +2541,47 @@ const HomePage = memo(() => {
             : costSummary.pricingBreakdown || null
         }
       />
+
+      {isAdminOrManager && (
+        <PendingOrderModal
+          isOpen={isPendingOrderModalOpen}
+          order={pendingOrder}
+          storageId={previewStorage?.id}
+          onClose={() => {
+            setIsPendingOrderModalOpen(false);
+            setPendingOrder(null);
+          }}
+          onUnbook={async () => {
+            setIsUnbooking(true);
+            try {
+              setPreviewStorage(null);
+              const data = await warehouseApi.getAllWarehouses();
+              const updated = Array.isArray(data) ? data : [];
+              setApiWarehouses(updated);
+              if (selectedWarehouse?.id) {
+                const fresh = updated.find((w) => w.id === selectedWarehouse.id);
+                if (fresh) setSelectedWarehouse(fresh);
+              }
+            } catch (error) {
+              console.error('Ошибка при обновлении данных:', error);
+            } finally {
+              setIsUnbooking(false);
+            }
+          }}
+          isUnbooking={isUnbooking}
+        />
+      )}
+
+      {isLoadingPendingOrder && (
+        <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 border-2 border-t-transparent border-[#31876D] rounded-full animate-spin" />
+              <span className="text-sm font-medium text-[#202422]">Загрузка информации о заказе...</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Анимированная бегущая строка с преимуществами перед футером */}
       <section className="w-full bg-[#FFF] pt-12 sm:pt-16 lg:pt-20 pb-6 overflow-hidden relative">

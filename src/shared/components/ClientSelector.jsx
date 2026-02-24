@@ -158,9 +158,9 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200">
-          <DialogTitle className="text-xl font-bold text-[#273655]">
+      <DialogContent className="w-[92vw] max-w-[420px] sm:max-w-3xl max-h-[85vh] rounded-3xl border-none p-0 bg-white shadow-xl overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
+          <DialogTitle className="text-xl font-bold text-[#202422]">
             {showCreateForm ? 'Создание нового клиента' : 'Выбор клиента'}
           </DialogTitle>
         </DialogHeader>
@@ -176,23 +176,23 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                   placeholder="Поиск по имени, email или телефону..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12 rounded-2xl border-[#273655]/20 text-[#273655] focus:ring-2 focus:ring-[#273655]/30"
+                  className="pl-12 h-12 rounded-2xl border-gray-200 text-[#202422] placeholder:text-gray-400 focus:ring-2 focus:ring-[#31876D]/30 focus:border-[#31876D]/50"
                 />
               </div>
 
               {/* Результаты поиска */}
               {isSearching && (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-t-transparent border-[#31876D] rounded-full animate-spin" />
                 </div>
               )}
 
               {!isSearching && searchQuery && searchResults.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User className="h-8 w-8 text-gray-400" />
+                  <div className="w-16 h-16 mx-auto mb-4 bg-[#31876D]/10 rounded-full flex items-center justify-center">
+                    <User className="h-8 w-8 text-[#31876D]" />
                   </div>
-                  <p className="text-base font-medium text-gray-700 mb-1">Пользователи не найдены</p>
+                  <p className="text-base font-medium text-[#202422] mb-1">Пользователи не найдены</p>
                   <p className="text-sm text-gray-500">Попробуйте другой запрос или создайте нового пользователя</p>
                 </div>
               )}
@@ -205,21 +205,21 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                       onClick={() => handleSelectUser(user)}
                       className={`w-full text-left p-4 rounded-2xl border transition-all ${
                         selectedUser?.id === user.id
-                          ? 'border-[#273655] bg-[#273655]/5 shadow-sm'
-                          : 'border-gray-200 hover:border-[#273655]/40 hover:bg-gray-50'
+                          ? 'border-[#31876D] bg-[#31876D]/10 shadow-sm'
+                          : 'border-gray-200 hover:border-[#31876D]/40 hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              selectedUser?.id === user.id ? 'bg-[#273655]' : 'bg-gray-100'
+                              selectedUser?.id === user.id ? 'bg-[#31876D]' : 'bg-gray-100'
                             }`}>
                               <User className={`h-5 w-5 ${
                                 selectedUser?.id === user.id ? 'text-white' : 'text-gray-400'
                               }`} />
                             </div>
-                            <span className="font-semibold text-[#273655] text-base">
+                            <span className="font-semibold text-[#202422] text-base">
                               {user.name || 'Без имени'}
                             </span>
                           </div>
@@ -246,7 +246,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                         </div>
                         {selectedUser?.id === user.id && (
                           <div className="flex-shrink-0">
-                            <div className="w-6 h-6 rounded-full bg-[#273655] flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full bg-[#31876D] flex items-center justify-center">
                               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                               </svg>
@@ -286,7 +286,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                 >
                   <ArrowLeft className="h-5 w-5 text-gray-600" />
                 </button>
-                <h3 className="text-lg font-semibold text-[#273655]">Создание нового клиента</h3>
+                <h3 className="text-lg font-semibold text-[#202422]">Создание нового клиента</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -301,7 +301,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                     className={`h-12 rounded-2xl border transition-colors ${
                       formErrors.name 
                         ? 'border-red-300 bg-red-50 focus:ring-red-300' 
-                        : 'border-[#273655]/20 focus:ring-[#273655]/30'
+                        : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
                     }`}
                     placeholder="Введите имя"
                   />
@@ -327,7 +327,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                     className={`h-12 rounded-2xl border transition-colors ${
                       formErrors.email 
                         ? 'border-red-300 bg-red-50 focus:ring-red-300' 
-                        : 'border-[#273655]/20 focus:ring-[#273655]/30'
+                        : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
                     }`}
                     placeholder="example@mail.com"
                   />
@@ -353,7 +353,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                     className={`h-12 rounded-2xl border transition-colors ${
                       formErrors.phone 
                         ? 'border-red-300 bg-red-50 focus:ring-red-300' 
-                        : 'border-[#273655]/20 focus:ring-[#273655]/30'
+                        : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
                     }`}
                     placeholder="+7 700 123 4567"
                   />
@@ -380,7 +380,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                     className={`h-12 rounded-2xl border transition-colors ${
                       formErrors.iin 
                         ? 'border-red-300 bg-red-50 focus:ring-red-300' 
-                        : 'border-[#273655]/20 focus:ring-[#273655]/30'
+                        : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
                     }`}
                     placeholder="123456789012"
                   />
@@ -405,7 +405,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                     className={`h-12 rounded-2xl border transition-colors ${
                       formErrors.address 
                         ? 'border-red-300 bg-red-50 focus:ring-red-300' 
-                        : 'border-[#273655]/20 focus:ring-[#273655]/30'
+                        : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
                     }`}
                     placeholder="г. Алматы, ул. Абая, д. 25"
                   />
@@ -434,7 +434,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                       className={`h-12 rounded-2xl border pl-12 transition-colors ${
                         formErrors.bday 
                           ? 'border-red-300 bg-red-50 focus:ring-red-300' 
-                          : 'border-[#273655]/20 focus:ring-[#273655]/30'
+                          : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
                       }`}
                     />
                   </div>
@@ -449,18 +449,18 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+              <div className="bg-[#31876D]/10 border border-[#31876D]/20 rounded-2xl p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[#31876D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-900 mb-1">
+                    <p className="text-sm font-medium text-[#202422] mb-1">
                       Вход через Google OAuth
                     </p>
-                    <p className="text-xs text-blue-700">
+                    <p className="text-xs text-gray-600">
                       Клиент сможет войти в систему через Google аккаунт. Пароль не требуется.
                     </p>
                   </div>
@@ -470,12 +470,12 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex-shrink-0 border-t border-gray-100 px-6 py-4 bg-white">
           {!showCreateForm ? (
             <Button
               type="button"
               onClick={() => setShowCreateForm(true)}
-              className="w-full h-12 rounded-2xl bg-[#273655] hover:bg-[#1e2c4f] text-white font-semibold transition-colors"
+              className="w-full h-12 rounded-3xl bg-[#31876D] hover:bg-[#276b57] text-white font-semibold transition-colors"
             >
               <UserPlus className="h-5 w-5 mr-2" />
               Создать нового клиента
@@ -497,7 +497,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                   });
                   setFormErrors({});
                 }}
-                className="flex-1 h-12 rounded-2xl border-gray-300"
+                className="flex-1 h-12 rounded-3xl border-gray-200 text-[#202422] hover:bg-gray-100"
               >
                 Отмена
               </Button>
@@ -505,7 +505,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                 type="button"
                 onClick={handleCreateUser}
                 disabled={isCreating}
-                className="flex-1 h-12 rounded-2xl bg-[#273655] hover:bg-[#1e2c4f] text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 h-12 rounded-3xl bg-[#31876D] hover:bg-[#276b57] text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreating ? (
                   <div className="flex items-center gap-2">

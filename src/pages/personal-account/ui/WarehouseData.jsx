@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {showInfoToast, showSuccessToast, showErrorToast, toastOrderRequestSent} from '../../../shared/lib/toast';
+import {showInfoToast, showSuccessToast, showErrorToast} from '../../../shared/lib/toast';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
@@ -8,28 +8,34 @@ import { paymentsApi } from '../../../shared/api/paymentsApi';
 import Sidebar from './Sidebar';
 import WarehouseCanvasViewer from '../../../shared/components/WarehouseCanvasViewer';
 import WarehouseSVGMap from '../../../components/WarehouseSVGMap';
-import { SmartButton } from '../../../shared/components/SmartButton.js';
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
-  SelectValue,
-  Switch,
+  SelectValue
 } from '../../../components/ui';
 import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
-import { Truck, Package, X, Info, Plus, Trash2, User } from 'lucide-react';
+import { X, Info, User } from 'lucide-react';
 import { Dropdown } from '../../../shared/components/Dropdown';
-import ClientSelector from '../../../shared/components/ClientSelector';
 import PendingOrderModal from './PendingOrderModal';
 import { ordersApi } from '../../../shared/api/ordersApi';
-import DatePicker from '../../../shared/ui/DatePicker';
 import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
 import { getTodayLocalDateString } from '../../../shared/lib/utils/date';
 import PricingRuleManagement from './PricingRuleManagement';
 import {StoragePricesMatrix} from "../../../../src/pages/personal-account/admin/StoragePricesMatrix.js";
 import {useStoragePrices} from "../../../../src/shared/hooks/useStoragePrices.js";
 import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
+import { promoApi } from '@/shared/api/promoApi';
+import CloudTariffs from '@/pages/home/components/order/CloudTariffs.jsx';
+import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
+import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
+import bicycleImg from '../../../assets/cloud-tariffs/bicycle.png';
+import furnitureImg from '../../../assets/cloud-tariffs/furniture.png';
+import shinaImg from '../../../assets/cloud-tariffs/shina.png';
+import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
+import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
+import skladImg from '../../../assets/cloud-tariffs/sklad.png';
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -91,6 +97,12 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const [cloudMonths, setCloudMonths] = useState('1');
   const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => getTodayLocalDateString());
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
+  const [cloudVolumeDirect, setCloudVolumeDirect] = useState(1);
+  const [selectedTariff, setSelectedTariff] = useState(null);
+  const [currentTariffIndex, setCurrentTariffIndex] = useState(0);
+  const [tariffsPerView, setTariffsPerView] = useState(3);
+  const [tariffPrices, setTariffPrices] = useState({});
+  const [cloudCustomPrices, setCloudCustomPrices] = useState({ low: null, high: null });
   const [includeMoving, setIncludeMoving] = useState(false);
   const [includePacking, setIncludePacking] = useState(false);
   const [movingAddressFrom, setMovingAddressFrom] = useState('');
@@ -115,10 +127,25 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const [servicesError, setServicesError] = useState(null);
   const [services, setServices] = useState([]);
   const [gazelleService, setGazelleService] = useState(null);
-  const [selectedClientUser, setSelectedClientUser] = useState(null);
-  const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderError, setOrderError] = useState(null);
+  // Промокод INDIVIDUAL
+  const [promoCode, setPromoCode] = useState('');
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoDiscountPercent, setPromoDiscountPercent] = useState(0);
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState(false);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  const [showPromoInput, setShowPromoInput] = useState(false);
+  // Промокод CLOUD
+  const [cloudPromoCode, setCloudPromoCode] = useState('');
+  const [cloudPromoCodeInput, setCloudPromoCodeInput] = useState('');
+  const [cloudPromoDiscount, setCloudPromoDiscount] = useState(0);
+  const [cloudPromoDiscountPercent, setCloudPromoDiscountPercent] = useState(0);
+  const [cloudPromoError, setCloudPromoError] = useState('');
+  const [cloudPromoSuccess, setCloudPromoSuccess] = useState(false);
+  const [isValidatingCloudPromo, setIsValidatingCloudPromo] = useState(false);
+  const [showCloudPromoInput, setShowCloudPromoInput] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [isPendingOrderModalOpen, setIsPendingOrderModalOpen] = useState(false);
   const [isLoadingPendingOrder, setIsLoadingPendingOrder] = useState(false);
@@ -152,30 +179,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
   const [initialFormData, setInitialFormData] = useState(null);
 
-  // Компонент InfoHint для подсказок
-  const InfoHint = ({ description, ariaLabel = 'Подробнее', align = 'end', side = 'bottom' }) => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={ariaLabel}
-          title={ariaLabel}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-[#6B6B6B] transition-colors hover:border-[#d7dbe6] hover:text-[#004743] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A991]/30"
-        >
-          <Info className="h-4 w-4" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align={align}
-        side={side}
-        sideOffset={8}
-        className="max-w-xs rounded-2xl border border-[#d7dbe6] bg-white p-4 text-sm leading-relaxed text-[#004743] shadow-xl"
-      >
-        {description}
-      </PopoverContent>
-    </Popover>
-  );
-
   // Проверка мобильного вида
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -198,10 +201,47 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     }
   }, [isMapModalOpen]);
 
+  // Карточка "Свои габариты" - статичная
+  const customTariff = useMemo(() => ({
+    id: 'custom',
+    name: 'Свои габариты',
+    image: null,
+    isCustom: true
+  }), []);
+
+  // Остальные тарифы - подвижные в карусели
+  const regularTariffs = useMemo(() => {
+    const tariffs = [
+      { id: 'sumka', name: 'Хранения сумки / коробки вещей', image: sumkaImg, pricePerM3: tariffPrices['CLOUD_TARIFF_SUMKA'] || 6000, maxVolume: 0.25, baseVolume: 0.25, basePrice: null },
+      { id: 'shina', name: 'Шины', image: shinaImg, pricePerM3: tariffPrices['CLOUD_TARIFF_SHINA'] || 5000, maxVolume: 0.5, baseVolume: 0.5, basePrice: null },
+      { id: 'motorcycle', name: 'Хранение мотоцикла', image: motorcycleImg, pricePerM3: tariffPrices['CLOUD_TARIFF_MOTORCYCLE'] || 25000, maxVolume: 1.8, baseVolume: 1.8, basePrice: null },
+      { id: 'bicycle', name: 'Хранение велосипед', image: bicycleImg, pricePerM3: tariffPrices['CLOUD_TARIFF_BICYCLE'] || 6000, maxVolume: 0.9, baseVolume: 0.9, basePrice: null },
+      { id: 'sunuk', name: 'Сундук до 1 м³', image: sunukImg, basePrice: 15000, pricePerM3: tariffPrices['CLOUD_TARIFF_SUNUK'] || 15000, maxVolume: 1, baseVolume: 1 },
+      { id: 'furniture', name: 'Шкаф до 2 м³', image: furnitureImg, basePrice: 27000, pricePerM3: tariffPrices['CLOUD_TARIFF_FURNITURE'] || 13500, baseVolume: 2, maxVolume: 2 },
+      { id: 'sklad', name: 'Кладовка до 3 м³', image: skladImg, basePrice: 38000, pricePerM3: tariffPrices['CLOUD_TARIFF_SKLAD'] || 12667, maxVolume: 3, baseVolume: 3 },
+      { id: 'garazh', name: 'Гараж до 9м³', image: garazhImg, basePrice: 90000, pricePerM3: tariffPrices['CLOUD_TARIFF_GARAZH'] || 10000, maxVolume: 9, baseVolume: 9 }
+    ];
+    return tariffs;
+  }, [tariffPrices]);
+
+  const maxTariffIndex = Math.max(0, regularTariffs.length - tariffsPerView);
+  const handleTariffPrev = useCallback(() => {
+    setCurrentTariffIndex((prev) => Math.max(0, prev - 1));
+  }, []);
+  const handleTariffNext = useCallback(() => {
+    setCurrentTariffIndex((prev) => Math.min(maxTariffIndex, prev + 1));
+  }, [maxTariffIndex]);
+
   // Расчет объема для CLOUD
   const cloudVolume = useMemo(() => {
-    return cloudDimensions.width * cloudDimensions.height * cloudDimensions.length;
-  }, [cloudDimensions]);
+    if (selectedTariff && !selectedTariff.isCustom) {
+      const tariffVolume = selectedTariff.baseVolume ?? selectedTariff.maxVolume ?? cloudVolumeDirect;
+      return Number.isFinite(tariffVolume) && tariffVolume > 0 ? tariffVolume : 0;
+    }
+    const { width, height, length } = cloudDimensions;
+    const volume = Number(width) * Number(height) * Number(length);
+    return Number.isFinite(volume) && volume > 0 ? volume : 0;
+  }, [cloudDimensions, cloudVolumeDirect, selectedTariff]);
 
   // Расчет месяцев для INDIVIDUAL
   const monthsNumber = useMemo(() => {
@@ -306,9 +346,11 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         const storagePrice = response?.storage?.price;
 
         if (typeof storagePrice === "number" && !Number.isNaN(storagePrice) && storagePrice > 0) {
+          const pricingBreakdown = response?.storage?.pricingBreakdown;
           setPricePreview({
             total: storagePrice,
-            monthly: storagePrice / monthsNumber,
+            monthly: pricingBreakdown ? null : storagePrice / monthsNumber,
+            pricingBreakdown: pricingBreakdown || null,
             isFallback: false,
           });
         } else {
@@ -357,73 +399,281 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     };
   }, [isCloud, warehouse, monthsNumber, previewStorage]);
 
-  // Расчет цены для CLOUD складов
+  // Загрузка цен тарифов облачного хранения из API
   useEffect(() => {
-    let isCancelled = false;
-
-    const calculateCloudPrice = async () => {
-      if (!isCloud || !warehouse) {
-        setCloudPricePreview(null);
-        setCloudPriceError(null);
-        return;
+    const loadTariffPrices = async () => {
+      try {
+        const pricesData = await paymentsApi.getPrices();
+        const tariffTypes = [
+          'CLOUD_TARIFF_SUMKA', 'CLOUD_TARIFF_SHINA', 'CLOUD_TARIFF_MOTORCYCLE', 'CLOUD_TARIFF_BICYCLE',
+          'CLOUD_TARIFF_SUNUK', 'CLOUD_TARIFF_FURNITURE', 'CLOUD_TARIFF_SKLAD', 'CLOUD_TARIFF_GARAZH'
+        ];
+        const pricesMap = {};
+        let cloudM3Price = null;
+        pricesData.forEach((price) => {
+          if (tariffTypes.includes(price.type)) {
+            pricesMap[price.type] = parseFloat(price.price);
+          }
+          if (price.type === 'CLOUD_M3') {
+            cloudM3Price = parseFloat(price.price);
+          }
+        });
+        setTariffPrices(pricesMap);
+        setCloudCustomPrices({ low: cloudM3Price, high: cloudM3Price });
+      } catch (error) {
+        console.error('Ошибка при загрузке цен тарифов облачного хранения:', error);
+        setTariffPrices({});
+        setCloudCustomPrices({ low: null, high: null });
       }
+    };
+    loadTariffPrices();
+  }, []);
 
-      if (!cloudMonthsNumber || cloudMonthsNumber <= 0) {
-        setCloudPricePreview(null);
-        setCloudPriceError(null);
-        return;
-      }
+  // При переключении на облако устанавливаем "Свои габариты" по умолчанию
+  useEffect(() => {
+    if (isCloud && !selectedTariff) {
+      setSelectedTariff(customTariff);
+      setCloudDimensions({ width: 1, height: 1, length: 1 });
+    }
+  }, [isCloud, selectedTariff, customTariff]);
 
+  // Обработка изменения размера экрана для карусели тарифов
+  useEffect(() => {
+    const handleResize = () => {
+      const newTariffsPerView = window.innerWidth < 768 ? 1 : 3;
+      setTariffsPerView(newTariffsPerView);
+      const newMaxIndex = Math.max(0, regularTariffs.length - newTariffsPerView);
+      setCurrentTariffIndex((prev) => Math.min(prev, newMaxIndex));
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [regularTariffs.length]);
+
+  // Расчет цены для CLOUD складов (на фронте по выбранному тарифу)
+  useEffect(() => {
+    if (!isCloud || !warehouse) {
+      setCloudPricePreview(null);
+      setCloudPriceError(null);
+      return;
+    }
+    if (!cloudMonthsNumber || cloudMonthsNumber <= 0) {
+      setCloudPricePreview(null);
+      setCloudPriceError(null);
+      return;
+    }
+    if (!selectedTariff) {
+      setCloudPricePreview(null);
+      setCloudPriceError(null);
+      return;
+    }
+    if (selectedTariff && !selectedTariff.isCustom) {
+      const monthlyPrice = selectedTariff.basePrice ?? selectedTariff.pricePerM3 ?? 0;
+      const totalPrice = Math.round(monthlyPrice * cloudMonthsNumber);
+      setCloudPricePreview({
+        total: totalPrice,
+        monthly: monthlyPrice,
+        isFallback: false,
+      });
+      setCloudPriceError(null);
+    } else if (selectedTariff?.isCustom) {
       if (!cloudVolume || cloudVolume <= 0) {
         setCloudPricePreview(null);
         setCloudPriceError("Укажите габариты вещей, чтобы рассчитать объём хранения.");
         return;
       }
-
-      setIsCloudPriceCalculating(true);
+      const pricePerM3 = cloudCustomPrices.low ?? cloudCustomPrices.high ?? 9500;
+      const monthlyPrice = Math.round(pricePerM3 * cloudVolume);
+      const totalPrice = Math.round(monthlyPrice * cloudMonthsNumber);
+      setCloudPricePreview({
+        total: totalPrice,
+        monthly: monthlyPrice,
+        isFallback: false,
+      });
       setCloudPriceError(null);
+    } else {
+      setCloudPricePreview(null);
+      setCloudPriceError(null);
+    }
+  }, [isCloud, warehouse, cloudMonthsNumber, cloudVolume, selectedTariff, cloudCustomPrices]);
 
-      try {
-        const payload = {
-          storageType: "CLOUD",
-          months: cloudMonthsNumber,
-          volume: cloudVolume,
-          services: [],
-        };
+  // Расчет стоимости услуг (перевозка, упаковка)
+  const serviceSummary = useMemo(() => {
+    const breakdown = [];
+    let total = 0;
 
-        const response = await warehouseApi.calculateBulkPrice(payload);
-        if (isCancelled) return;
+    // Перевозка вещей (только доставка)
+    if (includeMoving && gazelleService) {
+      const count = 1; // Только доставка
+      const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
+      total += amount;
+      breakdown.push({
+        label: gazelleService.name || "Доставка (с клиента на склад)",
+        amount,
+      });
+    }
 
-        const storagePrice = response?.storage?.price;
-
-        if (typeof storagePrice === "number" && !Number.isNaN(storagePrice) && storagePrice > 0) {
-          setCloudPricePreview({
-            total: storagePrice,
-            monthly: storagePrice / cloudMonthsNumber,
-            isFallback: false,
-          });
-        } else {
-          setCloudPricePreview(null);
-          setCloudPriceError("Не удалось получить предварительный расчёт стоимости.");
+    // Услуги упаковки
+    if (includePacking) {
+      services.forEach((service) => {
+        if (!service?.service_id || !service?.count || service.count <= 0) {
+          return;
         }
-      } catch (error) {
-        console.error("Ошибка при расчёте стоимости облачного хранения:", error);
-        if (isCancelled) return;
-        setCloudPricePreview(null);
-        setCloudPriceError("Не удалось рассчитать стоимость. Попробуйте позже или уточните у менеджера.");
-      } finally {
-        if (!isCancelled) {
-          setIsCloudPriceCalculating(false);
-        }
+        const option = serviceOptions.find((item) => String(item.id) === String(service.service_id));
+        const unitPrice = option?.price ?? PACKING_SERVICE_ESTIMATE;
+        const amount = unitPrice * service.count;
+        total += amount;
+        breakdown.push({
+          label: formatServiceDescription(option?.description) || getServiceTypeName(option?.type) || "Услуга",
+          amount,
+        });
+      });
+    }
+
+    return {
+      total,
+      breakdown,
+    };
+  }, [includeMoving, includePacking, gazelleService, services, serviceOptions]);
+
+  // Итоговая стоимость для INDIVIDUAL
+  const costSummary = useMemo(() => {
+    const baseMonthly = pricePreview ? Math.round(pricePreview.monthly || (pricePreview.total / (parseInt(individualMonths, 10) || 1))) : null;
+    const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
+    const serviceTotal = serviceSummary.total;
+    const combinedTotal = (baseTotal || 0) + serviceTotal;
+
+    return {
+      baseMonthly,
+      baseTotal,
+      serviceTotal,
+      combinedTotal,
+      pricingBreakdown: pricePreview?.pricingBreakdown || null,
+    };
+  }, [pricePreview, serviceSummary.total, individualMonths]);
+
+  // Промокод INDIVIDUAL
+  const handleApplyPromoCode = useCallback(async () => {
+    if (!promoCodeInput.trim()) {
+      setPromoError('Введите промокод');
+      return;
+    }
+    const totalAmount = costSummary.combinedTotal || 0;
+    if (totalAmount <= 0) {
+      setPromoError('Сначала выберите бокс и срок аренды');
+      return;
+    }
+    try {
+      setIsValidatingPromo(true);
+      setPromoError('');
+      setPromoSuccess(false);
+      const result = await promoApi.validate(promoCodeInput.trim(), totalAmount);
+      if (result.valid) {
+        setPromoCode(promoCodeInput.trim());
+        setPromoDiscount(result.discount_amount || 0);
+        setPromoDiscountPercent(result.discount_percent || 0);
+        setPromoSuccess(true);
+        setPromoError('');
+        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+      } else {
+        setPromoError(result.error || 'Недействительный промокод');
+        setPromoCode('');
+        setPromoDiscount(0);
+        setPromoDiscountPercent(0);
+        setPromoSuccess(false);
       }
-    };
+    } catch (err) {
+      console.error('Ошибка при проверке промокода:', err);
+      setPromoError('Ошибка при проверке промокода');
+      setPromoCode('');
+      setPromoDiscount(0);
+      setPromoDiscountPercent(0);
+      setPromoSuccess(false);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  }, [promoCodeInput, costSummary.combinedTotal]);
 
-    calculateCloudPrice();
+  const handleRemovePromoCode = useCallback(() => {
+    setPromoCode('');
+    setPromoCodeInput('');
+    setPromoDiscount(0);
+    setPromoDiscountPercent(0);
+    setPromoError('');
+    setPromoSuccess(false);
+    setShowPromoInput(false);
+  }, []);
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [isCloud, warehouse, cloudMonthsNumber, cloudVolume]);
+  // Промокод CLOUD
+  const handleApplyCloudPromoCode = useCallback(async () => {
+    if (!cloudPromoCodeInput.trim()) {
+      setCloudPromoError('Введите промокод');
+      return;
+    }
+    const totalAmount = cloudPricePreview?.total || 0;
+    if (totalAmount <= 0) {
+      setCloudPromoError('Сначала выберите тариф и срок аренды');
+      return;
+    }
+    try {
+      setIsValidatingCloudPromo(true);
+      setCloudPromoError('');
+      setCloudPromoSuccess(false);
+      const result = await promoApi.validate(cloudPromoCodeInput.trim(), totalAmount);
+      if (result.valid) {
+        setCloudPromoCode(cloudPromoCodeInput.trim());
+        setCloudPromoDiscount(result.discount_amount || 0);
+        setCloudPromoDiscountPercent(result.discount_percent || 0);
+        setCloudPromoSuccess(true);
+        setCloudPromoError('');
+        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+      } else {
+        setCloudPromoError(result.error || 'Недействительный промокод');
+        setCloudPromoCode('');
+        setCloudPromoDiscount(0);
+        setCloudPromoDiscountPercent(0);
+        setCloudPromoSuccess(false);
+      }
+    } catch (err) {
+      console.error('Ошибка при проверке промокода:', err);
+      setCloudPromoError('Ошибка при проверке промокода');
+      setCloudPromoCode('');
+      setCloudPromoDiscount(0);
+      setCloudPromoDiscountPercent(0);
+      setCloudPromoSuccess(false);
+    } finally {
+      setIsValidatingCloudPromo(false);
+    }
+  }, [cloudPromoCodeInput, cloudPricePreview?.total]);
+
+  const handleRemoveCloudPromoCode = useCallback(() => {
+    setCloudPromoCode('');
+    setCloudPromoCodeInput('');
+    setCloudPromoDiscount(0);
+    setCloudPromoDiscountPercent(0);
+    setCloudPromoError('');
+    setCloudPromoSuccess(false);
+    setShowCloudPromoInput(false);
+  }, []);
+
+  // Пересчёт скидки при изменении суммы (INDIVIDUAL)
+  useEffect(() => {
+    if (promoCode && promoDiscountPercent > 0) {
+      const totalAmount = costSummary.combinedTotal || 0;
+      const newDiscount = Math.round((totalAmount * promoDiscountPercent / 100) * 100) / 100;
+      setPromoDiscount(newDiscount);
+    }
+  }, [costSummary.combinedTotal, promoCode, promoDiscountPercent]);
+
+  // Пересчёт скидки при изменении суммы (CLOUD)
+  useEffect(() => {
+    if (cloudPromoCode && cloudPromoDiscountPercent > 0) {
+      const totalAmount = cloudPricePreview?.total || 0;
+      const newDiscount = Math.round((totalAmount * cloudPromoDiscountPercent / 100) * 100) / 100;
+      setCloudPromoDiscount(newDiscount);
+    }
+  }, [cloudPricePreview?.total, cloudPromoCode, cloudPromoDiscountPercent]);
+
 
   // Загрузка опций услуг
   const ensureServiceOptions = useCallback(async () => {
@@ -440,8 +690,21 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       setServicesError(null);
       const pricesData = await paymentsApi.getPrices();
       const filteredPrices = pricesData.filter((price) => {
-        if (price.id <= 4) return false;
-        const excludedTypes = ["DEPOSIT", "M2", "CLOUD_M3"];
+        const excludedTypes = [
+          "DEPOSIT",
+          "M2",
+          "CLOUD_M3",
+          "UTILITY_KNIFE",
+          "FURNITURE_SPECIALIST",
+          "CLOUD_TARIFF_SUMKA",
+          "CLOUD_TARIFF_SHINA",
+          "CLOUD_TARIFF_MOTORCYCLE",
+          "CLOUD_TARIFF_BICYCLE",
+          "CLOUD_TARIFF_SUNUK",
+          "CLOUD_TARIFF_FURNITURE",
+          "CLOUD_TARIFF_SKLAD",
+          "CLOUD_TARIFF_GARAZH",
+        ];
         return !excludedTypes.includes(price.type);
       });
       setServiceOptions(filteredPrices);
@@ -590,59 +853,15 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     }
   }, [includeMoving, serviceOptions, ensureServiceOptions]);
 
-  // Расчет стоимости услуг (перевозка, упаковка)
-  const serviceSummary = useMemo(() => {
-    const breakdown = [];
-    let total = 0;
+  const finalIndividualTotal = useMemo(() => {
+    const total = costSummary.combinedTotal || 0;
+    return Math.max(0, total - promoDiscount);
+  }, [costSummary.combinedTotal, promoDiscount]);
 
-    // Перевозка вещей (только доставка)
-    if (includeMoving && gazelleService) {
-      const count = 1; // Только доставка
-      const amount = (gazelleService.price ?? MOVING_SERVICE_ESTIMATE) * count;
-      total += amount;
-      breakdown.push({
-        label: gazelleService.name || "Доставка (с клиента на склад)",
-        amount,
-      });
-    }
-
-    // Услуги упаковки
-    if (includePacking) {
-      services.forEach((service) => {
-        if (!service?.service_id || !service?.count || service.count <= 0) {
-          return;
-        }
-        const option = serviceOptions.find((item) => String(item.id) === String(service.service_id));
-        const unitPrice = option?.price ?? PACKING_SERVICE_ESTIMATE;
-        const amount = unitPrice * service.count;
-        total += amount;
-        breakdown.push({
-          label: formatServiceDescription(option?.description) || getServiceTypeName(option?.type) || "Услуга",
-          amount,
-        });
-      });
-    }
-
-    return {
-      total,
-      breakdown,
-    };
-  }, [includeMoving, includePacking, gazelleService, services, serviceOptions]);
-
-  // Итоговая стоимость для INDIVIDUAL
-  const costSummary = useMemo(() => {
-    const baseMonthly = pricePreview ? Math.round(pricePreview.monthly) : null;
-    const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
-    const serviceTotal = serviceSummary.total;
-    const combinedTotal = (baseTotal || 0) + serviceTotal;
-
-    return {
-      baseMonthly,
-      baseTotal,
-      serviceTotal,
-      combinedTotal,
-    };
-  }, [pricePreview, serviceSummary.total]);
+  const finalCloudTotal = useMemo(() => {
+    const total = cloudPricePreview?.total || 0;
+    return Math.max(0, total - cloudPromoDiscount);
+  }, [cloudPricePreview?.total, cloudPromoDiscount]);
 
   // Сброс выбранного бокса при смене склада
   useEffect(() => {
@@ -1263,64 +1482,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     );
   }
 
-  // Если warehouse ещё не загружен (ожидание автоматического перенаправления на первый склад)
-  if (!warehouse) {
-    const waitingSpinner = (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00A991]"></div>
-        <span className="ml-3 text-[#004743] font-medium">Загрузка склада...</span>
-      </div>
-    );
-
-    if (embedded) {
-      // В embedded-режиме показываем табы + спиннер, чтобы UX не прыгал
-      return (
-        <div className="space-y-6">
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl w-full sm:w-fit">
-            <button
-              onClick={() => handleEmbeddedStorageTypeChange('INDIVIDUAL')}
-              className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
-                embeddedStorageType === 'INDIVIDUAL'
-                  ? 'bg-white text-[#004743] shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              Индивидуальное хранение
-            </button>
-            <button
-              onClick={() => handleEmbeddedStorageTypeChange('CLOUD')}
-              className={`flex-1 sm:flex-none px-5 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 ${
-                embeddedStorageType === 'CLOUD'
-                  ? 'bg-white text-[#004743] shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-              </svg>
-              Облачное хранение
-            </button>
-          </div>
-          {waitingSpinner}
-        </div>
-      );
-    }
-
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <div className="flex flex-1">
-          <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
-          <main className="flex-1 p-6">
-            <div className="max-w-6xl mx-auto">{waitingSpinner}</div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={embedded ? "" : "min-h-screen flex flex-col bg-gray-50"}>
       <div className={embedded ? "" : "flex flex-1"}>
@@ -1409,27 +1570,29 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
             {/* Табы переключения: Склад / Тарифы и акции — только для полной страницы */}
             {!embedded && isAdminOrManager && (
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-                <button
-                  onClick={() => setWarehouseTab('warehouse')}
-                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-                    warehouseTab === 'warehouse'
-                      ? 'bg-white text-[#004743] shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Управление складом
-                </button>
-                <button
-                  onClick={() => setWarehouseTab('pricing')}
-                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
-                    warehouseTab === 'pricing'
-                      ? 'bg-white text-[#004743] shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Тарифы и акции
-                </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+                  <button
+                    onClick={() => setWarehouseTab('warehouse')}
+                    className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
+                      warehouseTab === 'warehouse'
+                        ? 'bg-white text-[#004743] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Управление складом
+                  </button>
+                  <button
+                    onClick={() => setWarehouseTab('pricing')}
+                    className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${
+                      warehouseTab === 'pricing'
+                        ? 'bg-white text-[#004743] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Тарифы и акции
+                  </button>
+                </div>
               </div>
             )}
 
@@ -1907,1463 +2070,9 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
             </div>
             )}
 
-            {/* Блоки с картой и настройками - только в режиме просмотра */}
-            {(!embedded ? (!isEditing && warehouseTab === 'warehouse') : true) && warehouse && embedded && (
-              <div className="mt-8">
-                {isCloud ? (
-                  // Для CLOUD складов
-                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-6">
-                    {/* Блок с габаритами */}
-                    <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-xl font-bold text-[#004743]">
-                            Укажите габариты вещей
-                          </h3>
-                        </div>
-                        <InfoHint
-                          description={
-                            <span>
-                              Введите ширину, высоту и длину в метрах — мы автоматически посчитаем общий объём для облачного хранения.
-                            </span>
-                          }
-                          ariaLabel="Подсказка по вводу габаритов"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-4">
-                          <label className="w-24 text-sm text-[#6B6B6B]">Ширина</label>
-                          <input
-                            type="number"
-                            min="0.1"
-                            step="0.1"
-                            value={cloudDimensions.width}
-                            onChange={(e) => setCloudDimensions(prev => ({ ...prev, width: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
-                          />
-                          <span className="text-sm text-[#6B6B6B]">м</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <label className="w-24 text-sm text-[#6B6B6B]">Высота</label>
-                          <input
-                            type="number"
-                            min="0.1"
-                            step="0.1"
-                            value={cloudDimensions.height}
-                            onChange={(e) => setCloudDimensions(prev => ({ ...prev, height: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
-                          />
-                          <span className="text-sm text-[#6B6B6B]">м</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <label className="w-24 text-sm text-[#6B6B6B]">Длина</label>
-                          <input
-                            type="number"
-                            min="0.1"
-                            step="0.1"
-                            value={cloudDimensions.length}
-                            onChange={(e) => setCloudDimensions(prev => ({ ...prev, length: parseFloat(e.target.value) || 0.1 }))}
-                            className="flex-1 h-[56px] rounded-2xl border border-[#00A991]/20 bg-white px-4 text-base text-[#004743] font-medium focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
-                          />
-                          <span className="text-sm text-[#6B6B6B]">м</span>
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl bg-[#00A991]/10 border border-[#00A991]/15 p-3 space-y-3">
-                        <p className="text-sm text-[#6B6B6B]">
-                          Рассчитанный объём: <span className="font-semibold text-[#004743]">{cloudVolume.toFixed(2)} м³</span>
-                        </p>
-
-                        {/* Блок с расчетом стоимости для CLOUD */}
-                        <div className="rounded-2xl border border-dashed border-[#00A991]/30 bg-white px-4 py-3 text-sm text-[#004743] space-y-3 mt-3">
-                          <div className="flex items-center justify-between text-[#004743]">
-                            <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
-                            <span className="text-xs text-[#6B6B6B]">
-                              {cloudVolume.toFixed(2)} м³
-                            </span>
-                          </div>
-                          {isCloudPriceCalculating ? (
-                            <div className="flex items-center justify-center gap-2 text-base font-semibold">
-                              <span className="w-4 h-4 border-2 border-t-transparent border-[#00A991] rounded-full animate-spin" />
-                              Расчёт...
-                            </div>
-                          ) : cloudPricePreview ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[#6B6B6B]">За месяц</span>
-                                <span className="text-base font-semibold">
-                                  {Math.round(cloudPricePreview.monthly).toLocaleString()} ₸
-                                </span>
-                              </div>
-                              {/* Показываем информацию о ценах за 6 и 12 месяцев */}
-                              {cloudMonthsNumber < 6 && (
-                                <div className="pt-2 border-t border-dashed border-[#00A991]/20">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs text-[#6B6B6B]">За 6 мес</span>
-                                    <span className="text-sm font-semibold text-[#004743]">
-                                      {Math.round(cloudPricePreview.monthly * 6).toLocaleString()} ₸
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                              {cloudMonthsNumber < 12 && (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-[#6B6B6B]">За 12 мес</span>
-                                  <span className="text-sm font-semibold text-[#004743]">
-                                    {Math.round(cloudPricePreview.monthly * 12).toLocaleString()} ₸
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex items-center justify-between">
-                                <span className="text-[#6B6B6B]">За {cloudMonthsNumber} мес</span>
-                                <span className="text-lg font-bold text-[#004743]">
-                                  {Math.round(cloudPricePreview.total).toLocaleString()} ₸
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-[#6B6B6B]">
-                              Укажите габариты и срок, чтобы увидеть ориентировочную цену.
-                            </p>
-                          )}
-                          {cloudPricePreview?.isFallback && (
-                            <p className="text-xs text-[#C67A00]">
-                              Ориентировочная стоимость — подтверждаем при бронировании.
-                            </p>
-                          )}
-                          {cloudPriceError && (
-                            <p className="text-xs text-[#C73636]">
-                              {cloudPriceError}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Блок с настройками */}
-                    <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-xl font-bold text-[#004743]">
-                            Облачное хранение ExtraSpace
-                          </h3>
-                        </div>
-                        <InfoHint
-                          description={
-                            <span>
-                              Перевозка и упаковка входят в тариф облачного хранения — никаких доплат, мы всё организуем.
-                            </span>
-                          }
-                          ariaLabel="Подсказка по облачному хранению"
-                        />
-                      </div>
-
-                      <div className="space-y-2 sm:space-y-2.5">
-                        <span className="text-sm font-semibold text-[#004743]">
-                          Дата начала бронирования
-                        </span>
-                        <DatePicker
-                          value={cloudBookingStartDate}
-                          onChange={(value) => setCloudBookingStartDate(value)}
-                          minDate={getTodayLocalDateString()}
-                          allowFutureDates={true}
-                          placeholder="ДД.ММ.ГГГГ"
-                        />
-                      </div>
-
-                      <div className="space-y-2 sm:space-y-2.5">
-                        <RentalPeriodSelect
-                          value={cloudMonths}
-                          onChange={setCloudMonths}
-                          label="Срок аренды (месяцы)"
-                          variant="warehouse-data"
-                          placeholder="Выберите срок"
-                        />
-                      </div>
-
-                      <div className="rounded-2xl bg-[#00A991]/10 border border-[#00A991]/20 p-3 text-sm text-[#004743] space-y-2">
-                        <div className="rounded-xl border border-[#00A991]/20 bg-white/80 px-3 py-2 text-xs sm:text-sm text-[#004743] flex items-start gap-2">
-                          <Truck className="h-4 w-4 mt-[2px]" />
-                          <div>
-                            <strong>Дополнительные услуги</strong>
-                            <p className="mt-1">
-                              Мы сами забираем и упаковываем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес доставки.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата доставки</span>
-                          <DatePicker
-                            value={cloudPickupDate}
-                            onChange={(value) => setCloudPickupDate(value)}
-                            minDate={getTodayLocalDateString()}
-                            allowFutureDates={true}
-                            placeholder="ДД.ММ.ГГГГ"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Адрес доставки</span>
-                          <input
-                            type="text"
-                            value={cloudPickupAddress}
-                            onChange={(e) => setCloudPickupAddress(e.target.value)}
-                            placeholder="Например: г. Алматы, Абая 25"
-                            className="h-[46px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#004743] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#00A991]/30"
-                          />
-                        </div>
-                        <p>Перевозка и упаковка включены в стоимость.</p>
-                      </div>
-
-                      {/* Блок выбора пользователя для менеджеров/админов */}
-                      {isAdminOrManager && (
-                        <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[#004743] font-semibold">
-                              <User className="w-5 h-5 shrink-0" />
-                              <span>Клиент</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setIsClientSelectorOpen(true)}
-                              className="px-4 py-2 text-sm font-medium text-[#004743] border border-[#00A991] rounded-lg hover:bg-[#00A991] hover:text-white transition-colors"
-                            >
-                              {selectedClientUser ? 'Изменить' : 'Выбрать клиента'}
-                            </button>
-                          </div>
-                          {selectedClientUser && (
-                            <div className="bg-[#00A991]/10 rounded-lg p-3">
-                              <div className="text-sm font-medium text-[#004743]">
-                                {selectedClientUser.name || 'Без имени'}
-                              </div>
-                              <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
-                              {selectedClientUser.phone && (
-                                <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <SmartButton
-                        variant="success"
-                        size="lg"
-                        className="w-full h-[56px] text-base font-semibold"
-                        onClick={async () => {
-                          if (isAdminOrManager && !selectedClientUser) {
-                            showErrorToast('Выберите клиента для создания заказа');
-                            return;
-                          }
-
-                          if (!warehouse?.storage?.[0]) {
-                            showErrorToast('Склад не имеет доступных мест для хранения');
-                            return;
-                          }
-
-                          if (!cloudVolume || cloudVolume <= 0) {
-                            showErrorToast('Укажите габариты вещей для расчета объема');
-                            return;
-                          }
-
-                          if (!cloudPickupAddress.trim()) {
-                            showErrorToast('Укажите адрес доставки');
-                            return;
-                          }
-
-                          setIsCreatingOrder(true);
-                          setOrderError(null);
-
-                          try {
-                            // Загружаем опции услуг если еще не загружены
-                            let availableOptions = serviceOptions;
-                            if (serviceOptions.length === 0) {
-                              const loadedOptions = await ensureServiceOptions();
-                              if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
-                                availableOptions = loadedOptions;
-                                // Обновляем serviceOptions для использования в других местах
-                                setServiceOptions(loadedOptions);
-                              }
-                            }
-
-                            // Синхронизируем услуги с газелью
-                            let finalServices = [...services];
-                            if (includeMoving && gazelleService) {
-                              finalServices = syncGazelleService(finalServices);
-                            }
-
-                            // Преобразуем в правильный формат как в home/index.jsx
-                            const validServices = finalServices
-                              .map((service) => ({
-                                service_id: Number(service.service_id),
-                                count: service.count,
-                              }))
-                              .filter(
-                                (service) =>
-                                  Number.isFinite(service.service_id) && service.service_id > 0 && Number.isFinite(service.count) && service.count > 0
-                              );
-
-                            console.log("🔍 Проверка услуг для индивидуального хранения:", {
-                              services,
-                              finalServices,
-                              validServices,
-                              availableOptions: availableOptions.length,
-                              serviceOptions: serviceOptions.length,
-                              availableOptionsIds: availableOptions.map(opt => ({ id: opt.id, type: opt.type })),
-                              validServicesIds: validServices.map(s => s.service_id),
-                            });
-
-                            // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
-                            const hasPackagingServices = includePacking && validServices.some(s => {
-                              if (!gazelleService) return true; // Если gazelleService не установлен, считаем все услуги упаковкой
-                              const serviceId = s.service_id?.toString();
-                              const gazelleId = gazelleService.id?.toString();
-                              return serviceId !== gazelleId; // услуги кроме Газели
-                            });
-                            // Проверяем наличие услуги "Газель" в validServices
-                            const hasGazelleService = includeMoving && (() => {
-                              if (gazelleService) {
-                                const gazelleId = gazelleService.id?.toString();
-                                return validServices.some(s => s.service_id?.toString() === gazelleId);
-                              }
-                              // Если gazelleService не установлен, проверяем по типу из serviceOptions
-                              const gazelleFromOption = serviceOptions.find(opt => opt.type === "GAZELLE_FROM");
-                              if (gazelleFromOption) {
-                                const gazelleId = gazelleFromOption.id?.toString();
-                                return validServices.some(s => s.service_id?.toString() === gazelleId);
-                              }
-                              return false;
-                            })();
-                            const isPackageSelected = hasPackagingServices || hasGazelleService;
-
-                            // Формируем дату начала бронирования для облачного хранения
-                            const cloudStartDate = cloudBookingStartDate ? new Date(cloudBookingStartDate).toISOString() : new Date().toISOString();
-
-                            const orderData = {
-                              storage_id: warehouse.storage[0].id,
-                              months: cloudMonthsNumber,
-                              start_date: cloudStartDate,
-                              order_items: [{
-                                name: 'Облачное хранение',
-                                volume: cloudVolume,
-                                cargo_mark: 'NO'
-                              }],
-                              is_selected_moving: includeMoving,
-                              is_selected_package: isPackageSelected,
-                            };
-
-                            // Добавляем user_id для менеджеров/админов
-                            if (isAdminOrManager && selectedClientUser) {
-                              orderData.user_id = selectedClientUser.id;
-                            }
-
-                            // Добавляем перевозки
-                            if (includeMoving) {
-                              // Используем выбранную дату доставки или текущую дату
-                              const pickupDate = cloudPickupDate 
-                                ? new Date(cloudPickupDate)
-                                : new Date();
-                              pickupDate.setHours(10, 0, 0, 0);
-                              
-                              // Дата возврата = дата доставки + количество месяцев
-                              const returnDate = new Date(pickupDate);
-                              returnDate.setMonth(returnDate.getMonth() + cloudMonthsNumber);
-                              returnDate.setHours(10, 0, 0, 0);
-                              
-                              orderData.moving_orders = [
-                                {
-                                  moving_date: pickupDate.toISOString(),
-                                  status: 'PENDING',
-                                  direction: 'TO_WAREHOUSE',
-                                  address: cloudPickupAddress.trim(),
-                                },
-                                {
-                                  moving_date: returnDate.toISOString(),
-                                  status: 'PENDING',
-                                  direction: 'TO_CLIENT',
-                                  address: cloudPickupAddress.trim(),
-                                }
-                              ];
-                            }
-
-                            // Добавляем услуги (включая Газель при перевозке, даже если упаковка не включена)
-                            if (validServices.length > 0) {
-                              orderData.services = validServices.map((service) => ({
-                                service_id: Number(service.service_id),
-                                count: service.count,
-                              }));
-                            }
-
-                            await warehouseApi.createOrder(orderData);
-
-                            toastOrderRequestSent();
-
-                            // Для embedded — вызываем callback, для админа/менеджера — на запросы, для обычных пользователей — на thank-you
-                            setTimeout(() => {
-                              if (embedded && onBookingComplete) {
-                                onBookingComplete();
-                              } else if (isAdminOrManager) {
-                                navigate('/personal-account', { state: { activeSection: 'request' } });
-                              } else {
-                                navigate('/thank-you');
-                              }
-                            }, 1500);
-                          } catch (error) {
-                            console.error('Ошибка при создании заказа:', error);
-                            const errorData = error.response?.data;
-                            const errorMessage = errorData?.message || 
-                                                errorData?.details?.[0]?.message ||
-                                                errorData?.error ||
-                                                'Не удалось создать заказ. Попробуйте позже.';
-                            
-                            // Проверяем, не верифицирован ли телефон
-                            const isPhoneNotVerified = error.response?.status === 400 && (
-                                errorMessage.includes('Phone number must be verified') ||
-                                errorMessage.includes('phone number') ||
-                                errorData?.code === 'PHONE_NOT_VERIFIED'
-                            );
-                            
-                            if (isPhoneNotVerified) {
-                              showErrorToast(
-                                'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
-                                { autoClose: 5000 }
-                              );
-                              if (!embedded) {
-                                setTimeout(() => {
-                                  navigate('/personal-account', { state: { activeSection: 'personal' } });
-                                }, 2000);
-                              }
-                              setIsCreatingOrder(false);
-                              return;
-                            }
-                            
-                            setOrderError(errorMessage);
-                            showErrorToast(errorMessage);
-                          } finally {
-                            setIsCreatingOrder(false);
-                          }
-                        }}
-                        disabled={
-                          (isAdminOrManager && !selectedClientUser) ||
-                          isCreatingOrder ||
-                          !cloudVolume ||
-                          cloudVolume <= 0 ||
-                          !cloudPickupAddress.trim()
-                        }
-                      >
-                        {isCreatingOrder ? 'Создание заказа...' : 'Забронировать бокс'}
-                      </SmartButton>
-                      
-                      {orderError && (
-                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-sm text-red-600">{orderError}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  // Для INDIVIDUAL складов - как на главной странице
-                  <div className="grid grid-cols-1 lg:grid-cols-[50%_1fr] gap-6">
-                    {/* Левая панель - Карта склада с градиентом */}
-                    <div className="rounded-2xl h-[70vh] min-h-[400px] flex flex-col" style={{
-                      background: 'linear-gradient(to bottom, #00A991 0%, #31876D 100%)',
-                      padding: '20px',
-                      borderRadius: '20px',
-                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
-                      position: 'relative',
-                      minHeight: 0,
-                      overflow: 'hidden',
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}>
-                      {/* Селектор склада и кнопки зума */}
-                      <div className="mb-4 flex items-center gap-3 flex-wrap justify-center" style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
-                        <div className="w-fit [&_button]:bg-transparent [&_button]:text-white [&_button]:border-2 [&_button]:border-white [&_button]:rounded-full [&_button]:hover:bg-white/10 [&_svg]:text-white">
-                          <Dropdown
-                            items={allWarehouses.filter(w => w.type !== 'CLOUD')}
-                            value={selectedWarehouse ? selectedWarehouse.id : undefined}
-                            onChange={(_, item) => {
-                              // Сбрасываем состояния при смене склада
-                              setPreviewStorage(null);
-                              setPricePreview(null);
-                              setPriceError(null);
-                              setCloudPricePreview(null);
-                              setCloudPriceError(null);
-                              setOrderError(null);
-                              setServices([]);
-                              setIncludeMoving(false);
-                              setIncludePacking(false);
-                              setSelectedClientUser(null);
-                              
-                              // Сбрасываем warehouse и карту чтобы вызвать полную перезагрузку
-                              setWarehouse(null);
-                              setSelectedWarehouse(null);
-                              setMegaSelectedMap(1);
-                              setKomfortSelectedMap(1);
-                              
-                              if (embedded) {
-                                setEmbeddedWarehouseId(String(item.id));
-                              } else {
-                                const basePath = user?.role === 'ADMIN' ? 'admin' : 'manager';
-                                navigate(`/personal-account/${basePath}/warehouses/${item.id}`);
-                              }
-                            }}
-                            placeholder="Выберите склад"
-                            searchable={false}
-                            getKey={(w) => w.id}
-                            getLabel={(w) => w.name}
-                            getDescription={(w) => w.address}
-                            className="bg-transparent text-white border-2 border-white rounded-full hover:bg-white/10 w-auto min-w-[200px]"
-                            popoverProps={{ className: "p-0" }}
-                          />
-                        </div>
-
-                        {/* Кнопки управления зумом */}
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button
-                            onClick={() => {
-                              if (mapRef.current) {
-                                mapRef.current.zoomIn();
-                              }
-                            }}
-                            className="w-10 h-10 rounded-full bg-[#A8E6CF] text-gray-600 flex items-center justify-center hover:bg-[#90D4B8] transition-colors shadow-md font-bold text-xl"
-                            aria-label="Увеличить"
-                          >
-                            +
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (mapRef.current) {
-                                mapRef.current.zoomOut();
-                              }
-                            }}
-                            className="w-10 h-10 rounded-full bg-[#A8E6CF] text-gray-600 flex items-center justify-center hover:bg-[#90D4B8] transition-colors shadow-md font-bold text-xl"
-                            aria-label="Уменьшить"
-                          >
-                            −
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Компонент карты */}
-                      <div className="flex-1 w-full h-full" style={{ minHeight: 0, minWidth: 0, position: 'relative', zIndex: 0 }}>
-                        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
-                          {renderWarehouseScheme({ isFullscreen: true })}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Правая панель - Информация о складе, статистика и форма */}
-                    <div className="space-y-6">
-                      {/* Информация о складе и статистика боксов */}
-                      {selectedWarehouse && (
-                        <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-[#273655]">
-                              {selectedWarehouse.name}
-                            </h3>
-                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(selectedWarehouse.status)}`}>
-                              <div className={`w-2 h-2 rounded-full mr-2 ${selectedWarehouse.status === 'AVAILABLE' ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                              {getStatusDisplay(selectedWarehouse.status)}
-                            </div>
-                          </div>
-
-                          <div className="space-y-3 text-sm text-gray-600">
-                            {selectedWarehouse.address && (
-                              <div className="flex items-start">
-                                <svg className="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span>{selectedWarehouse.address}</span>
-                              </div>
-                            )}
-
-                            <div className="flex items-center">
-                              <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <span>{formatTime(selectedWarehouse.work_start)} - {formatTime(selectedWarehouse.work_end)}</span>
-                            </div>
-
-                            {selectedWarehouse.storage && (
-                              <div className="pt-3 border-t border-gray-100 grid grid-cols-2 gap-4">
-                                <div>
-                                  <div className="text-xs text-gray-500 mb-1">Всего {selectedWarehouse.type === "CLOUD" ? 'мест' : 'боксов'}</div>
-                                  <div className="text-lg font-bold text-[#273655]">
-                                    {selectedWarehouse.type === "CLOUD"
-                                      ? selectedWarehouse.storage[0]?.total_volume || 0
-                                      : selectedWarehouse.storage.length}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-xs text-gray-500 mb-1">Свободно</div>
-                                  <div className="text-lg font-bold text-green-600">
-                                    {selectedWarehouse.type === "CLOUD"
-                                      ? selectedWarehouse.storage[0]?.available_volume || 0
-                                      : selectedWarehouse.storage.filter(s => s.status === 'VACANT').length}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Блок с настройками */}
-                      <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm flex flex-col gap-4 sm:gap-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="text-xl font-bold text-[#273655]">
-                              Настройте хранение
-                            </h3>
-                          </div>
-                          <InfoHint
-                            description={
-                              <span>
-                                Настройте срок аренды, выберите перевозку и упаковку — все параметры сохранятся, когда перейдёте к оформлению заявки.
-                              </span>
-                            }
-                            ariaLabel="Подсказка по настройкам хранения"
-                          />
-                        </div>
-
-                      <div className="space-y-2 sm:space-y-2.5">
-                        <span className="text-sm font-semibold text-[#273655]">
-                          Дата начала бронирования
-                        </span>
-                        <DatePicker
-                          value={individualBookingStartDate}
-                          onChange={(value) => setIndividualBookingStartDate(value)}
-                          minDate={getTodayLocalDateString()}
-                          allowFutureDates={true}
-                          placeholder="ДД.ММ.ГГГГ"
-                        />
-                      </div>
-
-                      <div className="space-y-2 sm:space-y-2.5">
-                        <RentalPeriodSelect
-                          value={individualMonths}
-                          onChange={setIndividualMonths}
-                          label="Срок аренды (месяцы)"
-                          variant="warehouse-data"
-                          placeholder="Выберите срок"
-                        />
-                      </div>
-
-                      <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2 text-[#273655] font-semibold">
-                            <Truck className="w-5 h-5 shrink-0" />
-                            <span>Перевозка вещей</span>
-                          </div>
-                          <Switch
-                            checked={includeMoving}
-                            onCheckedChange={async (checked) => {
-                              setIncludeMoving(checked);
-                              if (checked) {
-                                const loadedOptions = await ensureServiceOptions();
-                                // Устанавливаем gazelleService сразу после загрузки опций
-                                if (loadedOptions && loadedOptions.length > 0) {
-                                  // Ищем GAZELLE_FROM вместо GAZELLE
-                                  const gazelleFrom = loadedOptions.find((option) => option.type === "GAZELLE_FROM");
-                                  if (gazelleFrom) {
-                                    setGazelleService({
-                                      id: String(gazelleFrom.id),
-                                      type: gazelleFrom.type,
-                                      name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - Доставка",
-                                      price: gazelleFrom.price,
-                                    });
-                                  }
-                                }
-                              } else {
-                                setGazelleService(null);
-                              }
-                            }}
-                            className="bg-gray-200 data-[state=checked]:bg-[#273655]"
-                          />
-                        </div>
-
-                        {includeMoving && (
-                          <div className="mt-3 space-y-3">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em]">Дата доставки</label>
-                              <DatePicker
-                                value={movingPickupDate}
-                                onChange={(value) => setMovingPickupDate(value)}
-                                minDate={getTodayLocalDateString()}
-                                allowFutureDates={true}
-                                placeholder="ДД.ММ.ГГГГ"
-                              />
-                              <label className="text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mt-2">Адрес доставки</label>
-                              <input
-                                type="text"
-                                value={movingAddressFrom}
-                                onChange={(e) => setMovingAddressFrom(e.target.value)}
-                                placeholder="Например: г. Алматы, Абая 25"
-                                className="h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2 text-[#273655] font-semibold">
-                            <Package className="w-5 h-5 shrink-0" />
-                            <span>Услуги упаковки</span>
-                            <InfoHint
-                              description={
-                                <span>
-                                  Выберите дополнительные услуги упаковки — всё, что нужно, чтобы подготовить вещи к хранению.
-                                </span>
-                              }
-                              ariaLabel="Подробнее об услугах упаковки"
-                              align="start"
-                            />
-                          </div>
-                          <Switch
-                            checked={includePacking}
-                            onCheckedChange={async (checked) => {
-                              setIncludePacking(checked);
-                              if (checked) {
-                                await ensureServiceOptions();
-                                setServices((prev) => (prev.length > 0 ? prev : [{ service_id: "", count: 1 }]));
-                              } else {
-                                setServices([]);
-                              }
-                            }}
-                            className="bg-gray-200 data-[state=checked]:bg-[#273655]"
-                          />
-                        </div>
-
-                        {includePacking && (
-                          <div className="space-y-3">
-                            {isServicesLoading ? (
-                              <div className="flex items-center justify-center py-2">
-                                <span className="w-5 h-5 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
-                              </div>
-                            ) : (
-                              <>
-                                {servicesError && (
-                                  <p className="text-xs text-[#C73636]">
-                                    {servicesError}
-                                  </p>
-                                )}
-
-                                {services.length > 0 && (
-                                  <div className="space-y-2">
-                                    {services.map((service, index) => {
-                                      const selectedOption = serviceOptions.find((option) => String(option.id) === service.service_id);
-                                      const unitPrice = selectedOption?.price ?? PACKING_SERVICE_ESTIMATE;
-                                      
-                                      // Фильтруем уже выбранные услуги (кроме текущей)
-                                      const availableOptions = serviceOptions.filter((option) => {
-                                        // Скрываем GAZELLE_FROM (добавляется автоматически при перевозке)
-                                        if (option.type === "GAZELLE_FROM") return false;
-                                        // Скрываем старый тип GAZELLE (для обратной совместимости)
-                                        if (option.type === "GAZELLE") return false;
-                                        // Исключаем услуги, которые уже выбраны в других строках
-                                        const isAlreadySelected = services.some((s, i) => 
-                                          i !== index && String(s.service_id) === String(option.id)
-                                        );
-                                        return !isAlreadySelected;
-                                      });
-
-                                      // Проверяем, выбрана ли услуга GAZELLE_TO для текущей строки
-                                      const isGazelleToService = selectedOption && selectedOption.type === "GAZELLE_TO";
-                                      
-                                      return (
-                                        <div key={index} className="space-y-2">
-                                          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d7dbe6] bg-white px-3 py-2">
-                                            <Select
-                                              value={service.service_id}
-                                              onValueChange={(value) => updateServiceRow(index, "service_id", value)}
-                                            >
-                                              <SelectTrigger className="h-10 min-w-[180px] rounded-lg border-[#d7dbe6] text-sm">
-                                                <SelectValue placeholder="Услуга" />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {availableOptions.length > 0 ? (
-                                                  availableOptions
-                                                    .map((option) => {
-                                                      // Используем description если есть, иначе getServiceTypeName
-                                                      const serviceName = formatServiceDescription(option.description) || getServiceTypeName(option.type);
-                                                      // Не показываем услуги без названия
-                                                      if (!serviceName) return null;
-                                                      return (
-                                                        <SelectItem key={option.id} value={String(option.id)}>
-                                                          {serviceName}
-                                                        </SelectItem>
-                                                      );
-                                                    })
-                                                    .filter(Boolean)
-                                                ) : (
-                                                  <div className="px-2 py-1.5 text-sm text-[#6B6B6B]">
-                                                    Нет доступных услуг
-                                                  </div>
-                                                )}
-                                              </SelectContent>
-                                            </Select>
-
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-xs uppercase tracking-[0.08em] text-[#6B6B6B]">
-                                              Кол-во
-                                            </span>
-                                            <input
-                                              type="number"
-                                              min="1"
-                                              value={service.count}
-                                              onChange={(e) => updateServiceRow(index, "count", e.target.value)}
-                                              className="w-16 h-10 rounded-lg border border-[#d7dbe6] px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
-                                            />
-                                          </div>
-
-                                          {service.service_id && (
-                                            <span className="ml-auto text-xs text-[#6B6B6B]">
-                                              {unitPrice.toLocaleString()} ₸/шт.
-                                            </span>
-                                          )}
-
-                                            <button
-                                              type="button"
-                                              onClick={() => removeServiceRow(index)}
-                                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-100 text-red-500 hover:bg-red-50 transition-colors"
-                                              aria-label="Удалить услугу"
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </button>
-                                          </div>
-                                          
-                                          {/* Показываем поле адреса, если выбрана услуга GAZELLE_TO */}
-                                          {isGazelleToService && (
-                                            <div className="pl-3 pr-11">
-                                              <label className="block text-xs text-[#6B6B6B] uppercase tracking-[0.08em] mb-1">
-                                                Адрес доставки вещей
-                                              </label>
-                                              <input
-                                                type="text"
-                                                value={movingAddressTo}
-                                                onChange={(e) => {
-                                                  setMovingAddressTo(e.target.value);
-                                                  // Обновляем адрес в moving_order
-                                                  setMovingOrders(prev => prev.map(order => 
-                                                    (order.status === "PENDING" && order.direction === "TO_CLIENT") 
-                                                      ? { ...order, address: e.target.value }
-                                                      : order
-                                                  ));
-                                                }}
-                                                placeholder="Например: г. Алматы, Абая 25"
-                                                className="w-full h-[42px] rounded-xl border border-[#d5d8e1] px-3 text-sm text-[#273655] placeholder:text-[#B0B7C3] focus:outline-none focus:ring-2 focus:ring-[#273655]/30"
-                                              />
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-
-                                {services.length === 0 && !servicesError && (
-                                  <p className="text-xs text-[#6B6B6B]">
-                                    Добавьте услуги, чтобы мы подготовили упаковку под ваши вещи.
-                                  </p>
-                                )}
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    ensureServiceOptions();
-                                    addServiceRow();
-                                  }}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#273655]/40 px-3 py-2 text-xs sm:text-sm font-semibold text-[#273655] hover:bg-[#273655]/5 transition-colors"
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  Добавить услугу
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Блок с расчетом стоимости */}
-                      <div className="rounded-2xl border border-dashed border-[#273655]/30 bg-white px-4 py-3 text-sm text-[#273655] space-y-3">
-                        <div className="flex items-center justify-between text-[#273655]">
-                          <span className="text-sm font-semibold uppercase tracking-[0.12em]">Итог</span>
-                          {previewStorage && (
-                            <span className="text-xs text-[#6B6B6B]">
-                              {previewStorage.name || `Бокс ${previewStorage.id}`}
-                            </span>
-                          )}
-                        </div>
-                        {isPriceCalculating ? (
-                          <div className="flex items-center justify-center gap-2 text-base font-semibold">
-                            <span className="w-4 h-4 border-2 border-t-transparent border-[#273655] rounded-full animate-spin" />
-                            Расчёт...
-                          </div>
-                        ) : previewStorage && pricePreview ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[#6B6B6B]">За месяц</span>
-                              <span className="text-base font-semibold">
-                                {costSummary.baseMonthly?.toLocaleString() ?? "—"} ₸
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-[#6B6B6B]">За {monthsNumber} мес</span>
-                              <span className="text-lg font-bold text-[#273655]">
-                                {costSummary.baseTotal?.toLocaleString() ?? "—"} ₸
-                              </span>
-                            </div>
-                            {pricePreview.isFallback && (
-                              <p className="text-xs text-[#C67A00]">
-                                Ориентировочная стоимость по тарифу бокса.
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-[#6B6B6B]">
-                            Выберите бокс на схеме, чтобы увидеть предварительную цену.
-                          </p>
-                        )}
-                        {serviceSummary.breakdown.length > 0 && (
-                          <div className="border-t border-dashed border-[#273655]/20 pt-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[#6B6B6B]">Услуги</span>
-                              <span className="font-semibold">
-                                +{serviceSummary.total.toLocaleString()} ₸
-                              </span>
-                            </div>
-                            <div className="space-y-1 text-xs text-[#6B6B6B]">
-                              {serviceSummary.breakdown.map((item, index) => (
-                                <div key={`${item.label}-${index}`} className="flex items-center justify-between">
-                                  <span className="truncate pr-2">{item.label}</span>
-                                  <span className="font-medium text-[#273655]">
-                                    +{item.amount.toLocaleString()} ₸
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {((previewStorage && pricePreview) || serviceSummary.total > 0) && (
-                          <div className="flex items-center justify-between border-t border-dashed border-[#273655]/20 pt-3 text-base font-bold text-[#273655]">
-                            <span>Всего</span>
-                            <span>
-                              {(costSummary.combinedTotal || serviceSummary.total || 0).toLocaleString()} ₸
-                            </span>
-                          </div>
-                        )}
-                        {priceError && (
-                          <p className="text-xs text-[#C73636]">
-                            {priceError}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Блок выбора пользователя для менеджеров/админов */}
-                      {isAdminOrManager && (
-                        <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[#273655] font-semibold">
-                              <User className="w-5 h-5 shrink-0" />
-                              <span>Клиент</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setIsClientSelectorOpen(true)}
-                              className="px-4 py-2 text-sm font-medium text-[#273655] border border-[#273655] rounded-lg hover:bg-[#273655] hover:text-white transition-colors"
-                            >
-                              {selectedClientUser ? 'Изменить' : 'Выбрать клиента'}
-                            </button>
-                          </div>
-                          {selectedClientUser && (
-                            <div className="bg-[#273655]/5 rounded-lg p-3">
-                              <div className="text-sm font-medium text-[#273655]">
-                                {selectedClientUser.name || 'Без имени'}
-                              </div>
-                              <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
-                              {selectedClientUser.phone && (
-                                <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <SmartButton
-                        variant="success"
-                        size="lg"
-                        className="w-full h-[56px] text-base font-semibold"
-                        onClick={async () => {
-                          if (isAdminOrManager && !selectedClientUser) {
-                            showErrorToast('Выберите клиента для создания заказа');
-                            return;
-                          }
-
-                          if (!previewStorage) {
-                            showErrorToast('Выберите бокс на схеме склада');
-                            return;
-                          }
-
-                          if (!monthsNumber || monthsNumber <= 0) {
-                            showErrorToast('Выберите срок аренды');
-                            return;
-                          }
-
-                          if (includeMoving && !movingAddressFrom.trim()) {
-                            showErrorToast('Укажите адрес доставки');
-                            return;
-                          }
-
-                          setIsCreatingOrder(true);
-                          setOrderError(null);
-
-                          try {
-                            // Загружаем опции услуг если еще не загружены
-                            let availableOptions = serviceOptions;
-                            if (serviceOptions.length === 0) {
-                              const loadedOptions = await ensureServiceOptions();
-                              if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
-                                availableOptions = loadedOptions;
-                                // Обновляем serviceOptions для использования в других местах
-                                setServiceOptions(loadedOptions);
-                              }
-                            }
-
-                            // Синхронизируем услуги с газелью
-                            let finalServices = [...services];
-                            if (includeMoving && gazelleService) {
-                              finalServices = syncGazelleService(finalServices);
-                            }
-
-                            // Преобразуем в правильный формат как в home/index.jsx
-                            const validServices = finalServices
-                              .map((service) => ({
-                                service_id: Number(service.service_id),
-                                count: service.count,
-                              }))
-                              .filter(
-                                (service) =>
-                                  Number.isFinite(service.service_id) && service.service_id > 0 && Number.isFinite(service.count) && service.count > 0
-                              );
-
-                            console.log("🔍 Проверка услуг для индивидуального хранения:", {
-                              services,
-                              finalServices,
-                              validServices,
-                              availableOptions: availableOptions.length,
-                              serviceOptions: serviceOptions.length,
-                              availableOptionsIds: availableOptions.map(opt => ({ id: opt.id, type: opt.type })),
-                              validServicesIds: validServices.map(s => s.service_id),
-                            });
-
-                            // Проверка услуг для обычных пользователей (только для упаковки, не для перевозки)
-                            if (includePacking && validServices.length === 0 && !isAdminOrManager) {
-                              // Проверяем, есть ли хотя бы услуга "Газель" при перевозке
-                              const hasGazelle = includeMoving && validServices.some(s => {
-                                const serviceId = s.service_id?.toString();
-                                const gazelleId = gazelleService?.id?.toString();
-                                return serviceId === gazelleId;
-                              });
-                              if (!hasGazelle) {
-                                showErrorToast('Добавьте хотя бы одну услугу для упаковки');
-                                setIsCreatingOrder(false);
-                                return;
-                              }
-                            }
-
-                            // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
-                            const hasPackagingServices = includePacking && validServices.some(s => {
-                              if (!gazelleService) return true; // Если gazelleService не установлен, считаем все услуги упаковкой
-                              const serviceId = s.service_id?.toString();
-                              const gazelleId = gazelleService.id?.toString();
-                              return serviceId !== gazelleId; // услуги кроме Газели
-                            });
-                            // Проверяем наличие услуги "Газель" в validServices
-                            const hasGazelleService = includeMoving && (() => {
-                              if (gazelleService) {
-                                const gazelleId = gazelleService.id?.toString();
-                                return validServices.some(s => s.service_id?.toString() === gazelleId);
-                              }
-                              // Если gazelleService не установлен, проверяем по типу из serviceOptions
-                              const gazelleFromOption = serviceOptions.find(opt => opt.type === "GAZELLE_FROM");
-                              if (gazelleFromOption) {
-                                const gazelleId = gazelleFromOption.id?.toString();
-                                return validServices.some(s => s.service_id?.toString() === gazelleId);
-                              }
-                              return false;
-                            })();
-                            const isPackageSelected = hasPackagingServices || hasGazelleService;
-
-                            // Формируем дату начала бронирования для индивидуального хранения
-                            const individualStartDate = individualBookingStartDate ? new Date(individualBookingStartDate).toISOString() : new Date().toISOString();
-
-                            // Проверяем наличие GAZELLE_TO в услугах (независимо от includeMoving) ДО создания orderData
-                            const hasGazelleTo = validServices.some(s => {
-                              // Нормализуем ID для сравнения (приводим к числу)
-                              const serviceId = Number(s.service_id);
-                              // Используем availableOptions вместо serviceOptions
-                              const service = availableOptions.find(opt => Number(opt.id) === serviceId);
-                              const isGazelleTo = service && service.type === "GAZELLE_TO";
-                              console.log("🔍 Проверка услуги:", { 
-                                serviceId: s.service_id,
-                                normalizedServiceId: serviceId,
-                                foundService: service ? { id: service.id, type: service.type } : null,
-                                serviceType: service?.type,
-                                isGazelleTo,
-                                availableOptionsCount: availableOptions.length,
-                                availableOptionsIds: availableOptions.map(opt => ({ id: opt.id, type: opt.type }))
-                              });
-                              return isGazelleTo;
-                            });
-
-                            console.log("🔍 Проверка GAZELLE_TO:", {
-                              hasGazelleTo,
-                              validServices,
-                              availableOptions: availableOptions.length,
-                              serviceOptions: serviceOptions.length,
-                              movingOrders,
-                              movingAddressTo,
-                              includeMoving,
-                            });
-
-                            // Создаем moving_orders
-                            const allMovingOrders = [];
-                            
-                            if (includeMoving && movingAddressFrom.trim()) {
-                              // Добавляем доставку (PENDING с direction TO_WAREHOUSE)
-                              const pickupDate = movingPickupDate 
-                                ? new Date(movingPickupDate)
-                                : new Date();
-                              pickupDate.setHours(10, 0, 0, 0);
-                              
-                              allMovingOrders.push({
-                                moving_date: pickupDate.toISOString(),
-                                status: 'PENDING',
-                                direction: 'TO_WAREHOUSE',
-                                address: movingAddressFrom.trim(),
-                              });
-                            }
-                            
-                            // Добавляем возврат вещей, если есть GAZELLE_TO в услугах
-                            if (hasGazelleTo) {
-                              console.log("✅ GAZELLE_TO найдена, добавляем moving_order");
-                              
-                              // Используем moving_order из состояния или создаем новый
-                              const returnOrder = movingOrders.find(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
-                              if (returnOrder && returnOrder.address && returnOrder.address.trim()) {
-                                console.log("✅ Используем существующий moving_order из состояния");
-                                allMovingOrders.push({
-                                  moving_date: returnOrder.moving_date,
-                                  status: "PENDING",
-                                  direction: "TO_CLIENT",
-                                  address: returnOrder.address.trim(),
-                                });
-                              } else {
-                                console.log("✅ Создаем новый moving_order для возврата");
-                                // Создаем дату возврата: дата начала бронирования + количество месяцев
-                                const startDate = new Date(individualBookingStartDate || new Date());
-                                const returnDate = new Date(startDate);
-                                returnDate.setMonth(returnDate.getMonth() + monthsNumber);
-                                returnDate.setHours(10, 0, 0, 0);
-                                
-                                // Используем movingAddressTo, если он указан, иначе movingAddressFrom (если includeMoving), иначе пустая строка
-                                const returnAddress = movingAddressTo.trim() || (includeMoving ? movingAddressFrom.trim() : "");
-                                
-                                if (!returnAddress) {
-                                  console.error("❌ Адрес для возврата не указан!");
-                                  showErrorToast('Укажите адрес доставки вещей для услуги "Газель - возврат вещей"');
-                                  setIsCreatingOrder(false);
-                                  return;
-                                }
-                                
-                                allMovingOrders.push({
-                                  moving_date: returnDate.toISOString(),
-                                  status: "PENDING",
-                                  direction: "TO_CLIENT",
-                                  address: returnAddress,
-                                });
-                              }
-                            }
-                            
-                            console.log("📦 Финальные moving_orders:", allMovingOrders);
-
-                            // is_selected_moving должен быть true, если есть любые moving_orders (включая возврат от GAZELLE_TO)
-                            const isMovingSelected = includeMoving || hasGazelleTo || allMovingOrders.length > 0;
-
-                            const orderData = {
-                              storage_id: previewStorage.id,
-                              months: monthsNumber,
-                              start_date: individualStartDate,
-                              order_items: [{
-                                name: previewStorage.name || `Бокс ${previewStorage.id}`,
-                                volume: 0,
-                                cargo_mark: 'NO'
-                              }],
-                              is_selected_moving: isMovingSelected,
-                              is_selected_package: isPackageSelected,
-                            };
-
-                            // Добавляем user_id для менеджеров/админов
-                            if (isAdminOrManager && selectedClientUser) {
-                              orderData.user_id = selectedClientUser.id;
-                            }
-                            
-                            // Добавляем moving_orders только если они есть
-                            if (allMovingOrders.length > 0) {
-                              orderData.moving_orders = allMovingOrders;
-                              // Дополнительно убеждаемся, что is_selected_moving = true
-                              orderData.is_selected_moving = true;
-                            }
-
-                            // Добавляем услуги (включая Газель при перевозке, даже если упаковка не включена)
-                            if (validServices.length > 0) {
-                              orderData.services = validServices.map((service) => ({
-                                service_id: Number(service.service_id), // Уже Number после преобразования выше
-                                count: service.count,
-                              }));
-                            }
-
-                            console.log("📤 Отправляемые данные заказа:", orderData);
-
-                            const result = await warehouseApi.createOrder(orderData);
-
-                            toastOrderRequestSent();
-
-                            // Для embedded — вызываем callback, для админа/менеджера — на запросы, для обычных пользователей — на thank-you
-                            setTimeout(() => {
-                              if (embedded && onBookingComplete) {
-                                onBookingComplete();
-                              } else if (isAdminOrManager) {
-                                navigate('/personal-account', { state: { activeSection: 'request' } });
-                              } else {
-                                navigate('/thank-you');
-                              }
-                            }, 1500);
-                          } catch (error) {
-                            console.error('Ошибка при создании заказа:', error);
-                            const errorData = error.response?.data;
-                            const errorMessage = errorData?.message || 
-                                                errorData?.details?.[0]?.message ||
-                                                errorData?.error ||
-                                                'Не удалось создать заказ. Попробуйте позже.';
-                            
-                            // Проверяем, не верифицирован ли телефон
-                            const isPhoneNotVerified = error.response?.status === 400 && (
-                                errorMessage.includes('Phone number must be verified') ||
-                                errorMessage.includes('phone number') ||
-                                errorData?.code === 'PHONE_NOT_VERIFIED'
-                            );
-                            
-                            if (isPhoneNotVerified) {
-                              showErrorToast(
-                                'Телефон не верифицирован. Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.',
-                                { autoClose: 5000 }
-                              );
-                              if (!embedded) {
-                                setTimeout(() => {
-                                  navigate('/personal-account', { state: { activeSection: 'personal' } });
-                                }, 2000);
-                              }
-                              setIsCreatingOrder(false);
-                              return;
-                            }
-                            
-                            setOrderError(errorMessage);
-                            showErrorToast(errorMessage);
-                          } finally {
-                            setIsCreatingOrder(false);
-                          }
-                        }}
-                        disabled={
-                          (isAdminOrManager && !selectedClientUser) ||
-                          isCreatingOrder ||
-                          !previewStorage ||
-                          !monthsNumber ||
-                          monthsNumber <= 0 ||
-                          (includeMoving && !movingAddressFrom.trim())
-                        }
-                      >
-                        {isCreatingOrder ? 'Создание заказа...' : 'Забронировать бокс'}
-                      </SmartButton>
-                      
-                      {orderError && (
-                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-sm text-red-600">{orderError}</p>
-                        </div>
-                      )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-
-      {/* Модальное окно с полноэкранной картой - только для INDIVIDUAL складов */}
-      {isMapModalOpen && !isCloud && warehouse && embedded && (
-        <div className="fixed inset-0 z-[1200]">
-          {isMobileView ? (
-            <div className="absolute inset-0 flex flex-col justify-end">
-              <button
-                type="button"
-                aria-label="Закрыть карту"
-                onClick={() => setIsMapModalOpen(false)}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              />
-              <div className="relative z-10 mt-auto w-full max-h-[92vh] rounded-t-3xl border border-[#d7dbe6]/60 bg-white shadow-2xl overflow-hidden flex flex-col">
-                <div className="flex justify-center py-3 flex-shrink-0">
-                  <span className="block h-1.5 w-12 rounded-full bg-[#d7dbe6]" />
-                </div>
-                <div className="px-5 pb-6 flex flex-col gap-4 flex-1 min-h-0 overflow-hidden">
-                  <div className="flex items-start justify-between gap-3 flex-shrink-0">
-                    <div className="pr-6">
-                      <p className="text-[11px] uppercase tracking-[0.24em] text-[#6B6B6B]">
-                        Схема склада
-                      </p>
-                      <h3 className="text-lg font-semibold text-[#273655] leading-snug">
-                        {warehouse?.name || "Карта склада"}
-                      </h3>
-                      {warehouse?.address && (
-                        <p className="mt-1 text-sm text-[#6B6B6B]">
-                          {warehouse.address}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsMapModalOpen(false)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d7dbe6] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#273655]/30"
-                      aria-label="Закрыть карту"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-hidden rounded-2xl border border-[#d7dbe6]/70 bg-white">
-                    <WarehouseCanvasViewer
-                      warehouse={warehouse}
-                      userRole={user?.role || 'USER'}
-                      isViewOnly={true}
-                      showControls={true}
-                      isFullscreen={true}
-                      onBoxSelect={async (storage) => {
-                        // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
-                        if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
-                          setIsLoadingPendingOrder(true);
-                          try {
-                            const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                            setPendingOrder(order);
-                            setIsPendingOrderModalOpen(true);
-                            setIsMapModalOpen(false);
-                          } catch (error) {
-                            if (error.response.status === 404) {
-                              setPendingOrder(null);
-                              setIsPendingOrderModalOpen(true);
-                              setIsMapModalOpen(false);
-                            } else {
-                              console.error('Ошибка при загрузке заказа:', error);
-                            }
-
-                          } finally {
-                            setIsLoadingPendingOrder(false);
-                            setPreviewStorage(storage);
-                          }
-                        } else {
-                          // Для обычных боксов просто выбираем
-                          setPreviewStorage(storage);
-                        }
-                      }}
-                      selectedStorage={previewStorage}
-                      className="w-full h-full"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-6">
-              <div className="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-[#d7dbe6] flex flex-col max-h-[90vh]">
-                <button
-                  type="button"
-                  onClick={() => setIsMapModalOpen(false)}
-                  className="absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d7dbe6] text-[#273655] hover:bg-[#273655] hover:text-white transition-colors"
-                  aria-label="Закрыть карту"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-                <div className="p-6 pb-4 sm:p-8 sm:pb-6 flex flex-col gap-4 h-full overflow-hidden">
-                  <div className="space-y-1 pr-12 flex-shrink-0">
-                    <p className="text-xs uppercase tracking-[0.2em] text-[#6B6B6B]">
-                      Схема склада
-                    </p>
-                    <h3 className="text-xl font-bold text-[#273655]">
-                      {warehouse?.name || "Карта склада"}
-                    </h3>
-                    {warehouse?.address && (
-                      <p className="text-sm text-[#6B6B6B]">{warehouse.address}</p>
-                    )}
-                  </div>
-                  <div className="flex-1 min-h-0 overflow-hidden">
-                    <WarehouseCanvasViewer
-                      warehouse={warehouse}
-                      userRole={user?.role || 'USER'}
-                      isViewOnly={true}
-                      showControls={true}
-                      isFullscreen={true}
-                      onBoxSelect={async (storage) => {
-                        // Если бокс имеет статус PENDING и пользователь админ/менеджер, загружаем информацию о заказе
-                        if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
-                          setIsLoadingPendingOrder(true);
-                          try {
-                            const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                            setPendingOrder(order);
-                            setIsPendingOrderModalOpen(true);
-                            setIsMapModalOpen(false);
-                          } catch (error) {
-                            if (error.response.status === 404) {
-                              setPendingOrder(null);
-                              setIsPendingOrderModalOpen(true);
-                            } else {
-                              console.error('Ошибка при загрузке заказа:', error);
-                            }
-                          } finally {
-                            setIsLoadingPendingOrder(false);
-                            setPreviewStorage(storage);
-                          }
-                        } else {
-                          // Для обычных боксов просто выбираем
-                          setPreviewStorage(storage);
-                        }
-                      }}
-                      selectedStorage={previewStorage}
-                      className="w-full h-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          </main>
         </div>
-      )}
-
-      {/* Модальное окно выбора пользователя для менеджеров/админов */}
-      {isAdminOrManager && (
-        <ClientSelector
-          isOpen={isClientSelectorOpen}
-          onClose={() => setIsClientSelectorOpen(false)}
-          selectedUser={selectedClientUser}
-          onUserSelect={(user) => {
-            setSelectedClientUser(user);
-            if (user) {
-              setIsClientSelectorOpen(false);
-            }
-          }}
-        />
-      )}
 
       {/* Модальное окно информации о заказе PENDING */}
       {isAdminOrManager && (
