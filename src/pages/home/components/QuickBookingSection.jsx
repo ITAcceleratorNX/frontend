@@ -87,7 +87,7 @@ export default function QuickBookingSection() {
                         className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 bg-white border-2 border-[#31876D] text-[#31876D] text-sm sm:text-base font-medium rounded-lg hover:bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#31876D] focus:ring-offset-2 touch-manipulation"
                     >
                         <Play size={18} className="flex-shrink-0" fill="currentColor" />
-                        Смотреть видео
+                        Смотреть инструкцию
                     </button>
                 </div>
 

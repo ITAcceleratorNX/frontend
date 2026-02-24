@@ -54,13 +54,15 @@ function FormatBlock({
                     ))}
                 </ul>
 
-                <button
-                    onClick={handleMoreClick}
-                    className="inline-flex items-center gap-2 text-[#31876D] font-medium hover:opacity-80 transition-opacity"
-                >
-                    <span>Смотреть видео</span>
-                    <ChevronRight size={18} />
-                </button>
+                {(onMore || videoSrc) && (
+                    <button
+                        onClick={handleMoreClick}
+                        className="inline-flex items-center gap-2 text-[#31876D] font-medium hover:opacity-80 transition-opacity"
+                    >
+                        <span>Смотреть видео</span>
+                        <ChevronRight size={18} />
+                    </button>
+                )}
             </div>
 
             {/* Video modal */}
@@ -124,7 +126,6 @@ export default function StorageFormatsSection({ onMore }) {
                         "Упрощённый доступ",
                     ]}
                     image={oblachImg}
-                    onMore={onMore}
                 />
 
             </div>
