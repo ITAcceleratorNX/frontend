@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import indiImg from "../../../assets/indi.png";
 import oblachImg from "../../../assets/oblach.png";
+import indivHranVideo from "@/video/indiv_hran.mp4";
+import { Dialog, DialogContent } from "@/components/ui";
 
 
 function FormatBlock({
@@ -11,7 +13,18 @@ function FormatBlock({
                          image,
                          reverse = false,
                          onMore,
+                         videoSrc,
                      }) {
+    const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+    const handleMoreClick = () => {
+        if (videoSrc) {
+            setIsVideoOpen(true);
+        } else {
+            onMore?.();
+        }
+    };
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-x-16 md:gap-y-8 lg:gap-x-16 lg:gap-y-8 items-center">
 
@@ -42,13 +55,32 @@ function FormatBlock({
                 </ul>
 
                 <button
-                    onClick={onMore}
+                    onClick={handleMoreClick}
                     className="inline-flex items-center gap-2 text-[#31876D] font-medium hover:opacity-80 transition-opacity"
                 >
-                    <span>Подробнее</span>
+                    <span>Смотреть видео</span>
                     <ChevronRight size={18} />
                 </button>
             </div>
+
+            {/* Video modal */}
+            {videoSrc && (
+                <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
+                    <DialogContent className="!max-w-[100vw] w-[100vw] sm:w-[95vw] sm:!max-w-4xl !h-[95vh] sm:!h-auto sm:!min-h-0 p-0 gap-0 overflow-hidden bg-black border-0 rounded-none sm:rounded-lg [&>button]:text-white [&>button]:hover:text-white">
+                        <div className="relative w-full h-full min-h-[85vh] sm:min-h-[360px] sm:aspect-video flex items-center justify-center">
+                            <video
+                                src={videoSrc}
+                                controls
+                                className="w-full h-full max-w-full max-h-full object-contain"
+                                autoPlay
+                                playsInline
+                            >
+                                Ваш браузер не поддерживает воспроизведение видео.
+                            </video>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }
@@ -78,6 +110,7 @@ export default function StorageFormatsSection({ onMore }) {
                         image={indiImg}
                         reverse
                         onMore={onMore}
+                        videoSrc={indivHranVideo}
                     />
                 </div>
 
