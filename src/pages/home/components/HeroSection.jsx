@@ -7,9 +7,12 @@ export default function HeroSection({ handleHeroBookingClick }) {
         <div className="flex-1 relative overflow-hidden bg-gradient-to-r bg-[#FFF] -mt-16 pt-16">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative z-10">
                 <section className="flex flex-col items-center text-center">
-                    <h1 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#202422] leading-tight mb-6 sm:mb-8">
-                        храните там, где удобно и безопасно
+                    <h1 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#202422] leading-tight">
+                        храните там, где удобно
                     </h1>
+                    <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#202422] leading-tight mb-6 sm:mb-8">
+                        и безопасно
+                    </h2>
                     <div className="text-sm sm:text-base text-[#5C625F] leading-relaxed mb-12 max-w-2xl mt-2">
                         
                         <p className="mb-1">Боксы от 2 до 50 м² по специальной цене при аренде от 3 месяцев.</p>
