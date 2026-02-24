@@ -45,12 +45,12 @@ function StepCard({ Icon, title, text }) {
 function VideoModal({ open, onOpenChange, videoSrc }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="!max-w-[100vw] w-[100vw] sm:w-[95vw] sm:!max-w-4xl !h-[95vh] sm:!h-auto sm:!min-h-0 p-0 gap-0 overflow-hidden bg-black border-0 rounded-none sm:rounded-lg [&>button]:text-white [&>button]:hover:text-white">
-                <div className="relative w-full h-full min-h-[85vh] sm:min-h-[360px] sm:aspect-video flex items-center justify-center">
+            <DialogContent className="!max-w-[100vw] w-[100vw] sm:w-auto sm:max-w-[95vw] !h-[95vh] sm:!h-auto sm:!min-h-0 p-0 gap-0 overflow-hidden bg-transparent sm:bg-transparent border-0 shadow-none rounded-none [&>button]:text-white [&>button]:hover:text-white [&>button]:sm:bg-black/50 [&>button]:sm:rounded-full">
+                <div className="relative w-full h-full min-h-[85vh] sm:min-h-0 sm:flex sm:items-center sm:justify-center">
                     <video
                         src={videoSrc}
                         controls
-                        className="w-full h-full max-w-full max-h-full object-contain"
+                        className="block w-full h-full sm:w-auto sm:h-auto sm:max-h-[90vh] sm:max-w-full object-contain"
                         autoPlay
                         playsInline
                     >
