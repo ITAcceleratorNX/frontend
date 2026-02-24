@@ -182,7 +182,7 @@ export const ordersApi = {
   downloadItemFile: async (itemId) => {
     try {
       // Используем axios напрямую для получения файла
-      const response = await axios.get(`http://localhost:8080/moving/download/item/${itemId}`, {
+      const response = await axios.get(`https://api.extraspace.kz/moving/download/item/${itemId}`, {
         responseType: 'blob', // Важно для получения файла
       });
       return {
