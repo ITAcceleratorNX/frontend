@@ -311,28 +311,8 @@ const PaymentPreviewModal = ({
         <div className="px-6 pt-6 pb-4 flex-shrink-0">
           <h2 className="text-xl font-bold text-[#273655]">График платежей</h2>
           <p className="text-sm text-gray-500 mt-1">
-            {storageInfo.name || (storageType === 'INDIVIDUAL' ? 'Бокс' : 'Тариф')}
-            {storageInfo.volume && ` • ${storageInfo.volume} ${volumeUnit}`}
-            {` • ${monthsCount} мес.`}
+            {monthsCount} мес.
           </p>
-          {pricingBreakdown && (
-            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-2xl">
-              <div className="text-sm font-semibold text-green-700 mb-1">
-                {pricingBreakdown.ruleName}
-              </div>
-              {pricingBreakdown.promoMonths ? (
-                <div className="text-xs text-green-600 space-y-0.5">
-                  <div>Первые {pricingBreakdown.promoMonths} мес: <span className="font-bold">{formatPrice(pricingBreakdown.promoMonthlyAmount)} ₸/мес</span> <span className="text-green-500">({formatPrice(pricingBreakdown.promoPrice)} ₸/м²)</span></div>
-                  <div>Далее: <span className="font-bold">{formatPrice(pricingBreakdown.standardMonthlyAmount)} ₸/мес</span> <span className="text-green-500">({formatPrice(pricingBreakdown.standardPrice)} ₸/м²)</span></div>
-                </div>
-              ) : (
-                <div className="text-xs text-green-600">
-                  Спец.цена: <span className="font-bold">{formatPrice(pricingBreakdown.standardMonthlyAmount)} ₸/мес</span>
-                  {pricingBreakdown.discountPercent && ` (скидка ${pricingBreakdown.discountPercent}%)`}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Контент - скроллится */}
@@ -378,7 +358,7 @@ const PaymentPreviewModal = ({
                     : 'text-gray-500 hover:text-[#273655]'
                 }`}
               >
-                Сразу всё
+                Полная оплата
               </button>
             </div>
           </div>

@@ -87,6 +87,22 @@ const UserDelivery = ({ embeddedMobile = false }) => {
         '18:00-21:00'
     ];
 
+    // Проверка: прошел ли интервал (для доставки на сегодня — закрываем интервалы до текущего времени)
+    const isIntervalDisabled = (interval, movingDate) => {
+        if (!movingDate) return false;
+        const deliveryDate = new Date(movingDate);
+        const now = new Date();
+        const isToday = deliveryDate.getDate() === now.getDate() &&
+            deliveryDate.getMonth() === now.getMonth() &&
+            deliveryDate.getFullYear() === now.getFullYear();
+        if (!isToday) return false;
+        const [, endStr] = interval.split('-');
+        const [endH, endM] = endStr.trim().split(':').map(Number);
+        const endMinutes = endH * 60 + endM;
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        return endMinutes <= nowMinutes;
+    };
+
     const queryClient = useQueryClient();
 
     // Получение доставок
@@ -387,17 +403,22 @@ const UserDelivery = ({ embeddedMobile = false }) => {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-2 py-4">
-                        {deliveryTimeIntervals.map((interval) => (
-                            <Button
-                                key={interval}
-                                onClick={() => handleTimeIntervalSelect(interval)}
-                                className="w-full justify-start text-left h-auto py-3 px-4"
-                                variant="outline"
-                            >
-                                <Clock className="w-5 h-5 mr-3" />
-                                <span className="text-lg font-medium">{interval}</span>
-                            </Button>
-                        ))}
+                        {deliveryTimeIntervals.map((interval) => {
+                            const disabled = selectedDeliveryForTime && isIntervalDisabled(interval, selectedDeliveryForTime.moving_date);
+                            return (
+                                <Button
+                                    key={interval}
+                                    onClick={() => !disabled && handleTimeIntervalSelect(interval)}
+                                    disabled={disabled}
+                                    className="w-full justify-start text-left h-auto py-3 px-4"
+                                    variant="outline"
+                                >
+                                    <Clock className="w-5 h-5 mr-3" />
+                                    <span className={`text-lg font-medium ${disabled ? 'text-gray-400 line-through' : ''}`}>{interval}</span>
+                                    {disabled && <span className="ml-2 text-xs text-gray-400">(время уже прошло)</span>}
+                                </Button>
+                            );
+                        })}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => { setTimeSelectionModalOpen(false); setSelectedDeliveryForTime(null); }}>

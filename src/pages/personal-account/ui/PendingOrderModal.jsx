@@ -463,8 +463,8 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                   </CardContent>
                 </Card>
               )}
-              {/* Предметы заказа */}
-              {order?.items && Array.isArray(order?.items) && order?.items.length > 0 && (
+              {/* Предметы заказа — скрываем для индивидуального хранения */}
+              {order?.items && Array.isArray(order?.items) && order?.items.length > 0 && order?.storage?.storage_type !== 'INDIVIDUAL' && (
                 <Card className="border-gray-200 rounded-2xl">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-semibold text-[#202422]">

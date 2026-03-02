@@ -696,8 +696,8 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
         </div>
       )}
 
-      {/* Предметы */}
-      {order.items && order.items.length > 0 && (
+      {/* Предметы — скрываем для индивидуального хранения */}
+      {order.items && order.items.length > 0 && order.storage?.storage_type !== 'INDIVIDUAL' && (
         <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}>
           <p className="text-white/90 text-sm mb-2">Предметы:</p>
           

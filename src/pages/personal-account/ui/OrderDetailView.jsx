@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
@@ -9,6 +9,7 @@ import {
 } from '../../../shared/lib/types/orders';
 import { getServiceTypeName, formatServiceDescription } from '../../../shared/lib/utils/serviceNames';
 import EditLocationModal from './EditLocationModal';
+import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { AlertTriangle, Unlock, Tag } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
 
@@ -25,6 +26,30 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+  const [fetchedWarehouseName, setFetchedWarehouseName] = useState(null);
+
+  // API возвращает storage.warehouse_id, но не storage.warehouse — подгружаем склад по ID
+  useEffect(() => {
+    if (!order?.storage) {
+      setFetchedWarehouseName(null);
+      return;
+    }
+    const warehouseFromApi = order.storage.warehouse?.name;
+    const warehouseId = order.storage.warehouse_id ?? order.storage.warehouse?.id;
+    if (warehouseFromApi) {
+      setFetchedWarehouseName(null);
+      return;
+    }
+    if (!warehouseId) {
+      setFetchedWarehouseName(null);
+      return;
+    }
+    let cancelled = false;
+    warehouseApi.getWarehouseById(warehouseId)
+      .then((wh) => { if (!cancelled && wh?.name) setFetchedWarehouseName(wh.name); })
+      .catch(() => { if (!cancelled) setFetchedWarehouseName(null); });
+    return () => { cancelled = true; };
+  }, [order?.storage?.id, order?.storage?.warehouse_id, order?.storage?.warehouse?.name, order?.storage?.warehouse?.id]);
 
   // Расчёт суммы услуг. Бэкенд должен возвращать в GET /orders сервисы с полем price
   // или OrderService.total_price (order_service.total_price при snake_case).
@@ -178,7 +203,15 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
         <div className="space-y-3">
           <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Детали заказа</h3>
           <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
-            <InfoRow label="Склад/Бокс" value={order.storage?.name || 'Не указано'} />
+            <InfoRow
+              label="Склад/Бокс"
+              value={(() => {
+                const warehouseName = order.storage?.warehouse?.name ?? fetchedWarehouseName;
+                const boxName = order.storage?.name;
+                if (warehouseName && boxName) return `${warehouseName}, бокс ${boxName}`;
+                return warehouseName || boxName || 'Не указано';
+              })()}
+            />
             <Separator className="bg-gray-300" />
             <InfoRow 
               label="Тип хранения" 
@@ -355,8 +388,8 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
         </div>
       </div>
 
-      {/* Предметы в заказе */}
-      {order.items && order.items.length > 0 && (
+      {/* Предметы в заказе — скрываем для индивидуального хранения */}
+      {order.items && order.items.length > 0 && order.storage?.storage_type !== 'INDIVIDUAL' && (
         <div className="space-y-3">
           <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">
             Предметы в заказе ({order.items.length})

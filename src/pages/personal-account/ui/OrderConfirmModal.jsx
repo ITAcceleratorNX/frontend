@@ -207,8 +207,8 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
             </CardContent>
           </Card>
 
-          {/* Предметы для хранения */}
-          {order.items && order.items.length > 0 && (
+          {/* Предметы для хранения — скрываем для индивидуального хранения */}
+          {order.items && order.items.length > 0 && order.storage?.storage_type !== 'INDIVIDUAL' && (
             <Card className="border-gray-200 rounded-lg">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">

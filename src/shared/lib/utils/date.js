@@ -18,6 +18,20 @@ export function getTodayLocalDateString() {
 }
 
 /**
+ * Возвращает дату следующего дня в формате YYYY-MM-DD по локальному времени.
+ * Используется для даты доставки — доставка возможна только со следующего дня.
+ * @returns {string}
+ */
+export function getTomorrowLocalDateString() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Форматирует дату для календаря и периодов.
  * @param {string|Date} dateInput - Дата (ISO строка или Date)
  * @param {Intl.DateTimeFormatOptions} [options] - Опции Intl (например { day: '2-digit', month: 'short' })

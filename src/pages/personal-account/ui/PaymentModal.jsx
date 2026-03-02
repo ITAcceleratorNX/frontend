@@ -215,8 +215,8 @@ const PaymentModal = ({ isOpen, order, onSuccess, onCancel }) => {
             </CardContent>
           </Card>
 
-          {/* Предметы */}
-          {order.items && order.items.length > 0 && (
+          {/* Предметы — скрываем для индивидуального хранения */}
+          {order.items && order.items.length > 0 && order.storage?.storage_type !== 'INDIVIDUAL' && (
             <Card className="border-gray-200 rounded-lg">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between mb-2">

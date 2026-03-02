@@ -477,8 +477,8 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
         </div>
 
         
-        {/* Предметы в заказе */}
-        {order.items && order.items.length > 0 && (
+        {/* Предметы в заказе — скрываем для индивидуального хранения */}
+        {order.items && order.items.length > 0 && order.storage?.storage_type !== 'INDIVIDUAL' && (
           <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2 text-teal-700">

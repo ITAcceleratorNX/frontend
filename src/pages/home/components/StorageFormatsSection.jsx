@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ChevronRight, Play } from "lucide-react";
 import indiImg from "../../../assets/indi.png";
 import oblachImg from "../../../assets/oblach.png";
-import oblozhImg from "../../../assets/oblozh.png";
+import indivObloshkaImg from "../../../assets/indiv_obloshka.png";
 import indivHranVideo from "@/video/indiv_hran.mp4";
 import { Dialog, DialogContent } from "@/components/ui";
 
@@ -134,7 +134,7 @@ export default function StorageFormatsSection({ onMore }) {
                         reverse
                         onMore={onMore}
                         videoSrc={indivHranVideo}
-                        videoPoster={oblozhImg}
+                        videoPoster={indivObloshkaImg}
                     />
                 </div>
 

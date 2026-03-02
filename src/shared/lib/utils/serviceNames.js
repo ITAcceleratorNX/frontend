@@ -1,6 +1,19 @@
 /**
+ * Приводит первую букву строки к заглавной (для единообразия названий услуг).
+ * @param {string} str - Строка
+ * @returns {string}
+ */
+export const capitalizeFirst = (str) => {
+  if (!str || typeof str !== "string") return str || "";
+  const trimmed = str.trim();
+  if (!trimmed) return str;
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+};
+
+/**
  * Убирает габариты вида 60*40*40, 60×40×40 и т.д. из описания услуги.
  * Оставляет только текст в скобках (120 мм), (шт) и т.п.
+ * Всегда возвращает строку с заглавной буквы.
  * @param {string} desc - Описание услуги
  * @returns {string} - Отформатированное описание без габаритов
  */
@@ -8,8 +21,8 @@ export const formatServiceDescription = (desc) => {
   if (!desc || typeof desc !== "string") return desc || "";
   let result = desc.replace(/\d+\s*[*×xX]\s*\d+\s*[*×xX]\s*\d+/g, "").trim();
   // Замена для Заказанных услуг в личном кабинете менеджера
-  result = result.replace(/Газель - забор вещей\s*(\(с клиента на склад\))?/g, "Газель - доставка (с клиента на склад)");
-  return result;
+  result = result.replace(/Газель - забор вещей\s*(\(с клиента на склад\))?/gi, "Газель - Доставка (с клиента на склад)");
+  return capitalizeFirst(result);
 };
 
 /**
@@ -29,7 +42,7 @@ export const getServiceTypeName = (type) => {
     // Услуги перевозки
     GAZELLE: "Газель",
     GAZELLE_FROM: "Газель - Доставка",
-    GAZELLE_TO: "Газель - возврат вещей",
+    GAZELLE_TO: "Газель - Возврат вещей",
     
     // Упаковочные материалы
     STRETCH_FILM: "Стрейч-плёнка",
