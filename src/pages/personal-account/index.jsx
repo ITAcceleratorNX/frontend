@@ -52,6 +52,9 @@ const PersonalAccountPage = memo(() => {
   // Последняя вкладка orders/payments/delivery для кнопки «Назад» на мобильных (Профиль / Уведомления)
   const [lastOrdersTab, setLastOrdersTab] = useState('orders');
 
+  // Начальный фильтр в «Мои заказы» при редиректе после создания заказа (категория «Договор»)
+  const [ordersInitialFilter, setOrdersInitialFilter] = useState(null);
+
 
   // Сбрасываем раздел чата для ролей USER и MANAGER
   useEffect(() => {
@@ -65,10 +68,23 @@ const PersonalAccountPage = memo(() => {
   useEffect(() => {
     if (location.state?.activeSection) {
       setActiveNav(location.state.activeSection);
-      // Очищаем состояние после использования
-      navigate(location.pathname, { replace: true });
+      if (location.state.activeSection === 'orders' && location.state.ordersFilter) {
+        setOrdersInitialFilter(location.state.ordersFilter);
+      }
+      // Очищаем state в URL после применения (откладываем, чтобы setState успел отрендериться)
+      const path = location.pathname;
+      const id = setTimeout(() => navigate(path, { replace: true }), 0);
+      return () => clearTimeout(id);
     }
   }, [location.state, navigate, location.pathname]);
+
+  // Сбрасываем начальный фильтр заказов после первого отображения (чтобы при следующем открытии «Мои заказы» была вкладка «Все»)
+  useEffect(() => {
+    if (activeNav === 'orders' && ordersInitialFilter != null) {
+      const id = requestAnimationFrame(() => setOrdersInitialFilter(null));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [activeNav, ordersInitialFilter]);
 
   // Проверяем URL для установки активного раздела
   useEffect(() => {
@@ -150,6 +166,7 @@ const PersonalAccountPage = memo(() => {
         activeNav={activeNav}
         setActiveNav={handleMobileNav}
         lastOrdersTab={lastOrdersTab}
+        ordersInitialFilter={ordersInitialFilter}
       />
     );
   }
@@ -167,7 +184,7 @@ const PersonalAccountPage = memo(() => {
           )}
 
 
-          {activeNav === 'orders' && <UserOrdersPage />}
+          {activeNav === 'orders' && <UserOrdersPage initialFilter={ordersInitialFilter} />}
           {activeNav === 'personal' && (user?.user_type === 'LEGAL' ? <PersonalDataLegal /> : <PersonalData />)}
           {activeNav === 'contracts' && <Contracts />}
           {activeNav === 'chat' && <ChatSection />}
@@ -191,7 +208,7 @@ const PersonalAccountPage = memo(() => {
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab]);
+  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter]);
 
   return pageContent;
 });

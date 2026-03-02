@@ -509,19 +509,27 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
     }
   };
 
-  // Определяем фон карточки: зеленый градиент для активных/оплаченных, серый для неоплаченных/в обработке
+  // Фон карточки: серый — ожидает договор; бело-зелёный — договор подписан, ждёт оплату; более зелёный градиент — оплачен/активный
   const getCardBackground = () => {
     if (order.status === 'ACTIVE') {
-      return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для активных/оплаченных
-    } else {
-      return 'bg-[#999999]'; // Серый для неоплаченных/в обработке
+      return 'bg-gradient-to-b from-[#26B3AB] to-[#104D4A]'; // Более насыщенный зелёный после оплаты (цвета из проекта)
     }
+    const contractSignedUnpaid = order.status === 'PROCESSING' && order.contract_status === 'SIGNED' && order.payment_status === 'UNPAID';
+    if (contractSignedUnpaid) {
+      return 'bg-gradient-to-b from-[#26B3AB] to-[#00A991]'; // Градиент после подписания договора
+    }
+    return 'bg-[#999999]'; // Серый для ожидания договора
   };
 
   const cardBackground = getCardBackground();
+  // Тёмный градиент после подписания — используем белый текст; светлая карточка не нужна
+  const isLightCard = false;
+  const lightCardTextOverrides = isLightCard
+    ? ' [&_.text-white]:!text-[#004743] [&_.text-white\\/90]:!text-[#004743]/80 [&_.text-white\\/80]:!text-[#004743]/70 [&_.text-white\\/70]:!text-[#004743]/60 [&_.text-white\\/60]:!text-[#004743]/50 [&_.text-green-300]:!text-[#004743]'
+    : '';
 
   return (
-    <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
+    <div className={`${cardBackground} rounded-3xl relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'} ${isLightCard ? 'text-[#004743]' : 'text-white'}${lightCardTextOverrides}`}>
       {/* Статусные бейджи вверху - белые кнопки */}
       <div className={`flex flex-wrap items-center gap-1.5 min-[360px]:gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
         {order.status === 'ACTIVE' && (

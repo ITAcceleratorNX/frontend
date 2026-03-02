@@ -19,7 +19,7 @@ const TABS = [
   { key: 'delivery', label: 'Доставка', icon: Truck },
 ];
 
-const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'orders' }) => {
+const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'orders', ordersInitialFilter }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
@@ -31,7 +31,7 @@ const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'ord
   const renderContent = () => {
     switch (activeNav) {
       case 'orders':
-        return <UserOrdersPage embeddedMobile onPayOrder={() => setActiveNav('payments')} />;
+        return <UserOrdersPage embeddedMobile initialFilter={ordersInitialFilter} onPayOrder={() => setActiveNav('payments')} />;
       case 'payments':
         return <UserPayments embeddedMobile />;
       case 'delivery':
@@ -45,7 +45,7 @@ const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'ord
       case 'notifications':
         return <MobileNotificationsView />;
       default:
-        return <UserOrdersPage embeddedMobile onPayOrder={() => setActiveNav('payments')} />;
+        return <UserOrdersPage embeddedMobile initialFilter={ordersInitialFilter} onPayOrder={() => setActiveNav('payments')} />;
     }
   };
 

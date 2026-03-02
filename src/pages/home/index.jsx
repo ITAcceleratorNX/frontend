@@ -1194,9 +1194,11 @@ const HomePage = memo(() => {
       toastOrderRequestSent();
 
       const redirectSection = isAdminOrManager ? "request" : "orders";
+      const redirectState = { activeSection: redirectSection };
+      if (redirectSection === "orders") redirectState.ordersFilter = "contract";
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/personal-account", { state: { activeSection: redirectSection } });
+        navigate("/personal-account", { state: redirectState });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании заказа:", error);
@@ -1412,9 +1414,11 @@ const HomePage = memo(() => {
       toastOrderRequestSent();
 
       const cloudRedirectSection = isAdminOrManager ? "request" : "orders";
+      const cloudRedirectState = { activeSection: cloudRedirectSection };
+      if (cloudRedirectSection === "orders") cloudRedirectState.ordersFilter = "contract";
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['orders', 'user'] });
-        navigate("/personal-account", { state: { activeSection: cloudRedirectSection } });
+        navigate("/personal-account", { state: cloudRedirectState });
       }, 1500);
     } catch (error) {
       console.error("Ошибка при создании облачного заказа:", error);

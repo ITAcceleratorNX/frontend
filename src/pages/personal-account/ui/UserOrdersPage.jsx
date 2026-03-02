@@ -21,11 +21,18 @@ const ORDER_FILTER_OPTIONS = [
   { value: 'archive', label: 'В архиве' },
 ];
 
-const UserOrdersPage = ({ embeddedMobile = false, onPayOrder }) => {
+const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState(initialFilter || 'all');
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
+
+  // Синхронизация с initialFilter (при редиректе после создания заказа приходит с задержкой после effect в родителе)
+  useEffect(() => {
+    if (initialFilter != null) {
+      setActiveFilter(initialFilter);
+    }
+  }, [initialFilter]);
 
   // Получение заказов пользователя
   const {
