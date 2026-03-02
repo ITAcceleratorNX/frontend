@@ -109,10 +109,10 @@ const UserDelivery = ({ embeddedMobile = false }) => {
     const { data: deliveries = [], isLoading, error, refetch } = useQuery({
         queryKey: ['userDeliveries'],
         queryFn: ordersApi.getUserDeliveries,
-        staleTime: 5 * 60 * 1000,
+        staleTime: 2 * 60 * 1000,
         cacheTime: 10 * 60 * 1000,
         retry: 2,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true, // Обновление при возврате (после оплаты)
     });
 
     // Автоматическое открытие раздела по статусу доставки из state

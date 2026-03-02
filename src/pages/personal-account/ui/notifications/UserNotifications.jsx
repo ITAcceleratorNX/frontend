@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar, Bell, Inbox } from 'lucide-react';
 import NotificationCard from './NotificationCard';
 
-const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
+const UserNotifications = ({ notifications, onMarkAsRead, onNotificationClick, scale = 1 }) => {
   // Group notifications by date
   const groupedNotifications = notifications.reduce((groups, notification) => {
     const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
@@ -105,10 +105,11 @@ const UserNotifications = ({ notifications, onMarkAsRead, scale = 1 }) => {
                     }}
                   >
                     <NotificationCard
-                    notification={notification}
-                    onMarkAsRead={onMarkAsRead}
+                      notification={notification}
+                      onMarkAsRead={onMarkAsRead}
+                      onNotificationClick={onNotificationClick}
                       scale={1}
-                  />
+                    />
                   </div>
                 ))}
             </div>

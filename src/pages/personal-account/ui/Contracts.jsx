@@ -14,7 +14,8 @@ import {
   RefreshCcw, 
   Clock, 
   Ban, 
-  FileCheck 
+  FileCheck,
+  CreditCard 
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
@@ -243,7 +244,7 @@ function MonthSelector() {
   );
 }
 
-const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error, onDownloadItemFile, isDownloadingItem, onDownloadContract }) => {
+const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, error, onDownloadItemFile, isDownloadingItem, onDownloadContract, onNavigateToPayments }) => {
   const { isMobile } = useDeviceType();
   if (!contract) return null;
   
@@ -560,7 +561,22 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="flex flex-wrap gap-2">
+          {/* Кнопка «Перейти к оплате» — договор подписан, но не оплачен */}
+          {contract?.payment_status !== 'PAID' && contract?.contracts?.some((c) => 
+            ['Полностью подписан', 'Подписан компанией', 'Подписан клиентом'].includes(c?.status)
+          ) && (
+            <Button
+              className="bg-[#00A991] hover:bg-[#009882] text-white"
+              onClick={() => {
+                onClose?.();
+                onNavigateToPayments?.();
+              }}
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Перейти к оплате
+            </Button>
+          )}
           <Button 
             variant="outline" 
             className="w-full sm:w-auto mt-4" 
@@ -1055,7 +1071,22 @@ const Contracts = () => {
                         </div>
                       </td>
                       <td className="px-6 py-5 text-center">
-                        <div className="flex items-center justify-center space-x-3">
+                        <div className="flex items-center justify-center flex-wrap gap-2">
+                          {/* Перейти к оплате — договор подписан, но не оплачен */}
+                          {row.payment_status !== 'PAID' && row.contracts?.some((c) =>
+                            ['Полностью подписан', 'Подписан компанией', 'Подписан клиентом'].includes(c?.status)
+                          ) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate('/personal-account', { state: { activeSection: 'payments' } });
+                              }}
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00A991] hover:bg-[#009882] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00A991] transition-colors duration-200"
+                            >
+                              <CreditCard size={16} className="mr-2" />
+                              Оплатить
+                            </button>
+                          )}
                           {firstContract && (
                             <button
                               onClick={(e) => {
@@ -1146,6 +1177,20 @@ const Contracts = () => {
                     </div>
                   </div>
                   <div className="mt-3 grid grid-cols-1 gap-2">
+                    {row.payment_status !== 'PAID' && row.contracts?.some((c) =>
+                      ['Полностью подписан', 'Подписан компанией', 'Подписан клиентом'].includes(c?.status)
+                    ) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/personal-account', { state: { activeSection: 'payments' } });
+                        }}
+                        className="w-full h-11 inline-flex items-center justify-center rounded-lg bg-[#00A991] text-white font-medium hover:bg-[#009882] transition-colors"
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Оплатить
+                      </button>
+                    )}
                     {firstContract && (
                       <button
                         onClick={(e) => {
@@ -1188,6 +1233,7 @@ const Contracts = () => {
         onDownloadItemFile={handleDownloadItemFile}
         isDownloadingItem={downloadItemFileMutation.isPending}
         onDownloadContract={handleDownloadContract}
+        onNavigateToPayments={() => navigate('/personal-account', { state: { activeSection: 'payments' } })}
       />
       <CancelSurveyModal
         isOpen={isCancelSurveyOpen}

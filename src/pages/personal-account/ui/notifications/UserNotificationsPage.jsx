@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Settings, Loader2, AlertCircle, Search, X } from 'lucide-react';
 import { useNotifications } from '../../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './UserNotifications';
+import { getNotificationTarget } from './NotificationCard';
 import { Input } from '../../../../components/ui/input';
 import { Button } from '../../../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 
 const UserNotificationsPage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterRead, setFilterRead] = useState('all');
@@ -90,6 +93,16 @@ const UserNotificationsPage = () => {
 
   const hasActiveFilters = appliedFilters.query || appliedFilters.type !== 'all' || appliedFilters.read !== 'all';
   const hasUnappliedChanges = searchQuery !== appliedFilters.query || filterType !== appliedFilters.type || filterRead !== appliedFilters.read;
+
+  // Переход в нужный раздел ЛК при клике на уведомление
+  const handleNotificationClick = useCallback((notification) => {
+    const target = getNotificationTarget(notification);
+    const state = { activeSection: target.activeSection };
+    if (target.ordersFilter) state.ordersFilter = target.ordersFilter;
+    if (target.orderId) state.orderId = target.orderId;
+    if (target.deliveryId) state.deliveryId = target.deliveryId;
+    navigate('/personal-account', { state });
+  }, [navigate]);
 
   // Show loading state
   if (isLoading) {
@@ -285,6 +298,7 @@ const UserNotificationsPage = () => {
               <UserNotifications 
                 notifications={filteredNotifications || []}
                 onMarkAsRead={markAsRead}
+                onNotificationClick={handleNotificationClick}
               />
             )}
           </div>

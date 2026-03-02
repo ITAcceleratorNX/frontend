@@ -1,10 +1,33 @@
 import React from 'react';
 import { Bell, CheckCircle, MessageSquare } from 'lucide-react';
 
-const NotificationCard = ({ notification, onMarkAsRead, scale = 1 }) => {
+/**
+ * Определяет раздел ЛК для перехода по типу уведомления
+ */
+export const getNotificationTarget = (notification) => {
+  const type = notification?.notification_type;
+  const orderId = notification?.order_id;
+  
+  switch (type) {
+    case 'contract':
+      return { activeSection: 'orders', ordersFilter: 'contract', orderId };
+    case 'payment':
+      return { activeSection: 'payments', orderId };
+    case 'delivery':
+      return { activeSection: 'delivery', deliveryId: orderId };
+    case 'general':
+    default:
+      return { activeSection: 'orders' };
+  }
+};
+
+const NotificationCard = ({ notification, onMarkAsRead, onNotificationClick, scale = 1 }) => {
   const handleClick = () => {
     if (!notification.is_read && onMarkAsRead) {
       onMarkAsRead(notification.notification_id);
+    }
+    if (onNotificationClick) {
+      onNotificationClick(notification);
     }
   };
 

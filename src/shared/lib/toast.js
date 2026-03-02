@@ -46,6 +46,7 @@ export const showInfoToast = (message, options = {}) =>
         type: 'info',
         message,
         onClose: closeToast,
+        ...(options.title !== undefined && { title: options.title }),
       }),
     {
       ...DEFAULT_OPTIONS,
@@ -82,8 +83,8 @@ export const toastOrderDeclined = (message = 'Заказ отклонён') =>
 export const toastCourierStatus = (message = 'Курьер в пути') =>
   showInfoToast(message);
 
-export const toastNeedDeliveryTime = (message = 'Пожалуйста, выберите удобное время доставки') =>
-  showInfoToast(message);
+export const toastNeedDeliveryTime = (message = 'Пожалуйста, выберите удобное время доставки', options = {}) =>
+  showInfoToast(message, { autoClose: 6000, ...options });
 
 export const toastWaitManager = (message = 'Ожидайте подтверждение менеджера') =>
   showInfoToast(message);

@@ -1,9 +1,25 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { NOTIFICATION_QUERY_KEYS } from './use-notifications';
 import { showInfoToast } from '../toast';
 import { API_BASE_URL } from '../../config/api.js';
+
+const getNotificationTarget = (notification) => {
+  const type = notification?.notification_type;
+  const orderId = notification?.order_id;
+  switch (type) {
+    case 'contract':
+      return { activeSection: 'orders', ordersFilter: 'contract', orderId };
+    case 'payment':
+      return { activeSection: 'payments', orderId };
+    case 'delivery':
+      return { activeSection: 'delivery', deliveryId: orderId };
+    default:
+      return { activeSection: 'orders' };
+  }
+};
 
 // Функция для получения базового URL API
 const getApiBaseUrl = () => {
@@ -16,6 +32,7 @@ const getApiBaseUrl = () => {
  */
 export const useSSENotifications = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const eventSourceRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
@@ -60,10 +77,19 @@ export const useSSENotifications = () => {
 
           if (data.type === 'notification' && data.data) {
             const notification = data.data;
+            const target = getNotificationTarget(notification);
 
-            // Показываем toast уведомление по новому дизайну (синяя "i")
-            showInfoToast(notification.title || 'Новое уведомление', {
-              autoClose: 5000,
+            // Кликабельный toast — переход в нужный раздел ЛК
+            showInfoToast(notification.message || notification.title, {
+              title: notification.title || 'Новое уведомление',
+              autoClose: 6000,
+              onClick: () => {
+                const state = { activeSection: target.activeSection };
+                if (target.ordersFilter) state.ordersFilter = target.ordersFilter;
+                if (target.orderId) state.orderId = target.orderId;
+                if (target.deliveryId) state.deliveryId = target.deliveryId;
+                navigate('/personal-account', { state });
+              },
             });
 
             // Определяем ключ кеша в зависимости от роли
@@ -182,7 +208,7 @@ export const useSSENotifications = () => {
     } catch (error) {
       console.error('Ошибка создания SSE соединения:', error);
     }
-  }, [user, queryClient]);
+  }, [user, queryClient, navigate]);
 
   // Функция для отключения от SSE
   const disconnect = useCallback(() => {

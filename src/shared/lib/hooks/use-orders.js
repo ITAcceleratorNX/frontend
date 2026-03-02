@@ -48,11 +48,11 @@ export const useUserOrders = (options = {}) => {
   return useQuery({
     queryKey: ORDERS_QUERY_KEYS.USER_ORDERS,
     queryFn: ordersApi.getUserOrders,
-    staleTime: 3 * 60 * 1000, // 3 минуты
+    staleTime: 2 * 60 * 1000, // 2 минуты
     cacheTime: 10 * 60 * 1000, // 10 минут
     retry: shouldRetryOrders,
     retryDelay: 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Обновление при возврате (после подписания в TrustMe)
     ...options
   });
 };
@@ -232,7 +232,8 @@ export const useContracts = (options = {}) => {
   return useQuery({
     queryKey: ['contracts', 'user'],
     queryFn: ordersApi.getContracts,
-    staleTime: 5 * 60 * 1000, // 5 минут
+    staleTime: 2 * 60 * 1000, // 2 минуты
+    refetchOnWindowFocus: true, // Обновление при возврате (после подписания в TrustMe)
     ...options
   });
 }; 

@@ -79,9 +79,12 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) =
   useEffect(() => {
     if (hasDeliveriesNeedingTime && !hasShownDeliveryToastRef.current) {
       hasShownDeliveryToastRef.current = true;
-      toastNeedDeliveryTime('Выберите время доставки');
+      toastNeedDeliveryTime('Нажмите, чтобы выбрать время доставки', {
+        onClick: () => navigate('/personal-account', { state: { activeSection: 'delivery' } }),
+        title: 'Выберите время доставки',
+      });
     }
-  }, [hasDeliveriesNeedingTime]);
+  }, [hasDeliveriesNeedingTime, navigate]);
 
   // Фильтрация заказов
   const filteredOrders = useMemo(() => {
