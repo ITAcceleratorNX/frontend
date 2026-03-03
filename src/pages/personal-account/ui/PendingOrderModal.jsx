@@ -294,7 +294,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
   };
 
   // Определяем, можно ли разбронировать бокс
-  const canUnbook = order?.status !== 'ACTIVE';
+  const canUnbook = !['ACTIVE', 'CANCELED', 'FINISHED'].includes(order?.status);
   // Определяем, можно ли расторгнуть контракт
   const canCancelContract = order?.status === 'ACTIVE' && order?.cancel_status === 'NO';
 

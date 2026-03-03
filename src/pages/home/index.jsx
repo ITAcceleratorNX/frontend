@@ -39,7 +39,7 @@ import ClientSelector from "@/shared/components/ClientSelector.jsx";
 import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import PendingOrderModal from "@/pages/personal-account/ui/PendingOrderModal.jsx";
 import OrderDetailView from "@/pages/personal-account/ui/OrderDetailView.jsx";
-import { useApproveCancelOrder } from "@/shared/lib/hooks/use-orders";
+import { useApproveCancelOrder, useUnlockStorage } from "@/shared/lib/hooks/use-orders";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 
@@ -1898,6 +1898,7 @@ const HomePage = memo(() => {
   }, [previewStorage]);
 
   const approveCancelOrder = useApproveCancelOrder();
+  const unlockStorage = useUnlockStorage();
 
   const handleApproveReturn = useCallback(async (orderId) => {
     try {
@@ -1917,13 +1918,36 @@ const HomePage = memo(() => {
     }
   }, [approveCancelOrder, selectedWarehouse?.id]);
 
+  const handleUnlockStorage = useCallback(async (orderId) => {
+    try {
+      await unlockStorage.mutateAsync(orderId);
+      setPreviewStorage(null);
+      const data = await warehouseApi.getAllWarehouses();
+      const updated = Array.isArray(data) ? data : [];
+      setApiWarehouses(updated);
+      if (selectedWarehouse?.id) {
+        const fresh = updated.find((w) => w.id === selectedWarehouse.id);
+        if (fresh) setSelectedWarehouse(fresh);
+      }
+      setIsReturnApprovalModalOpen(false);
+      setOrderForReturnApproval(null);
+    } catch (err) {
+      console.error('Ошибка при разблокировке бокса:', err);
+      showErrorToast('Ошибка', {
+        duration: 2000,
+        position: 'top-right',
+        description: err.response?.data?.message || err.message,
+      });
+    }
+  }, [unlockStorage, selectedWarehouse?.id]);
+
   const handleBoxSelect = useCallback(async (storage) => {
-    if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
+    if ((['OCCUPIED', 'PENDING', 'CANCELED'].includes(storage?.status)) && isAdminOrManager) {
       setIsLoadingPendingOrder(true);
       try {
         const order = await ordersApi.getPendingOrderByStorageId(storage.id);
         setPreviewStorage(storage);
-        if (order?.cancel_status === 'PENDING') {
+        if ((order?.cancel_status === 'PENDING') || (order?.status === 'CANCELED' && order?.cancel_status === 'SIGNED')) {
           setOrderForReturnApproval(order);
           setIsReturnApprovalModalOpen(true);
         } else {
@@ -2622,8 +2646,9 @@ const HomePage = memo(() => {
               <div className="mt-4 sm:mt-6">
                 <OrderDetailView
                   order={orderForReturnApproval}
-                  isLoading={approveCancelOrder.isPending}
+                  isLoading={approveCancelOrder.isPending || unlockStorage.isPending}
                   onApproveReturn={handleApproveReturn}
+                  onUnlockStorage={handleUnlockStorage}
                 />
               </div>
             )}
