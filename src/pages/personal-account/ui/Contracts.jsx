@@ -15,7 +15,8 @@ import {
   Clock, 
   Ban, 
   FileCheck,
-  CreditCard 
+  CreditCard,
+  MessageCircle 
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
@@ -25,6 +26,14 @@ import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import {useNavigate} from "react-router-dom";
 import DatePicker from '../../../shared/ui/DatePicker';
 import { formatCalendarDate, getTodayLocalDateString } from '@/shared/lib/utils/date';
+
+const WHATSAPP_PHONE = '77783911425';
+const getWhatsAppReturnLink = (orderId) => {
+  const text = orderId
+    ? `Здравствуйте! Хочу сделать возврат / расторгнуть договор. Заявка № ${orderId}`
+    : 'Здравствуйте! Хочу сделать возврат / расторгнуть договор.';
+  return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
+};
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -823,7 +832,16 @@ const CancelSurveyModal = ({
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-4">
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-4">
+          <a
+            href={getWhatsAppReturnLink(orderId)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-[#25D366] border border-[#25D366] rounded-md hover:bg-[#25D366]/10 transition-colors w-full sm:w-auto"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Связаться с менеджером
+          </a>
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Закрыть
           </Button>
@@ -1260,12 +1278,20 @@ const Contracts = () => {
               По данному заказу есть <b>неоплаченная задолженность</b>. Пожалуйста, оплатите долг, а затем повторите отмену.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex-wrap gap-2">
+            <a
+              href={getWhatsAppReturnLink(pendingCancelData?.orderId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-[#25D366] border border-[#25D366] rounded-md hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Связаться с менеджером
+            </a>
             <Button variant="outline" onClick={() => setIsDebtModalOpen(false)}>Понятно</Button>
             <Button
                 onClick={() => {
                   setIsDebtModalOpen(false);
-                  // Переход к оплатам в личном кабинете
                   navigate('/personal-account', { state: { activeSection: 'payments' } });
                 }}
             >

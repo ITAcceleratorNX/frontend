@@ -23,7 +23,7 @@ import { Button } from '../../../components/ui/button';
 import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
 import { useCreateMoving, useCreateAdditionalServicePayment, useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
-import { Zap, CheckCircle, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag, CreditCard } from 'lucide-react';
+import { Zap, CheckCircle, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag, CreditCard, MessageCircle } from 'lucide-react';
 import { showSuccessToast } from '../../../shared/lib/toast';
 import { formatCalendarDateLong, getTodayLocalDateString } from '@/shared/lib/utils/date';
 // Импортируем иконки дополнительных услуг
@@ -44,6 +44,14 @@ import { ordersApi } from '../../../shared/api/ordersApi';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
 import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
+
+const WHATSAPP_PHONE = '77783911425';
+const getWhatsAppReturnLink = (orderId) => {
+  const text = orderId
+    ? `Здравствуйте! Хочу сделать возврат / расторгнуть договор. Заявка № ${orderId}`
+    : 'Здравствуйте! Хочу сделать возврат / расторгнуть договор.';
+  return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
+};
 
 const CANCEL_REASON_OPTIONS = [
   { value: 'no_longer_needed', label: 'Вещи больше не нужно хранить' },
@@ -1062,7 +1070,16 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
               По данному заказу есть <b>неоплаченная задолженность</b>. Пожалуйста, оплатите долг, а затем повторите отмену.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex-wrap gap-2">
+            <a
+              href={getWhatsAppReturnLink(order?.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-[#25D366] border border-[#25D366] rounded-md hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Связаться с менеджером
+            </a>
             <Button variant="outline" onClick={() => setIsDebtModalOpen(false)}>Понятно</Button>
             <Button
                 onClick={() => {
@@ -1318,7 +1335,17 @@ const CancelSurveyModal = ({
         </div>
 
         {/* Кнопки */}
-        <div className="px-5 py-4 border-t border-gray-100 bg-white rounded-b-2xl flex gap-2">
+        <div className="px-5 py-4 border-t border-gray-100 bg-white rounded-b-2xl flex flex-col gap-2">
+          <a
+            href={getWhatsAppReturnLink(orderId)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-[#25D366] text-[#25D366] text-sm font-medium hover:bg-[#25D366]/10 transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Связаться с менеджером
+          </a>
+          <div className="flex gap-2">
           <button 
             onClick={onClose} 
             className="flex-1 h-10 rounded-xl border border-gray-200 text-[#273655] text-sm font-medium hover:bg-gray-50 transition-colors"
@@ -1344,6 +1371,7 @@ const CancelSurveyModal = ({
               {isSubmitting ? 'Отправка…' : 'Подтвердить'}
             </button>
           )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

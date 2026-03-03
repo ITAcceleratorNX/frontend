@@ -19,7 +19,8 @@ import {
   Phone,
   Mail,
   Trash2,
-  FileX
+  FileX,
+  MessageCircle
 } from 'lucide-react';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
@@ -27,6 +28,14 @@ import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 import { useCancelOrder } from '../../../shared/lib/hooks/use-orders';
 import {warehouseApi as storageApi} from "../../.././../src/shared/api/warehouseApi.js";
 import { formatCalendarDateTime } from '../../../shared/lib/utils/date';
+
+const WHATSAPP_PHONE = '77783911425';
+const getWhatsAppReturnLink = (orderId) => {
+  const text = orderId
+    ? `Здравствуйте! Хочу сделать возврат / расторгнуть договор. Заявка № ${orderId}`
+    : 'Здравствуйте! Хочу сделать возврат / расторгнуть договор.';
+  return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
+};
 
 const getServiceTypeName = (type) => {
   if (!type) return 'Услуга';
@@ -792,7 +801,16 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
             </div>
           )}
           {cancelFormError && <p className="text-sm text-red-600 px-6">{cancelFormError}</p>}
-          <DialogFooter className="gap-2 sm:gap-4 px-6 pb-6">
+          <DialogFooter className="flex-wrap gap-2 sm:gap-4 px-6 pb-6">
+            <a
+              href={getWhatsAppReturnLink(order?.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 h-12 rounded-3xl border border-[#25D366] text-[#25D366] text-sm font-medium hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Связаться с менеджером
+            </a>
             <Button 
               variant="outline" 
               onClick={handleCloseCancelSurvey} 
