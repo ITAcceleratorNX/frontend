@@ -145,26 +145,52 @@ const UserDelivery = ({ embeddedMobile = false }) => {
 
 
 
+    // Доставка требует выбора времени (оплаченный заказ, статус ожидания, время не выбрано)
+    const needsTimeSelection = (d) => {
+        const order = d.order;
+        return (
+            order?.payment_status === 'PAID' &&
+            order?.contract_status === 'SIGNED' &&
+            ['PENDING', 'COURIER_ASSIGNED'].includes(d.status) &&
+            !d.delivery_time_interval
+        );
+    };
+
     // Фильтрация доставок
     const filteredDeliveries = useMemo(() => {
         if (!deliveries) return [];
-        
+
+        let list;
         switch (activeFilter) {
             case DELIVERY_SECTIONS.AWAITING_COURIER:
-                return deliveries.filter(d =>
+                list = deliveries.filter(d =>
                     ['PENDING', 'COURIER_ASSIGNED'].includes(d.status)
                 );
+                break;
             case DELIVERY_SECTIONS.COURIER_ON_THE_WAY:
-                return deliveries.filter(d =>
+                list = deliveries.filter(d =>
                     ['COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(d.status)
                 );
+                break;
             case DELIVERY_SECTIONS.COMPLETED:
-                return deliveries.filter(d =>
+                list = deliveries.filter(d =>
                     ['DELIVERED', 'FINISHED'].includes(d.status)
                 );
+                break;
             default:
-                return deliveries; // Все, включая CANCELLED
+                list = [...deliveries];
         }
+
+        // Сначала — те, кому нужно добавить время доставки; затем — остальные (новые/по дате)
+        return list.sort((a, b) => {
+            const aNeeds = needsTimeSelection(a);
+            const bNeeds = needsTimeSelection(b);
+            if (aNeeds && !bNeeds) return -1;
+            if (!aNeeds && bNeeds) return 1;
+            const aDate = a.created_at || a.moving_date || 0;
+            const bDate = b.created_at || b.moving_date || 0;
+            return new Date(bDate) - new Date(aDate);
+        });
     }, [deliveries, activeFilter]);
 
     // Статистика доставок
