@@ -48,6 +48,7 @@ import HeroSection from "../../../src/pages/home/components/HeroSection.jsx";
 import QuickBookingSection from "../../../src/pages/home/components/QuickBookingSection.jsx";
 import StorageFormatsSection from "../../../src/pages/home/components/StorageFormatsSection.jsx";
 import BranchesSection from "../../../src/pages/home/components/BranchesSection.jsx";
+import WarehouseGallery from "../../../src/pages/home/components/WarehouseGallery.jsx";
 import WarehouseSchemePanel from "../../../src/pages/home/components/order/WarehouseSchemePanel.jsx";
 import StorageWarnings from "../../../src/pages/home/components/order/StorageWarnings.jsx";
 import MovingSection from "../../../src/pages/home/components/order/MovingSection.jsx";
@@ -2481,6 +2482,9 @@ const HomePage = memo(() => {
 
       {/* Заказать обратный звонок */}
       <CallbackRequestSection showRegisterPrompt={!isAuthenticated} />
+
+      {/* Галерея складов ЖК Комфорт Сити */}
+      <WarehouseGallery />
 
       {/* Шестой фрейм: филиалы Extra Space */}
       <BranchesSection warehouses={warehouses} />
