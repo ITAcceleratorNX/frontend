@@ -57,12 +57,10 @@ function WarehouseGallery() {
     <section className="w-full bg-white py-8 sm:py-12 md:py-16 lg:py-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-[90rem] mx-auto">
-          <h2 className="font-soyuz-grotesk text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#202422] text-center mb-6 sm:mb-8 md:mb-12">
-            Галерея складов
+          <h2 className="font-soyuz-grotesk text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#202422] text-center mb-6 sm:mb-8 md:mb-20">
+            Галерея Жилого комплекса Комфорт Сити
           </h2>
-          <p className="text-sm sm:text-base text-[#555A65] text-center mb-6 sm:mb-8 md:mb-12">
-            Склад Жилого комплекса Комфорт Сити
-          </p>
+         
 
           <div className="flex items-center gap-3 sm:gap-6 md:gap-8 lg:gap-12">
             <button
