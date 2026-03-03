@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import Sidebar from './ui/Sidebar';
 import PersonalData from './ui/PersonalData';
 import PersonalDataLegal from './ui/PersonalDataLegal';
@@ -31,8 +31,11 @@ import { useAuth } from '../../shared/context/AuthContext';
 // ToastContainer уже подключен в главном приложении
 
 // Мемоизированный компонент страницы личного кабинета
+const VALID_SECTION_PARAMS = ['orders', 'payments', 'delivery', 'personal', 'notifications', 'ordersManagement'];
+
 const PersonalAccountPage = memo(() => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const { isMobile } = useDeviceType();
@@ -63,7 +66,7 @@ const PersonalAccountPage = memo(() => {
   }, [user?.role, activeNav]);
 
 
-  // Проверяем состояние навигации при загрузке компонента
+  // Проверяем состояние навигации при загрузке компонента (state или query ?section=)
   useEffect(() => {
     if (location.state?.activeSection) {
       const section = location.state.activeSection;
@@ -84,7 +87,23 @@ const PersonalAccountPage = memo(() => {
       const id = setTimeout(() => navigate(path, { replace: true }), 0);
       return () => clearTimeout(id);
     }
-  }, [location.state, navigate, location.pathname]);
+
+    // Ссылка из письма/SMS: ?section=payments или ?section=payments&orderId=123
+    const sectionParam = searchParams.get('section');
+    if (sectionParam && VALID_SECTION_PARAMS.includes(sectionParam)) {
+      setActiveNav(sectionParam);
+      if (sectionParam === 'orders' && searchParams.get('ordersFilter')) {
+        setOrdersInitialFilter(searchParams.get('ordersFilter'));
+      }
+      const nextSearch = new URLSearchParams(searchParams);
+      nextSearch.delete('section');
+      nextSearch.delete('orderId');
+      nextSearch.delete('ordersFilter');
+      const replaceTo = nextSearch.toString() ? `${location.pathname}?${nextSearch}` : location.pathname;
+      const id = setTimeout(() => navigate(replaceTo, { replace: true }), 0);
+      return () => clearTimeout(id);
+    }
+  }, [location.state, location.pathname, searchParams, navigate]);
 
   // Сбрасываем начальный фильтр заказов после первого отображения (чтобы при следующем открытии «Мои заказы» была вкладка «Все»)
   useEffect(() => {

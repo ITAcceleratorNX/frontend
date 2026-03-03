@@ -6,11 +6,11 @@ import { Bell, CheckCircle, MessageSquare } from 'lucide-react';
  */
 export const getNotificationTarget = (notification) => {
   const type = notification?.notification_type;
-  const orderId = notification?.order_id;
-  
+  const orderId = notification?.order_id ?? notification?.related_order_id;
+
   switch (type) {
     case 'contract':
-      return { activeSection: 'orders', ordersFilter: 'contract', orderId };
+      return { activeSection: 'payments', orderId };
     case 'payment':
       return { activeSection: 'payments', orderId };
     case 'delivery':

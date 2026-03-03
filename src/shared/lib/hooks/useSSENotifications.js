@@ -8,10 +8,10 @@ import { API_BASE_URL } from '../../config/api.js';
 
 const getNotificationTarget = (notification) => {
   const type = notification?.notification_type;
-  const orderId = notification?.order_id;
+  const orderId = notification?.order_id ?? notification?.related_order_id;
   switch (type) {
     case 'contract':
-      return { activeSection: 'orders', ordersFilter: 'contract', orderId };
+      return { activeSection: 'payments', orderId };
     case 'payment':
       return { activeSection: 'payments', orderId };
     case 'delivery':
@@ -19,6 +19,15 @@ const getNotificationTarget = (notification) => {
     default:
       return { activeSection: 'orders' };
   }
+};
+
+/** Редирект только если уведомление явно про «подписан договор — перейдите к оплате» (по тексту) */
+const shouldRedirectToPaymentsAfterContract = (notification) => {
+  if (notification?.notification_type !== 'contract') return false;
+  const text = [notification.title, notification.message].filter(Boolean).join(' ');
+  const payHint =
+    /произведите оплату|раздел\s*[«"]?\s*[Пп]латежи|перейдите в раздел|оплату на сайте/i;
+  return payHint.test(text);
 };
 
 // Функция для получения базового URL API
@@ -79,7 +88,14 @@ export const useSSENotifications = () => {
             const notification = data.data;
             const target = getNotificationTarget(notification);
 
-            // Кликабельный toast — переход в нужный раздел ЛК
+            // Авто-редирект только если в уведомлении явно про «подписан договор — перейдите к оплате» (не все contract-уведомления требуют редиректа)
+            if (shouldRedirectToPaymentsAfterContract(notification)) {
+              const state = { activeSection: target.activeSection };
+              if (target.orderId) state.orderId = target.orderId;
+              navigate('/personal-account', { state });
+            }
+
+            // Кликабельный toast — переход в нужный раздел ЛК (для всех типов)
             showInfoToast(notification.message || notification.title, {
               title: notification.title || 'Новое уведомление',
               autoClose: 6000,
