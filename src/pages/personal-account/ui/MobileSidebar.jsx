@@ -44,10 +44,8 @@ const managerNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
-  { label: 'Мувинг', icon: icon9, key: 'managermoving' },
-  { label: 'Запрос', icon: icon11, key: 'request' },
+  { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
-  { label: 'Оплаты', icon: icon4, key: 'adminpayments' },
   // { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
@@ -59,10 +57,8 @@ const adminNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
-  { label: 'Мувинг', icon: icon9, key: 'adminmoving' },
-  { label: 'Запрос', icon: icon11, key: 'request' },
+  { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
-  { label: 'Оплаты', icon: icon4, key: 'adminpayments' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
   { label: 'Выйти', icon: icon6, key: 'logout' },
@@ -263,7 +259,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
                 {/* Красная точка для платежей с pending статусом */}
-                {item.key === 'payments' && pendingExtensionCount > 0 && (
+                {(item.key === 'payments' || item.key === 'ordersManagement') && pendingExtensionCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
               </div>

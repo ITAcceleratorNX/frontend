@@ -6,14 +6,11 @@ import PersonalDataLegal from './ui/PersonalDataLegal';
 import Contracts from './ui/Contracts';
 import ChatSection from './ui/ChatSection';
 import AllUsers from './ui/AllUsers';
-import AdminMoving from './ui/AdminMoving';
-import ManagerMoving from './ui/ManagerMoving';
 import InfoWarehouses from './ui/InfoWarehouses';
 import CourierRequest from './ui/CourierRequest';
 import CourierRequestOrder from './ui/CourierRequestOrder';
-import OrderManagement from './ui/OrderManagement';
 import UserPayments from './ui/UserPayments';
-import AdminPaymentsPage from './ui/AdminPaymentsPage';
+import StaffOrdersSection from './ui/StaffOrdersSection';
 import UserDelivery from './ui/UserDelivery';
 import UserOrdersPage from './ui/UserOrdersPage';
 import ItemSearch from './ui/ItemSearch';
@@ -55,6 +52,8 @@ const PersonalAccountPage = memo(() => {
   // Начальный фильтр в «Мои заказы» при редиректе после создания заказа (категория «Договор»)
   const [ordersInitialFilter, setOrdersInitialFilter] = useState(null);
 
+  // Начальный режим в разделе «Заказы» для MANAGER/ADMIN (requests | payments | moving)
+  const [ordersManagementInitialMode, setOrdersManagementInitialMode] = useState('requests');
 
   // Сбрасываем раздел чата для ролей USER и MANAGER
   useEffect(() => {
@@ -67,8 +66,17 @@ const PersonalAccountPage = memo(() => {
   // Проверяем состояние навигации при загрузке компонента
   useEffect(() => {
     if (location.state?.activeSection) {
-      setActiveNav(location.state.activeSection);
-      if (location.state.activeSection === 'orders' && location.state.ordersFilter) {
+      const section = location.state.activeSection;
+      // Обратная совместимость: старые ключи request/adminpayments/managermoving/adminmoving → ordersManagement
+      if (['request', 'adminpayments', 'managermoving', 'adminmoving'].includes(section)) {
+        setActiveNav('ordersManagement');
+        setOrdersManagementInitialMode(
+          section === 'request' ? 'requests' : section === 'adminpayments' ? 'payments' : 'moving'
+        );
+      } else {
+        setActiveNav(section);
+      }
+      if (section === 'orders' && location.state.ordersFilter) {
         setOrdersInitialFilter(location.state.ordersFilter);
       }
       // Очищаем state в URL после применения (откладываем, чтобы setState успел отрендериться)
@@ -193,13 +201,12 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'adminusers' && <AllUsers />}
           {activeNav === 'managerusers' && <AllUsers />}
           {activeNav === 'warehouses' && <InfoWarehouses />}
-          {activeNav === 'adminmoving' && <AdminMoving />}
-          {activeNav === 'managermoving' && <ManagerMoving />}
-          {activeNav === 'request' && <OrderManagement />}
+          {activeNav === 'ordersManagement' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
+            <StaffOrdersSection initialMode={ordersManagementInitialMode} />
+          )}
           {activeNav === 'courierrequests' && <CourierRequest />}
           {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
           {activeNav === 'payments' && <UserPayments />}
-          {(activeNav === 'adminpayments') && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <AdminPaymentsPage />}
           {activeNav === 'delivery' && <UserDelivery />}
           {activeNav === 'itemsearch' && <ItemSearch />}
           {activeNav === 'statistics' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <Statistics />}
@@ -208,7 +215,7 @@ const PersonalAccountPage = memo(() => {
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter]);
+  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter, ordersManagementInitialMode]);
 
   return pageContent;
 });
