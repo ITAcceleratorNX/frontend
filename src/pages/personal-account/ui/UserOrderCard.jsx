@@ -1098,6 +1098,9 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   );
 };
 
+// Временно отключить выбор доставки при отмене (самовывоз / платная доставка)
+const DISABLE_RETURN_DELIVERY_CHOICE = true;
+
 // Компонент модального окна опроса при отмене
 const CancelSurveyModal = ({
   isOpen,
@@ -1123,8 +1126,8 @@ const CancelSurveyModal = ({
   const createMovingMutation = useCreateMoving();
   const createAdditionalServicePaymentMutation = useCreateAdditionalServicePayment();
 
-  // Проверяем, нужно ли показывать выбор способа получения вещей
-  const needsPickupMethod = orderDetails && !orderDetails.hasGazelleTo && !orderDetails.hasPendingToMovingOrder;
+  // Проверяем, нужно ли показывать выбор способа получения вещей (временно отключено через DISABLE_RETURN_DELIVERY_CHOICE)
+  const needsPickupMethod = !DISABLE_RETURN_DELIVERY_CHOICE && orderDetails && !orderDetails.hasGazelleTo && !orderDetails.hasPendingToMovingOrder;
 
   // Сбрасываем состояние при закрытии
   useEffect(() => {
@@ -1185,7 +1188,7 @@ const CancelSurveyModal = ({
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-lg font-bold text-[#273655]">Расторжение договора</DialogTitle>
           <DialogDescription className="text-xs text-[#8A8A8A]">
-            Укажите причину и способ получения вещей
+            {DISABLE_RETURN_DELIVERY_CHOICE ? 'Укажите причину расторжения' : 'Укажите причину и способ получения вещей'}
           </DialogDescription>
         </DialogHeader>
 
@@ -1352,7 +1355,7 @@ const CancelSurveyModal = ({
           >
             Отмена
           </button>
-          {pickupMethod === 'delivery' && selectedReason ? (
+          {!DISABLE_RETURN_DELIVERY_CHOICE && pickupMethod === 'delivery' && selectedReason ? (
             <button
               onClick={handleDeliverySubmit}
               disabled={isSubmitting || !deliveryDate || createMovingMutation.isPending || createAdditionalServicePaymentMutation.isPending}
