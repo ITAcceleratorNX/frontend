@@ -79,12 +79,16 @@ const DeliveryCard = ({ delivery, onSelectTimeClick, embeddedMobile = false }) =
     allowedStatuses.includes(delivery.status) &&
     !delivery.delivery_time_interval;
   
-  // Определяем фон карточки: зеленый градиент для завершенных, серый для в процессе
+  // Определяем фон карточки по статусу перемещения:
+  // Ожидает курьера — серый; Курьер в пути — светло-зелёный (как при подписании договора); Завершено — зелёный (как в активные)
   const getCardBackground = () => {
     if (['DELIVERED', 'FINISHED'].includes(delivery.status)) {
-      return 'bg-gradient-to-b from-[#00A991] to-[#004743]'; // Зеленый градиент для завершенных
+      return 'bg-gradient-to-b from-[#26B3AB] to-[#104D4A]'; // Зелёный как в активные заказы
     }
-    return 'bg-[#999999]'; // Серый для в процессе
+    if (['COURIER_IN_TRANSIT', 'COURIER_AT_CLIENT', 'IN_PROGRESS'].includes(delivery.status)) {
+      return 'bg-gradient-to-b from-[#26B3AB] to-[#00A991]'; // Светло-зелёный как при подписании договора
+    }
+    return 'bg-[#999999]'; // Серый для ожидания курьера (PENDING, COURIER_ASSIGNED)
   };
 
   const cardBackground = getCardBackground();
