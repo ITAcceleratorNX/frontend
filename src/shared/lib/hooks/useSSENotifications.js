@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { NOTIFICATION_QUERY_KEYS } from './use-notifications';
 import { showInfoToast } from '../toast';
-import { API_BASE_URL } from '../../config/api.js';
+import { getNotificationsStreamUrl } from '../../api/axios';
 
 const getNotificationTarget = (notification) => {
   const type = notification?.notification_type;
@@ -28,11 +28,6 @@ const shouldRedirectToPaymentsAfterContract = (notification) => {
   const payHint =
     /произведите оплату|раздел\s*[«"]?\s*[Пп]латежи|перейдите в раздел|оплату на сайте/i;
   return payHint.test(text);
-};
-
-// Функция для получения базового URL API
-const getApiBaseUrl = () => {
-  return API_BASE_URL;
 };
 
 /**
@@ -61,14 +56,11 @@ export const useSSENotifications = () => {
       eventSourceRef.current = null;
     }
 
-    const apiBaseUrl = getApiBaseUrl();
-    const url = `${apiBaseUrl}/notifications/stream`;
+    const url = getNotificationsStreamUrl();
 
     try {
-      // Создаем EventSource
-      // Cookies будут переданы автоматически, так как они установлены в браузере
-      // EventSource автоматически отправляет cookies для запросов к тому же домену
-      const eventSource = new EventSource(url);
+      // Создаем EventSource с withCredentials, чтобы при кросс-доменном запросе (frontend ≠ api.extraspace.kz) отправлялись cookies сессии
+      const eventSource = new EventSource(url, { withCredentials: true });
 
       eventSource.onopen = () => {
         console.log('✅ SSE соединение установлено');

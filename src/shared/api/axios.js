@@ -170,4 +170,8 @@ export const getDeliveredOrdersPaginated = async (page = 1, limit = 10) => {
   }
 };
 
+/** URL для SSE-стрима уведомлений (тот же baseURL, что и у api) */
+export const getNotificationsStreamUrl = () =>
+  `${api.defaults.baseURL}/notifications/stream`;
+
 export default api; 
