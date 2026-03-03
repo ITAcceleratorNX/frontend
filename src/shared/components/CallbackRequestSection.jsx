@@ -145,15 +145,18 @@ const CallbackRequestSection = ({ showRegisterPrompt = false }) => {
                     />
                     <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   </div>
+                  <div className="hidden sm:block h-12 px-8 shrink-0 opacity-0 pointer-events-none select-none" aria-hidden="true">
+                    Отправить заявку
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="h-12 px-8 rounded-xl bg-[#31876D] text-base font-semibold text-white hover:bg-[#2a7260] transition-colors disabled:opacity-70 sm:self-start"
+                    className="h-12 px-8 rounded-xl bg-[#31876D] text-base font-semibold text-white hover:bg-[#2a7260] transition-colors disabled:opacity-70 shrink-0"
                   >
                     {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
                   </Button>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <p className="text-sm text-gray-600">
                     Или позвоните нам:{' '}
                     <a href={TEL_LINK} className="text-[#31876D] underline hover:opacity-80">
