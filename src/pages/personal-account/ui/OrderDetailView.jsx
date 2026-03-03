@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
-import { Separator } from '../../../components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../components/ui/dialog';
 import { 
   getOrderStatusText,
@@ -11,7 +11,7 @@ import { getServiceTypeName, formatServiceDescription } from '../../../shared/li
 import EditLocationModal from './EditLocationModal';
 import ReturnApprovalPanel from './ReturnApprovalPanel';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
-import { AlertTriangle, Unlock, Tag } from 'lucide-react';
+import { AlertTriangle, Unlock, Tag, User, Package, CreditCard, FileText, Truck } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
 
 const getStorageTypeText = (type) => {
@@ -163,22 +163,24 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
     }
   };
 
-  // Информационная строка
   const InfoRow = ({ label, value, className = "" }) => (
-    <div className={`flex justify-between items-center py-2 ${className}`}>
-      <span className="text-sm text-gray-600">{label}</span>
-      <div className="text-sm font-medium text-gray-900">{value}</div>
+    <div className={`flex justify-between items-center py-2.5 ${className}`}>
+      <span className="text-sm text-[#6B6B6B]">{label}</span>
+      <div className="text-sm font-medium text-[#273655]">{value}</div>
     </div>
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Заголовок */}
       <div className="flex items-center justify-between pb-6 border-b border-gray-200">
         <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#31876D]/10 flex items-center justify-center">
+            <Package className="w-6 h-6 text-[#31876D]" />
+          </div>
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-1">Заказ #{order.id}</h2>
-            <p className="text-sm text-gray-500">Создан: {formatDate(order.created_at)}</p>
+            <h2 className="text-xl font-bold text-[#273655] mb-0.5">Заказ #{order.id}</h2>
+            <p className="text-sm text-[#6B6B6B]">Создан: {formatDate(order.created_at)}</p>
           </div>
           <Badge variant={getStatusVariant(order.status)} className="font-medium h-fit">
             {getOrderStatusText(order.status)}
@@ -189,21 +191,31 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
       {/* Основная информация - сетка */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Информация о клиенте */}
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Информация о клиенте</h3>
-          <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
+        <Card className="border-gray-200 rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+              <User className="w-4 h-4 text-[#31876D]" />
+              Информация о клиенте
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 pt-0">
             <InfoRow label="Имя" value={order.user?.name || 'Не указано'} />
-            <Separator className="bg-gray-300" />
+            <div className="border-t border-gray-100" />
             <InfoRow label="Email" value={order.user?.email || 'Не указан'} />
-            <Separator className="bg-gray-300" />
+            <div className="border-t border-gray-100" />
             <InfoRow label="Телефон" value={order.user?.phone || 'Не указан'} />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Детали заказа */}
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Детали заказа</h3>
-          <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
+        <Card className="border-gray-200 rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+              <Package className="w-4 h-4 text-[#31876D]" />
+              Детали заказа
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 pt-0">
             <InfoRow
               label="Склад/Бокс"
               value={(() => {
@@ -213,124 +225,134 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 return warehouseName || boxName || 'Не указано';
               })()}
             />
-            <Separator className="bg-gray-300" />
+            <div className="border-t border-gray-100" />
             <InfoRow 
               label="Тип хранения" 
               value={
-                <Badge variant="outline" className="font-normal">
+                <Badge variant="outline" className="font-normal border-gray-200">
                   {getStorageTypeText(order.storage?.storage_type)}
                 </Badge>
               } 
             />
-            <Separator className="bg-gray-300" />
+            <div className="border-t border-gray-100" />
             <InfoRow label="Объем" value={`${order.total_volume} м³`} />
-            <Separator className="bg-gray-300" />
+            <div className="border-t border-gray-100" />
             <InfoRow 
               label="Период аренды" 
               value={`${formatDate(order.start_date)} - ${formatDate(order.end_date)}`} 
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Финансовая информация */}
-      <div className="space-y-3">
-        <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Финансовая информация</h3>
-        <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
+      <Card className="border-[#31876D]/20 bg-[#31876D]/5 rounded-2xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-[#31876D]" />
+            Финансовая информация
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1 pt-0">
           <InfoRow label="Стоимость аренды" value={formatPrice(order.total_price)} />
-          {/* Стоимость в месяц — при ежемесячной оплате */}
           {isMonthlyPayment && monthlyAmount != null && (
             <>
-              <Separator className="bg-gray-300" />
+              <div className="border-t border-[#31876D]/20" />
               <InfoRow label="Стоимость в месяц" value={formatPrice(monthlyAmount)} />
             </>
           )}
-          {/* Услуги */}
           {servicesTotal > 0 && (
             <>
-              <Separator className="bg-gray-300" />
+              <div className="border-t border-[#31876D]/20" />
               <InfoRow label="Стоимость услуг" value={formatPrice(servicesTotal)} />
             </>
           )}
-          {/* Промокод */}
           {order.promo_code && (
             <>
-              <Separator className="bg-gray-300" />
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-600 flex items-center gap-1">
+              <div className="border-t border-[#31876D]/20" />
+              <div className="flex justify-between items-center py-2.5">
+                <span className="text-sm text-[#6B6B6B] flex items-center gap-1">
                   <Tag className="w-3 h-3" />
                   Промокод
                 </span>
-                <Badge className="bg-green-100 text-green-700 border-green-200">
+                <Badge className="bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20">
                   {order.promo_code.code} (-{order.promo_code.discount_percent}%)
                 </Badge>
               </div>
             </>
           )}
-          {/* Скидка */}
           {discountAmount > 0 && (
             <>
-              <Separator className="bg-gray-300" />
-              <div className="flex justify-between items-center py-2 text-green-600">
+              <div className="border-t border-[#31876D]/20" />
+              <div className="flex justify-between items-center py-2.5 text-[#31876D]">
                 <span className="text-sm">Скидка</span>
                 <span className="font-medium">-{formatPrice(discountAmount)}</span>
               </div>
             </>
           )}
-          <Separator className="bg-gray-300" />
-          <div className="flex justify-between items-center py-3 pt-4 border-t-2 border-gray-300 mt-2">
-            <span className="text-base font-semibold text-gray-900">Итого</span>
+          <div className="border-t-2 border-[#31876D]/20 mt-4 pt-4" />
+          <div className="flex justify-between items-center py-2">
+            <span className="text-base font-semibold text-[#273655]">Итого</span>
             <div className="text-right">
               {discountAmount > 0 && (
-                <span className="text-gray-400 line-through text-sm mr-2">
+                <span className="text-[#6B6B6B] line-through text-sm mr-2">
                   {formatPrice(totalBeforeDiscount)}
                 </span>
               )}
-              <span className="text-xl font-bold text-[#1e2c4f]">
+              <span className="text-xl font-bold text-[#31876D]">
                 {formatPrice(totalPrice)}
               </span>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Статусы */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Статусы</h3>
-          <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-gray-600">Оплата</span>
+        <Card className="border-gray-200 rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#31876D]" />
+              Статусы
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 pt-0">
+            <div className="flex justify-between items-center py-2.5">
+              <span className="text-sm text-[#6B6B6B]">Оплата</span>
               <Badge 
-                variant={order.payment_status === 'PAID' ? 'default' : 'destructive'}
-                className="font-medium"
+                variant={order.payment_status === 'PAID' ? 'outline' : 'destructive'}
+                className={`font-medium ${order.payment_status === 'PAID' ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : ''}`}
               >
                 {order.payment_status === 'PAID' ? 'Оплачено' : 'Не оплачено'}
               </Badge>
             </div>
-            <Separator className="bg-gray-300" />
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-gray-600">Договор</span>
+            <div className="border-t border-gray-100" />
+            <div className="flex justify-between items-center py-2.5">
+              <span className="text-sm text-[#6B6B6B]">Договор</span>
               <Badge 
-                variant={order.contract_status === 'SIGNED' ? 'default' : 'secondary'}
-                className="font-medium"
+                variant={order.contract_status === 'SIGNED' ? 'outline' : 'secondary'}
+                className={`font-medium ${order.contract_status === 'SIGNED' ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : ''}`}
               >
                 {order.contract_status === 'SIGNED' ? 'Подписан' : 'Не подписан'}
               </Badge>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Дополнительные услуги */}
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">Дополнительные услуги</h3>
-          <div className="bg-gray-50 rounded-lg p-5 space-y-3 border border-gray-200">
-            {/* Перевозка */}
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-gray-600">Перевозка</span>
+        <Card className="border-gray-200 rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+              <Truck className="w-4 h-4 text-[#31876D]" />
+              Дополнительные услуги
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 pt-0">
+            <div className="flex justify-between items-center py-2.5">
+              <span className="text-sm text-[#6B6B6B]">Перевозка</span>
               <div className="flex items-center gap-2">
                 {order.services?.some(s => ['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type)) && (
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-[#273655]">
                     {formatPrice(order.services
                       .filter(s => ['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type))
                       .reduce((sum, s) => sum + getServiceAmount(s), 0)
@@ -338,20 +360,19 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                   </span>
                 )}
                 <Badge 
-                  variant={order.is_selected_moving ? 'default' : 'outline'}
-                  className="font-medium"
+                  variant="outline"
+                  className={`font-medium ${order.is_selected_moving ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : 'border-gray-200'}`}
                 >
                   {order.is_selected_moving ? 'Выбрано' : 'Не выбрано'}
                 </Badge>
               </div>
             </div>
-            <Separator className="bg-gray-300" />
-            {/* Упаковка и прочие услуги (маркер, коробка и т.д.) */}
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-gray-600">Упаковка</span>
+            <div className="border-t border-gray-100" />
+            <div className="flex justify-between items-center py-2.5">
+              <span className="text-sm text-[#6B6B6B]">Упаковка</span>
               <div className="flex items-center gap-2">
                 {order.services?.filter(s => !['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type)).length > 0 && (
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-[#273655]">
                     {formatPrice(order.services
                       .filter(s => !['GAZELLE', 'GAZELLE_FROM', 'GAZELLE_TO'].includes(s.type))
                       .reduce((sum, s) => sum + getServiceAmount(s), 0)
@@ -359,25 +380,24 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                   </span>
                 )}
                 <Badge 
-                  variant={order.is_selected_package ? 'default' : 'outline'}
-                  className="font-medium"
+                  variant="outline"
+                  className={`font-medium ${order.is_selected_package ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : 'border-gray-200'}`}
                 >
                   {order.is_selected_package ? 'Выбрано' : 'Не выбрано'}
                 </Badge>
               </div>
             </div>
-            {/* Детализация: маркер, коробка и т.д. */}
             {order.services && order.services.length > 0 && (
               <>
-                <Separator className="bg-gray-300" />
+                <div className="border-t border-gray-100" />
                 <div className="pt-2 space-y-2">
                   {order.services.map((service, index) => (
                     <div key={service.id || index} className="flex justify-between items-center py-1 text-xs">
-                      <span className="text-gray-600">
+                      <span className="text-[#6B6B6B]">
                         {getServiceTypeName(service.type) || formatServiceDescription(service.description) || service.type}
                         {service.OrderService?.count > 1 && ` ×${service.OrderService.count}`}
                       </span>
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-[#273655]">
                         {formatPrice(getServiceAmount(service))}
                       </span>
                     </div>
@@ -385,27 +405,29 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 </div>
               </>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Предметы в заказе — скрываем для индивидуального хранения */}
+      {/* Предметы в заказе */}
       {order.items && order.items.length > 0 && order.storage?.storage_type !== 'INDIVIDUAL' && (
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">
-            Предметы в заказе ({order.items.length})
-          </h3>
-          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+        <Card className="border-gray-200 rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#202422]">
+              Предметы в заказе ({order.items.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {order.items.map((item) => (
-                <div key={item.id} className="bg-white rounded-md p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+                <div key={item.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-[#31876D]/20 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">ID: {item.public_id}</span>
-                        <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                        <span className="text-xs font-mono text-[#6B6B6B] bg-[#31876D]/5 px-2 py-1 rounded-lg">ID: {item.public_id}</span>
+                        <span className="text-sm font-medium text-[#273655]">{item.name}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-600">
+                      <div className="flex items-center gap-3 text-xs text-[#6B6B6B]">
                         <span>Объем: <span className="font-medium">{item.volume} м³</span></span>
                         <span className="text-gray-300">•</span>
                         <span>Метка: <span className="font-medium">{getCargoMarkText(item.cargo_mark)}</span></span>
@@ -418,7 +440,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleEditLocation(item)}
-                                className="h-6 px-2 text-xs hover:bg-gray-100"
+                                className="h-6 px-2 text-xs hover:bg-[#31876D]/10 text-[#31876D]"
                               >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -433,22 +455,25 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Заказанные услуги */}
       {order.services && order.services.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">
-            Заказанные услуги ({order.services.length})
-          </h3>
-          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+        <Card className="border-gray-200 rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+              <Truck className="w-4 h-4 text-[#31876D]" />
+              Заказанные услуги ({order.services.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {order.services.map((service, index) => (
-                <div key={service.id || index} className="bg-white rounded-md p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+                <div key={service.id || index} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-[#31876D]/20 transition-colors">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-[#273655]">
                       {formatServiceDescription(service.description) || service.type}
                     </span>
                     {service.OrderService && service.OrderService.count > 1 && (
@@ -458,15 +483,15 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                     )}
                   </div>
                   {service.price && (
-                    <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
+                    <div className="mt-2 flex items-center justify-between text-xs text-[#6B6B6B]">
                       <span>Цена:</span>
-                      <span className="font-medium text-gray-900">{formatPrice(service.price)}</span>
+                      <span className="font-medium text-[#273655]">{formatPrice(service.price)}</span>
                     </div>
                   )}
                   {service.OrderService?.total_price && service.OrderService.count > 1 && (
                     <div className="mt-1 flex items-center justify-between text-xs pt-2 border-t border-gray-200">
-                      <span className="text-gray-600 font-medium">Итого:</span>
-                      <span className="font-semibold text-[#1e2c4f]">
+                      <span className="text-[#6B6B6B] font-medium">Итого:</span>
+                      <span className="font-semibold text-[#31876D]">
                         {formatPrice(parseFloat(service.OrderService.total_price))}
                       </span>
                     </div>
@@ -474,60 +499,63 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Даты перемещения */}
       {order.moving_orders && order.moving_orders.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide text-xs">
-            Даты перемещения ({order.moving_orders.length})
-          </h3>
-          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+        <Card className="border-gray-200 rounded-2xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+              <Truck className="w-4 h-4 text-[#31876D]" />
+              Даты перемещения ({order.moving_orders.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
             <div className="space-y-3">
               {order.moving_orders.map((movingOrder, index) => (
-                <div key={movingOrder.id || index} className="bg-white rounded-md p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+                <div key={movingOrder.id || index} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-[#31876D]/20 transition-colors">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-gray-900">Перемещение #{index + 1}</span>
+                    <span className="text-sm font-medium text-[#273655]">Перемещение #{index + 1}</span>
                     <Badge className={`text-xs border ${getMovingStatusClass(movingOrder.status)}`}>
                       {getMovingStatusText(movingOrder.status, movingOrder.direction)}
                     </Badge>
                   </div>
-                  <div className="space-y-2 text-xs text-gray-600">
+                  <div className="space-y-2 text-xs text-[#6B6B6B]">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Дата:</span>
                       <span>{formatDate(movingOrder.moving_date)}</span>
                     </div>
                     {movingOrder.address && (
                       <div className="mt-2 pt-3 border-t border-gray-200">
-                        <span className="font-medium text-gray-700">Адрес:</span>
-                        <div className="mt-1 text-gray-700">{movingOrder.address}</div>
+                        <span className="font-medium text-[#273655]">Адрес:</span>
+                        <div className="mt-1 text-[#6B6B6B]">{movingOrder.address}</div>
                       </div>
                     )}
                     {movingOrder.delivery_time_interval && (
                       <div className="mt-2 pt-3 border-t border-gray-200">
-                        <span className="font-medium text-gray-700">Время доставки:</span>
-                        <div className="mt-1 text-gray-700">{movingOrder.delivery_time_interval}</div>
+                        <span className="font-medium text-[#273655]">Время доставки:</span>
+                        <div className="mt-1 text-[#6B6B6B]">{movingOrder.delivery_time_interval}</div>
                       </div>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Кнопки действий */}
       {order.status !== 'ACTIVE' && (
         <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
-          {['CANCELED, FINISHED'].includes(order.status) && (
+          {['CANCELED', 'FINISHED'].includes(order.status) && onDelete && (
               <Button
                   onClick={onDelete}
                   disabled={isLoading}
                   variant="destructive"
-                  className="flex-1 sm:flex-none"
+                  className="flex-1 sm:flex-none rounded-xl"
               >
                 Удалить заказ
               </Button>
@@ -538,14 +566,14 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 onClick={onUpdate}
                 disabled={isLoading}
                 variant="secondary"
-                className="flex-1 sm:flex-none"
+                className="flex-1 sm:flex-none rounded-xl border-gray-200 text-[#273655] hover:bg-gray-100"
               >
                 Редактировать
               </Button>
               <Button
                 onClick={onApprove}
                 disabled={isLoading}
-                className="flex-1 sm:flex-none bg-[#1e2c4f] hover:bg-[#1e2c4f]/90"
+                className="flex-1 sm:flex-none bg-[#31876D] hover:bg-[#31876D]/90 rounded-xl"
               >
                 Подтвердить
               </Button>
@@ -563,7 +591,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
       {/* Кнопка разблокировки бокса для отмененных заказов с cancel_status === 'APPROVED' */}
       {onUnlockStorage !== undefined && order.status === 'CANCELED' && order.cancel_status === 'SIGNED' && (
         <div className="space-y-4 pt-6 border-t border-gray-200">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 mt-0.5">
                 <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,7 +610,7 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
             <Button
               onClick={() => setIsUnlockModalOpen(true)}
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 min-w-[180px]"
+              className="bg-[#31876D] hover:bg-[#31876D]/90 text-white rounded-xl flex items-center justify-center gap-2 min-w-[180px]"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />

@@ -38,8 +38,9 @@ import CallbackRequestSection from "@/shared/components/CallbackRequestSection.j
 import ClientSelector from "@/shared/components/ClientSelector.jsx";
 import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import PendingOrderModal from "@/pages/personal-account/ui/PendingOrderModal.jsx";
-import ReturnApprovalModal from "@/pages/personal-account/ui/ReturnApprovalModal.jsx";
+import OrderDetailView from "@/pages/personal-account/ui/OrderDetailView.jsx";
 import { useApproveCancelOrder } from "@/shared/lib/hooks/use-orders";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 
 
@@ -2605,16 +2606,29 @@ const HomePage = memo(() => {
       />
 
       {isAdminOrManager && (
-        <ReturnApprovalModal
-          isOpen={isReturnApprovalModalOpen}
-          order={orderForReturnApproval}
-          onClose={() => {
-            setIsReturnApprovalModalOpen(false);
-            setOrderForReturnApproval(null);
-          }}
-          onApproveReturn={handleApproveReturn}
-          isLoading={approveCancelOrder.isPending}
-        />
+        <Dialog open={isReturnApprovalModalOpen} onOpenChange={(open) => {
+            if (!open) {
+              setIsReturnApprovalModalOpen(false);
+              setOrderForReturnApproval(null);
+            }
+          }}>
+          <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-none">
+            <DialogHeader className="pb-4 sm:pb-6 border-b">
+              <DialogTitle className="text-lg sm:text-2xl font-semibold text-[#273655]">
+                Детальная информация о заказе
+              </DialogTitle>
+            </DialogHeader>
+            {orderForReturnApproval && (
+              <div className="mt-4 sm:mt-6">
+                <OrderDetailView
+                  order={orderForReturnApproval}
+                  isLoading={approveCancelOrder.isPending}
+                  onApproveReturn={handleApproveReturn}
+                />
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       )}
 
       {isAdminOrManager && (
