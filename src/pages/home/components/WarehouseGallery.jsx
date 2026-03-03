@@ -44,11 +44,11 @@ function WarehouseGallery() {
   const canGoNext = startIndex < maxStartIndex;
 
   const handlePrev = useCallback(() => {
-    setStartIndex((i) => Math.max(0, i - 1));
+    setStartIndex((i) => Math.max(0, i - 4));
   }, []);
 
   const handleNext = useCallback(() => {
-    setStartIndex((i) => Math.min(maxStartIndex, i + 1));
+    setStartIndex((i) => Math.min(maxStartIndex, i + 4));
   }, [maxStartIndex]);
 
   const visibleImages = IMAGES.slice(startIndex, startIndex + visibleCount);

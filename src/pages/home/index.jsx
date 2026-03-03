@@ -38,6 +38,8 @@ import CallbackRequestSection from "@/shared/components/CallbackRequestSection.j
 import ClientSelector from "@/shared/components/ClientSelector.jsx";
 import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import PendingOrderModal from "@/pages/personal-account/ui/PendingOrderModal.jsx";
+import ReturnApprovalModal from "@/pages/personal-account/ui/ReturnApprovalModal.jsx";
+import { useApproveCancelOrder } from "@/shared/lib/hooks/use-orders";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 
 
@@ -92,6 +94,8 @@ const HomePage = memo(() => {
   const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [isPendingOrderModalOpen, setIsPendingOrderModalOpen] = useState(false);
+  const [orderForReturnApproval, setOrderForReturnApproval] = useState(null);
+  const [isReturnApprovalModalOpen, setIsReturnApprovalModalOpen] = useState(false);
   const [isLoadingPendingOrder, setIsLoadingPendingOrder] = useState(false);
   const [isUnbooking, setIsUnbooking] = useState(false);
 
@@ -1892,14 +1896,39 @@ const HomePage = memo(() => {
     }
   }, [previewStorage]);
 
+  const approveCancelOrder = useApproveCancelOrder();
+
+  const handleApproveReturn = useCallback(async (orderId) => {
+    try {
+      await approveCancelOrder.mutateAsync(orderId);
+      setPreviewStorage(null);
+      const data = await warehouseApi.getAllWarehouses();
+      const updated = Array.isArray(data) ? data : [];
+      setApiWarehouses(updated);
+      if (selectedWarehouse?.id) {
+        const fresh = updated.find((w) => w.id === selectedWarehouse.id);
+        if (fresh) setSelectedWarehouse(fresh);
+      }
+      setIsReturnApprovalModalOpen(false);
+      setOrderForReturnApproval(null);
+    } catch (err) {
+      console.error('Ошибка при подтверждении возврата:', err);
+    }
+  }, [approveCancelOrder, selectedWarehouse?.id]);
+
   const handleBoxSelect = useCallback(async (storage) => {
     if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
       setIsLoadingPendingOrder(true);
       try {
         const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-        setPendingOrder(order);
-        setIsPendingOrderModalOpen(true);
         setPreviewStorage(storage);
+        if (order?.cancel_status === 'PENDING') {
+          setOrderForReturnApproval(order);
+          setIsReturnApprovalModalOpen(true);
+        } else {
+          setPendingOrder(order);
+          setIsPendingOrderModalOpen(true);
+        }
       } catch (error) {
         if (error?.response?.status === 404) {
           setPendingOrder(null);
@@ -2574,6 +2603,19 @@ const HomePage = memo(() => {
             : costSummary.pricingBreakdown || null
         }
       />
+
+      {isAdminOrManager && (
+        <ReturnApprovalModal
+          isOpen={isReturnApprovalModalOpen}
+          order={orderForReturnApproval}
+          onClose={() => {
+            setIsReturnApprovalModalOpen(false);
+            setOrderForReturnApproval(null);
+          }}
+          onApproveReturn={handleApproveReturn}
+          isLoading={approveCancelOrder.isPending}
+        />
+      )}
 
       {isAdminOrManager && (
         <PendingOrderModal
