@@ -2,16 +2,32 @@ import React, { useState, useCallback, memo, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
 
-import img1 from '@/assets/komfort-city/20260226-IMG_5194.jpg';
-import img2 from '@/assets/komfort-city/20260226-IMG_5195.jpg';
-import img3 from '@/assets/komfort-city/20260226-IMG_5196.jpg';
-import img4 from '@/assets/komfort-city/20260226-IMG_5197.jpg';
-import img5 from '@/assets/komfort-city/20260226-IMG_5198.jpg';
-import img6 from '@/assets/komfort-city/20260226-IMG_5202.jpg';
-import img7 from '@/assets/komfort-city/20260226-IMG_5203.jpg';
-import img8 from '@/assets/komfort-city/20260226-IMG_5204.jpg';
+import img1 from '@/assets/komfort-city/20260226-IMG_5194.webp';
+import img2 from '@/assets/komfort-city/20260226-IMG_5195.webp';
+import img3 from '@/assets/komfort-city/20260226-IMG_5196.webp';
+import img4 from '@/assets/komfort-city/20260226-IMG_5197.webp';
+import img5 from '@/assets/komfort-city/20260226-IMG_5198.webp';
+import img6 from '@/assets/komfort-city/20260226-IMG_5202.webp';
+import img7 from '@/assets/komfort-city/20260226-IMG_5203.webp';
+import img8 from '@/assets/komfort-city/20260226-IMG_5204.webp';
+import img9 from '@/assets/komfort-city/20260226-IMG_5205.webp';
+import img10 from '@/assets/komfort-city/20260226-IMG_5206.webp';
+import img11 from '@/assets/komfort-city/20260226-IMG_5207.webp';
+import img12 from '@/assets/komfort-city/20260226-IMG_5208.webp';
+import img13 from '@/assets/komfort-city/20260226-IMG_5209.webp';
+import img14 from '@/assets/komfort-city/20260226-IMG_5210.webp';
+import img15 from '@/assets/komfort-city/20260226-IMG_5211.webp';
+import img16 from '@/assets/komfort-city/20260226-IMG_5212.webp';
+import img17 from '@/assets/komfort-city/20260226-IMG_5213.webp';
+import img18 from '@/assets/komfort-city/20260226-IMG_5214.webp';
+import img19 from '@/assets/komfort-city/20260226-IMG_5215.webp';
+import img20 from '@/assets/komfort-city/20260226-IMG_5216.webp';
+import img21 from '@/assets/komfort-city/20260226-IMG_5217.webp';
+import img22 from '@/assets/komfort-city/20260226-IMG_5218.webp';
+import img23 from '@/assets/komfort-city/20260226-IMG_5219.webp';
+import img24 from '@/assets/komfort-city/20260226-IMG_5220.webp';
 
-const IMAGES = [img1, img2, img3, img4, img5, img6, img7, img8];
+const IMAGES = [img1, img2, img3, img4, img5, img6, img7, img8, img9, img10, img11, img12, img13, img14, img15, img16, img17, img18, img19, img20, img21, img22, img23, img24];
 const MOBILE_BREAKPOINT = 640;
 
 function WarehouseGallery() {
