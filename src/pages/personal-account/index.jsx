@@ -1,5 +1,7 @@
 import React, { useState, useEffect, memo, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { PAYMENTS_QUERY_KEYS } from '../../shared/lib/hooks/use-payments';
 import Sidebar from './ui/Sidebar';
 import PersonalData from './ui/PersonalData';
 import PersonalDataLegal from './ui/PersonalDataLegal';
@@ -38,6 +40,7 @@ const PersonalAccountPage = memo(() => {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { isMobile } = useDeviceType();
   
   // Устанавливаем начальное состояние в зависимости от роли пользователя
@@ -82,6 +85,10 @@ const PersonalAccountPage = memo(() => {
       if (section === 'orders' && location.state.ordersFilter) {
         setOrdersInitialFilter(location.state.ordersFilter);
       }
+      // При переходе в «Платежи» (например после подписания) обновляем список платежей
+      if (section === 'payments') {
+        queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
+      }
       // Очищаем state в URL после применения (откладываем, чтобы setState успел отрендериться)
       const path = location.pathname;
       const id = setTimeout(() => navigate(path, { replace: true }), 0);
@@ -95,6 +102,10 @@ const PersonalAccountPage = memo(() => {
       if (sectionParam === 'orders' && searchParams.get('ordersFilter')) {
         setOrdersInitialFilter(searchParams.get('ordersFilter'));
       }
+      // При переходе в «Платежи» по ссылке обновляем список платежей
+      if (sectionParam === 'payments') {
+        queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
+      }
       const nextSearch = new URLSearchParams(searchParams);
       nextSearch.delete('section');
       nextSearch.delete('orderId');
@@ -103,7 +114,7 @@ const PersonalAccountPage = memo(() => {
       const id = setTimeout(() => navigate(replaceTo, { replace: true }), 0);
       return () => clearTimeout(id);
     }
-  }, [location.state, location.pathname, searchParams, navigate]);
+  }, [location.state, location.pathname, searchParams, navigate, queryClient]);
 
   // Сбрасываем начальный фильтр заказов после первого отображения (чтобы при следующем открытии «Мои заказы» была вкладка «Все»)
   useEffect(() => {
