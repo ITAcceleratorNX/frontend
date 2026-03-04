@@ -34,8 +34,13 @@ function loadWidgetScript() {
 
 /**
  * Открывает платёжный виджет TipTop Pay с переданными параметрами.
+ * По документации Tip Top Pay (developers.tiptoppay.kz) successRedirectUrl/failRedirectUrl
+ * в виджете в первую очередь используются для Рассрочки; при оплате картой виджет
+ * возвращает результат через Promise и редирект браузером не выполняется.
+ * Поэтому после успешной/неуспешной оплаты делаем редирект на фронте.
+ *
  * @param {Object} params - Параметры для widget.start() (publicTerminalId, amount, currency, description, externalId, accountId, successRedirectUrl, failRedirectUrl, tokenize, culture, emailBehavior и др.)
- * @returns {Promise<{ status: string, transactionId?: number }>} - Результат виджета (success/fail)
+ * @returns {Promise<{ type?: string, status?: string, data?: { transactionId?: number }, message?: string }>} - Результат виджета
  */
 export function openTipTopPayWidget(params) {
   if (!params || !params.publicTerminalId || params.amount == null) {
@@ -46,5 +51,22 @@ export function openTipTopPayWidget(params) {
     const Widget = window.tiptop.Widget;
     const widget = new Widget();
     return widget.start(params);
+  }).then((result) => {
+    const status = result?.status;
+    const successUrl = params?.successRedirectUrl;
+    const failUrl = params?.failRedirectUrl;
+
+    if (status === 'success' && successUrl) {
+      window.location.href = successUrl;
+      return result;
+    }
+    if ((status === 'fail' || result?.type === 'error') && failUrl) {
+      const url = new URL(failUrl);
+      if (result?.data?.ReasonCode != null) url.searchParams.set('reason', String(result.data.ReasonCode));
+      if (result?.message) url.searchParams.set('message', encodeURIComponent(result.message));
+      window.location.href = url.toString();
+      return result;
+    }
+    return result;
   });
 }
