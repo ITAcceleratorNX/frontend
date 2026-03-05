@@ -13,17 +13,17 @@ import Footer from '../../widgets/Footer';
 
 export default function AboutWarehouseRentPage() {
   const warehouses = useMemo(() => [
-    {
-      id: 1,
-      name: "Есентай, жилой комплекс",
-      address: "Касымова улица, 32, Алматы",
-      phone: "+7 727 123 4567",
-      // workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
-      workingHours: "Круглосуточно",
-      coordinates: [76.930495, 43.225893],
-      available: true,
-      image: extraspaceLogo
-    },
+    // ЖК Есентай убран с бронирования
+    // {
+    //   id: 1,
+    //   name: "Есентай, жилой комплекс",
+    //   address: "Касымова улица, 32, Алматы",
+    //   phone: "+7 727 123 4567",
+    //   workingHours: "Круглосуточно",
+    //   coordinates: [76.930495, 43.225893],
+    //   available: true,
+    //   image: extraspaceLogo
+    // },
     {
       id: 2,
       name: "Mega Tower Almaty, жилой комплекс",

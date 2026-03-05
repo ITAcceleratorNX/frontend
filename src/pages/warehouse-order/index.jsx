@@ -201,7 +201,12 @@ const WarehouseOrderPage = memo(() => {
         setIsLoading(true);
         setError(null);
         const data = await warehouseApi.getAllWarehouses();
-        setWarehouses(Array.isArray(data) ? data : []);
+        // ЖК Есентай убран с бронирования
+        const filtered = Array.isArray(data) ? data.filter(w => {
+          const name = (w.name || '').toLowerCase();
+          return !name.includes('есентай') && !name.includes('esentai');
+        }) : [];
+        setWarehouses(filtered);
         if (import.meta.env.DEV) {
         }
       } catch (error) {
@@ -956,7 +961,8 @@ const WarehouseOrderPage = memo(() => {
                                 selectedMap={megaSelectedMap}
                               />
                             </>
-                          ) : selectedWarehouse.name === "Есентай, жилой комплекс" ? (
+                          ) : /* ЖК Есентай убран с бронирования
+                          selectedWarehouse.name === "Есентай, жилой комплекс" ? (
                             <MainWarehouseCanvas
                               storageBoxes={selectedWarehouse.storage}
                               onBoxSelect={setSelectedStorage}
@@ -964,7 +970,8 @@ const WarehouseOrderPage = memo(() => {
                               userRole={user?.role}
                               isViewOnly={isAdminOrManager}
                             />
-                          ) : selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»" ? (
+                          ) : */
+                          selectedWarehouse.name === "Жилой комплекс «Комфорт Сити»" ? (
                             <>
                               <div className="mb-4 flex justify-center">
                                 <div className="bg-white border border-gray-200 rounded-lg p-2 flex gap-2">
