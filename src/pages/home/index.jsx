@@ -204,19 +204,19 @@ const HomePage = memo(() => {
   // Данные для складов на карте
   const warehouses = useMemo(
       () => [
-        {
-          id: 1,
-          name: "Есентай, жилой комплекс",
-          address: "Касымова улица, 32",
-          phone: "+7 727 123 4567",
-          // workingHours: "Пн-Пт: 09:00-18:00, Сб-Вс: 10:00-16:00",
-          workingHours: "Круглосуточно",
-          type: "INDIVIDUAL",
-          storage: [],
-          coordinates: [76.930495, 43.225893],
-          available: true,
-          image: extraspaceLogo,
-        },
+        // ЖК Есентай убран с бронирования
+        // {
+        //   id: 1,
+        //   name: "Есентай, жилой комплекс",
+        //   address: "Касымова улица, 32",
+        //   phone: "+7 727 123 4567",
+        //   workingHours: "Круглосуточно",
+        //   type: "INDIVIDUAL",
+        //   storage: [],
+        //   coordinates: [76.930495, 43.225893],
+        //   available: true,
+        //   image: extraspaceLogo,
+        // },
         {
           id: 2,
           name: "Mega Tower Almaty, жилой комплекс",
@@ -1615,12 +1615,17 @@ const HomePage = memo(() => {
     const fetchWarehouses = async () => {
       try {
         const data = await warehouseApi.getAllWarehouses();
-        setApiWarehouses(Array.isArray(data) ? data : []);
+        // ЖК Есентай убран с бронирования
+        const filtered = Array.isArray(data) ? data.filter(w => {
+          const name = (w.name || '').toLowerCase();
+          return !name.includes('есентай') && !name.includes('esentai');
+        }) : [];
+        setApiWarehouses(filtered);
 
         // Устанавливаем первый склад INDIVIDUAL как выбранный по умолчанию
-        if (data && data.length > 0) {
-          const firstIndividual = data.find((item) => item.type === "INDIVIDUAL");
-          setSelectedWarehouse(firstIndividual || data[0]);
+        if (filtered.length > 0) {
+          const firstIndividual = filtered.find((item) => item.type === "INDIVIDUAL");
+          setSelectedWarehouse(firstIndividual || filtered[0]);
         }
 
       } catch (error) {
@@ -1905,7 +1910,11 @@ const HomePage = memo(() => {
       await approveCancelOrder.mutateAsync(orderId);
       setPreviewStorage(null);
       const data = await warehouseApi.getAllWarehouses();
-      const updated = Array.isArray(data) ? data : [];
+      // ЖК Есентай убран с бронирования
+      const updated = Array.isArray(data) ? data.filter(w => {
+        const name = (w.name || '').toLowerCase();
+        return !name.includes('есентай') && !name.includes('esentai');
+      }) : [];
       setApiWarehouses(updated);
       if (selectedWarehouse?.id) {
         const fresh = updated.find((w) => w.id === selectedWarehouse.id);
@@ -1923,7 +1932,11 @@ const HomePage = memo(() => {
       await unlockStorage.mutateAsync(orderId);
       setPreviewStorage(null);
       const data = await warehouseApi.getAllWarehouses();
-      const updated = Array.isArray(data) ? data : [];
+      // ЖК Есентай убран с бронирования
+      const updated = Array.isArray(data) ? data.filter(w => {
+        const name = (w.name || '').toLowerCase();
+        return !name.includes('есентай') && !name.includes('esentai');
+      }) : [];
       setApiWarehouses(updated);
       if (selectedWarehouse?.id) {
         const fresh = updated.find((w) => w.id === selectedWarehouse.id);
@@ -2670,7 +2683,11 @@ const HomePage = memo(() => {
             try {
               setPreviewStorage(null);
               const data = await warehouseApi.getAllWarehouses();
-              const updated = Array.isArray(data) ? data : [];
+              // ЖК Есентай убран с бронирования
+              const updated = Array.isArray(data) ? data.filter(w => {
+                const name = (w.name || '').toLowerCase();
+                return !name.includes('есентай') && !name.includes('esentai');
+              }) : [];
               setApiWarehouses(updated);
               if (selectedWarehouse?.id) {
                 const fresh = updated.find((w) => w.id === selectedWarehouse.id);
