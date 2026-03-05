@@ -24,7 +24,7 @@ import {
   Download,
   Edit
 } from 'lucide-react';
-import { showErrorToast } from '../../../shared/lib/toast';
+import { showErrorToast, showSuccessToast } from '../../../shared/lib/toast';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 import EditLocationModal from './EditLocationModal';
 
@@ -34,6 +34,7 @@ const ManagerMovingOrder = () => {
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const downloadItemFile = useDownloadItemFile();
@@ -83,8 +84,82 @@ const ManagerMovingOrder = () => {
     }));
   };
 
-  // Менеджер только просматривает - никаких кнопок действий
+  // Управление доставкой от имени курьера (те же шаги, что у курьера)
+  const handleActionClick = async () => {
+    if (!order) return;
+    if (order.status === 'DELIVERED' || order.status === 'FINISHED') return;
+
+    let newStatus;
+    if (order.status === 'PENDING') newStatus = 'COURIER_ASSIGNED';
+    else if (order.status === 'COURIER_ASSIGNED') newStatus = 'COURIER_IN_TRANSIT';
+    else if (order.status === 'COURIER_IN_TRANSIT') newStatus = 'COURIER_AT_CLIENT';
+    else if (order.status === 'COURIER_AT_CLIENT') newStatus = 'IN_PROGRESS';
+    else if (order.status === 'IN_PROGRESS') newStatus = 'DELIVERED';
+    else return;
+
+    try {
+      setIsUpdating(true);
+      await api.put(`/moving/${orderId}`, { id: orderId, status: newStatus });
+      setOrder(prev => ({ ...prev, status: newStatus }));
+      showSuccessToast('Статус доставки обновлён');
+    } catch (err) {
+      console.error('Ошибка при обновлении статуса:', err);
+      showErrorToast('Ошибка при изменении статуса заказа');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const getActionButton = () => {
+    if (!order) return null;
+    if (order.status === 'DELIVERED' || order.status === 'FINISHED') return null;
+
+    const buttonProps = {
+      onClick: handleActionClick,
+      disabled: isUpdating,
+      className: "flex items-center gap-2 rounded-full px-5 py-2.5 bg-[#00A991] hover:bg-[#009882] text-white"
+    };
+
+    if (order.status === 'PENDING') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Назначьте курьера в списке заказов
+        </Button>
+      );
+    }
+    if (order.status === 'COURIER_ASSIGNED') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />}
+          К вам едет курьер
+        </Button>
+      );
+    }
+    if (order.status === 'COURIER_IN_TRANSIT') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
+          Курьер у вас
+        </Button>
+      );
+    }
+    if (order.status === 'COURIER_AT_CLIENT') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Box className="w-4 h-4" />}
+          {order.direction === 'TO_CLIENT' ? 'Курьер оставил вещи' : 'Курьер забрал вещи'}
+        </Button>
+      );
+    }
+    if (order.status === 'IN_PROGRESS') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+          Завершить
+        </Button>
+      );
+    }
     return null;
   };
 

@@ -31,7 +31,8 @@ import {
   AlertCircle,
   User,
   Building,
-  Phone
+  Phone,
+  Box
 } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 // --- Moving statuses helpers ---
@@ -66,7 +67,7 @@ const MANAGER_SECTIONS = {
   COMPLETED: 'completed',
 };
 
-const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAssign }) => {
+const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAssign, onStatusChange, isUpdatingStatus = false }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
@@ -78,6 +79,21 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAss
     if (onCourierAssign) onCourierAssign(order);
   };
 
+  const handleStatusClick = async (e) => {
+    e.stopPropagation();
+    if (!onStatusChange || isUpdatingStatus) return;
+    if (order.status === 'DELIVERED' || order.status === 'FINISHED') return;
+
+    let newStatus;
+    if (order.status === 'COURIER_ASSIGNED') newStatus = 'COURIER_IN_TRANSIT';
+    else if (order.status === 'COURIER_IN_TRANSIT') newStatus = 'COURIER_AT_CLIENT';
+    else if (order.status === 'COURIER_AT_CLIENT') newStatus = 'IN_PROGRESS';
+    else if (order.status === 'IN_PROGRESS') newStatus = 'DELIVERED';
+    else return;
+
+    await onStatusChange(order.movingOrderId, newStatus);
+  };
+
   const getActionButton = () => {
     if (order.status === 'PENDING' && !order.courier) {
       return (
@@ -87,6 +103,47 @@ const OrderCard = ({ order, isLoading = false, isDelivered = false, onCourierAss
           className="bg-[#00A991] hover:bg-[#009882] text-white rounded-full px-4 py-2"
         >
           Назначить курьера
+        </Button>
+      );
+    }
+    if (isDelivered || order.status === 'DELIVERED' || order.status === 'FINISHED') return null;
+    if (!order.courier) return null;
+
+    const buttonProps = {
+      onClick: handleStatusClick,
+      disabled: isUpdatingStatus,
+      className: "flex items-center gap-2 rounded-full px-4 py-2 bg-[#00A991] hover:bg-[#009882] text-white"
+    };
+
+    if (order.status === 'COURIER_ASSIGNED') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdatingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />}
+          К вам едет курьер
+        </Button>
+      );
+    }
+    if (order.status === 'COURIER_IN_TRANSIT') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdatingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
+          Курьер у вас
+        </Button>
+      );
+    }
+    if (order.status === 'COURIER_AT_CLIENT') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdatingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <Box className="w-4 h-4" />}
+          {order.direction === 'TO_CLIENT' ? 'Курьер оставил вещи' : 'Курьер забрал вещи'}
+        </Button>
+      );
+    }
+    if (order.status === 'IN_PROGRESS') {
+      return (
+        <Button {...buttonProps}>
+          {isUpdatingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+          Завершить
         </Button>
       );
     }
@@ -205,7 +262,21 @@ const ManagerMoving = () => {
   const [couriers, setCouriers] = useState([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
+  const handleStatusChange = async (movingOrderId, newStatus) => {
+    try {
+      setUpdatingOrderId(movingOrderId);
+      await api.put(`/moving/${movingOrderId}`, { id: movingOrderId, status: newStatus });
+      showSuccessToast('Статус доставки обновлён');
+      fetchOrders();
+    } catch (err) {
+      console.error('Ошибка при обновлении статуса:', err);
+      showErrorToast('Не удалось обновить статус доставки');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -490,6 +561,8 @@ const ManagerMoving = () => {
                   order={order}
                   isLoading={isLoading}
                   onCourierAssign={handleAssignCourier}
+                  onStatusChange={handleStatusChange}
+                  isUpdatingStatus={updatingOrderId === order.movingOrderId}
                 />
               ))}
             </div>
@@ -518,6 +591,8 @@ const ManagerMoving = () => {
                   order={order}
                   isLoading={isLoading}
                   onCourierAssign={handleAssignCourier}
+                  onStatusChange={handleStatusChange}
+                  isUpdatingStatus={updatingOrderId === order.movingOrderId}
                 />
               ))}
             </div>
