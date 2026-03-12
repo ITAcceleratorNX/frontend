@@ -58,7 +58,7 @@ function WarehouseGallery() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-[90rem] mx-auto">
           <h2 className="font-soyuz-grotesk text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#202422] text-center mb-6 sm:mb-8 md:mb-20">
-            Галерея Жилого комплекса Комфорт Сити
+          <span className="font-['Montserrat']">Г</span>алерея наших складов
           </h2>
          
 

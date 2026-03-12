@@ -101,19 +101,20 @@ export default function IndividualStorageSummary({
                 <div className="space-y-4">
                     {/* Главная сумма */}
                     <div>
-                        <div className="text-lg font-bold text-[#273655] flex items-baseline gap-2">
-                            Общая стоимость:{' '}
+                        <div className="text-lg font-bold text-[#273655] flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="shrink-0">Общая стоимость:</span>
                             {promoSuccess && promoDiscount > 0 && (
-                                <span className="text-sm text-gray-400 line-through">
-                  {costSummary.combinedTotal?.toLocaleString() ?? '—'} ₸
-                </span>
+                                <span className="text-sm text-gray-400 line-through shrink-0">
+                                    {costSummary.combinedTotal?.toLocaleString() ?? '—'} ₸
+                                </span>
                             )}
-                            <span className="text-2xl">
-                {finalIndividualTotal?.toLocaleString() ?? '—'} ₸
-              </span>
-                            <span className="text-sm font-normal text-gray-600">
-                ({volume} м²)
-              </span>
+                            <span className="inline-flex items-center gap-1 shrink-0">
+                                <span className="text-2xl tabular-nums">{finalIndividualTotal?.toLocaleString() ?? '—'}</span>
+                                <span className="text-2xl leading-none">₸</span>
+                            </span>
+                            <span className="text-sm font-normal text-gray-600 shrink-0">
+                                ({volume} м²)
+                            </span>
                         </div>
 
                         {promoSuccess && (
