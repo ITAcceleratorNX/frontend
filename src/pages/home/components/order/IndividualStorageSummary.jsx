@@ -117,6 +117,13 @@ export default function IndividualStorageSummary({
                             </span>
                         </div>
 
+                        {/* Средняя стоимость в месяц */}
+                        {monthsNumber != null && monthsNumber > 0 && finalIndividualTotal != null && (
+                            <div className="text-sm font-medium text-[#273655] mt-1">
+                                В среднем в месяц: {Math.round(finalIndividualTotal / monthsNumber).toLocaleString()} ₸
+                            </div>
+                        )}
+
                         {promoSuccess && (
                             <div className="text-xs text-gray-500 mt-1">
                                 (скидка {promoDiscountPercent}%)

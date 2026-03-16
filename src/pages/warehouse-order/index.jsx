@@ -1138,8 +1138,8 @@ const WarehouseOrderPage = memo(() => {
                             <div className="text-lg font-bold text-[#273655]">
                               Общая стоимость: {calculateTotalPrice().toLocaleString()} ₸
                             </div>
-                            <div className="text-xs text-gray-500">
-                              за {months} {months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}
+                            <div className="text-sm font-medium text-[#273655]">
+                              В среднем в месяц: {months > 0 ? Math.round(calculateTotalPrice() / months).toLocaleString() : '0'} ₸
                             </div>
                           </>
                         )}
@@ -1302,8 +1302,8 @@ const WarehouseOrderPage = memo(() => {
                             <div className="text-lg font-bold text-[#273655]">
                               Общая стоимость: {calculateTotalPrice().toLocaleString()} ₸
                             </div>
-                            <div className="text-xs text-gray-500">
-                              за {months} {months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев'}
+                            <div className="text-sm font-medium text-[#273655]">
+                              В среднем в месяц: {months > 0 ? Math.round(calculateTotalPrice() / months).toLocaleString() : '0'} ₸
                             </div>
                           </>
                         )}
