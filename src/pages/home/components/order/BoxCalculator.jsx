@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, memo } from "react";
+import { Search } from "lucide-react";
 import { getLayoutBoxNames } from "@/shared/lib/warehouseLayoutUtils";
 
 /**
@@ -122,8 +123,8 @@ function BoxCalculator({
       <p className="text-white text-sm font-medium text-center">
         Введите нужный размер бокса
       </p>
-      <div className="flex flex-col sm:flex-row gap-2 items-center justify-center">
-        <div className="flex items-center gap-2 bg-white/15 backdrop-blur rounded-xl px-4 py-2 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-center">
+        <div className="flex items-center gap-2 bg-white/15 backdrop-blur rounded-xl px-4 py-2.5 w-full sm:w-auto h-12 sm:h-12">
           <input
             type="number"
             inputMode="decimal"
@@ -140,8 +141,9 @@ function BoxCalculator({
         <button
           type="button"
           onClick={handleSearch}
-          className="px-5 py-2.5 rounded-xl bg-[#A8E6CF] text-[#273655] font-semibold hover:bg-[#90D4B8] transition-colors whitespace-nowrap"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#273655] font-bold shadow-lg ring-2 ring-white/50 hover:bg-[#F0FDF4] hover:ring-white hover:shadow-xl transition-all whitespace-nowrap h-12 sm:h-12"
         >
+          <Search className="w-5 h-5 shrink-0" strokeWidth={2.5} />
           Найти
         </button>
       </div>
