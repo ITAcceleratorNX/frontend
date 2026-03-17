@@ -1,11 +1,16 @@
 import React, {memo} from "react";
 import { Dropdown } from "../../../../shared/components/Dropdown.jsx";
+import BoxCalculator from "./BoxCalculator.jsx";
 
 function WarehouseSchemePanel({ dropdownItems = [],
                                   selectedWarehouse = "",
                                   setSelectedWarehouse,
                                   mapRef,
                                   renderWarehouseScheme,
+                                  storageBoxes = [],
+                                  selectedMap = 1,
+                                  onHighlightedBoxes,
+                                  onBoxSelect,
                               }) {
 
     return (
@@ -23,7 +28,7 @@ function WarehouseSchemePanel({ dropdownItems = [],
         >
             {/* header controls */}
             <div
-                className="mb-4 flex items-center gap-3 flex-wrap justify-center"
+                className="mb-2 flex items-center gap-3 flex-wrap justify-center"
                 style={{ position: "relative", zIndex: 1, flexShrink: 0 }}
             >
                 <div className="w-fit [&_button]:bg-transparent [&_button]:text-white [&_button]:border-2 [&_button]:border-white [&_button]:rounded-full [&_button]:hover:bg-white/10 [&_svg]:text-white">
@@ -60,6 +65,15 @@ function WarehouseSchemePanel({ dropdownItems = [],
                     </button>
                 </div>
             </div>
+
+            {/* Калькулятор подбора боксов */}
+            <BoxCalculator
+                storageBoxes={storageBoxes}
+                selectedWarehouse={selectedWarehouse}
+                selectedMap={selectedMap}
+                onHighlightedBoxes={onHighlightedBoxes}
+                onBoxSelect={onBoxSelect}
+            />
 
             {/* map */}
             <div className="flex-1 w-full h-full" style={{ minHeight: 0, minWidth: 0, position: "relative", zIndex: 0 }}>

@@ -155,6 +155,7 @@ const HomePage = memo(() => {
   const [isLoadingBookingInfo, setIsLoadingBookingInfo] = useState(false);
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const [megaSelectedMap, setMegaSelectedMap] = useState(1);
+  const [highlightedBoxes, setHighlightedBoxes] = useState([]);
   const [isMobileView, setIsMobileView] = useState(false);
   const mapRef = useRef(null);
   const [serviceOptions, setServiceOptions] = useState([]);
@@ -1955,6 +1956,7 @@ const HomePage = memo(() => {
   }, [unlockStorage, selectedWarehouse?.id]);
 
   const handleBoxSelect = useCallback(async (storage) => {
+    setHighlightedBoxes([]);
     if ((['OCCUPIED', 'PENDING', 'CANCELED'].includes(storage?.status)) && isAdminOrManager) {
       setIsLoadingPendingOrder(true);
       try {
@@ -2021,6 +2023,7 @@ const HomePage = memo(() => {
               storageBoxes={storageBoxes}
               onBoxSelect={handleBoxSelect}
               selectedStorage={previewStorage}
+              highlightedBoxes={highlightedBoxes}
               selectedMap={
                 selectedWarehouse?.name?.toLowerCase().includes('mega') 
                   ? megaSelectedMap 
@@ -2059,6 +2062,10 @@ const HomePage = memo(() => {
       }
     }
   }, [dropdownItems, selectedWarehouse, setSelectedWarehouse]);
+
+  useEffect(() => {
+    setHighlightedBoxes([]);
+  }, [selectedWarehouse?.id, megaSelectedMap, komfortSelectedMap]);
 
   return (
     <div className="font-['Montserrat'] min-h-screen bg-white flex flex-col">
@@ -2123,6 +2130,14 @@ const HomePage = memo(() => {
                     setSelectedWarehouse={setSelectedWarehouse}
                     mapRef={mapRef}
                     renderWarehouseScheme={renderWarehouseScheme}
+                    storageBoxes={selectedWarehouse?.storage ?? []}
+                    selectedMap={
+                      selectedWarehouse?.name?.toLowerCase().includes("mega")
+                        ? megaSelectedMap
+                        : komfortSelectedMap
+                    }
+                    onHighlightedBoxes={setHighlightedBoxes}
+                    onBoxSelect={handleBoxSelect}
                 />
 
                 {/* Правая панель - Форма конфигурации */}

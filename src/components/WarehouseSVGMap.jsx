@@ -12,6 +12,7 @@ const WarehouseSVGMap = React.forwardRef(({
   storageBoxes = [], 
   onBoxSelect, 
   selectedStorage,
+  highlightedBoxes = [],
   selectedMap: initialSelectedMap = 1,
   onMapChange
 }, ref) => {
@@ -308,11 +309,16 @@ const WarehouseSVGMap = React.forwardRef(({
     );
   }, [storageBoxes]);
 
-  // Проверка выбранного бокса
+  // Проверка выбранного бокса (включая подсветку от калькулятора)
   const isBoxSelected = useCallback((boxName) => {
-    if (!selectedStorage) return false;
-    return selectedStorage?.name === boxName;
-  }, [selectedStorage]);
+    if (selectedStorage?.name?.toLowerCase() === boxName?.toLowerCase()) return true;
+    if (Array.isArray(highlightedBoxes) && highlightedBoxes.length > 0) {
+      return highlightedBoxes.some(
+        (b) => b?.name?.toLowerCase() === boxName?.toLowerCase()
+      );
+    }
+    return false;
+  }, [selectedStorage, highlightedBoxes]);
 
   // Проверка занятости
   const isBoxOccupied = (status) => {
