@@ -2340,7 +2340,12 @@ const HomePage = memo(() => {
             <TabsContent value="LOCKERS" className="mt-8">
               <StorageLockersSection
                 isActive={activeStorageTab === "LOCKERS"}
+                warehouses={dropdownItems}
                 onCallbackClick={handleCallbackRequestClick}
+                selectedClientUser={selectedClientUser}
+                isAdminOrManager={isAdminOrManager}
+                isUserRole={isUserRole}
+                onOpenClientSelector={() => setIsClientSelectorOpen(true)}
               />
             </TabsContent>
             

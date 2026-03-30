@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin, Package, Calendar, Clock } from "lucide-react";
+import { MapPin, Package, Calendar, Clock, User } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,16 +12,12 @@ import LockerStepper from "./LockerStepper";
 import LockerDatePicker from "./LockerDatePicker";
 import LockerSummary from "./LockerSummary";
 
-const ACCENT = "#439F7E";
-
-const LOCATIONS = [
-  { id: "comfort", label: "ЖК Комфорт Сити" },
-  { id: "mega", label: "ЖК Мега Товерс" },
-];
+const ACCENT = "#31876D";
 
 export default function RightLockerForm({
-  locationId,
-  onLocationChange,
+  locations = [],
+  warehouseId = null,
+  onWarehouseChange,
   volumeM3,
   onVolumeChange,
   startDate,
@@ -37,39 +33,46 @@ export default function RightLockerForm({
   onBook,
   onCallback,
   canSubmit,
+  isSubmitting = false,
+  isPriceLoading = false,
+  priceError = "",
+  isAdminOrManager = false,
+  selectedClientUser = null,
+  onOpenClientSelector,
 }) {
   return (
-    <div className="flex min-h-[420px] flex-col rounded-3xl bg-white p-6 shadow-lg sm:p-8 lg:p-10">
-      <header className="mb-8">
-        <h2 className="font-soyuz-grotesk
- text-2xl font-bold tracking-tight text-[#202422] sm:text-3xl">
-          Камера хранения
-        </h2>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C625F] sm:text-base">
-          Краткосрочное хранение без доставки. Вы привозите и забираете вещи самостоятельно.
-        </p>
-      </header>
+    <div className="flex min-h-[450px] flex-col rounded-3xl bg-[#F7FAF9] p-6 shadow-lg">
+      <h2 className="font-soyuz-grotesk mb-6 text-2xl font-bold text-[#202422] sm:text-3xl">
+        Настройте камеру хранения
+      </h2>
 
-      <div className="flex flex-1 flex-col gap-7">
+      <div className="flex flex-1 flex-col gap-6">
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#202422]">
             <MapPin className="h-4 w-4 shrink-0" strokeWidth={2} style={{ color: ACCENT }} aria-hidden />
             Локация:
           </label>
-          <Select value={locationId} onValueChange={onLocationChange}>
-            <SelectTrigger
-              className="h-[52px] w-full rounded-2xl border border-gray-200 bg-white text-left text-base font-medium text-[#202422] shadow-sm focus:ring-2 focus:ring-[#439F7E] focus:ring-offset-0"
+          {locations.length === 0 ? (
+            <p className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-[#5C625F]">
+              Загрузка списка складов…
+            </p>
+          ) : (
+            <Select
+              value={warehouseId != null ? String(warehouseId) : undefined}
+              onValueChange={(v) => onWarehouseChange?.(Number(v))}
             >
-              <SelectValue placeholder="Выберите локацию" />
-            </SelectTrigger>
-            <SelectContent>
-              {LOCATIONS.map((l) => (
-                <SelectItem key={l.id} value={l.id}>
-                  {l.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger className="h-[52px] w-full rounded-2xl border border-gray-200 bg-white text-left text-base font-medium text-[#202422] shadow-sm focus:ring-2 focus:ring-[#31876D] focus:ring-offset-0">
+                <SelectValue placeholder="Выберите склад" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((l) => (
+                  <SelectItem key={l.id} value={String(l.id)}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div>
@@ -116,27 +119,59 @@ export default function RightLockerForm({
           endDateISO={endDateISO}
           totalPrice={totalPrice}
           priceLine={priceLine}
+          isPriceLoading={isPriceLoading}
         />
+
+        {priceError ? (
+          <p className="text-sm text-red-600" role="alert">
+            {priceError}
+          </p>
+        ) : null}
+
+        {isAdminOrManager && (
+          <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[#202422] font-semibold">
+                <User className="w-5 h-5 shrink-0" />
+                <span>Клиент</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => onOpenClientSelector?.()}
+                className="px-4 py-2 text-sm font-medium text-[#31876D] border border-[#31876D] rounded-lg hover:bg-[#31876D] hover:text-white transition-colors"
+              >
+                {selectedClientUser ? "Изменить" : "Выбрать клиента"}
+              </button>
+            </div>
+            {selectedClientUser && (
+              <div className="bg-[#31876D]/10 rounded-lg p-3">
+                <div className="text-sm font-medium text-[#202422]">
+                  {selectedClientUser.name || "Без имени"}
+                </div>
+                <div className="text-xs text-gray-600">{selectedClientUser.email}</div>
+                {selectedClientUser.phone && (
+                  <div className="text-xs text-gray-500">Телефон: {selectedClientUser.phone}</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-auto space-y-3 pt-2">
           <button
             type="button"
             onClick={onBook}
-            disabled={!canSubmit}
-            className="w-full rounded-[20px] py-3.5 text-base font-bold text-white shadow-md transition-all hover:opacity-95 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-45"
-            style={{
-              backgroundColor: ACCENT,
-              boxShadow: "0 6px 20px -6px rgba(67, 159, 126, 0.55)",
-            }}
+            disabled={!canSubmit || isSubmitting || isPriceLoading}
+            className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Забронировать бокс
+            {isSubmitting ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
           </button>
           <button
             type="button"
             onClick={onCallback}
-            className="w-full rounded-[20px] border border-[#C5CAC8] bg-white py-3.5 text-base font-semibold text-[#3D4542] transition-colors hover:bg-[#F7FAF9]"
+            className="w-full bg-transparent border border-gray-300 text-[#616161] font-semibold py-2.5 px-6 rounded-3xl hover:bg-gray-100/50 transition-colors"
           >
-            Заказать обратный звонок
+            заказать обратный звонок
           </button>
         </div>
       </div>

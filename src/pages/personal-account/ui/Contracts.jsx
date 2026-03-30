@@ -113,12 +113,12 @@ const getContractStatusInfo = (statusText) => {
   
   return statusMap[statusText] || { style: 'default', icon: null, message: statusText };
 };
-function StatusBadge({ status, type = 'order' }) {
+function StatusBadge({ status, type = 'order', storageType }) {
   if (!status) return null;
 
   const info =
       type === 'order'
-          ? getOrderStatusInfo(status)
+          ? getOrderStatusInfo(status, storageType)
           : type === 'contract'
               ? getContractStatusInfo(status)
               : getPaymentStatusInfo(status);
@@ -190,7 +190,7 @@ const getCargoMarkText = (mark) => {
 };
 
 // Функция для получения информации о статусе заказа
-const getOrderStatusInfo = (status) => {
+const getOrderStatusInfo = (status, storageType) => {
   const statusMap = {
     'APPROVED': { 
       style: 'success',
@@ -202,7 +202,7 @@ const getOrderStatusInfo = (status) => {
     },
     'ACTIVE': { 
       style: 'info',
-      message: 'Активный'
+      message: storageType === 'CAMERA' ? 'Хранение активно' : 'Активный'
     },
     'CANCELED': {
       style: 'danger',
@@ -282,7 +282,7 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
               <span className="text-sm text-gray-600">ID заказа: <span className="font-medium">{contract.order_id}</span></span>
               <span className="text-sm text-gray-600">Бокс: <span className="font-medium">{contract.storage_name}</span></span>
               <span className="text-sm text-gray-600">Адрес: <span className="font-medium">{contract.warehouse_address}</span></span>
-              <span className="text-sm text-gray-600">Объем: <span className="font-medium">{contract.total_volume} м²</span></span>
+              <span className="text-sm text-gray-600">Объем: <span className="font-medium">{contract.total_volume} {contract.storage_type === 'INDIVIDUAL' ? 'м²' : 'м³'}</span></span>
             </div>
           </DialogDescription>
         </DialogHeader>
@@ -300,9 +300,9 @@ const ContractDetailsModal = ({ isOpen, onClose, contract, details, isLoading, e
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-600">Статус заказа:</p>
                 <Badge 
-                  className={`${statusStyles[getOrderStatusInfo(contract.order_status).style]} justify-center py-2 px-3`}
+                  className={`${statusStyles[getOrderStatusInfo(contract.order_status, contract.storage_type).style]} justify-center py-2 px-3`}
                 >
-                  {getOrderStatusInfo(contract.order_status).message}
+                  {getOrderStatusInfo(contract.order_status, contract.storage_type).message}
                 </Badge>
               </div>
               
@@ -1070,7 +1070,7 @@ const Contracts = () => {
                       <td className="px-6 py-5 text-gray-600 text-sm">{row.storage_name || '-'}</td>
                       <td className="px-6 py-5 text-gray-600 text-sm">{`${formatCalendarDate(row.rental_period.start_date)} - ${formatCalendarDate(row.rental_period.end_date)}`}</td>
                       <td className="px-6 py-5">
-                        <StatusBadge status={row.order_status} type="order" />
+                        <StatusBadge status={row.order_status} type="order" storageType={row.storage_type} />
                       </td>
                       <td className="px-6 py-5 text-gray-600 text-sm">
                         <div className="flex flex-col gap-1">

@@ -69,13 +69,16 @@ const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
     return 'Индивидуальное';
   } else if (type === 'CLOUD') {
-    return 'Облачное'
+    return 'Облачное';
+  } else if (type === 'CAMERA') {
+    return 'Камеры хранения';
   }
   return type;
 };
 
 const getVolumeUnit = (storageType) => {
-  return storageType === 'INDIVIDUAL' ? 'м²' : 'м³';
+  if (storageType === 'INDIVIDUAL') return 'м²';
+  return 'м³';
 };
 
 const getMonthName = (month) => {
@@ -543,7 +546,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
         {order.status === 'ACTIVE' && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
             <Zap className="w-3.5 h-3.5 text-gray-500" />
-            Активный
+            {order.storage?.storage_type === 'CAMERA' ? 'Хранение активно' : 'Активный'}
           </span>
         )}
         {order.status === 'APPROVED' && order.contract_status !== 'SIGNED' && (

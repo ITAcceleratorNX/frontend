@@ -27,7 +27,7 @@ export default function LockerDatePicker({
       placeholder="ДД.ММ.ГГГГ"
       className={cn(
         "[&>div]:!min-h-[52px] [&>div]:rounded-2xl [&>div]:border [&>div]:border-gray-200 [&>div]:bg-white [&>div]:p-3 [&>div]:shadow-sm",
-        "[&>div]:hover:bg-gray-50/90 [&>div]:focus-within:ring-2 [&>div]:focus-within:!ring-[#439F7E] [&>div]:focus-within:border-transparent",
+        "[&>div]:hover:bg-gray-50/90 [&>div]:focus-within:ring-2 [&>div]:focus-within:!ring-[#31876D] [&>div]:focus-within:border-transparent",
         "[&_label]:sr-only"
       )}
     />

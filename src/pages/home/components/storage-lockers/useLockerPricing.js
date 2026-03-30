@@ -17,24 +17,12 @@ export function computeLockerEndDateISO(startDateISO, days) {
   const start = new Date(y, mo - 1, d);
   if (Number.isNaN(start.getTime())) return null;
   const end = new Date(start);
-  end.setDate(end.getDate() + (days - 1));
+  // Совпадает с бэкендом: end_date = start_date + storage_days (Luxon)
+  end.setDate(end.getDate() + days);
   const yy = end.getFullYear();
   const mm = String(end.getMonth() + 1).padStart(2, "0");
   const dd = String(end.getDate()).padStart(2, "0");
   return `${yy}-${mm}-${dd}`;
-}
-
-/**
- * @param {number} volumeM3 - 1–4
- * @param {number} days - 1–14
- * @returns {number}
- */
-export function computeLockerTotalPrice(volumeM3, days) {
-  const v = Number(volumeM3);
-  const n = Math.floor(Number(days));
-  if (!Number.isFinite(v) || v < 1 || !Number.isFinite(n) || n < 1) return 0;
-  if (n === 1) return Math.round(v * 4000);
-  return Math.round(v * n * 3000);
 }
 
 /**

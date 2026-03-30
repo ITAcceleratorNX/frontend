@@ -19,7 +19,14 @@ export default function LeftCapacityGuide({ volumeM3 }) {
   const imageSrc = LOCKER_IMAGES[volumeM3] ?? LOCKER_IMAGES[1];
 
   return (
-    <div className="flex h-full min-h-[520px] flex-col rounded-[32px] bg-[#429475] p-8 shadow-lg sm:p-10">
+    <div
+      className="flex h-full min-h-[450px] flex-col rounded-2xl p-5 shadow-lg sm:p-5"
+      style={{
+        background: "linear-gradient(to bottom, #00A991 0%, #31876D 100%)",
+        boxShadow:
+          "0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)",
+      }}
+    >
       <header className="shrink-0">
         <h3 className="font-sans text-2xl font-bold tracking-tight text-white sm:text-3xl">
           Гайд по объему
@@ -81,7 +88,7 @@ export default function LeftCapacityGuide({ volumeM3 }) {
             />
           </AnimatePresence>
           <div
-            className="pointer-events-none absolute inset-0 rounded-2xl bg-[#429475]/10"
+            className="pointer-events-none absolute inset-0 rounded-2xl bg-white/5"
             aria-hidden
           />
           <div className="absolute bottom-3 right-3 z-10 rounded-full bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-[2px]">

@@ -23,6 +23,7 @@ import { ordersApi } from '../../../shared/api/ordersApi';
 import { RentalPeriodSelect } from '../../../shared/ui/RentalPeriodSelect';
 import { getTodayLocalDateString } from '../../../shared/lib/utils/date';
 import PricingRuleManagement from './PricingRuleManagement';
+import { CameraStorageAdminPanel } from '../../../../src/pages/personal-account/ui/CameraStorageAdminPanel.tsx';
 import {StoragePricesMatrix} from "../../../../src/pages/personal-account/admin/StoragePricesMatrix.js";
 import {useStoragePrices} from "../../../../src/shared/hooks/useStoragePrices.js";
 import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
@@ -1600,6 +1601,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
             {!embedded && warehouseTab === 'pricing' && isAdminOrManager && (
               <div className="space-y-6">
                 <PricingRuleManagement />
+
+                <CameraStorageAdminPanel warehouseId={warehouseId} />
 
                 {/* Управление ценами боксов по фильтрам */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

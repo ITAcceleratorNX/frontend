@@ -1,8 +1,4 @@
 import React from "react";
-import { Info } from "lucide-react";
-import { formatLockerPriceKzt } from "./useLockerPricing";
-
-const ACCENT = "#439F7E";
 
 function formatEndDateRu(iso) {
   if (!iso) return "—";
@@ -23,43 +19,49 @@ export default function LockerSummary({
   endDateISO,
   totalPrice,
   priceLine,
-  showUpdatedBadge = true,
+  isPriceLoading = false,
 }) {
   const endLabel = formatEndDateRu(endDateISO);
 
   return (
-    <div
-      className="rounded-3xl border-2 border-dashed p-5 sm:p-6"
-      style={{
-        borderColor: `${ACCENT}66`,
-        background: "linear-gradient(180deg, rgba(67,159,126,0.12) 0%, rgba(67,159,126,0.05) 100%)",
-      }}
-    >
-      <div className="mb-1 flex items-start justify-between gap-3">
-        <span className="text-sm font-medium text-[#6B7570]">Итого к оплате</span>
-        {showUpdatedBadge && (
-          <span
-            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-[#2d6b58]"
-            style={{ backgroundColor: "rgba(67,159,126,0.18)" }}
-          >
-            <Info className="h-3.5 w-3.5" strokeWidth={2.25} style={{ color: ACCENT }} />
-            Расчет обновлен
-          </span>
-        )}
-      </div>
+    <div className="border-2 border-dashed border-gray-300 rounded-3xl bg-transparent p-4 sm:p-6">
+      <h3 className="text-lg font-bold text-[#373737] mb-4">Итог</h3>
 
-      <p className="text-3xl font-bold tracking-tight text-[#202422] sm:text-[2rem] sm:leading-tight">
-        {formatLockerPriceKzt(totalPrice)}
-      </p>
+      {isPriceLoading ? (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="animate-spin h-4 w-4 border-2 border-t-[#273655] border-b-[#273655] rounded-full" />
+          Расчёт...
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div>
+            <div className="text-lg font-bold text-[#273655] flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="shrink-0">К оплате:</span>
+              <span className="inline-flex items-center gap-1 shrink-0">
+                {totalPrice != null && Number.isFinite(Number(totalPrice)) ? (
+                  <>
+                    <span className="text-2xl tabular-nums">
+                      {Number(totalPrice).toLocaleString("ru-RU")}
+                    </span>
+                    <span className="text-2xl leading-none">₸</span>
+                  </>
+                ) : (
+                  <span className="text-2xl">—</span>
+                )}
+              </span>
+            </div>
+          </div>
 
-      <div className="mt-5 flex flex-col gap-2 text-sm text-[#5C625F] sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <span>
-          <span className="font-medium text-[#202422]">Завершение:</span> {endLabel}
-        </span>
-        {priceLine && (
-          <span className="font-medium text-[#202422] sm:text-right">{priceLine}</span>
-        )}
-      </div>
+          <div className="flex flex-col gap-2 text-sm text-[#5C625F] sm:flex-row sm:items-center sm:justify-between sm:gap-4 pt-1 border-t border-gray-200">
+            <span>
+              <span className="font-medium text-[#273655]">Завершение:</span> {endLabel}
+            </span>
+            {priceLine && (
+              <span className="font-medium text-[#273655] sm:text-right">{priceLine}</span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

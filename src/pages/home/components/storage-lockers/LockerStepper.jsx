@@ -2,7 +2,7 @@ import React from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 
-const ACCENT = "#439F7E";
+const ACCENT = "#31876D";
 
 export default function LockerStepper({
   value,
