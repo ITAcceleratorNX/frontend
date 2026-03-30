@@ -60,6 +60,7 @@ import IndividualStorageSummary from "../../../src/pages/home/components/order/I
 import CloudTariffs from "../../../src/pages/home/components/order/CloudTariffs.jsx";
 import CloudDimensions from "../../../src/pages/home/components/order/CloudDimensions.jsx";
 import CloudStorageSummary from "../../../src/pages/home/components/order/CloudStorageSummary.jsx";
+import StorageLockersSection from "../../../src/pages/home/components/storage-lockers/StorageLockersSection.jsx";
 
 
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
@@ -694,12 +695,18 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const storageType = activeStorageTab === "CLOUD" ? "CLOUD" : "INDIVIDUAL";
+    const storageType =
+      activeStorageTab === "CLOUD"
+        ? "CLOUD"
+        : activeStorageTab === "LOCKERS"
+          ? "LOCKERS"
+          : "INDIVIDUAL";
     localStorage.setItem("prep_storage_type", storageType);
   }, [activeStorageTab]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (activeStorageTab === "LOCKERS") return;
     const duration =
       activeStorageTab === "CLOUD" ? cloudMonthsNumber : monthsNumber;
     if (duration && duration > 0) {
@@ -822,6 +829,7 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (activeStorageTab === "LOCKERS") return;
     if (activeStorageTab === "INDIVIDUAL") {
       const area =
         parseFloat(
@@ -848,6 +856,8 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (activeStorageTab === "LOCKERS") return;
+
     let price = null;
 
     if (activeStorageTab === "INDIVIDUAL") {
@@ -2096,7 +2106,7 @@ const HomePage = memo(() => {
           </div>
           
           {/* Отдельные кнопки табов */}
-          <div className="flex gap-4 mb-8">
+          <div className="flex flex-wrap gap-4 mb-8">
             <button
               onClick={() => setActiveStorageTab("INDIVIDUAL")}
               className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
@@ -2116,6 +2126,16 @@ const HomePage = memo(() => {
               }`}
             >
               Облачное хранение
+            </button>
+            <button
+              onClick={() => setActiveStorageTab("LOCKERS")}
+              className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
+                activeStorageTab === "LOCKERS"
+                  ? "bg-[#31876D] text-white"
+                  : "bg-[#DFDFDF] text-gray-600"
+              }`}
+            >
+              Камеры хранения
             </button>
           </div>
           
@@ -2315,6 +2335,13 @@ const HomePage = memo(() => {
                   </button>
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="LOCKERS" className="mt-8">
+              <StorageLockersSection
+                isActive={activeStorageTab === "LOCKERS"}
+                onCallbackClick={handleCallbackRequestClick}
+              />
             </TabsContent>
             
             {/*<TabsContent value="CLOUD" className="mt-8">*/}
