@@ -24,7 +24,7 @@ export default function HeroSection({ handleHeroBookingClick }) {
                             и безопасно
                         </h2>
                         <div className="text-sm sm:text-base text-white leading-relaxed max-w-2xl">
-                            <p className="mb-1">Боксы от 2 до 50 м² по специальной цене при аренде от 3 месяцев.</p>
+                            <p className="mb-1">Боксы от 2 до 50 м² по специальной цене при аренде от 2 месяцев.</p>
                             <p className="flex flex-wrap items-center justify-center">
                                 <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#E0F2F1] font-normal text-sm sm:text-base rounded-xl">
                                     <Gift size={18} strokeWidth={2} className="text-[#00897B] shrink-0" />

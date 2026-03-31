@@ -134,18 +134,18 @@ export default function IndividualStorageSummary({
                     {/* Надпись акции в зависимости от срока аренды */}
                     {monthsNumber !== undefined && monthsNumber !== null && monthsNumber > 0 && (
                         <div className={`p-4 rounded-2xl ${
-                            monthsNumber < 3
+                            monthsNumber < 2
                                 ? 'bg-gradient-to-r from-[#31876D]/5 to-[#31876D]/10 border border-[#31876D]/20'
                                 : 'bg-gradient-to-r from-[#31876D]/10 to-[#26B3AB]/10 border border-[#31876D]/30'
                         }`}>
                             <div className="flex items-start gap-3">
                                 <Gift className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                                    monthsNumber < 3 ? 'text-[#31876D]' : 'text-[#31876D]'
+                                    monthsNumber < 2 ? 'text-[#31876D]' : 'text-[#31876D]'
                                 }`} />
                                 <div className="flex-1">
-                                    {monthsNumber < 3 ? (
+                                    {monthsNumber < 2 ? (
                                         <p className="text-sm font-medium text-[#273655] leading-relaxed">
-                                            <span className="font-semibold text-[#31876D]">Забронируйте бокс от 3 месяцев</span> — и получите первые 2 месяца по <span className="font-bold text-[#31876D]">5 990 ₸/м²</span>
+                                            <span className="font-semibold text-[#31876D]">Забронируйте бокс от 2 месяцев</span> — и получите первые 2 месяца по <span className="font-bold text-[#31876D]">5 990 ₸/м²</span>
                                         </p>
                                     ) : (
                                         <p className="text-sm font-medium text-[#273655] leading-relaxed">

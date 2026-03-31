@@ -17,7 +17,6 @@ import MovingPage from '../pages/moving';
 import ThankYouPage from '../pages/thank-you';
 
 import PersonalAccountPage from '../pages/personal-account';
-import WarehouseOrderPage from '../pages/warehouse-order';
 import UserProfile from '../pages/personal-account/ui/UserProfile';
 import WarehouseData from '../pages/personal-account/ui/WarehouseData';
 import AdminMovingOrder from '../pages/personal-account/ui/AdminMovingOrder';
@@ -86,7 +85,6 @@ const Routing = memo(() => {
     { path: "/privacy-policy", element: <PrivacyPolicyPage /> },
     { path: "/privacy-policy2", element: <PrivacyPolicy2Page /> },
     { path: "/public-offer", element: <PublicOfferPage /> },
-    { path: "/warehouse-order", element: <WarehouseOrderPage /> },
     { path: "/moving", element: <MovingPage /> },
     { path: "/thank-you", element: <ThankYouPage /> },
   ], []);
