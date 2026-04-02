@@ -40,7 +40,13 @@ import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
 import PendingOrderModal from "@/pages/personal-account/ui/PendingOrderModal.jsx";
 import OrderDetailView from "@/pages/personal-account/ui/OrderDetailView.jsx";
 import { useApproveCancelOrder, useUnlockStorage } from "@/shared/lib/hooks/use-orders";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
 
 
@@ -105,6 +111,10 @@ const HomePage = memo(() => {
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [activeStorageTab, setActiveStorageTab] = useState("INDIVIDUAL");
   const tabsSectionRef = useRef(null);
+  const promoMapSectionRef = useRef(null);
+  const promoMovingSectionRef = useRef(null);
+  const promoPackingSectionRef = useRef(null);
+  const promoBookButtonRef = useRef(null);
   const [individualMonths, setIndividualMonths] = useState("1");
   const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => getTodayLocalDateString());
   const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => getTodayLocalDateString());
@@ -168,6 +178,8 @@ const HomePage = memo(() => {
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const [callbackModalContext, setCallbackModalContext] = useState('callback');
   const [isLeadSourceModalOpen, setIsLeadSourceModalOpen] = useState(false);
+  const [isPromoBookingModalOpen, setIsPromoBookingModalOpen] = useState(false);
+  const [promoGuidedBooking, setPromoGuidedBooking] = useState(false);
   const { saveLeadSource } = useLeadSource();
   // Состояние для модалки предпросмотра платежей
   const [isPaymentPreviewOpen, setIsPaymentPreviewOpen] = useState(false);
@@ -463,6 +475,72 @@ const HomePage = memo(() => {
     packagingServicesForOrder.length,
     previewStorage,
   ]);
+
+  const promoBookingGuide = useMemo(() => {
+    if (!promoGuidedBooking || activeStorageTab !== "INDIVIDUAL") {
+      return { highlight: null, message: null, step: 0 };
+    }
+    const hasVacantBox = previewStorage?.status === "VACANT";
+    if (!hasVacantBox) {
+      return {
+        highlight: "map",
+        message: "Выберите или укажите подходящий размер бокса",
+        step: 1,
+      };
+    }
+    if (
+      includeMoving &&
+      (!movingPickupDate || !String(movingPickupDate).trim() || !movingStreetFrom.trim())
+    ) {
+      return {
+        highlight: "moving",
+        message: "Теперь выберите дату доставки",
+        step: 2,
+      };
+    }
+    if (includePacking && packagingServicesForOrder.length === 0) {
+      return {
+        highlight: "packing",
+        message: "Добавьте нужные дополнительные услуги",
+        step: 3,
+      };
+    }
+    const bookReady =
+      isIndividualFormReady && !(isAdminOrManager && !selectedClientUser);
+    if (bookReady) {
+      return { highlight: "book", message: null, step: 4 };
+    }
+    return { highlight: null, message: null, step: 0 };
+  }, [
+    promoGuidedBooking,
+    activeStorageTab,
+    previewStorage,
+    includeMoving,
+    includePacking,
+    movingPickupDate,
+    movingStreetFrom,
+    packagingServicesForOrder.length,
+    isIndividualFormReady,
+    isAdminOrManager,
+    selectedClientUser,
+  ]);
+
+  useEffect(() => {
+    if (!promoGuidedBooking || activeStorageTab !== "INDIVIDUAL") return;
+    const { highlight } = promoBookingGuide;
+    const ref =
+      highlight === "map"
+        ? promoMapSectionRef
+        : highlight === "moving"
+          ? promoMovingSectionRef
+          : highlight === "packing"
+            ? promoPackingSectionRef
+            : highlight === "book"
+              ? promoBookButtonRef
+              : null;
+    if (!ref?.current) return;
+    ref.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [promoGuidedBooking, activeStorageTab, promoBookingGuide.step, promoBookingGuide.highlight]);
 
   const cloudWarehouse = useMemo(
       () => (apiWarehouses.length > 0 ? apiWarehouses : warehouses).find((item) => item.type === "CLOUD") || null,
@@ -1207,6 +1285,7 @@ const HomePage = memo(() => {
       // Закрываем модалку предпросмотра платежей
       setIsPaymentPreviewOpen(false);
       setPaymentPreviewType(null);
+      setPromoGuidedBooking(false);
 
       toastOrderRequestSent();
 
@@ -1539,12 +1618,17 @@ const HomePage = memo(() => {
     }
   }, [isSubmittingOrder]);
 
-  const handleHeroBookingClick = useCallback(() => {
+  const openPromoBookingModal = useCallback(() => {
+    setIsPromoBookingModalOpen(true);
+  }, []);
+
+  const handlePromoModalContinue = useCallback(() => {
+    setIsPromoBookingModalOpen(false);
+    setPromoGuidedBooking(true);
+    setIndividualMonths("2");
     setActiveStorageTab("INDIVIDUAL");
     setTimeout(() => {
-      if (tabsSectionRef.current) {
-        tabsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      tabsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   }, []);
 
@@ -2082,7 +2166,28 @@ const HomePage = memo(() => {
       <Header />
 
       {/* Первая секция: Храните там, где удобно */}
-      < HeroSection handleHeroBookingClick={handleHeroBookingClick} />
+      <HeroSection onOpenPromoBooking={openPromoBookingModal} />
+
+      <Dialog open={isPromoBookingModalOpen} onOpenChange={setIsPromoBookingModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-left text-lg font-bold text-[#202422] sm:text-xl pr-8">
+              Акционная бронь
+            </DialogTitle>
+            <DialogDescription className="text-left text-[#5C625F] text-sm sm:text-base leading-relaxed pt-1">
+              Забронируйте бокс в любом нашем складе по специальной цене — 5 990 ₸ за м² на первые 2
+              месяца хранения.
+            </DialogDescription>
+          </DialogHeader>
+          <button
+            type="button"
+            onClick={handlePromoModalContinue}
+            className="mt-2 w-full rounded-2xl bg-[#31876D] py-3 px-4 text-center text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:text-base"
+          >
+            Забронировать бокс по акции
+          </button>
+        </DialogContent>
+      </Dialog>
 
       {/* Секция: Быстрое бронирование */}
       < QuickBookingSection />
@@ -2144,7 +2249,17 @@ const HomePage = memo(() => {
             <TabsContent value="INDIVIDUAL" className="mt-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                 {/* Левая панель - Карта склада */}
-                <WarehouseSchemePanel
+                <div
+                  ref={promoMapSectionRef}
+                  className={
+                    promoGuidedBooking &&
+                    activeStorageTab === "INDIVIDUAL" &&
+                    promoBookingGuide.highlight === "map"
+                      ? "rounded-2xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#FFF] transition-shadow"
+                      : ""
+                  }
+                >
+                  <WarehouseSchemePanel
                     dropdownItems={dropdownItems}
                     selectedWarehouse={selectedWarehouse}
                     setSelectedWarehouse={setSelectedWarehouse}
@@ -2158,21 +2273,40 @@ const HomePage = memo(() => {
                     }
                     onHighlightedBoxes={setHighlightedBoxes}
                     onBoxSelect={handleBoxSelect}
-                />
+                  />
+                </div>
 
                 {/* Правая панель - Форма конфигурации */}
                 <div className="bg-[#F7FAF9] rounded-3xl p-6 shadow-lg min-h-[450px] flex flex-col">
                   <h2 className="font-soyuz-grotesk text-2xl sm:text-3xl font-bold text-[#202422] mb-6">
                     Настройте хранение
                   </h2>
-                  
+
+                  {promoGuidedBooking && activeStorageTab === "INDIVIDUAL" && (
+                    <div className="mb-4 rounded-2xl border border-[#31876D]/35 bg-gradient-to-r from-[#31876D]/12 to-[#26B3AB]/10 px-4 py-3 text-sm font-semibold text-[#273655]">
+                      Акция активна: первые 2 месяца по 5 990 ₸ / м²
+                    </div>
+                  )}
+
+                  {promoGuidedBooking &&
+                    activeStorageTab === "INDIVIDUAL" &&
+                    promoBookingGuide.message && (
+                      <div
+                        className="mb-4 rounded-2xl border border-[#31876D]/45 bg-white px-4 py-3 text-sm font-medium text-[#202422] shadow-sm"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        {promoBookingGuide.message}
+                      </div>
+                    )}
+
                   {/* Предупреждение для Яруса 2 Mega Tower Almaty */}
                   <StorageWarnings
-                      selectedWarehouse={selectedWarehouse}
-                      megaSelectedMap={megaSelectedMap}
-                      komfortSelectedMap={komfortSelectedMap}
+                    selectedWarehouse={selectedWarehouse}
+                    megaSelectedMap={megaSelectedMap}
+                    komfortSelectedMap={komfortSelectedMap}
                   />
-                  
+
                   {/* Срок аренды */}
                   <div className="mb-6">
                     <RentalPeriodSelect
@@ -2185,9 +2319,19 @@ const HomePage = memo(() => {
                       triggerClassName="bg-transparent"
                     />
                   </div>
-                  
+
                   {/* Перевозка вещей */}
-                  <MovingSection
+                  <div
+                    ref={promoMovingSectionRef}
+                    className={
+                      promoGuidedBooking &&
+                      activeStorageTab === "INDIVIDUAL" &&
+                      promoBookingGuide.highlight === "moving"
+                        ? "rounded-3xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
+                        : ""
+                    }
+                  >
+                    <MovingSection
                       includeMoving={includeMoving}
                       setIncludeMoving={setIncludeMoving}
                       previewStorage={previewStorage}
@@ -2202,9 +2346,20 @@ const HomePage = memo(() => {
                       movingApartmentFrom={movingApartmentFrom}
                       setMovingApartmentFrom={setMovingApartmentFrom}
                       ensureServiceOptions={ensureServiceOptions}
-                  />
+                    />
+                  </div>
 
-                  <PackingServicesSection
+                  <div
+                    ref={promoPackingSectionRef}
+                    className={
+                      promoGuidedBooking &&
+                      activeStorageTab === "INDIVIDUAL" &&
+                      promoBookingGuide.highlight === "packing"
+                        ? "rounded-3xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
+                        : ""
+                    }
+                  >
+                    <PackingServicesSection
                       includePacking={includePacking}
                       setIncludePacking={setIncludePacking}
                       previewStorage={previewStorage}
@@ -2220,7 +2375,8 @@ const HomePage = memo(() => {
                       setMovingAddressTo={setMovingAddressTo}
                       movingOrders={movingOrders}
                       setMovingOrders={setMovingOrders}
-                  />
+                    />
+                  </div>
                   
                   {/* Итог */}
                   <IndividualStorageSummary
@@ -2295,9 +2451,17 @@ const HomePage = memo(() => {
                   {/* Кнопки действий */}
                   <div className="mt-6 space-y-3">
                     <button
+                      ref={promoBookButtonRef}
+                      type="button"
                       onClick={handleIndividualBookingClick}
                       disabled={!isIndividualFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser)}
-                      className="w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${
+                        promoGuidedBooking &&
+                        activeStorageTab === "INDIVIDUAL" &&
+                        promoBookingGuide.highlight === "book"
+                          ? "ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9]"
+                          : ""
+                      }`}
                     >
                       {isSubmittingOrder ? "СОЗДАНИЕ ЗАКАЗА..." : "Забронировать бокс"}
                     </button>
