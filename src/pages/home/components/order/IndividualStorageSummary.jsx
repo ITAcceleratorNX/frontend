@@ -24,6 +24,8 @@ export default function IndividualStorageSummary({
                                            serviceSummary,
                                            isPriceCalculating,
                                            monthsNumber,
+                                           guideMessage = null,
+                                           onGuideClick,
                                            setShowOrderDetails,
                                            setShowPromoInput,
                                            setPromoCodeInput,
@@ -31,12 +33,33 @@ export default function IndividualStorageSummary({
                                            handleApplyPromoCode,
                                            handleRemovePromoCode,
                                        }) {
+    const showSimpleGuide =
+        Boolean(
+            guideMessage &&
+            onGuideClick &&
+            (!previewStorage || previewStorage.status === "VACANT")
+        );
+
+    if (showSimpleGuide) {
+        return (
+            <button
+                type="button"
+                onClick={onGuideClick}
+                className="border-2 border-dashed border-gray-300 rounded-3xl bg-transparent p-4 sm:p-6 w-full text-left hover:bg-[#F0F4F2]/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#31876D] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7FAF9]"
+            >
+                <h3 className="text-lg font-bold text-[#373737] mb-2">Итог</h3>
+                <p className="text-sm text-[#5C625F] leading-relaxed">{guideMessage}</p>
+            </button>
+        );
+    }
+
     if (!previewStorage) {
         return (
             <div className="border-2 border-dashed border-gray-300 rounded-3xl bg-transparent p-4 sm:p-6">
                 <h3 className="text-lg font-bold text-[#373737] mb-2">Итог</h3>
                 <p className="text-sm text-gray-500">
-                    Выберите бокс на схеме, чтобы увидеть предварительную цену.
+                    {guideMessage ||
+                        "Выберите подходящий бокс, чтобы посмотреть предварительную цену."}
                 </p>
             </div>
         );
@@ -45,9 +68,34 @@ export default function IndividualStorageSummary({
     const isOccupied = previewStorage.status === 'OCCUPIED' || previewStorage.status === 'PENDING';
     const volume = previewStorage.available_volume || previewStorage.volume || '—';
 
+    const occupiedGuideClickable = Boolean(guideMessage && onGuideClick && isOccupied);
+
     return (
-        <div className="border-2 border-dashed border-gray-300 rounded-3xl bg-transparent p-4 sm:p-6">
+        <div
+            className={`border-2 border-dashed border-gray-300 rounded-3xl bg-transparent p-4 sm:p-6 ${
+                occupiedGuideClickable
+                    ? "cursor-pointer hover:bg-[#F0F4F2]/40 transition-colors focus-within:ring-2 focus-within:ring-[#31876D] focus-within:ring-offset-2 focus-within:ring-offset-[#F7FAF9]"
+                    : ""
+            }`}
+            role={occupiedGuideClickable ? "button" : undefined}
+            tabIndex={occupiedGuideClickable ? 0 : undefined}
+            onClick={occupiedGuideClickable ? () => onGuideClick() : undefined}
+            onKeyDown={
+                occupiedGuideClickable
+                    ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onGuideClick();
+                          }
+                      }
+                    : undefined
+            }
+        >
             <h3 className="text-lg font-bold text-[#373737] mb-4">Итог</h3>
+
+            {occupiedGuideClickable && guideMessage ? (
+                <p className="text-sm font-medium text-[#273655] mb-4 leading-relaxed">{guideMessage}</p>
+            ) : null}
 
             {/* Занятый бокс */}
             {isOccupied && (

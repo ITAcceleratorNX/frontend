@@ -112,9 +112,12 @@ const HomePage = memo(() => {
   const [activeStorageTab, setActiveStorageTab] = useState("INDIVIDUAL");
   const tabsSectionRef = useRef(null);
   const promoMapSectionRef = useRef(null);
+  const promoRentalSectionRef = useRef(null);
   const promoMovingSectionRef = useRef(null);
   const promoPackingSectionRef = useRef(null);
   const promoBookButtonRef = useRef(null);
+  const individualGuideHighlightClearRef = useRef(null);
+  const [individualGuideHighlight, setIndividualGuideHighlight] = useState(null);
   const [individualMonths, setIndividualMonths] = useState("1");
   const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => getTodayLocalDateString());
   const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => getTodayLocalDateString());
@@ -460,21 +463,95 @@ const HomePage = memo(() => {
     [services]
   );
 
+  /** Обязательные условия для брони: срок + свободный бокс (доставка и доп. услуги — по желанию) */
   const isIndividualFormReady = useMemo(() => {
-    if (previewStorage && previewStorage?.status !== 'VACANT') return false;
+    if (previewStorage && previewStorage?.status !== "VACANT") return false;
     if (!previewStorage || !monthsNumber || monthsNumber <= 0) return false;
-    if (includeMoving && !movingStreetFrom.trim()) return false;
-    if (includePacking && packagingServicesForOrder.length === 0) return false;
     return true;
+  }, [monthsNumber, previewStorage]);
+
+  const INDIVIDUAL_GUIDE_COPY = {
+    term: "Выберите срок хранения для расчета стоимости",
+    box: "Выберите подходящий бокс, чтобы посмотреть предварительную цену",
+    delivery: "Выберите дату доставки",
+    extras: "Добавьте дополнительные услуги при необходимости",
+  };
+
+  const individualBookingGuideTarget = useMemo(() => {
+    if (activeStorageTab !== "INDIVIDUAL") {
+      return { section: null, message: null };
+    }
+    const monthsOk = monthsNumber >= 1 && String(individualMonths ?? "").trim() !== "";
+    if (!monthsOk) {
+      return { section: "rental", message: INDIVIDUAL_GUIDE_COPY.term };
+    }
+    const hasVacantBox = previewStorage?.status === "VACANT";
+    if (!hasVacantBox) {
+      return { section: "map", message: INDIVIDUAL_GUIDE_COPY.box };
+    }
+    if (
+      includeMoving &&
+      (!movingPickupDate || !String(movingPickupDate).trim() || !movingStreetFrom.trim())
+    ) {
+      return { section: "moving", message: INDIVIDUAL_GUIDE_COPY.delivery };
+    }
+    if (includePacking && packagingServicesForOrder.length === 0) {
+      return { section: "packing", message: INDIVIDUAL_GUIDE_COPY.extras };
+    }
+    return { section: null, message: null };
   }, [
-    includeMoving,
-    includePacking,
+    activeStorageTab,
     monthsNumber,
-    getMovingAddressFrom,
-    movingStreetFrom,
-    packagingServicesForOrder.length,
+    individualMonths,
     previewStorage,
+    includeMoving,
+    movingPickupDate,
+    movingStreetFrom,
+    includePacking,
+    packagingServicesForOrder.length,
   ]);
+
+  const individualMandatoryBookingReady = useMemo(() => {
+    return (
+      monthsNumber >= 1 &&
+      String(individualMonths ?? "").trim() !== "" &&
+      previewStorage?.status === "VACANT"
+    );
+  }, [monthsNumber, individualMonths, previewStorage]);
+
+  const flashIndividualGuideHighlight = useCallback((section) => {
+    if (!section || typeof window === "undefined") return;
+    if (individualGuideHighlightClearRef.current) {
+      clearTimeout(individualGuideHighlightClearRef.current);
+    }
+    setIndividualGuideHighlight(section);
+    individualGuideHighlightClearRef.current = setTimeout(() => {
+      setIndividualGuideHighlight(null);
+      individualGuideHighlightClearRef.current = null;
+    }, 2600);
+  }, []);
+
+  const scrollToIndividualBookingGuideTarget = useCallback(() => {
+    const { section } = individualBookingGuideTarget;
+    if (!section) return;
+    const refMap = {
+      rental: promoRentalSectionRef,
+      map: promoMapSectionRef,
+      moving: promoMovingSectionRef,
+      packing: promoPackingSectionRef,
+    };
+    const ref = refMap[section];
+    ref?.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    flashIndividualGuideHighlight(section);
+  }, [individualBookingGuideTarget, flashIndividualGuideHighlight]);
+
+  useEffect(() => {
+    return () => {
+      if (individualGuideHighlightClearRef.current) {
+        clearTimeout(individualGuideHighlightClearRef.current);
+      }
+    };
+  }, []);
 
   const promoBookingGuide = useMemo(() => {
     if (!promoGuidedBooking || activeStorageTab !== "INDIVIDUAL") {
@@ -1586,6 +1663,24 @@ const HomePage = memo(() => {
     setIsPaymentPreviewOpen(true);
   }, []);
 
+  const handleIndividualBookButtonClick = useCallback(() => {
+    if (!individualMandatoryBookingReady) {
+      scrollToIndividualBookingGuideTarget();
+      return;
+    }
+    handleIndividualBookingClick();
+  }, [
+    individualMandatoryBookingReady,
+    scrollToIndividualBookingGuideTarget,
+    handleIndividualBookingClick,
+  ]);
+
+  const handleIndividualSummaryGuideClick = useCallback(() => {
+    if (individualBookingGuideTarget.section) {
+      scrollToIndividualBookingGuideTarget();
+    }
+  }, [individualBookingGuideTarget.section, scrollToIndividualBookingGuideTarget]);
+
   const handleCloudBookingClick = useCallback(() => {
     // Всегда показываем модалку предпросмотра платежей
     setPaymentPreviewType('CLOUD');
@@ -2252,9 +2347,10 @@ const HomePage = memo(() => {
                 <div
                   ref={promoMapSectionRef}
                   className={
-                    promoGuidedBooking &&
-                    activeStorageTab === "INDIVIDUAL" &&
-                    promoBookingGuide.highlight === "map"
+                    (promoGuidedBooking &&
+                      activeStorageTab === "INDIVIDUAL" &&
+                      promoBookingGuide.highlight === "map") ||
+                    (activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "map")
                       ? "rounded-2xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#FFF] transition-shadow"
                       : ""
                   }
@@ -2308,7 +2404,14 @@ const HomePage = memo(() => {
                   />
 
                   {/* Срок аренды */}
-                  <div className="mb-6">
+                  <div
+                    ref={promoRentalSectionRef}
+                    className={
+                      activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "rental"
+                        ? "mb-6 rounded-2xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
+                        : "mb-6"
+                    }
+                  >
                     <RentalPeriodSelect
                       value={individualMonths}
                       onChange={(value) => {
@@ -2324,9 +2427,10 @@ const HomePage = memo(() => {
                   <div
                     ref={promoMovingSectionRef}
                     className={
-                      promoGuidedBooking &&
-                      activeStorageTab === "INDIVIDUAL" &&
-                      promoBookingGuide.highlight === "moving"
+                      (promoGuidedBooking &&
+                        activeStorageTab === "INDIVIDUAL" &&
+                        promoBookingGuide.highlight === "moving") ||
+                      (activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "moving")
                         ? "rounded-3xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
                         : ""
                     }
@@ -2352,9 +2456,10 @@ const HomePage = memo(() => {
                   <div
                     ref={promoPackingSectionRef}
                     className={
-                      promoGuidedBooking &&
-                      activeStorageTab === "INDIVIDUAL" &&
-                      promoBookingGuide.highlight === "packing"
+                      (promoGuidedBooking &&
+                        activeStorageTab === "INDIVIDUAL" &&
+                        promoBookingGuide.highlight === "packing") ||
+                      (activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "packing")
                         ? "rounded-3xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
                         : ""
                     }
@@ -2388,6 +2493,12 @@ const HomePage = memo(() => {
                       finalIndividualTotal={finalIndividualTotal}
                       isPriceCalculating={isPriceCalculating}
                       monthsNumber={monthsNumber}
+                      guideMessage={individualBookingGuideTarget.message}
+                      onGuideClick={
+                        individualBookingGuideTarget.section
+                          ? handleIndividualSummaryGuideClick
+                          : undefined
+                      }
 
                       // промокод
                       promoSuccess={promoSuccess}
@@ -2453,9 +2564,16 @@ const HomePage = memo(() => {
                     <button
                       ref={promoBookButtonRef}
                       type="button"
-                      onClick={handleIndividualBookingClick}
-                      disabled={!isIndividualFormReady || isSubmittingOrder || (isAdminOrManager && !selectedClientUser)}
-                      className={`w-full bg-[#31876D] text-white font-semibold py-2.5 px-6 rounded-3xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${
+                      onClick={handleIndividualBookButtonClick}
+                      disabled={
+                        isSubmittingOrder ||
+                        (isAdminOrManager && !selectedClientUser && individualMandatoryBookingReady)
+                      }
+                      className={`w-full font-semibold py-2.5 px-6 rounded-3xl transition-opacity ${
+                        individualMandatoryBookingReady
+                          ? "bg-[#31876D] text-white hover:opacity-90"
+                          : "bg-[#31876D]/40 text-white hover:bg-[#31876D]/50 cursor-pointer"
+                      } ${
                         promoGuidedBooking &&
                         activeStorageTab === "INDIVIDUAL" &&
                         promoBookingGuide.highlight === "book"

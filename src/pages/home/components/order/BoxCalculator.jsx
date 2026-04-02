@@ -130,7 +130,7 @@ function BoxCalculator({
             inputMode="decimal"
             min="0"
             step="0.5"
-            placeholder="м²"
+            placeholder="5"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
