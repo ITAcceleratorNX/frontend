@@ -66,7 +66,6 @@ function WarehouseSchemePanel({ dropdownItems = [],
                 </div>
             </div>
 
-            {/* Калькулятор подбора боксов */}
             <BoxCalculator
                 storageBoxes={storageBoxes}
                 selectedWarehouse={selectedWarehouse}
@@ -75,8 +74,7 @@ function WarehouseSchemePanel({ dropdownItems = [],
                 onBoxSelect={onBoxSelect}
             />
 
-            {/* map */}
-            <div className="flex-1 w-full h-full" style={{ minHeight: 0, minWidth: 0, position: "relative", zIndex: 0 }}>
+            <div className="flex-1 w-full h-full min-h-0 min-w-0 relative z-0">
                 <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
                     {renderWarehouseScheme({ isFullscreen: true })}
                 </div>

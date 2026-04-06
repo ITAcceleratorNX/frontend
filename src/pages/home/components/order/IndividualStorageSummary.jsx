@@ -59,7 +59,7 @@ export default function IndividualStorageSummary({
                 <h3 className="text-lg font-bold text-[#373737] mb-2">Итог</h3>
                 <p className="text-sm text-gray-500">
                     {guideMessage ||
-                        "Выберите подходящий бокс, чтобы посмотреть предварительную цену."}
+                        "Введите площадь (м²) над схемой и нажмите «Найти», затем выберите бокс — так вы увидите предварительную цену."}
                 </p>
             </div>
         );

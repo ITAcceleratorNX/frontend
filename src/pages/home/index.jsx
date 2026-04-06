@@ -117,6 +117,7 @@ const HomePage = memo(() => {
   const promoPackingSectionRef = useRef(null);
   const promoBookButtonRef = useRef(null);
   const individualGuideHighlightClearRef = useRef(null);
+  const [galleryBookingFocusToken, setGalleryBookingFocusToken] = useState(0);
   const [individualGuideHighlight, setIndividualGuideHighlight] = useState(null);
   const [individualMonths, setIndividualMonths] = useState("1");
   const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => getTodayLocalDateString());
@@ -472,7 +473,7 @@ const HomePage = memo(() => {
 
   const INDIVIDUAL_GUIDE_COPY = {
     term: "Выберите срок хранения для расчета стоимости",
-    box: "Выберите подходящий бокс, чтобы посмотреть предварительную цену",
+    box: "Введите площадь (м²) над схемой и нажмите «Найти», затем выберите бокс на схеме — так вы увидите предварительную цену и сможете забронировать",
     delivery: "Выберите дату доставки",
     extras: "Добавьте дополнительные услуги при необходимости",
   };
@@ -2242,6 +2243,56 @@ const HomePage = memo(() => {
     return list.filter((item) => item && item.type !== "CLOUD");
   }, [apiWarehouses, warehouses]);
 
+  const handleGalleryBookInWarehouse = useCallback(
+    (warehouseName) => {
+      if (!warehouseName || typeof warehouseName !== "string") return;
+      const list = Array.isArray(dropdownItems) ? dropdownItems : [];
+      const wh =
+        list.find((w) => w?.name === warehouseName) ||
+        list.find(
+          (w) =>
+            w?.type === "INDIVIDUAL" &&
+            (w.name || "").toLowerCase().includes("mega") &&
+            warehouseName.toLowerCase().includes("mega")
+        ) ||
+        list.find(
+          (w) =>
+            w?.type === "INDIVIDUAL" &&
+            ((w.name || "").toLowerCase().includes("комфорт") ||
+              (w.name || "").toLowerCase().includes("komfort")) &&
+            (warehouseName.toLowerCase().includes("комфорт") ||
+              warehouseName.toLowerCase().includes("komfort"))
+        );
+      if (wh) {
+        setSelectedWarehouse(wh);
+      }
+      setActiveStorageTab("INDIVIDUAL");
+      setGalleryBookingFocusToken((t) => t + 1);
+    },
+    [dropdownItems]
+  );
+
+  useEffect(() => {
+    if (galleryBookingFocusToken === 0) return;
+    if (activeStorageTab !== "INDIVIDUAL" || !selectedWarehouse) return;
+    let innerTimer;
+    const outerTimer = window.setTimeout(() => {
+      tabsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      innerTimer = window.setTimeout(() => {
+        scrollToIndividualBookingGuideTarget();
+      }, 450);
+    }, 100);
+    return () => {
+      window.clearTimeout(outerTimer);
+      if (innerTimer) window.clearTimeout(innerTimer);
+    };
+  }, [
+    galleryBookingFocusToken,
+    selectedWarehouse?.id,
+    activeStorageTab,
+    scrollToIndividualBookingGuideTarget,
+  ]);
+
   useEffect(() => {
     if (!Array.isArray(dropdownItems) || dropdownItems.length === 0) return;
     if (!selectedWarehouse || selectedWarehouse.type === "CLOUD") {
@@ -2255,6 +2306,20 @@ const HomePage = memo(() => {
   useEffect(() => {
     setHighlightedBoxes([]);
   }, [selectedWarehouse?.id, megaSelectedMap, komfortSelectedMap]);
+
+  const mapSectionGuideHighlight = useMemo(
+    () =>
+      (promoGuidedBooking &&
+        activeStorageTab === "INDIVIDUAL" &&
+        promoBookingGuide.highlight === "map") ||
+      (activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "map"),
+    [
+      promoGuidedBooking,
+      activeStorageTab,
+      promoBookingGuide.highlight,
+      individualGuideHighlight,
+    ],
+  );
 
   return (
     <div className="font-['Montserrat'] min-h-screen bg-white flex flex-col">
@@ -2346,13 +2411,15 @@ const HomePage = memo(() => {
                 {/* Левая панель - Карта склада */}
                 <div
                   ref={promoMapSectionRef}
-                  className={
-                    (promoGuidedBooking &&
-                      activeStorageTab === "INDIVIDUAL" &&
-                      promoBookingGuide.highlight === "map") ||
-                    (activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "map")
-                      ? "rounded-2xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#FFF] transition-shadow"
+                  className={`self-start w-full ${
+                    mapSectionGuideHighlight
+                      ? "rounded-[20px] transition-[box-shadow] duration-300 ease-out"
                       : ""
+                  }`}
+                  style={
+                    mapSectionGuideHighlight
+                      ? { boxShadow: "0 0 0 4px #31876D" }
+                      : undefined
                   }
                 >
                   <WarehouseSchemePanel
@@ -2880,7 +2947,7 @@ const HomePage = memo(() => {
       <CallbackRequestSection showRegisterPrompt={!isAuthenticated} />
 
       {/* Галерея складов ЖК Комфорт Сити */}
-      <WarehouseGallery />
+      <WarehouseGallery onBookInWarehouse={handleGalleryBookInWarehouse} />
 
       {/* Шестой фрейм: филиалы Extra Space */}
       <BranchesSection warehouses={warehouses} />
