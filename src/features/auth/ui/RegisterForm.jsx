@@ -14,6 +14,10 @@ import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.
 import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
 import api from '../../../shared/api/axios';
+import {
+  formatPhoneNumber,
+  KZ_PHONE_DISPLAY_REGEX,
+} from '../../../shared/lib/phone';
 
 export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSelector = true }) => {
   const navigate = useNavigate();
@@ -47,56 +51,6 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
   });
   
   const password = watch('password', '');
-
-  // Функция форматирования номера телефона
-  const formatPhoneNumber = (value) => {
-    // Если значение пустое, возвращаем пустую строку
-    if (!value || value.trim() === '') {
-      return '';
-    }
-    
-    // Удаляем все символы кроме цифр
-    const numbers = value.replace(/\D/g, '');
-    
-    // Если нет цифр, возвращаем пустую строку
-    if (numbers.length === 0) {
-      return '';
-    }
-    
-    // Если начинается с 8, заменяем на 7
-    let cleaned = numbers;
-    if (cleaned.startsWith('8')) {
-      cleaned = '7' + cleaned.slice(1);
-    }
-    
-    // Если не начинается с 7, добавляем 7
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    
-    // Ограничиваем до 11 цифр (7 + 10 цифр)
-    cleaned = cleaned.slice(0, 11);
-    
-    // Форматируем в формат +7 (XXX) XXX-XX-XX
-    let formatted = '';
-    if (cleaned.length > 0) {
-      formatted = '+7';
-      if (cleaned.length > 1) {
-        formatted += ' (' + cleaned.slice(1, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += ') ' + cleaned.slice(4, 7);
-      }
-      if (cleaned.length > 7) {
-        formatted += '-' + cleaned.slice(7, 9);
-      }
-      if (cleaned.length > 9) {
-        formatted += '-' + cleaned.slice(9, 11);
-      }
-    }
-    
-    return formatted;
-  };
 
   // Автоматическое заполнение phone из location.state
   useEffect(() => {
@@ -138,9 +92,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
       return;
     }
 
-    // Простая валидация телефона (минимум 10 цифр после +7)
-    const phoneRegex = /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/;
-    if (!phoneRegex.test(phone)) {
+    if (!KZ_PHONE_DISPLAY_REGEX.test(phone)) {
       toastValidationError('Введите корректный номер телефона');
       return;
     }
@@ -394,7 +346,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
                       {...register('phone', {
                         required: 'Телефон обязателен',
                         pattern: {
-                          value: /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/,
+                          value: KZ_PHONE_DISPLAY_REGEX,
                           message: 'Неверный формат телефона',
                         },
                         onChange: handlePhoneChange

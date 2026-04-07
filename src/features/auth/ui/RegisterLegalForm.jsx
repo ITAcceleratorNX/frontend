@@ -9,6 +9,10 @@ import { authApi } from '../../../shared/api/auth';
 import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
 import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
+import {
+  formatPhoneNumber,
+  KZ_PHONE_DISPLAY_REGEX,
+} from '../../../shared/lib/phone';
 
 // Список регионов Казахстана
 const regions = [
@@ -102,49 +106,6 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
     },
   });
 
-  // Функция форматирования номера телефона
-  const formatPhoneNumber = (value) => {
-    if (!value || value.trim() === '') {
-      return '';
-    }
-    
-    const numbers = value.replace(/\D/g, '');
-    
-    if (numbers.length === 0) {
-      return '';
-    }
-    
-    let cleaned = numbers;
-    if (cleaned.startsWith('8')) {
-      cleaned = '7' + cleaned.slice(1);
-    }
-    
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    
-    cleaned = cleaned.slice(0, 11);
-    
-    let formatted = '';
-    if (cleaned.length > 0) {
-      formatted = '+7';
-      if (cleaned.length > 1) {
-        formatted += ' (' + cleaned.slice(1, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += ') ' + cleaned.slice(4, 7);
-      }
-      if (cleaned.length > 7) {
-        formatted += '-' + cleaned.slice(7, 9);
-      }
-      if (cleaned.length > 9) {
-        formatted += '-' + cleaned.slice(9, 11);
-      }
-    }
-    
-    return formatted;
-  };
-
   const handlePhoneChange = (e) => {
     const formatted = formatPhoneNumber(e.target.value);
     setValue('phone', formatted, { shouldValidate: true });
@@ -207,8 +168,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       return;
     }
 
-    const phoneRegex = /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/;
-    if (!phoneRegex.test(phone)) {
+    if (!KZ_PHONE_DISPLAY_REGEX.test(phone)) {
       showErrorToast('Введите корректный номер телефона');
       return;
     }
@@ -750,7 +710,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                         {...register('phone', {
                           required: 'Телефон обязателен',
                           pattern: {
-                            value: /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/,
+                            value: KZ_PHONE_DISPLAY_REGEX,
                             message: 'Введите корректный номер телефона'
                           },
                           onChange: handlePhoneChange

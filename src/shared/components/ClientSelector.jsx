@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { getTodayLocalDateString } from '../lib/utils/date';
+import { formatPhoneNumber, isValidKzPhoneDisplay } from '../lib/phone';
 
 const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,14 +84,15 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
       errors.name = 'Имя обязательно';
     }
     
-    if (!formData.email.trim()) {
-      errors.email = 'Email обязателен';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    const emailTrim = formData.email.trim();
+    if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
       errors.email = 'Некорректный email';
     }
     
     if (!formData.phone.trim()) {
       errors.phone = 'Телефон обязателен';
+    } else if (!isValidKzPhoneDisplay(formData.phone)) {
+      errors.phone = 'Неверный формат телефона';
     }
     
     if (!formData.iin.trim()) {
@@ -127,27 +129,45 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
 
     setIsCreating(true);
     try {
-      const newUser = await usersApi.createUserByManager({
+      const emailTrim = formData.email.trim();
+      const payload = {
         name: formData.name.trim(),
-        email: formData.email.trim(),
         phone: formData.phone.trim(),
         iin: formData.iin.trim(),
         address: formData.address.trim(),
         bday: formData.bday.trim(),
-      });
+      };
+      if (emailTrim) {
+        payload.email = emailTrim;
+      }
+      const newUser = await usersApi.createUserByManager(payload);
       
       showSuccessToast('Пользователь успешно создан. Клиент сможет войти через Google OAuth.');
       onUserSelect(newUser);
       onClose();
     } catch (error) {
       console.error('Ошибка при создании пользователя:', error);
-      const errorMessage = error.response?.data?.details?.[0]?.message || 
-                          error.response?.data?.error || 
-                          'Не удалось создать пользователя';
+      const status = error.response?.status;
+      const data = error.response?.data;
+      const serverMsg =
+        data?.details?.[0]?.message ||
+        data?.error ||
+        data?.message;
+      if (status === 409 && serverMsg) {
+        showErrorToast(serverMsg);
+        return;
+      }
+      const errorMessage = serverMsg || 'Не удалось создать пользователя';
       showErrorToast(errorMessage);
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handlePhoneChange = (e) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setFormData((prev) => ({ ...prev, phone: formatted }));
+    setFormErrors((prev) => ({ ...prev, phone: undefined }));
   };
 
   // Выбор пользователя из результатов поиска
@@ -317,7 +337,7 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
 
                 <div>
                   <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Email *
+                    Email (необязательно)
                   </Label>
                   <Input
                     id="email"
@@ -349,13 +369,13 @@ const ClientSelector = ({ isOpen, onClose, selectedUser, onUserSelect }) => {
                     id="phone"
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={handlePhoneChange}
                     className={`h-12 rounded-2xl border transition-colors ${
                       formErrors.phone 
                         ? 'border-red-300 bg-red-50 focus:ring-red-300' 
                         : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
                     }`}
-                    placeholder="+7 700 123 4567"
+                    placeholder="+7 (___) ___-__-__"
                   />
                   {formErrors.phone && (
                     <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
