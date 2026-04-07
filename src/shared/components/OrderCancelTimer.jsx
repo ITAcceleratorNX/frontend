@@ -12,11 +12,12 @@ const OrderCancelTimer = ({ order }) => {
   // Мемоизируем проверку критериев для оптимизации
   const shouldShowTimer = useMemo(() => {
     return (
+      order.order_source !== 'OFFLINE_IMPORT' &&
       order.status === 'PROCESSING' &&
       order.contract_status === 'SIGNED' &&
       order.payment_status === 'UNPAID'
     );
-  }, [order.status, order.contract_status, order.payment_status]);
+  }, [order.order_source, order.status, order.contract_status, order.payment_status]);
 
   // Мемоизируем дату подписания контракта
   const contractSignedAt = useMemo(() => {

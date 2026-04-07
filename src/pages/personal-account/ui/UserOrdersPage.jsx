@@ -92,11 +92,22 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) =
     
     switch (activeFilter) {
       case 'contract':
-        // Ожидают подписания договора
-        return orders.filter(order => order.status === 'APPROVED' && order.contract_status !== 'SIGNED');
+        // Ожидают подписания договора (только онлайн-электронный договор)
+        return orders.filter(
+          (order) =>
+            order.order_source !== 'OFFLINE_IMPORT' &&
+            order.status === 'APPROVED' &&
+            order.contract_status !== 'SIGNED'
+        );
       case 'payment':
         // Ожидают оплаты (договор подписан, но не оплачено)
-        return orders.filter(order => order.status === 'PROCESSING' && order.contract_status === 'SIGNED' && order.payment_status === 'UNPAID');
+        return orders.filter(
+          (order) =>
+            order.order_source !== 'OFFLINE_IMPORT' &&
+            order.status === 'PROCESSING' &&
+            order.contract_status === 'SIGNED' &&
+            order.payment_status === 'UNPAID'
+        );
       case 'active':
         return orders.filter(order => order.status === 'ACTIVE');
       case 'archive':
@@ -109,8 +120,16 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) =
   // Статистика заказов
   const stats = useMemo(() => {
     const total = orders.length;
-    const awaitingContract = orders.filter(o => o.status === 'APPROVED' && o.contract_status !== 'SIGNED').length;
-    const awaitingPayment = orders.filter(o => o.status === 'PROCESSING' && o.contract_status === 'SIGNED' && o.payment_status === 'UNPAID').length;
+    const awaitingContract = orders.filter(
+      (o) => o.order_source !== 'OFFLINE_IMPORT' && o.status === 'APPROVED' && o.contract_status !== 'SIGNED'
+    ).length;
+    const awaitingPayment = orders.filter(
+      (o) =>
+        o.order_source !== 'OFFLINE_IMPORT' &&
+        o.status === 'PROCESSING' &&
+        o.contract_status === 'SIGNED' &&
+        o.payment_status === 'UNPAID'
+    ).length;
     const active = orders.filter(o => o.status === 'ACTIVE').length;
     
     return { total, awaitingContract, awaitingPayment, active };

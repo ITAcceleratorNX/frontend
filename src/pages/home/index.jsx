@@ -328,6 +328,63 @@ const HomePage = memo(() => {
     return Number.isNaN(parsed) ? 0 : parsed;
   }, [individualMonths]);
 
+  /** Данные брони для импорта офлайн-заказа (вкладка «Офлайн-импорт» в ClientSelector) */
+  const buildLegacyImportOrderPayload = useCallback(() => {
+    if (activeStorageTab !== "INDIVIDUAL") return null;
+    if (!selectedWarehouse || !previewStorage) return null;
+    if (!monthsNumber || monthsNumber <= 0) return null;
+    const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
+    if (!Number.isFinite(storageId) || storageId <= 0) return null;
+    const startDate = individualBookingStartDate
+      ? new Date(individualBookingStartDate).toISOString()
+      : new Date().toISOString();
+    return {
+      storage_id: storageId,
+      months: monthsNumber,
+      start_date: startDate,
+      order_items: [{ name: "Вещь", volume: 1, cargo_mark: "NO" }],
+      is_selected_moving: false,
+      is_selected_package: false,
+    };
+  }, [
+    activeStorageTab,
+    selectedWarehouse,
+    previewStorage,
+    monthsNumber,
+    individualBookingStartDate,
+  ]);
+
+  /** Подпись к брони для модалки офлайн-импорта: склад, бокс, адрес, срок */
+  const buildLegacyImportBookingSummary = useCallback(() => {
+    if (activeStorageTab !== "INDIVIDUAL") return null;
+    if (!selectedWarehouse || !previewStorage) return null;
+    if (!monthsNumber || monthsNumber <= 0) return null;
+    const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
+    if (!Number.isFinite(storageId) || storageId <= 0) return null;
+    const startRaw = individualBookingStartDate || getTodayLocalDateString();
+    return {
+      warehouseName: selectedWarehouse.name || "—",
+      warehouseAddress:
+        selectedWarehouse.address ||
+        selectedWarehouse.warehouse_address ||
+        selectedWarehouse.full_address ||
+        "",
+      storageLabel:
+        previewStorage.name ||
+        previewStorage.display_name ||
+        `Бокс №${storageId}`,
+      storageId,
+      months: monthsNumber,
+      startDate: startRaw,
+    };
+  }, [
+    activeStorageTab,
+    selectedWarehouse,
+    previewStorage,
+    monthsNumber,
+    individualBookingStartDate,
+  ]);
+
   const updateServiceRow = useCallback((index, field, value) => {
     setServices((prev) => {
       const updated = prev.map((service, i) =>
@@ -2982,6 +3039,14 @@ const HomePage = memo(() => {
           onUserSelect={(client) => {
             setSelectedClientUser(client);
             if (client) setIsClientSelectorOpen(false);
+          }}
+          legacyImportBuildOrderPayload={buildLegacyImportOrderPayload}
+          legacyImportBookingSummary={buildLegacyImportBookingSummary}
+          onLegacyImportSuccess={() => {
+            queryClient.refetchQueries({ queryKey: ["orders", "user"] });
+            const redirectSection = "request";
+            const redirectState = { activeSection: redirectSection };
+            navigate("/personal-account", { state: redirectState });
           }}
         />
       )}

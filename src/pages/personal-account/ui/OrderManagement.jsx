@@ -298,6 +298,14 @@ const OrderManagement = () => {
 
   // Получение бейджа статуса договора
   const getContractBadge = (order) => {
+    if (order.order_source === 'OFFLINE_IMPORT') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200">
+          <FileText className="w-3 h-3" />
+          Без ЭДО
+        </span>
+      );
+    }
     const isSigned = order.contract_status === 'SIGNED';
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -533,10 +541,15 @@ const OrderManagement = () => {
                     {/* Верхняя строка: номер, клиент, стрелка */}
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-bold text-[#00A991] bg-[#00A991]/10 px-2 py-0.5 rounded-full">
                             #{order.id}
                           </span>
+                          {order.order_source === 'OFFLINE_IMPORT' && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-900 bg-amber-50">
+                              Офлайн
+                            </Badge>
+                          )}
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                             {getStorageTypeText(order.storage?.storage_type)}
                           </Badge>
@@ -610,7 +623,14 @@ const OrderManagement = () => {
                         onClick={() => handleOrderClick(order)}
                       >
                         <TableCell>
-                          <span className="text-sm font-bold text-[#00A991]">#{order.id}</span>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm font-bold text-[#00A991]">#{order.id}</span>
+                            {order.order_source === 'OFFLINE_IMPORT' && (
+                              <Badge variant="outline" className="text-[10px] w-fit border-amber-300 text-amber-900 bg-amber-50">
+                                Офлайн-импорт
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
