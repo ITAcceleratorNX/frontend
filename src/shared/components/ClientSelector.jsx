@@ -36,6 +36,7 @@ function firstDayOfPaymentMonthYmd(monthStr, yearStr) {
 /**
  * Равномерно делит сумму по месяцам от якорной даты (первый платёж — календарный месяц этой даты).
  * Последняя строка — остаток из‑за округления.
+ * После генерации: периоды до текущего календарного месяца включительно помечаются оплаченными с датой оплаты «сегодня».
  * @returns {Array<ReturnType<typeof defaultOrderPaymentRow>>|null}
  */
 function generateMonthlyPaymentRows(totalAmountInput, monthsCount, startDateStr) {
@@ -62,7 +63,31 @@ function generateMonthlyPaymentRows(totalAmountInput, monthsCount, startDateStr)
       note: '',
     });
   }
-  return rows;
+  return applyPaidStatusThroughCurrentMonth(rows);
+}
+
+/**
+ * Месяцы до текущего календарного месяца включительно — «Оплачено», дата оплаты — сегодня (локальная дата).
+ * Будущие месяцы в графике остаются «К оплате» без даты.
+ */
+function applyPaidStatusThroughCurrentMonth(rows) {
+  if (!rows?.length) return rows;
+  const todayYmd = getTodayLocalDateString();
+  const now = new Date();
+  const cy = now.getFullYear();
+  const cm = now.getMonth() + 1;
+  return rows.map((row) => {
+    const y = parseInt(String(row.year), 10);
+    const m = parseInt(String(row.month), 10);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) {
+      return row;
+    }
+    const isPaid = y < cy || (y === cy && m <= cm);
+    if (isPaid) {
+      return { ...row, status: 'PAID', paid_at: todayYmd };
+    }
+    return { ...row, status: 'UNPAID', paid_at: '' };
+  });
 }
 
 const MODE = {
@@ -123,7 +148,6 @@ const ClientSelector = ({
   const [legacyGeneratorTotal, setLegacyGeneratorTotal] = useState('');
   /** Дата начала брони для генерации графика (можно отличаться от даты на странице) */
   const [legacyBookingStartDate, setLegacyBookingStartDate] = useState('');
-  const [ignoreStorageAvailability, setIgnoreStorageAvailability] = useState(false);
 
   const handleSearch = useCallback(async (query) => {
     if (!query || query.trim().length < 2) {
@@ -166,7 +190,6 @@ const ClientSelector = ({
       setLegacyPaymentType('MONTHLY');
       setLegacyOrderPayments([defaultOrderPaymentRow()]);
       setLegacyGeneratorTotal('');
-      setIgnoreStorageAvailability(false);
       const summaryOnOpen = legacyImportBookingSummary?.();
       const rawStart = summaryOnOpen?.startDate;
       if (rawStart) {
@@ -299,8 +322,9 @@ const ClientSelector = ({
     } catch (error) {
       console.error('Ошибка при создании пользователя:', error);
       const errorMessage =
-        error.response?.data?.details?.[0]?.message ||
+        error.response?.data?.message ||
         error.response?.data?.error ||
+        error.response?.data?.details?.[0]?.message ||
         'Не удалось создать пользователя';
       showErrorToast(errorMessage);
     } finally {
@@ -395,7 +419,6 @@ const ClientSelector = ({
         },
         payment_type: legacyPaymentType,
         order_payments: parsed.rows,
-        ignore_storage_availability: ignoreStorageAvailability,
       };
 
       const res = await warehouseApi.importOfflineOrder(payload);
@@ -409,9 +432,9 @@ const ClientSelector = ({
     } catch (error) {
       console.error('Ошибка импорта офлайн-заказа:', error);
       const msg =
-        error.response?.data?.details?.[0]?.message ||
-        error.response?.data?.error ||
         error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.response?.data?.details?.[0]?.message ||
         'Не удалось создать импорт';
       showErrorToast(typeof msg === 'string' ? msg : 'Не удалось создать импорт');
     } finally {
@@ -775,7 +798,9 @@ const ClientSelector = ({
                   <p className="text-sm text-gray-600">
                     Сначала на странице бронирования выберите склад, бокс и срок. Задайте график платежей: при
                     помесячной оплате можно сгенерировать строки по сумме и дате начала брони (поле ниже) или
-                    добавить вручную; при полной оплате — один платёж за весь период.
+                    добавить вручную; при полной оплате — один платёж за весь период. Если клиент уже есть в базе по
+                    телефону, email или ИИН, все поля анкеты должны совпадать с карточкой — иначе выберите клиента в
+                    поиске сверху.
                   </p>
 
                   {bookingSummary ? (
@@ -830,29 +855,16 @@ const ClientSelector = ({
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 mb-2 block">Тип оплаты</Label>
-                      <select
-                        value={legacyPaymentType}
-                        onChange={(e) => handleLegacyPaymentTypeChange(e.target.value)}
-                        className="w-full h-12 rounded-2xl border border-gray-200 px-3 text-[#202422]"
-                      >
-                        <option value="MONTHLY">Помесячно</option>
-                        <option value="FULL">Полностью</option>
-                      </select>
-                    </div>
-                    <div className="flex items-end pb-2">
-                      <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={ignoreStorageAvailability}
-                          onChange={(e) => setIgnoreStorageAvailability(e.target.checked)}
-                          className="rounded border-gray-300 text-[#31876D] focus:ring-[#31876D]"
-                        />
-                        Бокс уже занят (офлайн), не проверять доступность
-                      </label>
-                    </div>
+                  <div className="max-w-md">
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Тип оплаты</Label>
+                    <select
+                      value={legacyPaymentType}
+                      onChange={(e) => handleLegacyPaymentTypeChange(e.target.value)}
+                      className="w-full h-12 rounded-2xl border border-gray-200 px-3 text-[#202422]"
+                    >
+                      <option value="MONTHLY">Помесячно</option>
+                      <option value="FULL">Полностью</option>
+                    </select>
                   </div>
 
                   {isMonthlyLegacy && bookingSummary && (
@@ -861,7 +873,8 @@ const ClientSelector = ({
                       <p className="text-xs text-gray-600">
                         Укажите общую сумму за все {bookingSummary.months} мес. — строки создадутся помесячно от даты
                         начала брони (поле «Дата начала брони» выше; равные доли, последний месяц с корректировкой
-                        округления).
+                        округления). Месяцы до текущего включительно будут отмечены как оплаченные, дата оплаты —
+                        сегодняшняя; остальные — к оплате.
                       </p>
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                         <div className="flex-1">
