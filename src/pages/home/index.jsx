@@ -2418,7 +2418,10 @@ const HomePage = memo(() => {
                   }`}
                   style={
                     mapSectionGuideHighlight
-                      ? { boxShadow: "0 0 0 4px #31876D" }
+                      ? {
+                          boxShadow:
+                            "0 0 0 2px #ffffff, 0 0 0 7px #0d9488, 0 0 22px rgba(45, 212, 191, 0.55)",
+                        }
                       : undefined
                   }
                 >
