@@ -335,6 +335,7 @@ const HomePage = memo(() => {
     if (!monthsNumber || monthsNumber <= 0) return null;
     const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
     if (!Number.isFinite(storageId) || storageId <= 0) return null;
+    // start_date/total_price для офлайн-импорта задаются в ClientSelector (дата якоря графика и сумма платежей)
     const startDate = individualBookingStartDate
       ? new Date(individualBookingStartDate).toISOString()
       : new Date().toISOString();
@@ -1415,6 +1416,23 @@ const HomePage = memo(() => {
         orderData.services = finalServices;
       }
 
+      // MANAGER/ADMIN: сумма аренды и разбивка как в превью (calculate-bulk), иначе на бэкенде пересчёт не совпадёт с orders.total_price
+      if (
+        isAdminOrManager &&
+        pricePreview &&
+        Number.isFinite(Number(pricePreview.total)) &&
+        Number(pricePreview.total) >= 0
+      ) {
+        orderData.total_price = Math.round(Number(pricePreview.total));
+        if (pricePreview.pricingBreakdown) {
+          orderData.pricing_breakdown = pricePreview.pricingBreakdown;
+          const rid = pricePreview.pricingBreakdown.ruleId;
+          if (rid != null && Number.isFinite(Number(rid))) {
+            orderData.pricing_rule_id = Number(rid);
+          }
+        }
+      }
+
       await warehouseApi.createOrder(orderData);
 
       // Закрываем модалку предпросмотра платежей
@@ -1493,6 +1511,7 @@ const HomePage = memo(() => {
     movingOrders,
     individualBookingStartDate,
     promoCode,
+    pricePreview,
     user,
     validateUserProfile,
     translateBackendError,
@@ -1636,6 +1655,15 @@ const HomePage = memo(() => {
         ];
       }
 
+      if (
+        isAdminOrManager &&
+        cloudPricePreview &&
+        Number.isFinite(Number(cloudPricePreview.total)) &&
+        Number(cloudPricePreview.total) >= 0
+      ) {
+        orderData.total_price = Math.round(Number(cloudPricePreview.total));
+      }
+
       await warehouseApi.createOrder(orderData);
 
       // Закрываем модалку предпросмотра платежей
@@ -1710,6 +1738,7 @@ const HomePage = memo(() => {
     ensureServiceOptions,
     warehouseApi,
     cloudPromoCode,
+    cloudPricePreview,
     user,
     validateUserProfile,
     translateBackendError,

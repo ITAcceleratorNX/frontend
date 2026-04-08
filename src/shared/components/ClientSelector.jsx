@@ -22,6 +22,19 @@ function parseScheduleAnchorDate(str) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/** YYYY-MM-DD в локальной полуночи → ISO для start_date заказа (без сдвига дня из‑за UTC). */
+function localYmdToOrderStartIso(ymd) {
+  const s = String(ymd ?? '').trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null;
+  const dt = new Date(y, mo - 1, d, 12, 0, 0, 0);
+  return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
+}
+
 /** Для input type="date`: первый день месяца оплаты по полям строки (месяц 1–12, год). */
 function firstDayOfPaymentMonthYmd(monthStr, yearStr) {
   const m = Number(String(monthStr ?? '').trim());
@@ -405,10 +418,32 @@ const ClientSelector = ({
       return;
     }
 
+    const anchorYmd = getLegacyScheduleAnchorYmd();
+    if (!anchorYmd) {
+      showErrorToast('Укажите дату начала брони для импорта (поле в блоке офлайн-импорта или дату на странице бронирования).');
+      return;
+    }
+    const startDateIso = localYmdToOrderStartIso(anchorYmd);
+    if (!startDateIso) {
+      showErrorToast('Некорректная дата начала брони.');
+      return;
+    }
+
+    const totalFromPayments = parsed.rows.reduce((sum, p) => sum + Number(p.amount), 0);
+    if (!Number.isFinite(totalFromPayments) || totalFromPayments <= 0) {
+      showErrorToast('Сумма по графику платежей должна быть больше нуля.');
+      return;
+    }
+
     setIsImporting(true);
     try {
       const payload = {
         ...base,
+        start_date: startDateIso,
+        // Итог по заказу = сумма строк графика (после ручных правок), не превью цены со страницы
+        total_price: Math.round(totalFromPayments * 100) / 100,
+        pricing_breakdown: null,
+        pricing_rule_id: null,
         client: {
           name: formData.name.trim(),
           email: formData.email.trim() || undefined,
