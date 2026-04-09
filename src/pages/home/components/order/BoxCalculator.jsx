@@ -1,13 +1,30 @@
-import React, { useState, useCallback, useMemo, memo } from "react";
+import React, { useState, useCallback, useMemo, memo, useEffect } from "react";
 import { Search } from "lucide-react";
 import { getLayoutBoxNames } from "@/shared/lib/warehouseLayoutUtils";
 
+/** ±доля от запроса, не меньше RANGE_MIN_DELTA м² */
+const RANGE_FRACTION = 0.12;
+const RANGE_MIN_DELTA = 0.5;
+
+function pluralBoxes(n) {
+  const abs = n % 100;
+  if (abs >= 11 && abs <= 14) return "боксов";
+  const d = n % 10;
+  if (d === 1) return "бокс";
+  if (d >= 2 && d <= 4) return "бокса";
+  return "боксов";
+}
+
+function formatM2(v) {
+  const n = Math.round(Number(v) * 100) / 100;
+  if (Number.isNaN(n)) return "";
+  if (Number.isInteger(n)) return String(n);
+  return String(n).replace(".", ",");
+}
+
 /**
- * Калькулятор подбора боксов по размеру (м²).
- * Работает в рамках выбранного склада.
- * - Точное совпадение → все подходящие боксы
- * - Нет точного → ближайшие по размеру
- * - Нет подходящих → рекомендация сменить ярус/склад
+ * Подбор по м²: свободные боксы на ярусе, попадающие в диапазон вокруг введённой площади.
+ * Подсветка на схеме через onHighlightedBoxes.
  */
 function BoxCalculator({
   storageBoxes = [],
@@ -19,74 +36,68 @@ function BoxCalculator({
   const [inputValue, setInputValue] = useState("");
   const [lastSearchedSize, setLastSearchedSize] = useState(null);
 
-  // Боксы на текущем ярусе (только видимые на схеме)
   const layoutBoxNames = useMemo(() => {
     return getLayoutBoxNames(selectedWarehouse?.name, selectedMap);
   }, [selectedWarehouse?.name, selectedMap]);
 
-  // Боксы в выбранном складе, фильтруем по текущему ярусу
   const individualBoxes = useMemo(() => {
     return (storageBoxes || [])
       .filter((s) => s.storage_type === "INDIVIDUAL")
       .filter((s) => layoutBoxNames.has((s.name || "").toLowerCase()));
   }, [storageBoxes, layoutBoxNames]);
 
-  const uniqueSizes = useMemo(() => {
-    const sizes = new Set();
-    individualBoxes.forEach((s) => {
-      const v = parseFloat(s.available_volume);
-      if (!Number.isNaN(v) && v > 0) sizes.add(v);
-    });
-    return Array.from(sizes).sort((a, b) => a - b);
-  }, [individualBoxes]);
-
   const findMatchingBoxes = useCallback(
     (desiredSize) => {
-      const num = parseFloat(desiredSize);
+      const raw = String(desiredSize).trim().replace(",", ".");
+      const num = parseFloat(raw);
       if (Number.isNaN(num) || num <= 0 || individualBoxes.length === 0) {
-        return { boxes: [], message: null, isExact: false };
+        return { boxes: [], summary: null };
       }
 
-      // Точное совпадение (с допуском 0.01 для float)
-      const exactMatches = individualBoxes.filter((b) => {
+      const delta = Math.max(RANGE_MIN_DELTA, num * RANGE_FRACTION);
+      const lo = num - delta;
+      const hi = num + delta;
+
+      const vacantOnMap = individualBoxes.filter((b) => b.status === "VACANT");
+      const inRange = vacantOnMap.filter((b) => {
         const v = parseFloat(b.available_volume);
-        return !Number.isNaN(v) && Math.abs(v - num) < 0.01;
+        return !Number.isNaN(v) && v > 0 && v >= lo && v <= hi;
       });
 
-      if (exactMatches.length > 0) {
-        return { boxes: exactMatches, message: null, isExact: true };
-      }
-
-      // Ближайшие по размеру
-      const withDiff = individualBoxes
-        .map((b) => {
-          const v = parseFloat(b.available_volume);
-          if (Number.isNaN(v) || v <= 0) return null;
-          return { box: b, diff: Math.abs(v - num), size: v };
-        })
-        .filter(Boolean);
-
-      if (withDiff.length === 0) {
+      if (inRange.length === 0) {
         return {
           boxes: [],
-          message:
-            "В выбранном складе подходящих боксов нет. Рекомендуем выбрать другой ярус или склад.",
-          isExact: false,
+          summary:
+            "Свободных боксов в этом диапазоне нет. Измените площадь или выберите другой ярус или склад.",
         };
       }
 
-      withDiff.sort((a, b) => a.diff - b.diff);
-      const minDiff = withDiff[0].diff;
-      const nearest = withDiff.filter((x) => x.diff === minDiff).map((x) => x.box);
+      const uniqueVol = [
+        ...new Set(
+          inRange.map((b) => Math.round(parseFloat(b.available_volume) * 100) / 100)
+        ),
+      ].sort((a, b) => a - b);
 
-      return {
-        boxes: nearest,
-        message: `Точного совпадения нет. Показаны ближайшие боксы (${nearest.map((b) => `${b.available_volume} м²`).join(", ")}).`,
-        isExact: false,
-      };
+      let summary;
+      if (uniqueVol.length === 1) {
+        summary = `Найдено ${inRange.length} ${pluralBoxes(
+          inRange.length
+        )} размером ${formatM2(uniqueVol[0])} м² — выберите на схеме.`;
+      } else {
+        summary = `Найдено ${inRange.length} ${pluralBoxes(
+          inRange.length
+        )} (${formatM2(uniqueVol[0])}–${formatM2(uniqueVol[uniqueVol.length - 1])} м²) — выберите на схеме.`;
+      }
+
+      return { boxes: inRange, summary };
     },
     [individualBoxes]
   );
+
+  useEffect(() => {
+    setLastSearchedSize(null);
+    onHighlightedBoxes?.([]);
+  }, [selectedWarehouse?.id, selectedMap, onHighlightedBoxes]);
 
   const handleSearch = useCallback(() => {
     const trimmed = inputValue.trim();
@@ -95,7 +106,7 @@ function BoxCalculator({
       setLastSearchedSize(null);
       return;
     }
-    const { boxes, message } = findMatchingBoxes(trimmed);
+    const { boxes } = findMatchingBoxes(trimmed);
     setLastSearchedSize(trimmed);
     onHighlightedBoxes?.(boxes);
   }, [inputValue, findMatchingBoxes, onHighlightedBoxes]);
@@ -148,28 +159,10 @@ function BoxCalculator({
         </button>
       </div>
 
-      {result && (
-        <div className="text-center">
-          {result.message && (
-            <p className="text-white/95 text-sm">{result.message}</p>
-          )}
-          {result.boxes.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2 justify-center">
-              {result.boxes.map((box) => (
-                <button
-                  key={box.id ?? box.name}
-                  type="button"
-                  onClick={() => {
-                    onBoxSelect?.(box);
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-white/25 text-white text-sm font-medium hover:bg-white/35 transition-colors"
-                >
-                  {box.name} ({box.available_volume} м²)
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      {result?.summary && (
+        <p className="text-white text-sm font-medium text-center leading-snug px-1 max-w-xl mx-auto">
+          {result.summary}
+        </p>
       )}
     </div>
   );
