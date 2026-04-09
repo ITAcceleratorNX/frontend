@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, UserPlus, X, User, Mail, Phone, MapPin, Calendar, ArrowLeft, History } from 'lucide-react';
+import { Search, UserPlus, X, User, Mail, Phone, MapPin, ArrowLeft, History } from 'lucide-react';
 import { usersApi } from '../api/usersApi';
 import { warehouseApi } from '../api/warehouseApi';
 import { showSuccessToast, showErrorToast } from '../lib/toast';
@@ -7,6 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import DatePicker from '../ui/DatePicker';
 import { getTodayLocalDateString, formatCalendarDate } from '../lib/utils/date';
 
 /** Первый месяц графика: для YYYY-MM-DD — календарная дата в локальной зоне (без сдвига из‑за UTC). */
@@ -272,6 +280,7 @@ const ClientSelector = ({
 
   const validateForm = () => {
     const errors = {};
+    const isLegacy = mode === MODE.LEGACY;
 
     if (!formData.name.trim()) {
       errors.name = 'Имя обязательно';
@@ -287,24 +296,42 @@ const ClientSelector = ({
       errors.phone = 'Телефон обязателен';
     }
 
-    if (!formData.iin.trim()) {
-      errors.iin = 'ИИН обязателен';
-    } else if (formData.iin.length !== 12) {
-      errors.iin = 'ИИН должен содержать 12 цифр';
-    }
+    // MODE.CREATE: ИИН/адрес/дата рождения обязательны (нужны для договоров)
+    // MODE.LEGACY (оффлайн-импорт): допускаем старых клиентов без этих данных
+    if (!isLegacy) {
+      if (!formData.iin.trim()) {
+        errors.iin = 'ИИН обязателен';
+      } else if (formData.iin.length !== 12) {
+        errors.iin = 'ИИН должен содержать 12 цифр';
+      }
 
-    if (!formData.address.trim()) {
-      errors.address = 'Адрес обязателен';
-    }
+      if (!formData.address.trim()) {
+        errors.address = 'Адрес обязателен';
+      }
 
-    if (!formData.bday.trim()) {
-      errors.bday = 'Дата рождения обязательна';
+      if (!formData.bday.trim()) {
+        errors.bday = 'Дата рождения обязательна';
+      } else {
+        const selectedDate = new Date(formData.bday);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate > today) {
+          errors.bday = 'Дата рождения не может быть в будущем';
+        }
+      }
     } else {
-      const selectedDate = new Date(formData.bday);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate > today) {
-        errors.bday = 'Дата рождения не может быть в будущем';
+      // В LEGACY проверяем только если значение введено
+      if (formData.iin.trim() && formData.iin.length !== 12) {
+        errors.iin = 'ИИН должен содержать 12 цифр';
+      }
+
+      if (formData.bday.trim()) {
+        const selectedDate = new Date(formData.bday);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate > today) {
+          errors.bday = 'Дата рождения не может быть в будущем';
+        }
       }
     }
 
@@ -448,9 +475,9 @@ const ClientSelector = ({
           name: formData.name.trim(),
           email: formData.email.trim() || undefined,
           phone: formData.phone.trim(),
-          iin: formData.iin.trim(),
-          address: formData.address.trim(),
-          bday: formData.bday.trim(),
+          iin: formData.iin.trim() || undefined,
+          address: formData.address.trim() || undefined,
+          bday: formData.bday.trim() || undefined,
         },
         payment_type: legacyPaymentType,
         order_payments: parsed.rows,
@@ -745,7 +772,7 @@ const ClientSelector = ({
 
                 <div>
                   <Label htmlFor="iin" className="text-sm font-medium text-gray-700 mb-2 block">
-                    ИИН (12 цифр) *
+                    ИИН (12 цифр) {mode === MODE.LEGACY ? '' : '*'}
                   </Label>
                   <Input
                     id="iin"
@@ -767,7 +794,7 @@ const ClientSelector = ({
 
                 <div className="md:col-span-2">
                   <Label htmlFor="address" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Адрес *
+                    Адрес {mode === MODE.LEGACY ? '' : '*'}
                   </Label>
                   <Input
                     id="address"
@@ -785,28 +812,19 @@ const ClientSelector = ({
                   )}
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="bday" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Дата рождения *
+                    Дата рождения {mode === MODE.LEGACY ? '' : '*'}
                   </Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#6B6B6B] h-5 w-5 pointer-events-none" />
-                    <Input
-                      id="bday"
-                      type="date"
-                      value={formData.bday}
-                      onChange={(e) => setFormData({ ...formData, bday: e.target.value })}
-                      max={getTodayLocalDateString()}
-                      className={`h-12 rounded-2xl border pl-12 transition-colors ${
-                        formErrors.bday
-                          ? 'border-red-300 bg-red-50 focus:ring-red-300'
-                          : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
-                      }`}
-                    />
-                  </div>
-                  {formErrors.bday && (
-                    <p className="mt-1.5 text-sm text-red-600">{formErrors.bday}</p>
-                  )}
+                  <DatePicker
+                    placeholder=""
+                    value={formData.bday || ''}
+                    onChange={(value) => setFormData({ ...formData, bday: value || '' })}
+                    error={formErrors.bday}
+                    captionLayout="dropdown"
+                    allowFutureDates={false}
+                    variant="input"
+                  />
                 </div>
               </div>
 
@@ -877,11 +895,13 @@ const ClientSelector = ({
                       <Label className="text-sm font-medium text-gray-700 block">
                         Дата начала брони (для графика платежей)
                       </Label>
-                      <Input
-                        type="date"
-                        value={legacyBookingStartDate}
-                        onChange={(e) => setLegacyBookingStartDate(e.target.value)}
-                        className="h-12 rounded-2xl border-gray-200 max-w-xs"
+                      <DatePicker
+                        placeholder=""
+                        value={legacyBookingStartDate || ''}
+                        onChange={(value) => setLegacyBookingStartDate(value || '')}
+                        allowFutureDates
+                        variant="input"
+                        className="max-w-xs"
                       />
                       <p className="text-xs text-gray-500">
                         По умолчанию подставляется дата из бронирования выше; при необходимости измените — генерация
@@ -892,14 +912,19 @@ const ClientSelector = ({
 
                   <div className="max-w-md">
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">Тип оплаты</Label>
-                    <select
-                      value={legacyPaymentType}
-                      onChange={(e) => handleLegacyPaymentTypeChange(e.target.value)}
-                      className="w-full h-12 rounded-2xl border border-gray-200 px-3 text-[#202422]"
-                    >
-                      <option value="MONTHLY">Помесячно</option>
-                      <option value="FULL">Полностью</option>
-                    </select>
+                    <Select value={legacyPaymentType} onValueChange={handleLegacyPaymentTypeChange}>
+                      <SelectTrigger className="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-[#202422] text-base shadow-sm focus:ring-2 focus:ring-[#31876D]/30 focus:ring-offset-0 focus:border-[#31876D]/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border border-gray-200">
+                        <SelectItem value="MONTHLY" className="rounded-xl">
+                          Помесячно
+                        </SelectItem>
+                        <SelectItem value="FULL" className="rounded-xl">
+                          Полностью
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {isMonthlyLegacy && bookingSummary && (
@@ -1002,16 +1027,17 @@ const ClientSelector = ({
                             <span className="text-xs text-gray-500">
                               Дата оплаты {row.status === 'PAID' ? '*' : '(только если оплачено)'}
                             </span>
-                            <Input
-                              type="date"
-                              value={row.paid_at}
+                            <DatePicker
+                              placeholder=""
+                              value={row.paid_at || ''}
                               disabled={row.status !== 'PAID'}
-                              onChange={(e) => {
+                              onChange={(value) => {
                                 const next = [...legacyOrderPayments];
-                                next[idx] = { ...next[idx], paid_at: e.target.value };
+                                next[idx] = { ...next[idx], paid_at: value || '' };
                                 setLegacyOrderPayments(next);
                               }}
-                              className="h-10 rounded-xl text-sm disabled:opacity-50"
+                              allowFutureDates
+                              variant="input"
                             />
                           </div>
                           <div className="col-span-1 md:col-span-1">
