@@ -12,6 +12,7 @@ import ChangePasswordModal from './ChangePasswordModal';
 import { Lock, User, CheckCircle2, LogOut } from 'lucide-react';
 import IinTooltip from '../../../shared/ui/IinTooltip';
 import { usersApi } from '../../../shared/api/usersApi';
+import { getApiErrorMessage } from '../../../shared/lib/utils/apiErrorMessage';
 import {
   Dialog,
   DialogContent,
@@ -292,13 +293,21 @@ const PersonalData = memo(({ embeddedMobile = false }) => {
     } catch (error) {
       console.error('Ошибка при обновлении данных пользователя:', error);
 
+      const backendMsg = getApiErrorMessage(error, '');
       if (error.response && error.response.status === 401) {
         showErrorToast('Сессия истекла. Пожалуйста, войдите снова.');
         navigate('/login');
+      } else if (error.response?.status === 409) {
+        showErrorToast(
+          backendMsg ||
+            'Пользователь с таким номером телефона, email или ИИН уже зарегистрирован. Проверьте данные.'
+        );
       } else if (error.response && error.response.status === 400) {
-        showErrorToast('Ошибка валидации данных. Проверьте введенные данные.');
+        showErrorToast(
+          backendMsg || 'Ошибка валидации данных. Проверьте введенные данные.'
+        );
       } else {
-        showErrorToast('Не удалось обновить данные профиля');
+        showErrorToast(backendMsg || 'Не удалось обновить данные профиля');
       }
     } finally {
       setSaving(false);

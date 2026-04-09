@@ -90,6 +90,7 @@ const getMonthName = (month) => {
 };
 
 const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
+  const isOfflineImport = order.order_source === 'OFFLINE_IMPORT';
   const navigate = useNavigate();
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
   const [isCancelExtendDialogOpen, setIsCancelExtendDialogOpen] = useState(false);
@@ -225,6 +226,10 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
   };
 
   const openCancelSurvey = () => {
+    if (isOfflineImport) {
+      window.open(getWhatsAppReturnLink(order.id), '_blank', 'noopener,noreferrer');
+      return;
+    }
     // Получаем первый контракт для отмены
     const sortedContracts = (order.contracts || []).sort((a, b) => {
       const aId = a.contract_id || a.id || 0;
@@ -549,7 +554,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
             {order.storage?.storage_type === 'CAMERA' ? 'Хранение активно' : 'Активный'}
           </span>
         )}
-        {order.status === 'APPROVED' && order.contract_status !== 'SIGNED' && (
+        {order.status === 'APPROVED' && order.contract_status !== 'SIGNED' && !isOfflineImport && (
           <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700">
             <FileText className="w-4 h-4 text-gray-500" />
             Ожидает договор
@@ -579,6 +584,9 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
       <div className={`flex items-start justify-between relative gap-2 ${embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}`}>
         <div className="flex-1 min-w-0 overflow-hidden">
           <h3 className={`font-bold mb-2 truncate ${embeddedMobile ? 'text-base min-[360px]:text-lg' : 'text-2xl'}`}>Заказ №{order.id}</h3>
+          {order.order_source === 'OFFLINE_IMPORT' && (
+            <p className="text-amber-200 text-xs mb-1 font-medium">Офлайн / без ЭДО (импорт)</p>
+          )}
           <p className="text-white/90 text-xs mb-1">Создан: {formatDate(order.created_at)}</p>
           <p className="text-white/90 text-sm mb-1">Тип: {getStorageTypeText(order.storage?.storage_type || 'INDIVIDUAL')}</p>
           <p className="text-white/90 text-sm">Объем: {order.total_volume} {getVolumeUnit(order.storage?.storage_type || 'INDIVIDUAL')}</p>
@@ -618,7 +626,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
       </div>
 
       {/* Договоры */}
-      {Array.isArray(order?.contracts) && order.contracts?.document_id && (
+      {!isOfflineImport && Array.isArray(order?.contracts) && order.contracts.length > 0 && (
         <div className={embeddedMobile ? 'mb-4 min-[360px]:mb-6' : 'mb-10'}>
           <p className="text-white/90 text-sm mb-2">Договоры:</p>
           
@@ -856,7 +864,11 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
             )}
             {/* Если нет платежей, показываем сообщение */}
             {payments.length === 0 && (
-              <p className="text-white/70 text-sm">Платежи будут созданы после подписания договора</p>
+              <p className="text-white/70 text-sm">
+                {isOfflineImport
+                  ? 'Платежи по этому заказу заданы при импорте'
+                  : 'Платежи будут созданы после подписания договора'}
+              </p>
             )}
           </div>
         </div>
@@ -891,7 +903,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           
           <div className="flex flex-col items-end gap-2">
             {/* Кнопка Оплатить - показывается когда договор подписан и не оплачено */}
-            {(['APPROVED', 'PROCESSING', 'ACTIVE'].includes(order.status) && order.payment_status === 'UNPAID' && order.contract_status === 'SIGNED') ? (
+            {(['APPROVED', 'PROCESSING', 'ACTIVE'].includes(order.status) && order.payment_status === 'UNPAID' && (order.contract_status === 'SIGNED' || isOfflineImport)) ? (
               <button
                 onClick={() => {
                   if (!isOnlinePaymentEnabled) {

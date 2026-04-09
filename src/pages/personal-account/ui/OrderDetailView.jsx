@@ -179,8 +179,20 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
             <Package className="w-6 h-6 text-[#31876D]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[#273655] mb-0.5">Заказ #{order.id}</h2>
+            <div className="flex flex-wrap items-center gap-2 mb-0.5">
+              <h2 className="text-xl font-bold text-[#273655]">Заказ #{order.id}</h2>
+              {order.order_source === 'OFFLINE_IMPORT' && (
+                <Badge variant="outline" className="text-xs font-medium border-amber-300 text-amber-900 bg-amber-50">
+                  Офлайн-импорт
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-[#6B6B6B]">Создан: {formatDate(order.created_at)}</p>
+            {order.order_source === 'OFFLINE_IMPORT' && order.imported_at && (
+              <p className="text-xs text-amber-800 mt-1">
+                Импортирован: {formatDate(order.imported_at)}
+              </p>
+            )}
           </div>
           <Badge variant={getStatusVariant(order.status)} className="font-medium h-fit">
             {getOrderStatusText(order.status)}
@@ -329,12 +341,21 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
             <div className="border-t border-gray-100" />
             <div className="flex justify-between items-center py-2.5">
               <span className="text-sm text-[#6B6B6B]">Договор</span>
-              <Badge 
-                variant={order.contract_status === 'SIGNED' ? 'outline' : 'secondary'}
-                className={`font-medium ${order.contract_status === 'SIGNED' ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : ''}`}
-              >
-                {order.contract_status === 'SIGNED' ? 'Подписан' : 'Не подписан'}
-              </Badge>
+              {order.order_source === 'OFFLINE_IMPORT' ? (
+                <Badge
+                  variant="outline"
+                  className="font-medium border-amber-300 text-amber-900 bg-amber-50"
+                >
+                  Офлайн / без ЭДО
+                </Badge>
+              ) : (
+                <Badge
+                  variant={order.contract_status === 'SIGNED' ? 'outline' : 'secondary'}
+                  className={`font-medium ${order.contract_status === 'SIGNED' ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : ''}`}
+                >
+                  {order.contract_status === 'SIGNED' ? 'Подписан' : 'Не подписан'}
+                </Badge>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -368,7 +368,11 @@ const OrderCard = ({ order, onUpdate, onDelete, onApprove, onApproveReturn, isLo
                     Договор
                   </span>
                   <Badge variant={getContractVariant(order.contract_status)} className="text-xs">
-                    {order.contract_status === 'SIGNED' ? 'Подписан' : 'Не подписан'}
+                    {order.order_source === 'OFFLINE_IMPORT'
+                      ? 'Без ЭДО'
+                      : order.contract_status === 'SIGNED'
+                        ? 'Подписан'
+                        : 'Не подписан'}
                   </Badge>
                 </div>
                 

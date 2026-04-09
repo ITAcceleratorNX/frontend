@@ -45,6 +45,17 @@ export const warehouseApi = {
     }
   },
 
+  /** Staff: импорт офлайн-договора и истории оплат в один backdated-заказ */
+  importOfflineOrder: async (payload) => {
+    try {
+      const response = await api.post('/orders/import-offline', payload);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при импорте офлайн-заказа:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Массовый расчет стоимости для множества сервисов
   calculateBulkPrice: async (data) => {
     try {

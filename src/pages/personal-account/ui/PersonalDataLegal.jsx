@@ -10,6 +10,7 @@ import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import ChangePasswordModal from './ChangePasswordModal';
 import { Lock, Building2, CheckCircle2, MapPin, ChevronDown, LogOut } from 'lucide-react';
 import { usersApi } from '../../../shared/api/usersApi';
+import { getApiErrorMessage } from '../../../shared/lib/utils/apiErrorMessage';
 import {
   Dialog,
   DialogContent,
@@ -269,13 +270,21 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
     } catch (error) {
       console.error('Ошибка при обновлении данных пользователя:', error);
 
+      const backendMsg = getApiErrorMessage(error, '');
       if (error.response && error.response.status === 401) {
         showErrorToast('Сессия истекла. Пожалуйста, войдите снова.');
         navigate('/login');
+      } else if (error.response?.status === 409) {
+        showErrorToast(
+          backendMsg ||
+            'Пользователь с таким номером телефона или email уже зарегистрирован. Проверьте данные.'
+        );
       } else if (error.response && error.response.status === 400) {
-        showErrorToast('Ошибка валидации данных. Проверьте введенные данные.');
+        showErrorToast(
+          backendMsg || 'Ошибка валидации данных. Проверьте введенные данные.'
+        );
       } else {
-        showErrorToast('Не удалось обновить данные профиля');
+        showErrorToast(backendMsg || 'Не удалось обновить данные профиля');
       }
     } finally {
       setSaving(false);
