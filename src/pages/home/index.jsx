@@ -2469,16 +2469,6 @@ const HomePage = memo(() => {
               Индивидуальное хранение
             </button>
             <button
-              onClick={() => setActiveStorageTab("CLOUD")}
-              className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
-                activeStorageTab === "CLOUD"
-                  ? "bg-[#31876D] text-white"
-                  : "bg-[#DFDFDF] text-gray-600"
-              }`}
-            >
-              Облачное хранение
-            </button>
-            <button
               onClick={() => setActiveStorageTab("LOCKERS")}
               className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
                 activeStorageTab === "LOCKERS"
@@ -2487,6 +2477,16 @@ const HomePage = memo(() => {
               }`}
             >
               Камеры хранения
+            </button>
+            <button
+              onClick={() => setActiveStorageTab("CLOUD")}
+              className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
+                activeStorageTab === "CLOUD"
+                  ? "bg-[#31876D] text-white"
+                  : "bg-[#DFDFDF] text-gray-600"
+              }`}
+            >
+              Облачное хранение
             </button>
           </div>
           
@@ -2499,14 +2499,21 @@ const HomePage = memo(() => {
                   ref={promoMapSectionRef}
                   className={`self-start w-full ${
                     mapSectionGuideHighlight
-                      ? "rounded-[20px] transition-[box-shadow] duration-300 ease-out"
+                      ? "rounded-[20px] transition-[box-shadow] duration-500 ease-out"
                       : ""
                   }`}
                   style={
                     mapSectionGuideHighlight
                       ? {
-                          boxShadow:
-                            "0 0 0 2px #ffffff, 0 0 0 7px #0d9488, 0 0 22px rgba(45, 212, 191, 0.55)",
+                          boxShadow: [
+                            "0 0 0 2px #ffffff",
+                            "0 0 0 4px #5eead4",
+                            "0 0 0 8px rgba(45, 212, 191, 0.95)",
+                            "0 0 0 12px rgba(6, 182, 212, 0.55)",
+                            "0 0 28px 4px rgba(34, 211, 238, 0.9)",
+                            "0 0 52px 12px rgba(103, 232, 249, 0.65)",
+                            "0 0 88px 20px rgba(165, 243, 252, 0.45)",
+                          ].join(", "),
                         }
                       : undefined
                   }
