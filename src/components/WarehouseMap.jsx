@@ -178,10 +178,15 @@ const WarehouseMap = ({ warehouses = [] }) => {
         font-family: 'Montserrat', sans-serif !important;
         font-size: 14px !important;
         font-weight: 600 !important;
-        padding: 10px 14px !important;
+        padding: 10px 16px !important;
         box-shadow: 0 4px 16px rgba(39, 54, 85, 0.4) !important;
-        max-width: 250px !important;
+        max-width: 380px !important;
         text-align: center !important;
+        white-space: normal !important;
+      }
+      .warehouse-tooltip .leaflet-tooltip-content {
+        white-space: normal !important;
+        word-break: break-word !important;
       }
       .warehouse-tooltip:before {
         border-top-color: #273655 !important;

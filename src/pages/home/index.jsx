@@ -90,6 +90,27 @@ import sunukImg from "../../assets/cloud-tariffs/sunuk.png";
 import garazhImg from "../../assets/cloud-tariffs/garazh.png";
 import skladImg from "../../assets/cloud-tariffs/sklad.png";
 
+/** Неоновая обводка карты склада */
+const HOME_INDIVIDUAL_NEON_BOX_SHADOW = [
+  "0 0 0 2px #ffffff",
+  "0 0 0 4px #5eead4",
+  "0 0 0 8px rgba(45, 212, 191, 0.95)",
+  "0 0 0 12px rgba(6, 182, 212, 0.55)",
+  "0 0 28px 4px rgba(34, 211, 238, 0.9)",
+  "0 0 52px 12px rgba(103, 232, 249, 0.65)",
+  "0 0 88px 20px rgba(165, 243, 252, 0.45)",
+].join(", ");
+
+/** Тот же стиль неона, но компактнее — срок аренды и доставка/доп. услуги */
+const HOME_INDIVIDUAL_NEON_BOX_SHADOW_FORM = [
+  "0 0 0 2px #ffffff",
+  "0 0 0 3px #5eead4",
+  "0 0 0 6px rgba(45, 212, 191, 0.88)",
+  "0 0 0 9px rgba(6, 182, 212, 0.42)",
+  "0 0 16px 2px rgba(34, 211, 238, 0.72)",
+  "0 0 32px 8px rgba(103, 232, 249, 0.48)",
+  "0 0 48px 12px rgba(165, 243, 252, 0.28)",
+].join(", ");
 
 const HomePage = memo(() => {
   const navigate = useNavigate();
@@ -120,6 +141,8 @@ const HomePage = memo(() => {
   const [galleryBookingFocusToken, setGalleryBookingFocusToken] = useState(0);
   const [individualGuideHighlight, setIndividualGuideHighlight] = useState(null);
   const [individualMonths, setIndividualMonths] = useState("1");
+  /** После выбора срока в селекте — показываем неон на доставке и доп. услугах */
+  const [individualRentalPeriodAcknowledged, setIndividualRentalPeriodAcknowledged] = useState(false);
   const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => getTodayLocalDateString());
   const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => getTodayLocalDateString());
   const [includeMoving, setIncludeMoving] = useState(false);
@@ -2393,7 +2416,14 @@ const HomePage = memo(() => {
     setHighlightedBoxes([]);
   }, [selectedWarehouse?.id, megaSelectedMap, komfortSelectedMap]);
 
-  const mapSectionGuideHighlight = useMemo(
+  useEffect(() => {
+    if (!previewStorage || previewStorage.status !== "VACANT") {
+      setIndividualRentalPeriodAcknowledged(false);
+    }
+  }, [previewStorage?.id, previewStorage?.status]);
+
+  /** Подсветка карты (промо / гид) — же условие, что «шаг карты», чтобы не дублировать неон срока */
+  const mapStepEmphasisActive = useMemo(
     () =>
       (promoGuidedBooking &&
         activeStorageTab === "INDIVIDUAL" &&
@@ -2404,6 +2434,44 @@ const HomePage = memo(() => {
       activeStorageTab,
       promoBookingGuide.highlight,
       individualGuideHighlight,
+    ],
+  );
+
+  const individualRentalNeonActive = useMemo(
+    () =>
+      activeStorageTab === "INDIVIDUAL" &&
+      (individualGuideHighlight === "rental" ||
+        (previewStorage?.status === "VACANT" &&
+          !individualRentalPeriodAcknowledged &&
+          !mapStepEmphasisActive)),
+    [
+      activeStorageTab,
+      individualGuideHighlight,
+      previewStorage?.status,
+      individualRentalPeriodAcknowledged,
+      mapStepEmphasisActive,
+    ],
+  );
+
+  const individualServicesNeonActive = useMemo(
+    () =>
+      activeStorageTab === "INDIVIDUAL" &&
+      (individualGuideHighlight === "moving" ||
+        individualGuideHighlight === "packing" ||
+        (previewStorage?.status === "VACANT" &&
+          individualRentalPeriodAcknowledged &&
+          !mapStepEmphasisActive) ||
+        (promoGuidedBooking &&
+          (promoBookingGuide.highlight === "moving" ||
+            promoBookingGuide.highlight === "packing"))),
+    [
+      activeStorageTab,
+      individualGuideHighlight,
+      previewStorage?.status,
+      individualRentalPeriodAcknowledged,
+      mapStepEmphasisActive,
+      promoGuidedBooking,
+      promoBookingGuide.highlight,
     ],
   );
 
@@ -2498,23 +2566,13 @@ const HomePage = memo(() => {
                 <div
                   ref={promoMapSectionRef}
                   className={`self-start w-full ${
-                    mapSectionGuideHighlight
+                    mapStepEmphasisActive
                       ? "rounded-[20px] transition-[box-shadow] duration-500 ease-out"
                       : ""
                   }`}
                   style={
-                    mapSectionGuideHighlight
-                      ? {
-                          boxShadow: [
-                            "0 0 0 2px #ffffff",
-                            "0 0 0 4px #5eead4",
-                            "0 0 0 8px rgba(45, 212, 191, 0.95)",
-                            "0 0 0 12px rgba(6, 182, 212, 0.55)",
-                            "0 0 28px 4px rgba(34, 211, 238, 0.9)",
-                            "0 0 52px 12px rgba(103, 232, 249, 0.65)",
-                            "0 0 88px 20px rgba(165, 243, 252, 0.45)",
-                          ].join(", "),
-                        }
+                    mapStepEmphasisActive
+                      ? { boxShadow: HOME_INDIVIDUAL_NEON_BOX_SHADOW }
                       : undefined
                   }
                 >
@@ -2569,16 +2627,33 @@ const HomePage = memo(() => {
                   {/* Срок аренды */}
                   <div
                     ref={promoRentalSectionRef}
-                    className={
-                      activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "rental"
-                        ? "mb-6 rounded-2xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
-                        : "mb-6"
+                    className={`mb-6 rounded-2xl ${
+                      individualRentalNeonActive
+                        ? "transition-[box-shadow] duration-500 ease-out p-0.5"
+                        : ""
+                    }`}
+                    style={
+                      individualRentalNeonActive
+                        ? { boxShadow: HOME_INDIVIDUAL_NEON_BOX_SHADOW_FORM }
+                        : undefined
                     }
                   >
                     <RentalPeriodSelect
                       value={individualMonths}
                       onChange={(value) => {
                         setIndividualMonths(value);
+                        if (previewStorage?.status === "VACANT") {
+                          setIndividualRentalPeriodAcknowledged(true);
+                        }
+                      }}
+                      onOpenChange={(open) => {
+                        if (
+                          !open &&
+                          previewStorage?.status === "VACANT" &&
+                          !individualRentalPeriodAcknowledged
+                        ) {
+                          setIndividualRentalPeriodAcknowledged(true);
+                        }
                       }}
                       label="Срок аренды (месяцы):"
                       variant="individual-home"
@@ -2586,64 +2661,57 @@ const HomePage = memo(() => {
                     />
                   </div>
 
-                  {/* Перевозка вещей */}
+                  {/* Перевозка и доп. услуги — общая неоновая подсветка после выбора срока */}
                   <div
-                    ref={promoMovingSectionRef}
-                    className={
-                      (promoGuidedBooking &&
-                        activeStorageTab === "INDIVIDUAL" &&
-                        promoBookingGuide.highlight === "moving") ||
-                      (activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "moving")
-                        ? "rounded-3xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
+                    className={`space-y-4 ${
+                      individualServicesNeonActive
+                        ? "rounded-3xl transition-[box-shadow] duration-500 ease-out p-0.5"
                         : ""
+                    }`}
+                    style={
+                      individualServicesNeonActive
+                        ? { boxShadow: HOME_INDIVIDUAL_NEON_BOX_SHADOW_FORM }
+                        : undefined
                     }
                   >
-                    <MovingSection
-                      includeMoving={includeMoving}
-                      setIncludeMoving={setIncludeMoving}
-                      previewStorage={previewStorage}
-                      movingPickupDate={movingPickupDate}
-                      setMovingPickupDate={setMovingPickupDate}
-                      movingStreetFrom={movingStreetFrom}
-                      setMovingStreetFrom={setMovingStreetFrom}
-                      movingHouseFrom={movingHouseFrom}
-                      setMovingHouseFrom={setMovingHouseFrom}
-                      movingFloorFrom={movingFloorFrom}
-                      setMovingFloorFrom={setMovingFloorFrom}
-                      movingApartmentFrom={movingApartmentFrom}
-                      setMovingApartmentFrom={setMovingApartmentFrom}
-                      ensureServiceOptions={ensureServiceOptions}
-                    />
-                  </div>
+                    <div ref={promoMovingSectionRef}>
+                      <MovingSection
+                        includeMoving={includeMoving}
+                        setIncludeMoving={setIncludeMoving}
+                        previewStorage={previewStorage}
+                        movingPickupDate={movingPickupDate}
+                        setMovingPickupDate={setMovingPickupDate}
+                        movingStreetFrom={movingStreetFrom}
+                        setMovingStreetFrom={setMovingStreetFrom}
+                        movingHouseFrom={movingHouseFrom}
+                        setMovingHouseFrom={setMovingHouseFrom}
+                        movingFloorFrom={movingFloorFrom}
+                        setMovingFloorFrom={setMovingFloorFrom}
+                        movingApartmentFrom={movingApartmentFrom}
+                        setMovingApartmentFrom={setMovingApartmentFrom}
+                        ensureServiceOptions={ensureServiceOptions}
+                      />
+                    </div>
 
-                  <div
-                    ref={promoPackingSectionRef}
-                    className={
-                      (promoGuidedBooking &&
-                        activeStorageTab === "INDIVIDUAL" &&
-                        promoBookingGuide.highlight === "packing") ||
-                      (activeStorageTab === "INDIVIDUAL" && individualGuideHighlight === "packing")
-                        ? "rounded-3xl ring-4 ring-[#31876D] ring-offset-2 ring-offset-[#F7FAF9] transition-shadow -m-1 p-1"
-                        : ""
-                    }
-                  >
-                    <PackingServicesSection
-                      includePacking={includePacking}
-                      setIncludePacking={setIncludePacking}
-                      previewStorage={previewStorage}
-                      isServicesLoading={isServicesLoading}
-                      servicesError={servicesError}
-                      services={services}
-                      serviceOptions={serviceOptions}
-                      ensureServiceOptions={ensureServiceOptions}
-                      updateServiceRow={updateServiceRow}
-                      removeServiceRow={removeServiceRow}
-                      addServiceRow={addServiceRow}
-                      movingAddressTo={movingAddressTo}
-                      setMovingAddressTo={setMovingAddressTo}
-                      movingOrders={movingOrders}
-                      setMovingOrders={setMovingOrders}
-                    />
+                    <div ref={promoPackingSectionRef}>
+                      <PackingServicesSection
+                        includePacking={includePacking}
+                        setIncludePacking={setIncludePacking}
+                        previewStorage={previewStorage}
+                        isServicesLoading={isServicesLoading}
+                        servicesError={servicesError}
+                        services={services}
+                        serviceOptions={serviceOptions}
+                        ensureServiceOptions={ensureServiceOptions}
+                        updateServiceRow={updateServiceRow}
+                        removeServiceRow={removeServiceRow}
+                        addServiceRow={addServiceRow}
+                        movingAddressTo={movingAddressTo}
+                        setMovingAddressTo={setMovingAddressTo}
+                        movingOrders={movingOrders}
+                        setMovingOrders={setMovingOrders}
+                      />
+                    </div>
                   </div>
                   
                   {/* Итог */}
