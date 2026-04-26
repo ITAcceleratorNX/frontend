@@ -37,6 +37,7 @@ import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import CallbackRequestSection from "@/shared/components/CallbackRequestSection.jsx";
 import ClientSelector from "@/shared/components/ClientSelector.jsx";
 import PaymentPreviewModal from "@/shared/components/PaymentPreviewModal.jsx";
+import BoxVisualModal from "@/shared/components/BoxVisualModal.jsx";
 import PendingOrderModal from "@/pages/personal-account/ui/PendingOrderModal.jsx";
 import OrderDetailView from "@/pages/personal-account/ui/OrderDetailView.jsx";
 import { useApproveCancelOrder, useUnlockStorage } from "@/shared/lib/hooks/use-orders";
@@ -191,6 +192,8 @@ const HomePage = memo(() => {
   // Состояние для информации о бронировании занятого бокса
   const [bookingInfo, setBookingInfo] = useState(null);
   const [isLoadingBookingInfo, setIsLoadingBookingInfo] = useState(false);
+  const [isBoxVisualModalOpen, setIsBoxVisualModalOpen] = useState(false);
+  const [boxVisualStorage, setBoxVisualStorage] = useState(null);
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const [megaSelectedMap, setMegaSelectedMap] = useState(1);
   const [highlightedBoxes, setHighlightedBoxes] = useState([]);
@@ -2288,7 +2291,12 @@ const HomePage = memo(() => {
         setIsLoadingPendingOrder(false);
       }
     } else {
-      setPreviewStorage(storage);
+      if (storage?.status === "VACANT") {
+        setBoxVisualStorage(storage);
+        setIsBoxVisualModalOpen(true);
+      } else {
+        setPreviewStorage(storage);
+      }
     }
   }, [isAdminOrManager]);
 
@@ -3081,6 +3089,19 @@ const HomePage = memo(() => {
           }}
         />
       )}
+
+      <BoxVisualModal
+        open={isBoxVisualModalOpen && boxVisualStorage != null}
+        onOpenChange={(open) => {
+          setIsBoxVisualModalOpen(open);
+          if (!open) setBoxVisualStorage(null);
+        }}
+        storage={boxVisualStorage}
+        selectedWarehouse={selectedWarehouse}
+        onTakeBox={(s) => {
+          if (s) setPreviewStorage(s);
+        }}
+      />
 
       {/* Модалка предпросмотра платежей */}
       <PaymentPreviewModal
