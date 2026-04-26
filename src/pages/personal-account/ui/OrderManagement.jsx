@@ -22,6 +22,7 @@ import {useNavigate} from "react-router-dom";
 import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
 import { useAuth } from '../../../shared/context/AuthContext';
 import WarehouseData from './WarehouseData';
+import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { Search, Filter, ChevronRight, Plus, RotateCcw, ClipboardList, Users, CheckCircle2, Clock, Zap, Undo2, X, CreditCard, FileText, Package, ArrowLeft, ArrowRight } from 'lucide-react';
 
 // Функция для расчета месяцев аренды
@@ -126,6 +127,37 @@ const OrderManagement = () => {
   const deleteOrder = useDeleteOrder();
   const approveCancelOrder = useApproveCancelOrder();
   const unlockStorage = useUnlockStorage();
+
+  // Карта складов id → name. API /orders не всегда возвращает storage.warehouse.name,
+  // поэтому подгружаем список складов один раз и резолвим имена локально.
+  const [warehousesById, setWarehousesById] = useState({});
+
+  useEffect(() => {
+    if (!canFetchOrders) return undefined;
+    let cancelled = false;
+    warehouseApi.getAllWarehouses()
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : [];
+        const map = {};
+        list.forEach((wh) => {
+          if (wh?.id != null) map[wh.id] = wh.name || '';
+        });
+        setWarehousesById(map);
+      })
+      .catch(() => {
+        // молча — наименование просто не покажем, номер бокса всё ещё будет виден
+      });
+    return () => { cancelled = true; };
+  }, [canFetchOrders]);
+
+  const getOrderWarehouseName = (order) => {
+    return (
+      order?.storage?.warehouse?.name ||
+      warehousesById[order?.storage?.warehouse_id] ||
+      ''
+    );
+  };
 
   // Проверяем загрузку мутаций
   const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading || approveCancelOrder.isPending || unlockStorage.isPending;
@@ -568,7 +600,14 @@ const OrderManagement = () => {
 
                     {/* Средняя строка: склад, объём, срок */}
                     <div className="flex items-center gap-3 text-xs text-gray-500 mb-2.5">
-                      <span className="truncate max-w-[120px]">{order.storage?.name || 'Не указано'}</span>
+                      <span className="truncate max-w-[180px]">
+                        {(() => {
+                          const wh = getOrderWarehouseName(order);
+                          const box = order.storage?.name;
+                          if (wh && box) return `${wh} • ${box}`;
+                          return wh || box || 'Не указано';
+                        })()}
+                      </span>
                       <span className="text-gray-300">|</span>
                       <span>{order.total_volume} м³</span>
                       <span className="text-gray-300">|</span>
@@ -639,7 +678,21 @@ const OrderManagement = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-gray-600">
-                          {order.storage?.name || 'Не указано'}
+                          {(() => {
+                            const wh = getOrderWarehouseName(order);
+                            const box = order.storage?.name;
+                            if (!wh && !box) return 'Не указано';
+                            return (
+                              <div className="flex flex-col leading-tight">
+                                {wh && (
+                                  <span className="text-sm font-medium text-[#273655]">{wh}</span>
+                                )}
+                                {box && (
+                                  <span className="text-xs text-gray-500">Бокс {box}</span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs rounded-full">
