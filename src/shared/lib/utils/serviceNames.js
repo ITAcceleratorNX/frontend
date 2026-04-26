@@ -20,6 +20,9 @@ export const capitalizeFirst = (str) => {
 export const formatServiceDescription = (desc) => {
   if (!desc || typeof desc !== "string") return desc || "";
   let result = desc.replace(/\d+\s*[*×xX]\s*\d+\s*[*×xX]\s*\d+/g, "").trim();
+  // После удаления габаритов в описании коробок может остаться «размер» (как самостоятельное слово) — убираем его.
+  // \b в JS не работает для кириллицы, поэтому используем lookahead на отсутствие следующих русских букв.
+  result = result.replace(/\s*размер[а-яё]*(?![а-яё])\.?/gi, "").replace(/\s{2,}/g, " ").trim();
   // Замена для Заказанных услуг в личном кабинете менеджера
   result = result.replace(/Газель - забор вещей\s*(\(с клиента на склад\))?/gi, "Газель - Доставка (с клиента на склад)");
   return capitalizeFirst(result);
