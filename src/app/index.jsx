@@ -10,6 +10,7 @@ import '../shared/styles/toast.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
+import FloatingWhatsAppButton from "../shared/components/FloatingWhatsAppButton.jsx";
 import { useSSENotifications } from '../shared/lib/hooks/useSSENotifications';
 import {
   getUtmParams,
@@ -143,6 +144,7 @@ const App = memo(() => {
             <ResponseInterceptor />
             <SSEProvider />
             <Routing />
+            <FloatingWhatsAppButton />
             <NotificationContainer />
           </div>
         </BrowserRouter>
