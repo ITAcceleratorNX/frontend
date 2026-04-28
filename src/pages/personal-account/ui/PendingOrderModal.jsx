@@ -295,6 +295,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
 
   // Определяем, можно ли разбронировать бокс
   const canUnbook = !['ACTIVE', 'CANCELED', 'FINISHED'].includes(order?.status);
+  const canForceUnbookFinished = order?.status === 'FINISHED';
   // Определяем, можно ли расторгнуть контракт
   const canCancelContract = order?.status === 'ACTIVE' && order?.cancel_status === 'NO';
 
@@ -622,6 +623,19 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                 <Button
                   variant="destructive"
                   onClick={handleUnbookClick}
+                  disabled={isUnbooking || cancelOrderMutation.isPending}
+                  className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
+                >
+                  <div className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Разбронировать бокс
+                  </div>
+                </Button>
+              )}
+              {canForceUnbookFinished && (
+                <Button
+                  variant="destructive"
+                  onClick={handleForceUnbook}
                   disabled={isUnbooking || cancelOrderMutation.isPending}
                   className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
                 >
