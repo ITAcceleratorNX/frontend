@@ -2,7 +2,7 @@ import React from "react";
 import { ChevronRight, Gift } from "lucide-react";
 import heroVideo from "@/video/extraspace.mp4";
 
-export default function HeroSection({ onOpenPromoBooking }) {
+export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
     return (
         <div className="flex-1 relative overflow-hidden -mt-16 pt-16 min-h-[100vh] flex flex-col">
             <video
@@ -40,7 +40,7 @@ export default function HeroSection({ onOpenPromoBooking }) {
                     <div className="flex flex-col items-center mb-8 sm:mb-12">
                         <button
                             type="button"
-                            onClick={onOpenPromoBooking}
+                            onClick={onBookClick ?? onOpenPromoBooking}
                             className="flex items-center gap-2 bg-[#31876D] hover:bg-[#2a7260] text-white font-medium px-6 py-3 rounded-full text-sm sm:text-base transition-colors duration-300"
                         >
                             <span>Забронировать</span>
