@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronRight, Gift } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import heroVideo from "@/video/extraspace.mp4";
 
 export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
@@ -23,6 +23,8 @@ export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
                         <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 sm:mb-8">
                             и безопасно
                         </h2>
+                        {/* Боксы от 2 до 50 м² по специальной цене при аренде от 2 месяцев.
+                        Хранение за м² от 5 990 ₸
                         <div className="text-sm sm:text-base text-white leading-relaxed max-w-2xl">
                             <p className="mb-1">Боксы от 2 до 50 м² по специальной цене при аренде от 2 месяцев.</p>
                             <p className="flex flex-wrap items-center justify-center">
@@ -36,6 +38,7 @@ export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
                                 </button>
                             </p>
                         </div>
+                        */}
                     </div>
                     <div className="flex flex-col items-center mb-8 sm:mb-12">
                         <button
