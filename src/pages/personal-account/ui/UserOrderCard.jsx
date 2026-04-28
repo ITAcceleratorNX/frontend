@@ -407,6 +407,14 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
     downloadReceiptMutation.mutate(paymentId);
   };
 
+  const getPayablePayments = () =>
+    (order.order_payment || []).filter((payment) => {
+      if (payment.status === 'MANUAL') return true;
+      if (payment.status === 'UNPAID' && (order.status === 'PROCESSING' || order.status === 'ACTIVE'))
+        return true;
+      return false;
+    });
+
   // Компонент для рендеринга одного платежа
   const renderPayment = (payment) => (
     <div key={payment.id} className="flex items-center justify-between">
@@ -910,9 +918,15 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
                     setIsPaymentDisabledModalOpen(true);
                     return;
                   }
+                  const payable = getPayablePayments();
+                  if (payable.length === 1) {
+                    handlePay(payable[0]);
+                    return;
+                  }
                   onPayOrder(order);
                 }}
-                className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-3xl hover:bg-white/90 transition-colors"
+                disabled={createManualPaymentMutation.isLoading}
+                className="px-6 py-2.5 bg-white text-gray-700 text-sm font-bold rounded-3xl hover:bg-white/90 transition-colors disabled:opacity-60"
               >
                 Оплатить
               </button>
@@ -1050,7 +1064,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           onSuccess={() => {
             setIsEditModalOpen(false);
             window.location.reload();
-            navigate("/personal-account", { state: { activeSection: "payments" } });
+            navigate('/personal-account', { state: { activeSection: 'payments', orderId: order?.id } });
           }}
           onCancel={() => setIsEditModalOpen(false)}
       />
@@ -1099,7 +1113,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
             <Button
                 onClick={() => {
                   setIsDebtModalOpen(false);
-                  navigate('/personal-account', { state: { activeSection: 'payments' } });
+                  navigate('/personal-account', { state: { activeSection: 'payments', orderId: order?.id } });
                 }}
             >
               Перейти к оплате

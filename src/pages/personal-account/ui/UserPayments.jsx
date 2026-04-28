@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useUserPayments } from '../../../shared/lib/hooks/use-payments';
 import { showPaymentLoadError } from '../../../shared/lib/utils/notifications';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -21,7 +21,11 @@ const PAYMENT_FILTER_OPTIONS = [
   { value: 'archive', label: 'В архиве' },
 ];
 
-const UserPayments = ({ embeddedMobile = false }) => {
+const UserPayments = ({
+  embeddedMobile = false,
+  highlightOrderId = null,
+  onHighlightConsumed,
+}) => {
   const { user, refetchUser } = useAuth();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
@@ -78,6 +82,41 @@ const UserPayments = ({ embeddedMobile = false }) => {
         return payments;
     }
   }, [payments, activeFilter]);
+
+  // Показать нужный заказ: при активном фильтре «Активные»/«Архив» переключить на «Все»
+  useEffect(() => {
+    if (highlightOrderId == null || paymentsLoading || !payments.length) return;
+    const inAll = payments.some((o) => o.id === highlightOrderId);
+    if (!inAll) {
+      onHighlightConsumed?.();
+      return;
+    }
+    const inFiltered = filteredPayments.some((o) => o.id === highlightOrderId);
+    if (!inFiltered) setActiveFilter('all');
+  }, [highlightOrderId, payments, paymentsLoading, filteredPayments, onHighlightConsumed]);
+
+  // Прокрутка и снятие подсветки
+  useEffect(() => {
+    if (highlightOrderId == null || paymentsLoading) return;
+    const exists = filteredPayments.some((o) => o.id === highlightOrderId);
+    if (!exists) return;
+
+    const scrollTimer = window.setTimeout(() => {
+      document.getElementById(`payment-order-${highlightOrderId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 80);
+
+    const clearHighlight = window.setTimeout(() => {
+      onHighlightConsumed?.();
+    }, 4500);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+      window.clearTimeout(clearHighlight);
+    };
+  }, [highlightOrderId, paymentsLoading, filteredPayments, onHighlightConsumed]);
 
   // Статистика платежей
   const stats = useMemo(() => {
@@ -173,7 +212,12 @@ const UserPayments = ({ embeddedMobile = false }) => {
       ) : (
         <div className={embeddedMobile ? 'flex flex-col gap-3 min-[360px]:gap-4 min-w-0' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
           {filteredPayments.map((order) => (
-            <PaymentCard key={order.id} order={order} embeddedMobile={embeddedMobile} />
+            <PaymentCard
+              key={order.id}
+              order={order}
+              embeddedMobile={embeddedMobile}
+              isHighlighted={highlightOrderId != null && order.id === highlightOrderId}
+            />
           ))}
         </div>
       )}

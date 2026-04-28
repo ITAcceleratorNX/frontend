@@ -6,6 +6,7 @@ import mainWarehouseLayoutData from '../assets/Main_Individual_storage.json';
 import komfortLayoutData1 from '../assets/ZHK_Komfort_storage.json';
 import komfortLayoutData2 from '../assets/second_ZHK_Komfort_storage.json';
 import exitIcon from '../assets/exit.png';
+import { MEGA_TOWER_CEILING_M } from '../shared/components/MegaTowerVolumeLegend.jsx';
 
 const WarehouseSVGMap = React.forwardRef(({ 
   warehouse,
@@ -1220,19 +1221,50 @@ const WarehouseSVGMap = React.forwardRef(({
                   {box.name}
                 </text>
                 
-                {/* Информация при hover */}
+                {/* Информация при hover: Mega Tower — площадь и объём (× высота потолков) */}
                 {(hoveredId === box.name || isBoxSelected(box?.name)) && boxData && (
-                  <text
-                    x={centerX}
-                    y={centerY + 22}
-                    textAnchor="middle"
-                    fontSize="12"
-                    fontFamily="Montserrat, sans-serif"
-                    fill={textColor}
-                    style={{ pointerEvents: 'none', userSelect: 'none' }}
-                  >
-                    {boxData.available_volume || boxData.volume || ''} м²
-                  </text>
+                  isMegaWarehouse ? (
+                    <text
+                      x={centerX}
+                      y={centerY + 20}
+                      textAnchor="middle"
+                      fontSize="11"
+                      fontFamily="Montserrat, sans-serif"
+                      fill={textColor}
+                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                    >
+                      <tspan x={centerX} dy="0">
+                        {(() => {
+                          const raw = parseFloat(boxData.available_volume ?? boxData.volume);
+                          if (!Number.isFinite(raw)) return '';
+                          const m2 = Math.round(raw * 100) / 100;
+                          const s = Number.isInteger(m2) ? String(m2) : String(m2).replace('.', ',');
+                          return `${s} м²`;
+                        })()}
+                      </tspan>
+                      <tspan x={centerX} dy="13">
+                        {(() => {
+                          const raw = parseFloat(boxData.available_volume ?? boxData.volume);
+                          if (!Number.isFinite(raw)) return '';
+                          const m3 = Math.round(raw * MEGA_TOWER_CEILING_M * 100) / 100;
+                          const s = Number.isInteger(m3) ? String(m3) : String(m3).replace('.', ',');
+                          return `${s} м³`;
+                        })()}
+                      </tspan>
+                    </text>
+                  ) : (
+                    <text
+                      x={centerX}
+                      y={centerY + 22}
+                      textAnchor="middle"
+                      fontSize="12"
+                      fontFamily="Montserrat, sans-serif"
+                      fill={textColor}
+                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                    >
+                      {boxData.available_volume || boxData.volume || ''} м²
+                    </text>
+                  )
                 )}
               </g>
             );

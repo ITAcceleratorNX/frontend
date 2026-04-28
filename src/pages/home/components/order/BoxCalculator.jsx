@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, memo, useEffect } from "react";
 import { Search } from "lucide-react";
 import { getLayoutBoxNames } from "@/shared/lib/warehouseLayoutUtils";
+import { MEGA_TOWER_CEILING_M } from "@/shared/components/MegaTowerVolumeLegend.jsx";
 
 /** ±доля от запроса, не меньше RANGE_MIN_DELTA м² */
 const RANGE_FRACTION = 0.12;
@@ -46,6 +47,11 @@ function BoxCalculator({
       .filter((s) => layoutBoxNames.has((s.name || "").toLowerCase()));
   }, [storageBoxes, layoutBoxNames]);
 
+  const isMegaWarehouse = useMemo(
+    () => Boolean(selectedWarehouse?.name?.toLowerCase().includes("mega")),
+    [selectedWarehouse?.name]
+  );
+
   const findMatchingBoxes = useCallback(
     (desiredSize) => {
       const raw = String(desiredSize).trim().replace(",", ".");
@@ -80,18 +86,29 @@ function BoxCalculator({
 
       let summary;
       if (uniqueVol.length === 1) {
-        summary = `Найдено ${inRange.length} ${pluralBoxes(
-          inRange.length
-        )} размером ${formatM2(uniqueVol[0])} м² — выберите на схеме.`;
+        const m2s = formatM2(uniqueVol[0]);
+        summary = isMegaWarehouse
+          ? `Найдено ${inRange.length} ${pluralBoxes(inRange.length)} — ${m2s} м² ≈ ${formatM2(
+              uniqueVol[0] * MEGA_TOWER_CEILING_M
+            )} м³ (потолки ${MEGA_TOWER_CEILING_M} м). Выберите на схеме.`
+          : `Найдено ${inRange.length} ${pluralBoxes(
+              inRange.length
+            )} размером ${m2s} м² — выберите на схеме.`;
       } else {
-        summary = `Найдено ${inRange.length} ${pluralBoxes(
-          inRange.length
-        )} (${formatM2(uniqueVol[0])}–${formatM2(uniqueVol[uniqueVol.length - 1])} м²) — выберите на схеме.`;
+        const lo = formatM2(uniqueVol[0]);
+        const hi = formatM2(uniqueVol[uniqueVol.length - 1]);
+        summary = isMegaWarehouse
+          ? `Найдено ${inRange.length} ${pluralBoxes(inRange.length)} (${lo}–${hi} м², ≈ ${formatM2(
+              uniqueVol[0] * MEGA_TOWER_CEILING_M
+            )}–${formatM2(uniqueVol[uniqueVol.length - 1] * MEGA_TOWER_CEILING_M)} м³). Выберите на схеме.`
+          : `Найдено ${inRange.length} ${pluralBoxes(
+              inRange.length
+            )} (${lo}–${hi} м²) — выберите на схеме.`;
       }
 
       return { boxes: inRange, summary };
     },
-    [individualBoxes]
+    [individualBoxes, isMegaWarehouse]
   );
 
   useEffect(() => {
@@ -134,6 +151,11 @@ function BoxCalculator({
       <p className="text-white text-sm font-medium text-center">
         Введите нужный размер бокса
       </p>
+      {isMegaWarehouse && (
+        <p className="text-white/85 text-xs text-center leading-snug px-2 max-w-md mx-auto">
+          Объём в м³ = площадь (м²) × {MEGA_TOWER_CEILING_M} м — высота потолков.
+        </p>
+      )}
       <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-center">
         <div className="flex items-center gap-2 bg-white/15 backdrop-blur rounded-xl px-4 py-2.5 w-full sm:w-auto h-12 sm:h-12">
           <input

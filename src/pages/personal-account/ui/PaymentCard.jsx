@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { showSuccessToast } from '../../../shared/lib/toast';
@@ -43,8 +43,12 @@ const getMonthName = (month) => {
   return months[month - 1] || month;
 };
 
-const PaymentCard = ({ order, embeddedMobile = false }) => {
+const PaymentCard = ({ order, embeddedMobile = false, isHighlighted = false }) => {
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (isHighlighted) setIsPaymentsExpanded(true);
+  }, [isHighlighted]);
   const [isPaymentDisabledModalOpen, setIsPaymentDisabledModalOpen] = useState(false);
   const { data: paymentSettings } = usePaymentSettings();
   const isOnlinePaymentEnabled = paymentSettings?.online_payment_enabled;
@@ -143,7 +147,12 @@ const PaymentCard = ({ order, embeddedMobile = false }) => {
   );
 
   return (
-    <div className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'}`}>
+    <div
+      id={`payment-order-${order.id}`}
+      className={`${cardBackground} rounded-3xl text-white relative overflow-hidden shadow-lg min-w-0 scroll-mt-24 transition-[box-shadow] duration-300 ${embeddedMobile ? 'p-3 min-[360px]:p-4' : 'p-6'} ${
+        isHighlighted ? 'ring-4 ring-[#00A991] ring-offset-2 ring-offset-gray-50 z-[1]' : ''
+      }`}
+    >
       {/* Заголовок заказа */}
       <div className={`flex items-start justify-between gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
         <div className="flex-1 min-w-0 overflow-hidden">
