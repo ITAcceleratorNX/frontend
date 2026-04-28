@@ -39,6 +39,7 @@ const PricingRuleManagement = () => {
     area_to: '',
     rental_months_from: '0',
     rental_months_to: '',
+    payment_type: '',
     price_type: 'FIXED_PRICE',
     discount_percent: '',
     fixed_price: '',
@@ -115,6 +116,7 @@ const PricingRuleManagement = () => {
       area_to: rule.area_to != null ? String(rule.area_to) : '',
       rental_months_from: rule.rental_months_from != null ? String(rule.rental_months_from) : '0',
       rental_months_to: rule.rental_months_to != null ? String(rule.rental_months_to) : '',
+      payment_type: rule.payment_type || '',
       price_type: rule.price_type || 'FIXED_PRICE',
       discount_percent: rule.discount_percent != null ? String(rule.discount_percent) : '',
       fixed_price: rule.fixed_price != null ? String(rule.fixed_price) : '',
@@ -158,6 +160,7 @@ const PricingRuleManagement = () => {
         area_to: formData.area_to ? Number(formData.area_to) : null,
         rental_months_from: formData.rental_months_from ? Number(formData.rental_months_from) : 0,
         rental_months_to: formData.rental_months_to ? Number(formData.rental_months_to) : null,
+        payment_type: formData.payment_type || null,
         price_type: formData.price_type,
         discount_percent: formData.price_type === 'DISCOUNT' ? Number(formData.discount_percent) : null,
         fixed_price: formData.price_type === 'FIXED_PRICE' ? Number(formData.fixed_price) : null,
@@ -228,6 +231,12 @@ const PricingRuleManagement = () => {
       return <span className="text-orange-600 font-semibold">Скидка {rule.discount_percent}%</span>;
     }
     return <span className="text-green-600 font-semibold">{Number(rule.fixed_price).toLocaleString()} ₸/м²</span>;
+  };
+
+  const getPaymentTypeDisplay = (paymentType) => {
+    if (paymentType === 'FULL') return 'Полная оплата';
+    if (paymentType === 'MONTHLY') return 'Помесячно';
+    return 'Любой';
   };
 
   if (isLoading) {
@@ -301,6 +310,7 @@ const PricingRuleManagement = () => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">Склад / Ярус</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase hidden lg:table-cell">Площадь</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase hidden lg:table-cell">Срок</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase hidden lg:table-cell">Оплата</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Цена</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase hidden xl:table-cell">Период</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Статус</th>
@@ -330,6 +340,9 @@ const PricingRuleManagement = () => {
                     </td>
                     <td className="px-4 py-4 hidden lg:table-cell text-sm">
                       {Number(rule.rental_months_from) || 0} — {rule.rental_months_to ? `${rule.rental_months_to} мес.` : 'любой'}
+                    </td>
+                    <td className="px-4 py-4 hidden lg:table-cell text-sm">
+                      {getPaymentTypeDisplay(rule.payment_type)}
                     </td>
                     <td className="px-4 py-4">{getPriceDisplay(rule)}</td>
                     <td className="px-4 py-4 hidden xl:table-cell">
@@ -443,6 +456,20 @@ const PricingRuleManagement = () => {
                     placeholder="Без лимита" min="0"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]" />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#273655] mb-1">Тип оплаты</label>
+                <select
+                  value={formData.payment_type}
+                  onChange={(e) => setFormData({ ...formData, payment_type: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
+                >
+                  <option value="">Любой</option>
+                  <option value="FULL">Полная оплата</option>
+                  <option value="MONTHLY">Помесячно</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Если не выбирать тип, правило будет действовать для любого способа оплаты</p>
               </div>
 
               {/* Тип цены */}

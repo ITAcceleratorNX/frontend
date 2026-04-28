@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronDown, ChevronUp, Tag, Check, X, Gift } from 'lucide-react';
+import { ChevronDown, ChevronUp, Tag, Check, X } from 'lucide-react';
 import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 
 export default function IndividualStorageSummary({
@@ -24,6 +24,7 @@ export default function IndividualStorageSummary({
                                            serviceSummary,
                                            isPriceCalculating,
                                            monthsNumber,
+                                           fullPaymentDiscountInfo,
                                            guideMessage = null,
                                            onGuideClick,
                                            setShowOrderDetails,
@@ -182,33 +183,19 @@ export default function IndividualStorageSummary({
                         )}
                     </div>
 
-                    {/* Надпись акции в зависимости от срока аренды */}
-                    {monthsNumber !== undefined && monthsNumber !== null && monthsNumber > 0 && (
-                        <div className={`p-4 rounded-2xl ${
-                            monthsNumber < 2
-                                ? 'bg-gradient-to-r from-[#31876D]/5 to-[#31876D]/10 border border-[#31876D]/20'
-                                : 'bg-gradient-to-r from-[#31876D]/10 to-[#26B3AB]/10 border border-[#31876D]/30'
-                        }`}>
-                            <div className="flex items-start gap-3">
-                                <Gift className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                                    monthsNumber < 2 ? 'text-[#31876D]' : 'text-[#31876D]'
-                                }`} />
-                                <div className="flex-1">
-                                    {monthsNumber < 2 ? (
-                                        <p className="text-sm font-medium text-[#273655] leading-relaxed">
-                                            <span className="font-semibold text-[#31876D]">Забронируйте бокс от 2 месяцев</span> — и получите первые 2 месяца по <span className="font-bold text-[#31876D]">5 990 ₸/м²</span>
-                                        </p>
-                                    ) : (
-                                        <p className="text-sm font-medium text-[#273655] leading-relaxed">
-                                            <span className="font-semibold text-[#31876D]">Акция применена:</span> 2 первых месяца по <span className="font-bold text-[#31876D]">5 990 ₸/м²</span>
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                    {fullPaymentDiscountInfo && (
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                            <p className="text-sm font-medium leading-relaxed text-emerald-800">
+                                {fullPaymentDiscountInfo.discountPercent > 0
+                                    ? `При полной оплате действует скидка ${fullPaymentDiscountInfo.discountPercent}%`
+                                    : 'При полной оплате действует специальная цена'}
+                                {fullPaymentDiscountInfo.savingsAmount > 0
+                                    ? `, экономия ${Math.round(fullPaymentDiscountInfo.savingsAmount).toLocaleString()} ₸ за весь срок.`
+                                    : '.'}
+                            </p>
                         </div>
                     )}
 
-                    {/* Информация об акции */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
 
