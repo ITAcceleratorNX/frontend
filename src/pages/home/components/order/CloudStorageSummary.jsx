@@ -133,7 +133,7 @@ export default function CloudStorageSummary({
                             )}
                             {cloudPromoSuccess && (
                                 <p className="text-xs text-green-600 mt-1">
-                                    Промокод <strong>{cloudPromoCode}</strong> применен! Скидка {cloudPromoDiscountPercent}%
+                                    Промокод <strong>{cloudPromoCode}</strong> применён! Скидка {cloudPromoDiscountPercent}%
                                 </p>
                             )}
                         </>

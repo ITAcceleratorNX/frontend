@@ -92,8 +92,8 @@ export const LoginForm = () => {
           }
         }, 100);
       } else {
-        setServerError(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
-        showErrorToast(result.error || 'Не удалось войти. Пожалуйста, проверьте введенные данные.');
+        setServerError(result.error || 'Не удалось войти. Пожалуйста, проверьте введённые данные.');
+        showErrorToast(result.error || 'Не удалось войти. Пожалуйста, проверьте введённые данные.');
       }
     } catch (error) {
       console.error('LoginForm: Ошибка при входе:', error);
@@ -110,7 +110,7 @@ export const LoginForm = () => {
             if (data?.message) {
               errorMessage = data.message;
             } else {
-              errorMessage = 'Неверный логин или пароль. Пожалуйста, проверьте введенные данные.';
+              errorMessage = 'Неверный логин или пароль. Пожалуйста, проверьте введённые данные.';
             }
             break;
           case 400:
@@ -122,7 +122,7 @@ export const LoginForm = () => {
                 errorMessage = data.message;
               }
             } else {
-              errorMessage = 'Некорректные данные. Пожалуйста, проверьте введенную информацию.';
+              errorMessage = 'Некорректные данные. Пожалуйста, проверьте введённую информацию.';
             }
             break;
           case 429:

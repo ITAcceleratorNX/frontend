@@ -852,7 +852,7 @@ const HomePage = memo(() => {
         setPromoDiscountPercent(result.discount_percent);
         setPromoSuccess(true);
         setPromoError("");
-        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+        showSuccessToast(`Промокод применён! Скидка ${result.discount_percent}%`);
       } else {
         setPromoError(result.error || "Недействительный промокод");
         setPromoCode("");
@@ -909,7 +909,7 @@ const HomePage = memo(() => {
         setCloudPromoDiscountPercent(result.discount_percent);
       setCloudPromoSuccess(true);
       setCloudPromoError("");
-      showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+      showSuccessToast(`Промокод применён! Скидка ${result.discount_percent}%`);
       } else {
         setCloudPromoError(result.error || "Недействительный промокод");
         setCloudPromoCode("");

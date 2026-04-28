@@ -71,7 +71,7 @@ export default function OrderSummary({
                                         </div>
                                     ) : bookingInfo ? (
                                         <p className="text-sm text-[#6B6B6B]">
-                                            Бокс стоит о бронировании с{" "}
+                                            Бокс забронирован с{" "}
                                             <span className="font-medium text-[#273655]">
                         {new Date(bookingInfo.start_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </span>
@@ -90,7 +90,7 @@ export default function OrderSummary({
                             {isPriceCalculating ? (
                                 <div className="text-sm text-gray-600 flex items-center gap-2">
                                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#273655]"></div>
-                                    Расчет...
+                                    Расчёт...
                                 </div>
                             ) : (
                                 <>
