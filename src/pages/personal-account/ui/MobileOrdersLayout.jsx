@@ -19,7 +19,16 @@ const TABS = [
   { key: 'delivery', label: 'Доставка', icon: Truck },
 ];
 
-const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'orders', ordersInitialFilter }) => {
+const MobileOrdersLayout = memo(
+  ({
+    activeNav,
+    setActiveNav,
+    lastOrdersTab = 'orders',
+    ordersInitialFilter,
+    paymentsHighlightOrderId,
+    onPaymentsHighlightConsumed,
+    onBeforeNavigateToPayments,
+  }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
@@ -28,12 +37,25 @@ const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'ord
   const isOrdersSection = ['orders', 'payments', 'delivery'].includes(activeNav);
   const isPersonalOrNotifications = ['personal', 'notifications'].includes(activeNav);
 
+  const goToPaymentsWithOrder = (order) => {
+    onBeforeNavigateToPayments?.(order?.id);
+    setActiveNav('payments');
+  };
+
   const renderContent = () => {
     switch (activeNav) {
       case 'orders':
-        return <UserOrdersPage embeddedMobile initialFilter={ordersInitialFilter} onPayOrder={() => setActiveNav('payments')} />;
+        return (
+          <UserOrdersPage embeddedMobile initialFilter={ordersInitialFilter} onPayOrder={goToPaymentsWithOrder} />
+        );
       case 'payments':
-        return <UserPayments embeddedMobile />;
+        return (
+          <UserPayments
+            embeddedMobile
+            highlightOrderId={paymentsHighlightOrderId}
+            onHighlightConsumed={onPaymentsHighlightConsumed}
+          />
+        );
       case 'delivery':
         return <UserDelivery embeddedMobile />;
       case 'personal':
@@ -45,7 +67,9 @@ const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'ord
       case 'notifications':
         return <MobileNotificationsView />;
       default:
-        return <UserOrdersPage embeddedMobile initialFilter={ordersInitialFilter} onPayOrder={() => setActiveNav('payments')} />;
+        return (
+          <UserOrdersPage embeddedMobile initialFilter={ordersInitialFilter} onPayOrder={goToPaymentsWithOrder} />
+        );
     }
   };
 
@@ -128,7 +152,8 @@ const MobileOrdersLayout = memo(({ activeNav, setActiveNav, lastOrdersTab = 'ord
       </Dialog>
     </div>
   );
-});
+  }
+);
 
 MobileOrdersLayout.displayName = 'MobileOrdersLayout';
 

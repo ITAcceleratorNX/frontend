@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useMemo } from 'react';
+import React, { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { PAYMENTS_QUERY_KEYS } from '../../shared/lib/hooks/use-payments';
@@ -58,6 +58,16 @@ const PersonalAccountPage = memo(() => {
   // Начальный фильтр в «Мои заказы» при редиректе после создания заказа (категория «Договор»)
   const [ordersInitialFilter, setOrdersInitialFilter] = useState(null);
 
+  // Подсветка карточки в «Платежи» после «Оплатить» в заказе или ?section=payments&orderId=
+  const [paymentsHighlightOrderId, setPaymentsHighlightOrderId] = useState(null);
+  const clearPaymentsHighlight = useCallback(() => setPaymentsHighlightOrderId(null), []);
+  const onBeforeNavigateToPayments = useCallback((orderId) => {
+    if (orderId != null && orderId !== '') {
+      const n = Number(orderId);
+      if (Number.isFinite(n)) setPaymentsHighlightOrderId(n);
+    }
+  }, []);
+
   // Начальный режим в разделе «Заказы» для MANAGER/ADMIN (requests | payments | moving)
   const [ordersManagementInitialMode, setOrdersManagementInitialMode] = useState('requests');
 
@@ -88,6 +98,11 @@ const PersonalAccountPage = memo(() => {
       // При переходе в «Платежи» (например после подписания) обновляем список платежей
       if (section === 'payments') {
         queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
+        const oid = location.state.orderId;
+        if (oid != null && oid !== '') {
+          const n = Number(oid);
+          if (Number.isFinite(n)) setPaymentsHighlightOrderId(n);
+        }
       }
       // Очищаем state в URL после применения (откладываем, чтобы setState успел отрендериться)
       const path = location.pathname;
@@ -105,6 +120,11 @@ const PersonalAccountPage = memo(() => {
       // При переходе в «Платежи» по ссылке обновляем список платежей
       if (sectionParam === 'payments') {
         queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.USER_PAYMENTS] });
+        const oid = searchParams.get('orderId');
+        if (oid != null && oid !== '') {
+          const n = Number(oid);
+          if (Number.isFinite(n)) setPaymentsHighlightOrderId(n);
+        }
       }
       const nextSearch = new URLSearchParams(searchParams);
       nextSearch.delete('section');
@@ -205,6 +225,9 @@ const PersonalAccountPage = memo(() => {
         setActiveNav={handleMobileNav}
         lastOrdersTab={lastOrdersTab}
         ordersInitialFilter={ordersInitialFilter}
+        paymentsHighlightOrderId={paymentsHighlightOrderId}
+        onPaymentsHighlightConsumed={clearPaymentsHighlight}
+        onBeforeNavigateToPayments={onBeforeNavigateToPayments}
       />
     );
   }
@@ -236,7 +259,12 @@ const PersonalAccountPage = memo(() => {
           )}
           {activeNav === 'courierrequests' && <CourierRequest />}
           {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
-          {activeNav === 'payments' && <UserPayments />}
+          {activeNav === 'payments' && (
+            <UserPayments
+              highlightOrderId={paymentsHighlightOrderId}
+              onHighlightConsumed={clearPaymentsHighlight}
+            />
+          )}
           {activeNav === 'delivery' && <UserDelivery />}
           {activeNav === 'itemsearch' && <ItemSearch />}
           {activeNav === 'statistics' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <Statistics />}
@@ -245,7 +273,7 @@ const PersonalAccountPage = memo(() => {
       </div>
     </div>
   );
-  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter, ordersManagementInitialMode]);
+  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter, ordersManagementInitialMode, paymentsHighlightOrderId]);
 
   return pageContent;
 });

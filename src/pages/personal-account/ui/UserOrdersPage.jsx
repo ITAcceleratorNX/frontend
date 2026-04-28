@@ -139,7 +139,7 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) =
     if (onPayOrder) {
       onPayOrder(order);
     } else {
-      navigate('/personal-account', { state: { activeSection: 'payments' } });
+      navigate('/personal-account', { state: { activeSection: 'payments', orderId: order?.id } });
     }
   };
 

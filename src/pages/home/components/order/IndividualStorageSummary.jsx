@@ -147,35 +147,38 @@ export default function IndividualStorageSummary({
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {/* Главная сумма */}
+                    {/* Стоимость в месяц и размер бокса (без общей суммы за весь срок) */}
                     <div>
                         <div className="text-lg font-bold text-[#273655] flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span className="shrink-0">Общая стоимость:</span>
-                            {promoSuccess && promoDiscount > 0 && (
-                                <span className="text-sm text-gray-400 line-through shrink-0">
-                                    {costSummary.combinedTotal?.toLocaleString() ?? '—'} ₸
-                                </span>
+                            <span className="shrink-0">Стоимость в месяц:</span>
+                            {monthsNumber != null &&
+                                monthsNumber > 0 &&
+                                finalIndividualTotal != null &&
+                                promoSuccess &&
+                                promoDiscount > 0 && (
+                                    <span className="text-sm text-gray-400 line-through shrink-0">
+                                        {Math.round((costSummary.combinedTotal || 0) / monthsNumber).toLocaleString()} ₸
+                                    </span>
+                                )}
+                            {monthsNumber != null && monthsNumber > 0 && finalIndividualTotal != null ? (
+                                <>
+                                    <span className="inline-flex items-center gap-1 shrink-0">
+                                        <span className="text-2xl tabular-nums">
+                                            {Math.round(finalIndividualTotal / monthsNumber).toLocaleString()}
+                                        </span>
+                                        <span className="text-2xl leading-none">₸</span>
+                                    </span>
+                                    <span className="text-sm font-normal text-gray-600 shrink-0">
+                                        ({volume} м²)
+                                    </span>
+                                </>
+                            ) : (
+                                <span className="text-sm font-normal text-gray-500">—</span>
                             )}
-                            <span className="inline-flex items-center gap-1 shrink-0">
-                                <span className="text-2xl tabular-nums">{finalIndividualTotal?.toLocaleString() ?? '—'}</span>
-                                <span className="text-2xl leading-none">₸</span>
-                            </span>
-                            <span className="text-sm font-normal text-gray-600 shrink-0">
-                                ({volume} м²)
-                            </span>
                         </div>
 
-                        {/* Средняя стоимость в месяц */}
-                        {monthsNumber != null && monthsNumber > 0 && finalIndividualTotal != null && (
-                            <div className="text-sm font-medium text-[#273655] mt-1">
-                                В среднем в месяц: {Math.round(finalIndividualTotal / monthsNumber).toLocaleString()} ₸
-                            </div>
-                        )}
-
                         {promoSuccess && (
-                            <div className="text-xs text-gray-500 mt-1">
-                                (скидка {promoDiscountPercent}%)
-                            </div>
+                            <div className="text-xs text-gray-500 mt-1">(скидка {promoDiscountPercent}%)</div>
                         )}
                     </div>
 
