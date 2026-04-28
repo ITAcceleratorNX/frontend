@@ -1,8 +1,16 @@
 import React, { useState, memo, useMemo, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Box, Moon, Camera, Wifi, Maximize, Thermometer, User
+  Box,
+  Moon,
+  Camera,
+  Wifi,
+  Maximize,
+  Thermometer,
+  User,
+  ArrowLeft,
 } from "lucide-react";
 
 
@@ -113,6 +121,51 @@ const HOME_INDIVIDUAL_NEON_BOX_SHADOW_FORM = [
   "0 0 48px 12px rgba(165, 243, 252, 0.28)",
 ].join(", ");
 
+/** Секция «Хранение в городе»: тип → описание → бронирование */
+const CITY_STORAGE_PHASE = Object.freeze({
+  PICK: "pick",
+  ABOUT: "about",
+  BOOKING: "booking",
+});
+
+const CITY_STORAGE_SHORT_LABEL = {
+  INDIVIDUAL: "Индивидуальное",
+  LOCKERS: "Камера",
+  CLOUD: "Облако",
+};
+
+const STORAGE_ABOUT_COPY = {
+  INDIVIDUAL: {
+    title: "Индивидуальное хранение",
+    teaser:
+      "Отдельный бокс только под ваши вещи - помесячная оплата и доступ к своему хранению.",
+    bullets: [
+      "Арендуйте отдельный бокс только под свои вещи.",
+      "Удобный вариант для тех, кому нужно личное пространство с помесячной оплатой и доступом к своему хранению.",
+    ],
+  },
+  LOCKERS: {
+    title: "Камера хранения",
+    teaser:
+      "Чемодан, сумки и небольшие вещи на короткий срок - для поездок, переездов и на несколько дней до двух недель.",
+    bullets: [
+      "Оставьте чемодан, сумки или другие небольшие вещи на короткий срок.",
+      "Идеально для поездок, переездов и временного хранения - от нескольких дней до двух недель.",
+    ],
+  },
+  CLOUD: {
+    title: "Облачное хранение",
+    teaser:
+      "Без аренды отдельного бокса - платите только за нужный объём хранения помесячно.",
+    bullets: [
+      "Сдайте вещи на хранение без аренды отдельного бокса.",
+      "Подходит для коробок, сезонных вещей и имущества разного объёма - вы оплачиваете только нужный вам объём хранения помесячно.",
+    ],
+  },
+};
+
+const CITY_STORAGE_EASE = [0.22, 1, 0.36, 1];
+
 const HomePage = memo(() => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -131,7 +184,10 @@ const HomePage = memo(() => {
 
   const [apiWarehouses, setApiWarehouses] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
-  const [activeStorageTab, setActiveStorageTab] = useState("INDIVIDUAL");
+  /** INDIVIDUAL | LOCKERS | CLOUD — после выбора типа на главной */
+  const [activeStorageTab, setActiveStorageTab] = useState(null);
+  /** pick: три карточки → about: описание и «Выбрать» → booking: карта и формы */
+  const [cityStoragePhase, setCityStoragePhase] = useState(CITY_STORAGE_PHASE.PICK);
   const tabsSectionRef = useRef(null);
   const promoMapSectionRef = useRef(null);
   const promoRentalSectionRef = useRef(null);
@@ -935,6 +991,7 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!activeStorageTab) return;
     const storageType =
       activeStorageTab === "CLOUD"
         ? "CLOUD"
@@ -946,7 +1003,7 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (activeStorageTab === "LOCKERS") return;
+    if (!activeStorageTab || activeStorageTab === "LOCKERS") return;
     const duration =
       activeStorageTab === "CLOUD" ? cloudMonthsNumber : monthsNumber;
     if (duration && duration > 0) {
@@ -1833,6 +1890,7 @@ const HomePage = memo(() => {
   /** Скролл из hero-секции к карте склада: переключаем на «Индивидуальное», ждём рендер и скроллим. */
   const scrollToWarehouseMap = useCallback(() => {
     setActiveStorageTab("INDIVIDUAL");
+    setCityStoragePhase(CITY_STORAGE_PHASE.BOOKING);
     setTimeout(() => {
       const target = promoMapSectionRef.current ?? tabsSectionRef.current;
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1844,6 +1902,7 @@ const HomePage = memo(() => {
     setPromoGuidedBooking(true);
     setIndividualMonths("2");
     setActiveStorageTab("INDIVIDUAL");
+    setCityStoragePhase(CITY_STORAGE_PHASE.BOOKING);
     setTimeout(() => {
       tabsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
@@ -2393,6 +2452,7 @@ const HomePage = memo(() => {
         setSelectedWarehouse(wh);
       }
       setActiveStorageTab("INDIVIDUAL");
+      setCityStoragePhase(CITY_STORAGE_PHASE.BOOKING);
       setGalleryBookingFocusToken((t) => t + 1);
     },
     [dropdownItems]
@@ -2533,52 +2593,230 @@ const HomePage = memo(() => {
           <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-bold mb-6">
             хранение в городе
           </h2>
-          
-          {/* Описания на одном уровне */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-start mb-8">
-            <p className="text-[#5C625F] text-base sm:text-lg">
-              Современное хранение в черте города — просто, безопасно и гибко.
-            </p>
-            <p className="text-[#5C625F] text-sm sm:text-base">
-              Настройте срок аренды, добавьте услуги перевозки или упаковки и управляйте хранением онлайн.
-            </p>
-          </div>
-          
-          {/* Отдельные кнопки табов */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <button
-              onClick={() => setActiveStorageTab("INDIVIDUAL")}
-              className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
-                activeStorageTab === "INDIVIDUAL"
-                  ? "bg-[#31876D] text-white"
-                  : "bg-[#DFDFDF] text-gray-600"
-              }`}
-            >
-              Индивидуальное хранение
-            </button>
-            <button
-              onClick={() => setActiveStorageTab("LOCKERS")}
-              className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
-                activeStorageTab === "LOCKERS"
-                  ? "bg-[#31876D] text-white"
-                  : "bg-[#DFDFDF] text-gray-600"
-              }`}
-            >
-              Камеры хранения
-            </button>
-            <button
-              onClick={() => setActiveStorageTab("CLOUD")}
-              className={`px-6 py-3 rounded-xl text-base font-semibold transition-all ${
-                activeStorageTab === "CLOUD"
-                  ? "bg-[#31876D] text-white"
-                  : "bg-[#DFDFDF] text-gray-600"
-              }`}
-            >
-              Облачное хранение
-            </button>
-          </div>
-          
-          <Tabs value={activeStorageTab} onValueChange={setActiveStorageTab} className="w-full">
+
+          <AnimatePresence mode="wait">
+            {/* Описание стартового экрана */}
+            {cityStoragePhase === CITY_STORAGE_PHASE.PICK && (
+              <motion.div
+                key="city-storage-pick"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: CITY_STORAGE_EASE }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 items-start mb-8">
+                  <motion.p
+                    className="text-[#5C625F] text-base sm:text-lg"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05, duration: 0.4, ease: CITY_STORAGE_EASE }}
+                  >
+                    Современное хранение в черте города — просто, безопасно и гибко.
+                  </motion.p>
+                  <motion.p
+                    className="text-[#5C625F] text-sm sm:text-base"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12, duration: 0.4, ease: CITY_STORAGE_EASE }}
+                  >
+                    Сначала выберите тип хранения — затем откроются карта и форма бронирования.
+                  </motion.p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-10">
+                  {["INDIVIDUAL", "LOCKERS", "CLOUD"].map((key, index) => (
+                    <motion.button
+                      key={key}
+                      type="button"
+                      layout
+                      initial={{ opacity: 0, y: 28, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{
+                        delay: 0.08 + index * 0.09,
+                        duration: 0.45,
+                        ease: CITY_STORAGE_EASE,
+                      }}
+                      whileHover={{ y: -4, transition: { duration: 0.22 } }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setActiveStorageTab(key);
+                        setCityStoragePhase(CITY_STORAGE_PHASE.ABOUT);
+                      }}
+                      className="group rounded-2xl border-2 border-[#E8EBE9] bg-white p-6 text-left shadow-sm transition-colors duration-300 hover:border-[#31876D] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#31876D] focus-visible:ring-offset-2"
+                    >
+                      <span className="block font-soyuz-grotesk text-lg sm:text-xl font-bold text-[#202422] mb-3">
+                        {STORAGE_ABOUT_COPY[key].title}
+                      </span>
+                      <span className="text-sm text-[#5C625F] leading-relaxed block">
+                        {STORAGE_ABOUT_COPY[key].teaser}
+                      </span>
+                      <span className="mt-4 inline-flex items-center text-sm font-semibold text-[#31876D] group-hover:underline">
+                        Подробнее →
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Экран описания + «Выбрать»: кнопки слева, текст справа */}
+            {cityStoragePhase === CITY_STORAGE_PHASE.ABOUT && activeStorageTab && (
+              <motion.div
+                key="city-storage-about"
+                initial={{ opacity: 0, x: 28 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={{ duration: 0.42, ease: CITY_STORAGE_EASE }}
+                className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8"
+              >
+                <motion.div
+                  className="flex flex-col gap-3 lg:col-span-4 lg:max-w-sm lg:pr-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.45, delay: 0.06, ease: CITY_STORAGE_EASE }}
+                >
+                  <motion.button
+                    type="button"
+                    onClick={() => {
+                      setCityStoragePhase(CITY_STORAGE_PHASE.PICK);
+                      setActiveStorageTab(null);
+                    }}
+                    className="mb-1 self-start text-sm font-medium text-[#31876D] underline underline-offset-2 hover:text-[#276b57]"
+                    whileHover={{ x: -2 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  >
+                    ← Все типы
+                  </motion.button>
+                  {["INDIVIDUAL", "LOCKERS", "CLOUD"].map((key, index) => {
+                    const active = activeStorageTab === key;
+                    return (
+                      <motion.button
+                        key={key}
+                        type="button"
+                        layout
+                        initial={{ opacity: 0, x: -16 }}
+                        animate={{
+                          opacity: 1,
+                          x: 0,
+                          scale: active ? 1.03 : 1,
+                        }}
+                        transition={{
+                          delay: 0.05 + index * 0.06,
+                          duration: 0.38,
+                          ease: CITY_STORAGE_EASE,
+                          layout: { duration: 0.35 },
+                        }}
+                        whileHover={{ scale: active ? 1.04 : 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setActiveStorageTab(key)}
+                        className={`rounded-xl px-4 py-3 text-left text-sm font-semibold sm:text-base ${
+                          active
+                            ? "bg-[#31876D] text-white shadow-lg ring-2 ring-[#31876D]/30 sm:scale-[1.04]"
+                            : "bg-[#EFEFEF] text-gray-700 hover:bg-[#E4E4E4]"
+                        }`}
+                      >
+                        {STORAGE_ABOUT_COPY[key].title}
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+
+                <motion.div
+                  className="flex min-h-[260px] flex-col justify-between rounded-3xl bg-[#F7FAF9] p-6 shadow-inner lg:col-span-8 lg:p-8"
+                  initial={{ opacity: 0, x: 32 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.45, delay: 0.1, ease: CITY_STORAGE_EASE }}
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeStorageTab}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.28, ease: CITY_STORAGE_EASE }}
+                    >
+                      <h3 className="font-soyuz-grotesk mb-4 text-2xl font-bold text-[#202422] sm:text-3xl">
+                        {STORAGE_ABOUT_COPY[activeStorageTab].title}
+                      </h3>
+                      <ul className="list-inside list-disc space-y-3 text-[#5C625F] marker:text-[#31876D]">
+                        {STORAGE_ABOUT_COPY[activeStorageTab].bullets.map((line, idx) => (
+                          <motion.li
+                            key={`${activeStorageTab}-${idx}`}
+                            className="pl-1 leading-relaxed"
+                            initial={{ opacity: 0, x: 8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              delay: 0.06 + idx * 0.06,
+                              duration: 0.35,
+                              ease: CITY_STORAGE_EASE,
+                            }}
+                          >
+                            {line}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  </AnimatePresence>
+                  <motion.button
+                    type="button"
+                    onClick={() => setCityStoragePhase(CITY_STORAGE_PHASE.BOOKING)}
+                    className="mt-8 w-full rounded-2xl bg-[#31876D] px-8 py-3.5 text-center text-base font-semibold text-white shadow-md sm:w-auto sm:self-start"
+                    whileHover={{ scale: 1.02, boxShadow: "0 12px 28px rgba(49, 135, 109, 0.35)" }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                  >
+                    Выбрать
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            )}
+
+          {/* Карта и формы — только после «Выбрать» */}
+          {cityStoragePhase === CITY_STORAGE_PHASE.BOOKING && activeStorageTab && (
+              <motion.div
+                key="city-storage-booking"
+                initial={{ opacity: 0, y: 36 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 24 }}
+                transition={{ duration: 0.48, ease: CITY_STORAGE_EASE }}
+                className="w-full"
+              >
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <motion.button
+                  type="button"
+                  onClick={() => setCityStoragePhase(CITY_STORAGE_PHASE.ABOUT)}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-[#31876D] hover:text-[#276b57]"
+                  whileHover={{ x: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                  Назад к описанию
+                </motion.button>
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  {["INDIVIDUAL", "LOCKERS", "CLOUD"].map((key) => (
+                    <motion.button
+                      key={key}
+                      type="button"
+                      layout
+                      onClick={() => setActiveStorageTab(key)}
+                      className={`rounded-full px-4 py-2 text-xs font-semibold sm:text-sm ${
+                        activeStorageTab === key
+                          ? "bg-[#31876D] text-white shadow-md"
+                          : "bg-[#DFDFDF] text-gray-600 hover:bg-[#d0d0d0]"
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                    >
+                      {CITY_STORAGE_SHORT_LABEL[key]}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              <Tabs value={activeStorageTab} onValueChange={setActiveStorageTab} className="w-full">
 
             <TabsContent value="INDIVIDUAL" className="mt-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
@@ -3027,6 +3265,9 @@ const HomePage = memo(() => {
               />
             </TabsContent>
           </Tabs>
+              </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       </section>
 
