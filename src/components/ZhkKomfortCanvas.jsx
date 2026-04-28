@@ -1,4 +1,5 @@
 import React, { useEffect, useState, memo } from "react";
+import { storageMatchesLayoutSlot } from "@/shared/lib/storageLayoutSlot";
 import { Stage, Layer, Rect, Text, Image, Line } from "react-konva";
 import firstBackgroundImg from "../assets/zhkomfort_map.jpeg";
 import secondBackgroundImg from "../assets/second_zhkomfort_map.jpeg";
@@ -88,7 +89,7 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
             return 'OCCUPIED';
         }
         const box = storageBoxes.find(storage =>
-            storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
+            storage.storage_type === 'INDIVIDUAL' && storageMatchesLayoutSlot(storage, boxName)
         );
         const status = box ? box.status : 'OCCUPIED';
         if (import.meta.env.DEV && (status === 'OCCUPIED' || status === 'PENDING')) {
@@ -105,13 +106,13 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
     // Получение данных бокса
     const getBoxData = (boxName) => {
         return storageBoxes.find(storage =>
-            storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
+            storage.storage_type === 'INDIVIDUAL' && storageMatchesLayoutSlot(storage, boxName)
         );
     };
 
     const isBoxSelected = (boxName) => {
         if (!selectedStorage) return false;
-        return selectedStorage.name.toLowerCase() === boxName.toLowerCase();
+        return storageMatchesLayoutSlot(selectedStorage, boxName);
     };
 
     const isBoxOccupied = (status) => {
@@ -288,7 +289,7 @@ const ZhkKomfortCanvas = memo(({ storageBoxes, onBoxSelect, selectedStorage, use
 
                     {!isEmptyBox && (
                       <Text
-                        text={box.name}
+                        text={boxData?.name ?? box.name}
                         x={centerX}
                         y={isOccupied ? centerY + 20 : centerY}
                         fontSize={14}

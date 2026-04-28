@@ -6,8 +6,8 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
 import Sidebar from './Sidebar';
-import WarehouseCanvasViewer from '../../../shared/components/WarehouseCanvasViewer';
 import WarehouseSVGMap from '../../../components/WarehouseSVGMap';
+import WarehouseSchemePanel from '../../home/components/order/WarehouseSchemePanel.jsx';
 import {
   Select,
   SelectTrigger,
@@ -91,7 +91,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const [warehouseTab, setWarehouseTab] = useState('warehouse'); // 'warehouse' | 'pricing'
   const [isCloud, setIsCloud] = useState(false);
   const [servicePrices, setServicePrices] = useState({});
-  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [individualMonths, setIndividualMonths] = useState('1');
   const [individualBookingStartDate, setIndividualBookingStartDate] = useState(() => getTodayLocalDateString());
@@ -155,6 +154,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
   const [megaSelectedMap, setMegaSelectedMap] = useState(1);
   const [komfortSelectedMap, setKomfortSelectedMap] = useState(1);
   const mapRef = useRef(null);
+  const [highlightedBoxes, setHighlightedBoxes] = useState([]);
 
   // Массовое обновление цен боксов (по фильтрам)
   const [bulkPriceTier, setBulkPriceTier] = useState('');
@@ -190,17 +190,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Блокировка скролла при открытом модальном окне
-  useEffect(() => {
-    if (isMapModalOpen) {
-      const previousOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = previousOverflow;
-      };
-    }
-  }, [isMapModalOpen]);
 
   // Карточка "Свои габариты" - статичная
   const customTariff = useMemo(() => ({
@@ -1301,6 +1290,75 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     </div>
   );
 
+  const handleBoxSelectForScheme = useCallback(
+    async (storage) => {
+      setHighlightedBoxes([]);
+      if (
+        (storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') &&
+        isAdminOrManager
+      ) {
+        setIsLoadingPendingOrder(true);
+        try {
+          const order = await ordersApi.getPendingOrderByStorageId(storage.id);
+          setPendingOrder(order);
+          setIsPendingOrderModalOpen(true);
+        } catch (error) {
+          if (error.response?.status === 404) {
+            setPendingOrder(null);
+            setIsPendingOrderModalOpen(true);
+          } else {
+            console.error('Ошибка при загрузке заказа:', error);
+          }
+        } finally {
+          setPreviewStorage(storage);
+          setIsLoadingPendingOrder(false);
+        }
+      } else {
+        setPreviewStorage(storage);
+      }
+    },
+    [isAdminOrManager]
+  );
+
+  const handleRenameStorageFromAdminScheme = useCallback(
+    async (storageId, nextName) => {
+      const trimmed = String(nextName || '').trim();
+      if (!trimmed) {
+        showErrorToast('Ошибка', {
+          duration: 2200,
+          description: 'Введите непустое имя бокса.',
+        });
+        return;
+      }
+      try {
+        await warehouseApi.updateStorage(storageId, { name: trimmed });
+        showSuccessToast('Сохранено', {
+          duration: 2000,
+          description: 'Имя бокса обновлено.',
+        });
+        const updatedWarehouse = await warehouseApi.getWarehouseById(warehouseId);
+        setWarehouse(updatedWarehouse);
+        setSelectedWarehouse(updatedWarehouse);
+        const st = updatedWarehouse.storage?.find((s) => s.id === storageId);
+        if (st) setPreviewStorage(st);
+        const data = await warehouseApi.getAllWarehouses();
+        setAllWarehouses(Array.isArray(data) ? data : []);
+        await refetch();
+      } catch (err) {
+        console.error('Ошибка при переименовании бокса:', err);
+        showErrorToast('Не удалось сохранить', {
+          duration: 3200,
+          description:
+            err.response?.data?.message ||
+            err.response?.data?.error ||
+            err.message,
+        });
+        throw err;
+      }
+    },
+    [warehouseId, refetch]
+  );
+
   // Функция для рендеринга схемы склада (как на главной странице)
   const renderWarehouseScheme = ({ isFullscreen = false } = {}) => {
     if (!selectedWarehouse) {
@@ -1340,31 +1398,9 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               ref={isFullscreen ? mapRef : null}
               warehouse={selectedWarehouse}
               storageBoxes={storageBoxes}
-              onBoxSelect={async (storage) => {
-                if ((storage?.status === 'PENDING' || storage?.status === 'OCCUPIED') && isAdminOrManager) {
-                  setIsLoadingPendingOrder(true);
-                  try {
-                    const order = await ordersApi.getPendingOrderByStorageId(storage.id);
-                    setPendingOrder(order);
-                    setIsPendingOrderModalOpen(true);
-                    setIsMapModalOpen(false);
-                  } catch (error) {
-                    if (error.response?.status === 404) {
-                      setPendingOrder(null);
-                      setIsPendingOrderModalOpen(true);
-                      setIsMapModalOpen(false);
-                    } else {
-                      console.error('Ошибка при загрузке заказа:', error);
-                    }
-                  } finally {
-                    setPreviewStorage(storage);
-                    setIsLoadingPendingOrder(false);
-                  }
-                } else {
-                  setPreviewStorage(storage);
-                }
-              }}
+              onBoxSelect={handleBoxSelectForScheme}
               selectedStorage={previewStorage}
+              highlightedBoxes={highlightedBoxes}
               selectedMap={
                 selectedWarehouse?.name?.toLowerCase().includes('mega')
                   ? megaSelectedMap
@@ -2070,6 +2106,37 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                   </div>
                 )}
               </div>
+
+              {!embedded && !isCloud && isAdminOrManager && warehouse && selectedWarehouse && (
+                <div className="lg:col-span-3 w-full space-y-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Схема склада и боксы</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Кликните по ячейке на схеме; для переименования измените поле и нажмите «Сохранить».
+                    </p>
+                  </div>
+                  <WarehouseSchemePanel
+                    hideWarehouseDropdown
+                    dropdownItems={allWarehouses.filter((w) => w && w.type !== 'CLOUD')}
+                    selectedWarehouse={selectedWarehouse}
+                    setSelectedWarehouse={setSelectedWarehouse}
+                    mapRef={mapRef}
+                    renderWarehouseScheme={renderWarehouseScheme}
+                    storageBoxes={selectedWarehouse?.storage ?? []}
+                    selectedMap={
+                      selectedWarehouse?.name?.toLowerCase().includes('mega')
+                        ? megaSelectedMap
+                        : komfortSelectedMap
+                    }
+                    onHighlightedBoxes={setHighlightedBoxes}
+                    onBoxSelect={handleBoxSelectForScheme}
+                    selectedStorage={previewStorage}
+                    canEditBoxName={isAdminOrManager}
+                    onRenameStorage={handleRenameStorageFromAdminScheme}
+                    nameInputId={`admin-warehouse-${warehouseId}-box-name`}
+                  />
+                </div>
+              )}
             </div>
             )}
 

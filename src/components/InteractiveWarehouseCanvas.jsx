@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, memo } from "react";
+import { storageMatchesLayoutSlot } from "@/shared/lib/storageLayoutSlot";
 import { Stage, Layer, Rect, Text, Image } from "react-konva";
 import backgroundImage from "../assets/INDIVIDUAL.png";
 import lockIcon from "../assets/lock.png";
@@ -71,8 +72,8 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
 
   // Функция получения статуса бокса по имени (учитывает разный регистр)
   const getBoxStatus = (boxName) => {
-    const box = storageBoxes.find(storage => 
-      storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
+    const box = storageBoxes.find(storage =>
+      storage.storage_type === 'INDIVIDUAL' && storageMatchesLayoutSlot(storage, boxName)
     );
     
     // Если бокс найден в API данных, используем его статус
@@ -89,15 +90,15 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
 
   // Функция получения данных бокса по имени (учитывает разный регистр)
   const getBoxData = (boxName) => {
-    return storageBoxes.find(storage => 
-      storage.name.toLowerCase() === boxName.toLowerCase() && storage.storage_type === 'INDIVIDUAL'
+    return storageBoxes.find(storage =>
+      storage.storage_type === 'INDIVIDUAL' && storageMatchesLayoutSlot(storage, boxName)
     );
   };
 
   // Проверка, является ли бокс выбранным
   const isBoxSelected = (boxName) => {
     if (!selectedStorage) return false;
-    return selectedStorage.name.toLowerCase() === boxName.toLowerCase();
+    return storageMatchesLayoutSlot(selectedStorage, boxName);
   };
 
   // Функция проверки, занят ли бокс (OCCUPIED или PENDING)
@@ -255,7 +256,7 @@ const InteractiveWarehouseCanvas = memo(({ storageBoxes, onBoxSelect, selectedSt
                 
                 {/* Название бокса - строго по центру */}
                 <Text
-                  text={box.name}
+                  text={boxData?.name ?? box.name}
                   x={box.x}
                   y={isOccupied ? box.y + box.height / 2 + 20 : box.y + box.height / 2}
                   width={box.width}

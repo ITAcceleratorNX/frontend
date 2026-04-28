@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, memo, useEffect } from "react";
 import { Search } from "lucide-react";
 import { getLayoutBoxNames } from "@/shared/lib/warehouseLayoutUtils";
+import { storageLayoutSlot } from "@/shared/lib/storageLayoutSlot";
 
 /** ±доля от запроса, не меньше RANGE_MIN_DELTA м² */
 const RANGE_FRACTION = 0.12;
@@ -43,7 +44,9 @@ function BoxCalculator({
   const individualBoxes = useMemo(() => {
     return (storageBoxes || [])
       .filter((s) => s.storage_type === "INDIVIDUAL")
-      .filter((s) => layoutBoxNames.has((s.name || "").toLowerCase()));
+      .filter((s) =>
+        layoutBoxNames.has((storageLayoutSlot(s) || s.name || "").toLowerCase())
+      );
   }, [storageBoxes, layoutBoxNames]);
 
   const findMatchingBoxes = useCallback(

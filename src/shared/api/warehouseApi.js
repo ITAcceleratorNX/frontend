@@ -100,6 +100,17 @@ export const warehouseApi = {
     }
   },
 
+  /** ADMIN/MANAGER: частичное обновление бокса (например имя) */
+  updateStorage: async (storageId, data) => {
+    try {
+      const response = await api.put(`/storages/${storageId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении бокса:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Массовое обновление цены боксов (INDIVIDUAL) по фильтрам
   bulkUpdateStoragePricePerM2: async (payload) => {
     try {

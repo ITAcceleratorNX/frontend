@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import svgPanZoom from 'svg-pan-zoom';
+import { storageMatchesLayoutSlot } from '@/shared/lib/storageLayoutSlot';
 import megaTowersLayoutData1 from '../assets/mega-towers-1-storage.json';
 import megaTowersLayoutData2 from '../assets/mega-towers-2-storage.json';
 import mainWarehouseLayoutData from '../assets/Main_Individual_storage.json';
@@ -294,28 +295,26 @@ const WarehouseSVGMap = React.forwardRef(({
 
   // Получение статуса бокса
   const getBoxStatus = useCallback((boxName) => {
-    const box = storageBoxes.find(storage => 
-      storage.name.toLowerCase() === boxName.toLowerCase() && 
-      storage.storage_type === 'INDIVIDUAL'
+    const box = storageBoxes.find(storage =>
+      storage.storage_type === 'INDIVIDUAL' &&
+      storageMatchesLayoutSlot(storage, boxName)
     );
     return box ? box.status : 'OCCUPIED';
   }, [storageBoxes]);
 
   // Получение данных бокса
   const getBoxData = useCallback((boxName) => {
-    return storageBoxes.find(storage => 
-      storage.name.toLowerCase() === boxName.toLowerCase() && 
-      storage.storage_type === 'INDIVIDUAL'
+    return storageBoxes.find(storage =>
+      storage.storage_type === 'INDIVIDUAL' &&
+      storageMatchesLayoutSlot(storage, boxName)
     );
   }, [storageBoxes]);
 
   // Проверка выбранного бокса (включая подсветку от калькулятора)
   const isBoxSelected = useCallback((boxName) => {
-    if (selectedStorage?.name?.toLowerCase() === boxName?.toLowerCase()) return true;
+    if (selectedStorage && storageMatchesLayoutSlot(selectedStorage, boxName)) return true;
     if (Array.isArray(highlightedBoxes) && highlightedBoxes.length > 0) {
-      return highlightedBoxes.some(
-        (b) => b?.name?.toLowerCase() === boxName?.toLowerCase()
-      );
+      return highlightedBoxes.some((b) => storageMatchesLayoutSlot(b, boxName));
     }
     return false;
   }, [selectedStorage, highlightedBoxes]);
@@ -1217,7 +1216,7 @@ const WarehouseSVGMap = React.forwardRef(({
                   fill={textColor}
                   style={{ pointerEvents: 'none', userSelect: 'none' }}
                 >
-                  {box.name}
+                  {boxData?.name ?? box.name}
                 </text>
                 
                 {/* Информация при hover */}
