@@ -142,5 +142,16 @@ export const usersApi = {
       console.error('Ошибка при обновлении настроек пользователя:', error.response?.data || error.message);
       throw error;
     }
-  }
+  },
+
+  // Обновление профиля клиента менеджером/администратором
+  updateUserById: async (userId, data) => {
+    try {
+      const response = await api.put(`/users/${userId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля клиента:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 }; 

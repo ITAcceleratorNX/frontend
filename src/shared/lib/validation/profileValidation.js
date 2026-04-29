@@ -10,11 +10,16 @@ export const REQUIRED_PROFILE_FIELDS_INDIVIDUAL = [
   { key: 'bday', label: 'Дата рождения', validator: 'date' }
 ];
 
-// Константы для валидации для LEGAL пользователей (только базовые поля, остальные заполняются при регистрации)
+// Константы для валидации для LEGAL пользователей.
+// БИН/ИИН и Наименование задаются при регистрации.
+// ФИО, БИК, ИИК, юр. адрес, email заполняются в профиле перед первым заказом.
 export const REQUIRED_PROFILE_FIELDS_LEGAL = [
-  { key: 'name', label: 'ФИО', validator: 'text' },
+  { key: 'name', label: 'ФИО представителя', validator: 'text' },
   { key: 'email', label: 'Электронная почта', validator: 'email' },
-  { key: 'phone', label: 'Номер телефона', validator: 'phone' }
+  { key: 'phone', label: 'Номер телефона', validator: 'phone' },
+  { key: 'bik', label: 'БИК', validator: 'text' },
+  { key: 'iik', label: 'ИИК', validator: 'text' },
+  { key: 'legal_address', label: 'Юридический адрес', validator: 'legalAddress' },
 ];
 
 // Валидаторы для конкретных типов полей
@@ -41,7 +46,12 @@ const validators = {
     const minAge = new Date(now.getFullYear() - 100, now.getMonth(), now.getDate());
     const maxAge = new Date(now.getFullYear() - 18, now.getMonth(), now.getDate());
     return date >= minAge && date <= maxAge;
-  }
+  },
+  legalAddress: (value) => {
+    if (!value || typeof value !== 'object') return false;
+    const { region, city, street, house, postal_code } = value;
+    return !!(region && city && street && house && postal_code);
+  },
 };
 
 // Валидация профиля пользователя для заказа бокса
@@ -112,16 +122,17 @@ export const validateUserProfile = (user) => {
 export const createProfileValidator = () => {
   const validateAndRedirect = (user, navigate) => {
     const validation = validateUserProfile(user);
-    
+
     if (!validation.isValid) {
-      showErrorToast(
-        'Пожалуйста, заполните все данные в личном кабинете перед оформлением заказа бокса.',
-        { autoClose: 4000 }
-      );
-      navigate('/personal-account');
+      const isLegal = user?.user_type === 'LEGAL';
+      const baseMsg = isLegal
+        ? 'Для оформления заказа заполните данные организации в профиле.'
+        : 'Пожалуйста, заполните все данные в личном кабинете перед оформлением заказа бокса.';
+      showErrorToast(baseMsg, { autoClose: 4000 });
+      navigate('/personal-account', { state: { activeSection: 'personal' } });
       return false;
     }
-    
+
     return true;
   };
 

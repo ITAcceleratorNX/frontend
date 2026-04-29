@@ -12,6 +12,7 @@ import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
 import FloatingWhatsAppButton from "../shared/components/FloatingWhatsAppButton.jsx";
 import { useSSENotifications } from '../shared/lib/hooks/useSSENotifications';
+import { usePushNotifications } from '../shared/lib/hooks/usePushNotifications';
 import {
   getUtmParams,
   mapUtmSourceToLeadSource,
@@ -64,9 +65,10 @@ const NotificationContainer = memo(() => (
 
 NotificationContainer.displayName = 'NotificationContainer';
 
-// Компонент для инициализации SSE уведомлений
+// Компонент для инициализации SSE + Web Push уведомлений
 const SSEProvider = memo(() => {
   useSSENotifications();
+  usePushNotifications();
   return null;
 });
 

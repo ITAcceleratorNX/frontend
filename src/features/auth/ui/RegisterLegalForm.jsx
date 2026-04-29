@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { showSuccessToast, showErrorToast, toastValidationError } from '../../../shared/lib/toast';
-import { Mail, Phone, Building2, MapPin, ChevronDown, RefreshCw, User } from 'lucide-react';
+import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
+import { Mail, Phone, Building2, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
-import { authApi } from '../../../shared/api/auth';
 import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
 import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
@@ -13,51 +12,6 @@ import {
   formatPhoneNumber,
   KZ_PHONE_DISPLAY_REGEX,
 } from '../../../shared/lib/phone';
-
-// Список регионов Казахстана
-const regions = [
-  'Акмолинская область',
-  'Актюбинская область',
-  'Алматинская область',
-  'Атырауская область',
-  'Восточно-Казахстанская область',
-  'Жамбылская область',
-  'Западно-Казахстанская область',
-  'Карагандинская область',
-  'Костанайская область',
-  'Кызылординская область',
-  'Мангистауская область',
-  'Павлодарская область',
-  'Северо-Казахстанская область',
-  'Туркестанская область',
-  'Алматы',
-  'Астана',
-  'Шымкент'
-];
-
-// Список городов (можно расширить)
-const cities = [
-  'Алматы',
-  'Астана',
-  'Шымкент',
-  'Караганда',
-  'Актобе',
-  'Тараз',
-  'Павлодар',
-  'Усть-Каменогорск',
-  'Семей',
-  'Атырау',
-  'Костанай',
-  'Кызылорда',
-  'Уральск',
-  'Петропавловск',
-  'Актау',
-  'Темиртау',
-  'Туркестан',
-  'Кокшетау',
-  'Талдыкорган',
-  'Экибастуз'
-];
 
 export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSelector = true }) => {
   const navigate = useNavigate();
@@ -71,10 +25,6 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
   const [timer, setTimer] = useState(0);
   const [isResendingCode, setIsResendingCode] = useState(false);
   
-  // Состояния для зависимых списков
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  
   const {
     register,
     handleSubmit,
@@ -84,24 +34,13 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
     formState: { errors },
   } = useForm({
     defaultValues: {
-      name: '',
       bin_iin: '',
       company_name: '',
-      bik: '',
-      iik: '',
-      region: '',
-      city: '',
-      street: '',
-      house: '',
-      building: '',
-      office: '',
-      postal_code: '',
       phone: '',
       email: '',
       unique_code: '',
       password: '',
       confirm_password: '',
-      amount: '',
       terms: false,
     },
   });
@@ -115,18 +54,6 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
   const handleBinIinChange = (e) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 12);
     setValue('bin_iin', value, { shouldValidate: true });
-  };
-
-  // Обработчик изменения БИК - латинские буквы и цифры, максимум 11 символов
-  const handleBikChange = (e) => {
-    const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 11);
-    setValue('bik', value, { shouldValidate: true });
-  };
-
-  // Обработчик изменения ИИК - латинские буквы и цифры, максимум 20 символов
-  const handleIikChange = (e) => {
-    const value = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
-    setValue('iik', value, { shouldValidate: true });
   };
 
   // Автоматическое заполнение phone из location.state
@@ -226,20 +153,8 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       const visitorId = getOrCreateVisitorId();
       
       const legalEntityData = {
-        name: data.name,
         bin_iin: data.bin_iin,
         company_name: data.company_name,
-        bik: data.bik,
-        iik: data.iik,
-        legal_address: {
-          region: data.region,
-          city: data.city,
-          street: data.street,
-          house: data.house,
-          building: data.building || '',
-          office: data.office || '',
-          postal_code: data.postal_code,
-        },
         email: data.email || null,
       };
       
@@ -387,34 +302,6 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                   )}
                 </div>
 
-                {/* ФИО */}
-                <div className="flex flex-col gap-[6px] w-full">
-                  <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                    <User className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
-                    ФИО
-                  </label>
-                  <input
-                    type="text"
-                    className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                      errors.name ? 'border-red-400 bg-red-50' : 'bg-white'
-                    } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                    placeholder="Введите ФИО"
-                    disabled={isLoading}
-                    {...register('name', {
-                      required: 'ФИО обязательно',
-                      minLength: {
-                        value: 2,
-                        message: 'ФИО должно содержать минимум 2 символа'
-                      }
-                    })}
-                  />
-                  {errors.name && (
-                    <p className="text-xs sm:text-sm text-red-500 mt-1">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
-
                 {/* Наименование */}
                 <div className="flex flex-col gap-[6px] w-full">
                   <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
@@ -437,254 +324,6 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                       {errors.company_name.message}
                     </p>
                   )}
-                </div>
-
-                {/* БИК и ИИК в одной строке */}
-                <div className="flex gap-[8px] w-full">
-                  {/* БИК */}
-                  <div className="flex flex-col gap-[6px] flex-1">
-                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      БИК
-                    </label>
-                    <input
-                      type="text"
-                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                        errors.bik ? 'border-red-400 bg-red-50' : 'bg-white'
-                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                      placeholder="БИК"
-                      disabled={isLoading}
-                      maxLength={11}
-                      {...register('bik', {
-                        required: 'БИК обязателен',
-                        pattern: {
-                          value: /^[A-Za-z0-9]{8}$|^[A-Za-z0-9]{11}$/,
-                          message: 'БИК должен содержать 8 или 11 символов (латинские буквы и цифры)'
-                        },
-                        onChange: handleBikChange
-                      })}
-                    />
-                    {errors.bik && (
-                      <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.bik.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* ИИК */}
-                  <div className="flex flex-col gap-[6px] flex-1">
-                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      ИИК
-                    </label>
-                    <input
-                      type="text"
-                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                        errors.iik ? 'border-red-400 bg-red-50' : 'bg-white'
-                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                      placeholder="ИИК"
-                      disabled={isLoading}
-                      maxLength={20}
-                      {...register('iik', {
-                        required: 'ИИК обязателен',
-                        pattern: {
-                          value: /^[A-Za-z0-9]{20}$/,
-                          message: 'ИИК должен содержать ровно 20 символов (латинские буквы и цифры)'
-                        },
-                        onChange: handleIikChange
-                      })}
-                    />
-                    {errors.iik && (
-                      <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.iik.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Раздел: Юридический адрес */}
-                <div className="flex flex-col gap-[16px] w-full mt-2">
-                  <h2 className="text-[14px] sm:text-[15px] lg:text-[16px] font-bold leading-[1.19] text-[#363636]">
-                    Юридический адрес
-                  </h2>
-
-                  {/* Регион */}
-                  <div className="flex flex-col gap-[6px] w-full">
-                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      <MapPin className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
-                      Выберите регион
-                    </label>
-                    <div className="relative">
-                      <select
-                        className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] bg-white appearance-none cursor-pointer transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                          errors.region ? 'border-red-400 bg-red-50' : ''
-                        } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                        disabled={isLoading}
-                        {...register('region', {
-                          required: 'Регион обязателен'
-                        })}
-                        onChange={(e) => {
-                          setSelectedRegion(e.target.value);
-                          setValue('region', e.target.value);
-                        }}
-                      >
-                        <option value="">Выберите регион</option>
-                        {regions.map((region) => (
-                          <option key={region} value={region}>
-                            {region}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-4 sm:right-5 top-1/2 transform -translate-y-1/2 w-[16px] h-[16px] text-[#5C5C5C] pointer-events-none" />
-                    </div>
-                    {errors.region && (
-                      <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.region.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Город */}
-                  <div className="flex flex-col gap-[6px] w-full">
-                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      <MapPin className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] text-[#5C5C5C] flex-shrink-0" />
-                      Выберите город
-                    </label>
-                    <div className="relative">
-                      <select
-                        className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] bg-white appearance-none cursor-pointer transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                          errors.city ? 'border-red-400 bg-red-50' : ''
-                        } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                        disabled={isLoading}
-                        {...register('city', {
-                          required: 'Город обязателен'
-                        })}
-                        onChange={(e) => {
-                          setSelectedCity(e.target.value);
-                          setValue('city', e.target.value);
-                        }}
-                      >
-                        <option value="">Выберите город</option>
-                        {cities.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-4 sm:right-5 top-1/2 transform -translate-y-1/2 w-[16px] h-[16px] text-[#5C5C5C] pointer-events-none" />
-                    </div>
-                    {errors.city && (
-                      <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.city.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Улица */}
-                  <div className="flex flex-col gap-[6px] w-full">
-                    <label className="flex items-center gap-[6px] text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                      Улица
-                    </label>
-                    <input
-                      type="text"
-                      className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                        errors.street ? 'border-red-400 bg-red-50' : 'bg-white'
-                      } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                      placeholder="Введите улицу"
-                      disabled={isLoading}
-                      {...register('street', {
-                        required: 'Улица обязательна'
-                      })}
-                    />
-                    {errors.street && (
-                      <p className="text-xs sm:text-sm text-red-500 mt-1">
-                        {errors.street.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Дом, Корпус, Офис, Индекс в одной строке */}
-                  <div className="grid grid-cols-2 gap-[8px] w-full">
-                    {/* Дом */}
-                    <div className="flex flex-col gap-[6px]">
-                      <label className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                        Дом
-                      </label>
-                      <input
-                        type="text"
-                        className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                          errors.house ? 'border-red-400 bg-red-50' : 'bg-white'
-                        } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                        placeholder="Дом"
-                        disabled={isLoading}
-                        {...register('house', {
-                          required: 'Дом обязателен'
-                        })}
-                      />
-                      {errors.house && (
-                        <p className="text-xs sm:text-sm text-red-500 mt-1">
-                          {errors.house.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Корпус */}
-                    <div className="flex flex-col gap-[6px]">
-                      <label className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                        Корпус
-                      </label>
-                      <input
-                        type="text"
-                        className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] bg-white ${
-                          isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''
-                        }`}
-                        placeholder="Корпус"
-                        disabled={isLoading}
-                        {...register('building')}
-                      />
-                    </div>
-
-                    {/* Офис */}
-                    <div className="flex flex-col gap-[6px]">
-                      <label className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                        Офис
-                      </label>
-                      <input
-                        type="text"
-                        className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] bg-white ${
-                          isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''
-                        }`}
-                        placeholder="Офис"
-                        disabled={isLoading}
-                        {...register('office')}
-                      />
-                    </div>
-
-                    {/* Индекс */}
-                    <div className="flex flex-col gap-[6px]">
-                      <label className="text-[12px] sm:text-[13px] lg:text-[14px] font-normal leading-[1.19] text-[#5C5C5C]">
-                        Индекс
-                      </label>
-                      <input
-                        type="text"
-                        className={`w-full h-[48px] sm:h-[52px] lg:h-[56px] px-4 sm:px-5 border border-[#DFDFDF] rounded-[25px] text-[13px] sm:text-[14px] font-medium leading-[1.19] text-[#363636] placeholder:text-[#BEBEBE] transition-all duration-200 outline-none focus:border-[#26B3AB] ${
-                          errors.postal_code ? 'border-red-400 bg-red-50' : 'bg-white'
-                        } ${isLoading ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
-                        placeholder="Индекс"
-                        disabled={isLoading}
-                        {...register('postal_code', {
-                          required: 'Индекс обязателен',
-                          pattern: {
-                            value: /^\d{6}$/,
-                            message: 'Индекс должен содержать 6 цифр'
-                          }
-                        })}
-                      />
-                      {errors.postal_code && (
-                        <p className="text-xs sm:text-sm text-red-500 mt-1">
-                          {errors.postal_code.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Раздел: Контактная информация */}
