@@ -20,165 +20,68 @@ const formatPrice = (price) => {
   });
 };
 
-const getDaysInMonth = (year, month) => {
-  return new Date(year, month, 0).getDate();
+const MS_IN_DAY = 1000 * 60 * 60 * 24;
+
+const startOfDay = (date) => {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const diffInDays = (later, earlier) => {
+  return Math.round((later - earlier) / MS_IN_DAY);
 };
 
 /**
- * Генерирует платежи помесячно (MONTHLY)
+ * Прибавляет к дате `cycleIndex` календарных месяцев.
+ * Использует ту же логику, что DateTime.plus({months: n}) у Luxon на бэкенде:
+ * если день месяца недоступен в целевом месяце (например, 31 → 30/29/28),
+ * результат «сжимается» к последнему дню месяца.
  */
-const generateMonthlyPayments = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0) => {
-  if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
-
-  const start = new Date(startDateStr);
-  start.setHours(0, 0, 0, 0);
-  
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + monthsCount);
-  
-  const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-  if (totalDays <= 0) return [];
-  
-  const dailyAmount = totalPrice / totalDays;
-  
-  const paymentAmounts = [];
-  let current = new Date(start);
-  let remaining = totalDays;
-  
-  while (remaining > 0) {
-    const year = current.getFullYear();
-    const month = current.getMonth() + 1;
-    const daysInMonth = getDaysInMonth(year, month);
-    const startDay = current.getDate();
-    const daysThisMonth = daysInMonth - startDay + 1;
-    const daysToCharge = Math.min(remaining, daysThisMonth);
-    const amount = dailyAmount * daysToCharge;
-    
-    paymentAmounts.push({
-      amount: amount,
-      month: month,
-      year: year,
-      daysToCharge: daysToCharge,
-    });
-    
-    remaining -= daysToCharge;
-    current = new Date(year, month, 1);
-  }
-  
-  let totalCalculatedAmount = 0;
-  paymentAmounts.forEach((payment) => {
-    payment.roundedAmount = Number(parseFloat(payment.amount).toFixed(2));
-    totalCalculatedAmount += payment.roundedAmount;
-  });
-  
-  const difference = totalPrice - totalCalculatedAmount;
-  if (paymentAmounts.length > 0) {
-    paymentAmounts[paymentAmounts.length - 1].roundedAmount = 
-      Number(parseFloat(paymentAmounts[paymentAmounts.length - 1].roundedAmount + difference).toFixed(2));
-  }
-  
-  const totalAmountBeforeDiscount = totalPrice + Number(extraServicesAmount);
-  const discount = Number(discountAmount) || 0;
-  
-  let remainingDiscount = discount;
-  const discountPerPayment = [];
-  
-  paymentAmounts.forEach((payment, index) => {
-    const paymentTotal = index === 0
-      ? payment.roundedAmount + Number(extraServicesAmount)
-      : payment.roundedAmount;
-    
-    const paymentShare = totalAmountBeforeDiscount > 0 ? paymentTotal / totalAmountBeforeDiscount : 0;
-    let paymentDiscount = Number(parseFloat(discount * paymentShare).toFixed(2));
-    
-    paymentDiscount = Math.min(paymentDiscount, remainingDiscount);
-    paymentDiscount = Math.min(paymentDiscount, paymentTotal);
-    
-    discountPerPayment.push(paymentDiscount);
-    remainingDiscount -= paymentDiscount;
-  });
-  
-  if (remainingDiscount > 0 && discountPerPayment.length > 0) {
-    const lastIndex = discountPerPayment.length - 1;
-    const lastPaymentTotal = paymentAmounts[lastIndex].roundedAmount;
-    const maxAdditionalDiscount = lastPaymentTotal - discountPerPayment[lastIndex];
-    discountPerPayment[lastIndex] += Math.min(remainingDiscount, maxAdditionalDiscount);
-  }
-  
-  const result = paymentAmounts.map((payment, index) => {
-    let finalAmount = payment.roundedAmount;
-    
-    if (index === 0) {
-      finalAmount += Number(extraServicesAmount);
-    }
-    
-    finalAmount -= discountPerPayment[index] || 0;
-    finalAmount = Math.max(0, Number(parseFloat(finalAmount).toFixed(2)));
-    
-    return {
-      id: index + 1,
-      month: payment.month,
-      year: payment.year,
-      amount: finalAmount,
-      daysToCharge: payment.daysToCharge,
-      hasServices: index === 0 && extraServicesAmount > 0,
-    };
-  });
-  
+const addMonths = (date, months) => {
+  const result = new Date(date);
+  const day = result.getDate();
+  result.setDate(1);
+  result.setMonth(result.getMonth() + months);
+  const daysInTargetMonth = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+  result.setDate(Math.min(day, daysInTargetMonth));
   return result;
 };
 
 /**
- * Генерирует платежи помесячно с учётом промо-периода (разные суммы для промо и стандартных месяцев)
+ * Строит список месячных циклов от start_date.
+ * Каждый цикл: [start + i месяцев, min(start + (i+1) месяцев, end)).
+ * Возвращает массив объектов с метаданными, идентичный бэкендовому _buildBillingCycles.
  */
-const generateSplitMonthlyPayments = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0, pricingBreakdown = {}) => {
-  if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
+const buildBillingCycles = (start, end) => {
+  const cycles = [];
+  let cycleIndex = 0;
+  let cycleStart = start;
 
-  const promoMonths = pricingBreakdown.promoMonths || 0;
-  const promoMonthlyAmount = Number(pricingBreakdown.promoMonthlyAmount) || 0;
-  const standardMonthlyAmount = Number(pricingBreakdown.standardMonthlyAmount) || 0;
+  while (cycleStart < end) {
+    const expectedCycleEnd = addMonths(start, cycleIndex + 1);
+    const cycleEnd = expectedCycleEnd <= end ? expectedCycleEnd : end;
+    const daysInCycle = diffInDays(cycleEnd, cycleStart);
+    const fullCycleDays = diffInDays(expectedCycleEnd, cycleStart);
 
-  const start = new Date(startDateStr);
-  start.setHours(0, 0, 0, 0);
-  
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + monthsCount);
-  
-  const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-  if (totalDays <= 0) return [];
-
-  const paymentAmounts = [];
-  let current = new Date(start);
-  let remaining = totalDays;
-  let monthIndex = 0;
-
-  while (remaining > 0) {
-    const year = current.getFullYear();
-    const month = current.getMonth() + 1;
-    const daysInMonth = getDaysInMonth(year, month);
-    const startDay = current.getDate();
-    const daysThisMonth = daysInMonth - startDay + 1;
-    const daysToCharge = Math.min(remaining, daysThisMonth);
-
-    const isPromo = monthIndex < promoMonths;
-    const monthlyRate = isPromo ? promoMonthlyAmount : standardMonthlyAmount;
-    const dailyRate = monthlyRate / daysInMonth;
-    const amount = dailyRate * daysToCharge;
-
-    paymentAmounts.push({
-      amount,
-      month,
-      year,
-      daysToCharge,
-      isPromo,
+    cycles.push({
+      cycleIndex,
+      cycleStart,
+      cycleEnd,
+      daysInCycle,
+      fullCycleDays,
+      month: cycleStart.getMonth() + 1,
+      year: cycleStart.getFullYear(),
     });
 
-    remaining -= daysToCharge;
-    current = new Date(year, month, 1);
-    monthIndex++;
+    cycleIndex++;
+    cycleStart = cycleEnd;
   }
 
-  // Округление
+  return cycles;
+};
+
+const normalizePaymentAmounts = (paymentAmounts, totalPrice) => {
   let totalCalculatedAmount = 0;
   paymentAmounts.forEach((payment) => {
     payment.roundedAmount = Number(parseFloat(payment.amount).toFixed(2));
@@ -187,23 +90,39 @@ const generateSplitMonthlyPayments = (startDateStr, monthsCount, totalPrice, ext
 
   const difference = totalPrice - totalCalculatedAmount;
   if (paymentAmounts.length > 0) {
-    paymentAmounts[paymentAmounts.length - 1].roundedAmount =
-      Number(parseFloat(paymentAmounts[paymentAmounts.length - 1].roundedAmount + difference).toFixed(2));
+    const lastIndex = paymentAmounts.length - 1;
+    paymentAmounts[lastIndex].roundedAmount = Number(
+      parseFloat(paymentAmounts[lastIndex].roundedAmount + difference).toFixed(2)
+    );
+  }
+};
+
+/**
+ * Распределяет скидку пропорционально сумме каждого платежа
+ * (с учётом дополнительных услуг на первом платеже).
+ */
+const distributeDiscount = (paymentAmounts, extraServicesAmount, discount) => {
+  const discountPerPayment = [];
+  const totalBeforeDiscount = paymentAmounts.reduce(
+    (sum, p) => sum + p.roundedAmount,
+    0
+  ) + Number(extraServicesAmount);
+
+  if (totalBeforeDiscount <= 0 || discount <= 0) {
+    paymentAmounts.forEach(() => discountPerPayment.push(0));
+    return discountPerPayment;
   }
 
-  // Распределение скидки
-  const totalAmountBeforeDiscount = totalPrice + Number(extraServicesAmount);
-  const discount = Number(discountAmount) || 0;
   let remainingDiscount = discount;
-  const discountPerPayment = [];
 
   paymentAmounts.forEach((payment, index) => {
     const paymentTotal = index === 0
       ? payment.roundedAmount + Number(extraServicesAmount)
       : payment.roundedAmount;
 
-    const paymentShare = totalAmountBeforeDiscount > 0 ? paymentTotal / totalAmountBeforeDiscount : 0;
+    const paymentShare = paymentTotal / totalBeforeDiscount;
     let paymentDiscount = Number(parseFloat(discount * paymentShare).toFixed(2));
+
     paymentDiscount = Math.min(paymentDiscount, remainingDiscount);
     paymentDiscount = Math.min(paymentDiscount, paymentTotal);
 
@@ -218,9 +137,17 @@ const generateSplitMonthlyPayments = (startDateStr, monthsCount, totalPrice, ext
     discountPerPayment[lastIndex] += Math.min(remainingDiscount, maxAdditionalDiscount);
   }
 
+  return discountPerPayment;
+};
+
+const buildPreviewRows = (paymentAmounts, extraServicesAmount, discountPerPayment) => {
   return paymentAmounts.map((payment, index) => {
     let finalAmount = payment.roundedAmount;
-    if (index === 0) finalAmount += Number(extraServicesAmount);
+
+    if (index === 0) {
+      finalAmount += Number(extraServicesAmount);
+    }
+
     finalAmount -= discountPerPayment[index] || 0;
     finalAmount = Math.max(0, Number(parseFloat(finalAmount).toFixed(2)));
 
@@ -237,19 +164,89 @@ const generateSplitMonthlyPayments = (startDateStr, monthsCount, totalPrice, ext
 };
 
 /**
+ * Генерирует платежи по месячным циклам от start_date (MONTHLY).
+ * Первый платёж сразу покрывает полный месяц вперёд от даты старта,
+ * каждый следующий — следующий месячный цикл; последний может быть прорейтным,
+ * если контракт заканчивается раньше полного месяца.
+ */
+const generateMonthlyPayments = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0) => {
+  if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
+
+  const start = startOfDay(new Date(startDateStr));
+  const end = addMonths(start, monthsCount);
+  const totalDays = diffInDays(end, start);
+  if (totalDays <= 0) return [];
+
+  const dailyAmount = totalPrice / totalDays;
+  const cycles = buildBillingCycles(start, end);
+
+  const paymentAmounts = cycles.map((cycle) => ({
+    amount: dailyAmount * cycle.daysInCycle,
+    month: cycle.month,
+    year: cycle.year,
+    daysToCharge: cycle.daysInCycle,
+  }));
+
+  normalizePaymentAmounts(paymentAmounts, totalPrice);
+
+  const discount = Number(discountAmount) || 0;
+  const discountPerPayment = distributeDiscount(paymentAmounts, extraServicesAmount, discount);
+
+  return buildPreviewRows(paymentAmounts, extraServicesAmount, discountPerPayment);
+};
+
+/**
+ * Генерирует помесячные платежи с учётом промо-периода.
+ * Первые promoMonths циклов идут по промо-цене, остальные — по стандартной.
+ * Полный цикл стоит ровно monthlyRate; неполный последний цикл прорейтится
+ * пропорционально длительности.
+ */
+const generateSplitMonthlyPayments = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0, pricingBreakdown = {}) => {
+  if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
+
+  const promoMonths = pricingBreakdown.promoMonths || 0;
+  const promoMonthlyAmount = Number(pricingBreakdown.promoMonthlyAmount) || 0;
+  const standardMonthlyAmount = Number(pricingBreakdown.standardMonthlyAmount) || 0;
+
+  const start = startOfDay(new Date(startDateStr));
+  const end = addMonths(start, monthsCount);
+  const totalDays = diffInDays(end, start);
+  if (totalDays <= 0) return [];
+
+  const cycles = buildBillingCycles(start, end);
+
+  const paymentAmounts = cycles.map((cycle) => {
+    const isPromo = cycle.cycleIndex < promoMonths;
+    const monthlyRate = isPromo ? promoMonthlyAmount : standardMonthlyAmount;
+    const ratio = cycle.fullCycleDays > 0 ? cycle.daysInCycle / cycle.fullCycleDays : 1;
+
+    return {
+      amount: monthlyRate * ratio,
+      month: cycle.month,
+      year: cycle.year,
+      daysToCharge: cycle.daysInCycle,
+      isPromo,
+    };
+  });
+
+  normalizePaymentAmounts(paymentAmounts, totalPrice);
+
+  const discount = Number(discountAmount) || 0;
+  const discountPerPayment = distributeDiscount(paymentAmounts, extraServicesAmount, discount);
+
+  return buildPreviewRows(paymentAmounts, extraServicesAmount, discountPerPayment);
+};
+
+/**
  * Генерирует один платёж на всю сумму (FULL)
  */
 const generateFullPayment = (startDateStr, monthsCount, totalPrice, extraServicesAmount = 0, discountAmount = 0) => {
   if (!startDateStr || monthsCount <= 0 || !totalPrice) return [];
 
-  const start = new Date(startDateStr);
-  start.setHours(0, 0, 0, 0);
-  
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + monthsCount);
-  
-  const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-  
+  const start = startOfDay(new Date(startDateStr));
+  const end = addMonths(start, monthsCount);
+  const totalDays = diffInDays(end, start);
+
   const totalAmount = Number(totalPrice) + Number(extraServicesAmount) - Number(discountAmount || 0);
   const finalAmount = Math.max(0, Number(parseFloat(totalAmount).toFixed(2)));
 
@@ -491,7 +488,8 @@ const PaymentPreviewModal = ({
                 <div className="flex items-start gap-3">
                   <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-gray-600">
-                    Платежи рассчитываются по дням и делятся по месяцам: первый — до конца месяца, далее — за полные месяцы, последний — за оставшиеся дни.                  </p>
+                    Первый платёж сразу покрывает месяц вперёд от даты начала, каждый следующий — следующий месячный период. Последний платёж может быть прорейтным, если заказ заканчивается раньше полного месяца.
+                  </p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CreditCard className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
