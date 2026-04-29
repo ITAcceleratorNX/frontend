@@ -108,8 +108,16 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
     } catch (error) {
       console.error('Ошибка при подтверждении заказа:', error);
 
-      // Показываем ошибку пользователю
-      showErrorToast('Не удалось подтвердить заказ. Пожалуйста, попробуйте позже.', {
+      const apiMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        '';
+      const userMsg =
+        typeof apiMsg === 'string' && apiMsg.trim() !== ''
+          ? apiMsg.trim()
+          : 'Не удалось подтвердить заказ. Пожалуйста, попробуйте позже.';
+
+      showErrorToast(userMsg, {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,

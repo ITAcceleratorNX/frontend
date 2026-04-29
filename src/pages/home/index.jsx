@@ -1085,11 +1085,24 @@ const HomePage = memo(() => {
       };
     }
 
-    // Ошибки сервера
+    // Ошибки сервера / внешних сервисов (TrustMe и т.д.): показываем текст от API, если он есть
     if (status >= 500) {
+      const serverMsg = String(
+        errorData?.message || errorData?.error || ''
+      ).trim();
+      if (
+        serverMsg &&
+        !/^internal server error$/i.test(serverMsg)
+      ) {
+        return {
+          userMessage: serverMsg,
+          shouldRedirect: false,
+        };
+      }
       return {
-        userMessage: 'Произошла ошибка на сервере. Пожалуйста, попробуйте позже или свяжитесь с поддержкой.',
-        shouldRedirect: false
+        userMessage:
+          'Произошла ошибка на сервере. Пожалуйста, попробуйте позже или свяжитесь с поддержкой.',
+        shouldRedirect: false,
       };
     }
 
