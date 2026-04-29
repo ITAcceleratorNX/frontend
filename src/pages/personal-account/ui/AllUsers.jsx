@@ -192,7 +192,10 @@ const AllUsers = () => {
   };
 
   // Получение отображаемого имени роли
-  const getRoleDisplayName = (role) => {
+  const getRoleDisplayName = (role, user_type = null) => {
+    if (user_type === 'LEGAL') {
+      return 'Компания'
+    }
     const roleMap = {
       'ADMIN': 'Администратор',
       'MANAGER': 'Менеджер', 
@@ -203,7 +206,7 @@ const AllUsers = () => {
   };
 
   // Получение CSS класса для роли
-  const getRoleClass = (role) => {
+  const getRoleClass = (role, user_type = null) => {
     switch (role) {
       case 'ADMIN':
         return 'bg-red-100 text-red-800 border border-red-200';
@@ -212,6 +215,9 @@ const AllUsers = () => {
       case 'COURIER':
         return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
       default:
+        if (user_type === 'LEGAL') {
+          return 'bg-orange-100 text-orange-800 border border-orange-200';
+        }
         return 'bg-green-100 text-green-800 border border-green-200';
     }
   };
@@ -415,7 +421,7 @@ const AllUsers = () => {
                       value={user.role}
                       onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
                       disabled={isUpdatingRole === user.id}
-                      className={`text-xs font-semibold px-2 py-1.5 rounded-lg transition-all ${getRoleClass(user.role)} ${
+                      className={`text-xs font-semibold px-2 py-1.5 rounded-lg transition-all ${getRoleClass(user.role, user.user_type)} ${
                         isUpdatingRole === user.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
                       }`}
                     >
@@ -425,8 +431,8 @@ const AllUsers = () => {
                       <option value="COURIER">Курьер</option>
                     </select>
                   ) : (
-                    <span className={`inline-flex px-2 py-1.5 text-xs font-semibold rounded-lg ${getRoleClass(user.role)}`}>
-                      {getRoleDisplayName(user.role)}
+                    <span className={`inline-flex px-2 py-1.5 text-xs font-semibold rounded-lg ${getRoleClass(user.role, user.user_type)}`}>
+                      {getRoleDisplayName(user.role, user.user_type)}
                     </span>
                   )}
                 </div>
@@ -514,7 +520,7 @@ const AllUsers = () => {
                         value={user.role}
                         onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
                         disabled={isUpdatingRole === user.id}
-                        className={`text-xs font-semibold px-3 py-2 rounded-lg transition-all ${getRoleClass(user.role)} ${
+                        className={`text-xs font-semibold px-3 py-2 rounded-lg transition-all ${getRoleClass(user.role, user.user_type)} ${
                           isUpdatingRole === user.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
                         }`}
                       >
@@ -524,8 +530,8 @@ const AllUsers = () => {
                         <option value="COURIER">Курьер</option>
                       </select>
                     ) : (
-                      <span className={`inline-flex px-3 py-2 text-xs font-semibold rounded-lg ${getRoleClass(user.role)}`}>
-                        {getRoleDisplayName(user.role)}
+                      <span className={`inline-flex px-3 py-2 text-xs font-semibold rounded-lg ${getRoleClass(user.role, user.user_type)}`}>
+                        {getRoleDisplayName(user.role, user.user_type)}
                       </span>
                     )}
                   </td>
