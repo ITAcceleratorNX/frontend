@@ -575,7 +575,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         setPromoDiscountPercent(result.discount_percent || 0);
         setPromoSuccess(true);
         setPromoError('');
-        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+        showSuccessToast(`Промокод применён! Скидка ${result.discount_percent}%`);
       } else {
         setPromoError(result.error || 'Недействительный промокод');
         setPromoCode('');
@@ -627,7 +627,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         setCloudPromoDiscountPercent(result.discount_percent || 0);
         setCloudPromoSuccess(true);
         setCloudPromoError('');
-        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+        showSuccessToast(`Промокод применён! Скидка ${result.discount_percent}%`);
       } else {
         setCloudPromoError(result.error || 'Недействительный промокод');
         setCloudPromoCode('');

@@ -134,6 +134,16 @@ const CITY_STORAGE_SHORT_LABEL = {
   CLOUD: "Облако",
 };
 
+const PAYMENT_TYPE_OPTIONS = Object.freeze({
+  MONTHLY: "MONTHLY",
+  FULL: "FULL",
+});
+
+const EMPTY_INDIVIDUAL_PRICE_PREVIEWS = Object.freeze({
+  MONTHLY: null,
+  FULL: null,
+});
+
 const STORAGE_ABOUT_COPY = {
   INDIVIDUAL: {
     title: "Индивидуальное хранение",
@@ -242,7 +252,7 @@ const HomePage = memo(() => {
   // Состояние для адреса возврата (GAZELLE_TO)
   const [movingAddressTo, setMovingAddressTo] = useState("");
   const [previewStorage, setPreviewStorage] = useState(null);
-  const [pricePreview, setPricePreview] = useState(null);
+  const [individualPricePreviews, setIndividualPricePreviews] = useState(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
   const [isPriceCalculating, setIsPriceCalculating] = useState(false);
   const [cloudPricePreview, setCloudPricePreview] = useState(null);
   // Состояние для информации о бронировании занятого бокса
@@ -300,6 +310,9 @@ const HomePage = memo(() => {
   const [cloudPromoSuccess, setCloudPromoSuccess] = useState(false);
   const [isValidatingCloudPromo, setIsValidatingCloudPromo] = useState(false);
   const [showCloudPromoInput, setShowCloudPromoInput] = useState(false);
+
+  const pricePreview = individualPricePreviews[PAYMENT_TYPE_OPTIONS.MONTHLY];
+  const fullPricePreview = individualPricePreviews[PAYMENT_TYPE_OPTIONS.FULL];
 
   // Данные для складов на карте
   const warehouses = useMemo(
@@ -798,6 +811,13 @@ const HomePage = memo(() => {
     return 14000;
   }, [gazelleFromPrice]);
 
+  const calculatePercentDiscountAmount = useCallback((amount, percent) => {
+    const totalAmount = Number(amount) || 0;
+    const discountPercent = Number(percent) || 0;
+    if (totalAmount <= 0 || discountPercent <= 0) return 0;
+    return Math.round((totalAmount * discountPercent / 100) * 100) / 100;
+  }, []);
+
   const costSummary = useMemo(() => {
     const baseMonthly = pricePreview?.monthly ? Math.round(pricePreview.monthly) : null;
     const baseTotal = pricePreview ? Math.round(pricePreview.total) : null;
@@ -814,11 +834,56 @@ const HomePage = memo(() => {
     };
   }, [pricePreview, serviceSummary.total]);
 
+  const fullPaymentCostSummary = useMemo(() => {
+    const baseMonthly = fullPricePreview?.monthly ? Math.round(fullPricePreview.monthly) : null;
+    const baseTotal = fullPricePreview ? Math.round(fullPricePreview.total) : null;
+    const serviceTotal = serviceSummary.total;
+    const combinedTotal = (baseTotal || 0) + serviceTotal;
+
+    return {
+      baseMonthly,
+      baseTotal,
+      serviceTotal,
+      combinedTotal,
+      pricingBreakdown: fullPricePreview?.pricingBreakdown || null,
+    };
+  }, [fullPricePreview, serviceSummary.total]);
+
   // Расчет итоговой суммы с учетом промокода (индивидуальное хранение)
   const finalIndividualTotal = useMemo(() => {
     const total = costSummary.combinedTotal || 0;
     return Math.max(0, total - promoDiscount);
   }, [costSummary.combinedTotal, promoDiscount]);
+
+  const fullPaymentPromoDiscount = useMemo(() => {
+    if (!promoCode || promoDiscountPercent <= 0) return 0;
+    return calculatePercentDiscountAmount(fullPaymentCostSummary.combinedTotal, promoDiscountPercent);
+  }, [promoCode, promoDiscountPercent, fullPaymentCostSummary.combinedTotal, calculatePercentDiscountAmount]);
+
+  const finalIndividualFullPaymentTotal = useMemo(() => {
+    const total = fullPaymentCostSummary.combinedTotal || 0;
+    return Math.max(0, total - fullPaymentPromoDiscount);
+  }, [fullPaymentCostSummary.combinedTotal, fullPaymentPromoDiscount]);
+
+  const fullPaymentDiscountInfo = useMemo(() => {
+    if (!fullPricePreview || !pricePreview) return null;
+    const pricingBreakdown = fullPricePreview.pricingBreakdown || null;
+    const discountPercent = Number(pricingBreakdown?.discountPercent) || 0;
+    const fullCombinedTotal = fullPaymentCostSummary.combinedTotal || 0;
+    const monthlyCombinedTotal = costSummary.combinedTotal || 0;
+    const savingsAmount = Math.max(0, monthlyCombinedTotal - fullCombinedTotal);
+
+    if (pricingBreakdown?.paymentType !== PAYMENT_TYPE_OPTIONS.FULL && savingsAmount <= 0) {
+      return null;
+    }
+
+    return {
+      discountPercent,
+      savingsAmount,
+      fullCombinedTotal,
+      monthlyCombinedTotal,
+    };
+  }, [fullPricePreview, pricePreview, fullPaymentCostSummary.combinedTotal, costSummary.combinedTotal]);
 
   // Расчет итоговой суммы с учетом промокода (облачное хранение)
   const finalCloudTotal = useMemo(() => {
@@ -852,7 +917,7 @@ const HomePage = memo(() => {
         setPromoDiscountPercent(result.discount_percent);
         setPromoSuccess(true);
         setPromoError("");
-        showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+        showSuccessToast(`Промокод применён! Скидка ${result.discount_percent}%`);
       } else {
         setPromoError(result.error || "Недействительный промокод");
         setPromoCode("");
@@ -909,7 +974,7 @@ const HomePage = memo(() => {
         setCloudPromoDiscountPercent(result.discount_percent);
       setCloudPromoSuccess(true);
       setCloudPromoError("");
-      showSuccessToast(`Промокод применен! Скидка ${result.discount_percent}%`);
+      showSuccessToast(`Промокод применён! Скидка ${result.discount_percent}%`);
       } else {
         setCloudPromoError(result.error || "Недействительный промокод");
         setCloudPromoCode("");
@@ -1363,6 +1428,11 @@ const HomePage = memo(() => {
       return;
     }
 
+    const selectedPricePreview =
+      paymentType === PAYMENT_TYPE_OPTIONS.FULL
+        ? (fullPricePreview || pricePreview)
+        : (pricePreview || fullPricePreview);
+
     try {
       setIsSubmittingOrder(true);
 
@@ -1502,14 +1572,14 @@ const HomePage = memo(() => {
       // MANAGER/ADMIN: сумма аренды и разбивка как в превью (calculate-bulk), иначе на бэкенде пересчёт не совпадёт с orders.total_price
       if (
         isAdminOrManager &&
-        pricePreview &&
-        Number.isFinite(Number(pricePreview.total)) &&
-        Number(pricePreview.total) >= 0
+        selectedPricePreview &&
+        Number.isFinite(Number(selectedPricePreview.total)) &&
+        Number(selectedPricePreview.total) >= 0
       ) {
-        orderData.total_price = Math.round(Number(pricePreview.total));
-        if (pricePreview.pricingBreakdown) {
-          orderData.pricing_breakdown = pricePreview.pricingBreakdown;
-          const rid = pricePreview.pricingBreakdown.ruleId;
+        orderData.total_price = Math.round(Number(selectedPricePreview.total));
+        if (selectedPricePreview.pricingBreakdown) {
+          orderData.pricing_breakdown = selectedPricePreview.pricingBreakdown;
+          const rid = selectedPricePreview.pricingBreakdown.ruleId;
           if (rid != null && Number.isFinite(Number(rid))) {
             orderData.pricing_rule_id = Number(rid);
           }
@@ -1594,6 +1664,7 @@ const HomePage = memo(() => {
     movingOrders,
     individualBookingStartDate,
     promoCode,
+    fullPricePreview,
     pricePreview,
     user,
     validateUserProfile,
@@ -2132,22 +2203,22 @@ const HomePage = memo(() => {
 
     const calculatePrice = async () => {
       if (activeStorageTab !== "INDIVIDUAL") {
-        setPricePreview(null);
+        setIndividualPricePreviews(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
         return;
       }
 
       if (!selectedWarehouse || selectedWarehouse?.type === "CLOUD") {
-        setPricePreview(null);
+        setIndividualPricePreviews(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
         return;
       }
 
       if (!previewStorage) {
-        setPricePreview(null);
+        setIndividualPricePreviews(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
         return;
       }
 
       if (!monthsNumber || monthsNumber <= 0) {
-        setPricePreview(null);
+        setIndividualPricePreviews(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
         return;
       }
 
@@ -2161,14 +2232,14 @@ const HomePage = memo(() => {
       );
 
       if (!rawArea || Number.isNaN(rawArea) || rawArea <= 0) {
-        setPricePreview(null);
+        setIndividualPricePreviews(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
         return;
       }
 
       setIsPriceCalculating(true);
 
       try {
-        const payload = {
+        const basePayload = {
           storageType: "INDIVIDUAL",
           months: monthsNumber,
           area: rawArea,
@@ -2179,32 +2250,72 @@ const HomePage = memo(() => {
           ...(previewStorage?.tier !== undefined && previewStorage?.tier !== null && { tier: previewStorage.tier }),
         };
 
-        const response = await warehouseApi.calculateBulkPrice(payload);
+        const buildPreviewFromResponse = (response, paymentType) => {
+          const storagePrice = response?.storage?.price;
+          if (typeof storagePrice !== "number" || Number.isNaN(storagePrice) || storagePrice <= 0) {
+            return null;
+          }
 
-        if (isCancelled) return;
-
-        const storagePrice = response?.storage?.price;
-
-        if (typeof storagePrice === "number" && !Number.isNaN(storagePrice) && storagePrice > 0) {
           const pricingBreakdown = response?.storage?.pricingBreakdown;
-          setPricePreview({
+          return {
             total: storagePrice,
             monthly: pricingBreakdown ? null : storagePrice / monthsNumber,
             pricingBreakdown: pricingBreakdown || null,
+            paymentType,
             isFallback: false,
-          });
-        } else {
-          const fallback = (parseFloat(previewStorage.price) || 0) * monthsNumber;
-          if (fallback > 0) {
-            setPricePreview({
-              total: fallback,
-              monthly: fallback / monthsNumber,
-              isFallback: true,
+          };
+        };
+
+        const paymentTypes = [PAYMENT_TYPE_OPTIONS.MONTHLY, PAYMENT_TYPE_OPTIONS.FULL];
+        const previewEntries = await Promise.all(
+          paymentTypes.map(async (paymentType) => {
+            const response = await warehouseApi.calculateBulkPrice({
+              ...basePayload,
+              payment_type: paymentType,
             });
-          } else {
-            setPricePreview(null);
-          }
+
+            return [paymentType, buildPreviewFromResponse(response, paymentType)];
+          })
+        );
+
+        if (isCancelled) return;
+
+        const previews = Object.fromEntries(previewEntries);
+        const fallback = (parseFloat(previewStorage.price) || 0) * monthsNumber;
+
+        if (!previews[PAYMENT_TYPE_OPTIONS.MONTHLY] && fallback > 0) {
+          previews[PAYMENT_TYPE_OPTIONS.MONTHLY] = {
+            total: fallback,
+            monthly: fallback / monthsNumber,
+            pricingBreakdown: null,
+            paymentType: PAYMENT_TYPE_OPTIONS.MONTHLY,
+            isFallback: true,
+          };
         }
+
+        if (!previews[PAYMENT_TYPE_OPTIONS.FULL]) {
+          previews[PAYMENT_TYPE_OPTIONS.FULL] =
+            (previews[PAYMENT_TYPE_OPTIONS.MONTHLY]
+              ? {
+                  ...previews[PAYMENT_TYPE_OPTIONS.MONTHLY],
+                  paymentType: PAYMENT_TYPE_OPTIONS.FULL,
+                }
+              : null) ||
+            (fallback > 0
+              ? {
+                  total: fallback,
+                  monthly: fallback / monthsNumber,
+                  pricingBreakdown: null,
+                  paymentType: PAYMENT_TYPE_OPTIONS.FULL,
+                  isFallback: true,
+                }
+              : null);
+        }
+
+        setIndividualPricePreviews({
+          MONTHLY: previews[PAYMENT_TYPE_OPTIONS.MONTHLY] || null,
+          FULL: previews[PAYMENT_TYPE_OPTIONS.FULL] || null,
+        });
       } catch (error) {
         console.error("Ошибка при расчёте предварительной стоимости:", error);
         if (isCancelled) return;
@@ -2214,13 +2325,24 @@ const HomePage = memo(() => {
           : null;
 
         if (fallback) {
-          setPricePreview({
+          const fallbackPreview = {
             total: fallback,
             monthly: fallback / monthsNumber,
+            pricingBreakdown: null,
             isFallback: true,
+          };
+          setIndividualPricePreviews({
+            MONTHLY: {
+              ...fallbackPreview,
+              paymentType: PAYMENT_TYPE_OPTIONS.MONTHLY,
+            },
+            FULL: {
+              ...fallbackPreview,
+              paymentType: PAYMENT_TYPE_OPTIONS.FULL,
+            },
           });
         } else {
-          setPricePreview(null);
+          setIndividualPricePreviews(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
         }
       } finally {
         if (!isCancelled) {
@@ -2547,6 +2669,26 @@ const HomePage = memo(() => {
     ],
   );
 
+  const individualPaymentPreviewOptions = useMemo(() => ({
+    MONTHLY: {
+      totalPrice: costSummary.baseTotal || 0,
+      discountAmount: promoDiscount,
+      pricingBreakdown: costSummary.pricingBreakdown || null,
+    },
+    FULL: {
+      totalPrice: fullPaymentCostSummary.baseTotal || 0,
+      discountAmount: fullPaymentPromoDiscount,
+      pricingBreakdown: fullPaymentCostSummary.pricingBreakdown || null,
+    },
+  }), [
+    costSummary.baseTotal,
+    costSummary.pricingBreakdown,
+    promoDiscount,
+    fullPaymentCostSummary.baseTotal,
+    fullPaymentCostSummary.pricingBreakdown,
+    fullPaymentPromoDiscount,
+  ]);
+
   return (
     <div className="font-['Montserrat'] min-h-screen bg-white flex flex-col">
       <Header />
@@ -2852,12 +2994,6 @@ const HomePage = memo(() => {
                     Настройте хранение
                   </h2>
 
-                  {promoGuidedBooking && activeStorageTab === "INDIVIDUAL" && (
-                    <div className="mb-4 rounded-2xl border border-[#31876D]/35 bg-gradient-to-r from-[#31876D]/12 to-[#26B3AB]/10 px-4 py-3 text-sm font-semibold text-[#273655]">
-                      Акция активна: первые 2 месяца по 5 990 ₸ / м²
-                    </div>
-                  )}
-
                   {promoGuidedBooking &&
                     activeStorageTab === "INDIVIDUAL" &&
                     promoBookingGuide.message && (
@@ -2975,6 +3111,7 @@ const HomePage = memo(() => {
                       isLoadingBookingInfo={isLoadingBookingInfo}
                       costSummary={costSummary}
                       finalIndividualTotal={finalIndividualTotal}
+                      fullPaymentDiscountInfo={fullPaymentDiscountInfo}
                       isPriceCalculating={isPriceCalculating}
                       monthsNumber={monthsNumber}
                       guideMessage={individualBookingGuideTarget.message}
@@ -3369,6 +3506,11 @@ const HomePage = memo(() => {
           paymentPreviewType === 'CLOUD'
             ? cloudPromoDiscount
             : promoDiscount
+        }
+        priceOptions={
+          paymentPreviewType === 'CLOUD'
+            ? null
+            : individualPaymentPreviewOptions
         }
         storageInfo={
           paymentPreviewType === 'CLOUD'

@@ -798,7 +798,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                       </p>
                     )}
                     <p className="text-[11px] sm:text-[12px] text-[#5C5C5C] mt-1">
-                      закрывающие документы придут в письме на почту
+                      Закрывающие документы придут на указанную почту.
                     </p>
                   </div>
 

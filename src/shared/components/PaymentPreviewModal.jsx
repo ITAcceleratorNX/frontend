@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent } from '../../components/ui/dialog';
 import { Info, CreditCard, Calendar, Zap } from 'lucide-react';
 import instructionImage from '../../assets/int.jpg';
@@ -274,6 +274,7 @@ const PaymentPreviewModal = ({
   totalPrice = 0,
   servicesTotal = 0,
   discountAmount = 0,
+  priceOptions = null,
   storageInfo = {},
   isSubmitting = false,
   pricingBreakdown = null,
@@ -281,17 +282,83 @@ const PaymentPreviewModal = ({
   // Состояние для типа оплаты
   const [paymentType, setPaymentType] = useState('MONTHLY');
 
+  useEffect(() => {
+    if (isOpen) {
+      setPaymentType('MONTHLY');
+    }
+  }, [isOpen]);
+
+  const selectedPriceOption = useMemo(() => {
+    if (priceOptions?.[paymentType]) {
+      return priceOptions[paymentType];
+    }
+
+    return {
+      totalPrice,
+      discountAmount,
+      pricingBreakdown,
+    };
+  }, [paymentType, priceOptions, totalPrice, discountAmount, pricingBreakdown]);
+
+  const effectiveTotalPrice = selectedPriceOption?.totalPrice || 0;
+  const effectiveDiscountAmount = selectedPriceOption?.discountAmount || 0;
+  const effectivePricingBreakdown = selectedPriceOption?.pricingBreakdown || null;
+  const effectiveFinalTotal = Math.max(
+    0,
+    Number(effectiveTotalPrice) + Number(servicesTotal || 0) - Number(effectiveDiscountAmount || 0)
+  );
+
+  const paymentTypePriceSummary = useMemo(() => {
+    if (paymentType !== 'FULL' || !effectivePricingBreakdown || effectivePricingBreakdown.paymentType !== 'FULL') {
+      return null;
+    }
+
+    const monthlyOption = priceOptions?.MONTHLY || null;
+    const fullOption = priceOptions?.FULL || null;
+    const totalWithoutFullDiscount = monthlyOption
+      ? Number(monthlyOption.totalPrice || 0) + Number(servicesTotal || 0) - Number(monthlyOption.discountAmount || 0)
+      : null;
+    const totalWithFullDiscount = fullOption
+      ? Number(fullOption.totalPrice || 0) + Number(servicesTotal || 0) - Number(fullOption.discountAmount || 0)
+      : effectiveFinalTotal;
+
+    if (totalWithoutFullDiscount == null || totalWithoutFullDiscount <= totalWithFullDiscount) {
+      return null;
+    }
+
+    if (effectivePricingBreakdown.discountPercent) {
+      return {
+        title: `Скидка за полную оплату ${effectivePricingBreakdown.discountPercent}%`,
+        totalWithoutFullDiscount,
+        totalWithFullDiscount,
+      };
+    }
+
+    return {
+      title: 'Специальная цена за полную оплату',
+      totalWithoutFullDiscount,
+      totalWithFullDiscount,
+    };
+  }, [paymentType, effectivePricingBreakdown, priceOptions, servicesTotal, effectiveFinalTotal]);
+
   // Генерируем платежи в зависимости от выбранного типа
   const payments = useMemo(() => {
     if (paymentType === 'FULL') {
-      return generateFullPayment(startDate, monthsCount, totalPrice, servicesTotal, discountAmount);
+      return generateFullPayment(startDate, monthsCount, effectiveTotalPrice, servicesTotal, effectiveDiscountAmount);
     }
     // Если есть pricingBreakdown с promoMonths — используем split-генератор
-    if (pricingBreakdown && pricingBreakdown.promoMonths && pricingBreakdown.promoMonthlyAmount != null) {
-      return generateSplitMonthlyPayments(startDate, monthsCount, totalPrice, servicesTotal, discountAmount, pricingBreakdown);
+    if (effectivePricingBreakdown && effectivePricingBreakdown.promoMonths && effectivePricingBreakdown.promoMonthlyAmount != null) {
+      return generateSplitMonthlyPayments(
+        startDate,
+        monthsCount,
+        effectiveTotalPrice,
+        servicesTotal,
+        effectiveDiscountAmount,
+        effectivePricingBreakdown
+      );
     }
-    return generateMonthlyPayments(startDate, monthsCount, totalPrice, servicesTotal, discountAmount);
-  }, [startDate, monthsCount, totalPrice, servicesTotal, discountAmount, paymentType, pricingBreakdown]);
+    return generateMonthlyPayments(startDate, monthsCount, effectiveTotalPrice, servicesTotal, effectiveDiscountAmount);
+  }, [startDate, monthsCount, effectiveTotalPrice, servicesTotal, effectiveDiscountAmount, paymentType, effectivePricingBreakdown]);
 
   const calculatedTotal = useMemo(() => {
     return payments.reduce((sum, payment) => sum + payment.amount, 0);
@@ -361,6 +428,25 @@ const PaymentPreviewModal = ({
                 Полная оплата
               </button>
             </div>
+            {paymentTypePriceSummary && (
+              <div className="mt-3 rounded-2xl border border-green-200 bg-green-50 px-3 py-3">
+                <p className="text-xs font-semibold text-green-800">
+                  {paymentTypePriceSummary.title}
+                </p>
+                <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+                  <span className="text-green-700">Без скидки</span>
+                  <span className="font-medium text-gray-400 line-through">
+                    {formatPrice(paymentTypePriceSummary.totalWithoutFullDiscount)} ₸
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-3 text-xs">
+                  <span className="text-green-700">Сейчас</span>
+                  <span className="font-semibold text-green-800">
+                    {formatPrice(paymentTypePriceSummary.totalWithFullDiscount)} ₸
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Список платежей */}
