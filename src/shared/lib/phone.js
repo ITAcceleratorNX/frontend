@@ -59,3 +59,25 @@ export function formatPhoneNumber(value) {
 export function isValidKzPhoneDisplay(value) {
   return KZ_PHONE_DISPLAY_REGEX.test(value || '');
 }
+
+/**
+ * Converts any phone input to +7XXXXXXXXXX for API requests.
+ * @param {string} value
+ * @returns {string}
+ */
+export function normalizePhoneForSubmit(value) {
+  if (!value || value.trim() === '') return '';
+
+  const numbers = value.replace(/\D/g, '');
+  let cleaned = numbers;
+
+  if (cleaned.startsWith('8')) {
+    cleaned = '7' + cleaned.slice(1);
+  }
+  if (cleaned && !cleaned.startsWith('7')) {
+    cleaned = '7' + cleaned;
+  }
+
+  cleaned = cleaned.slice(0, 11);
+  return cleaned.startsWith('7') ? `+7${cleaned.slice(1)}` : '';
+}

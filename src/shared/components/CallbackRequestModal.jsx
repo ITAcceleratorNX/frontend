@@ -6,6 +6,7 @@ import { Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccessToast, showErrorToast } from '../lib/toast';
 import api from '@/shared/api/axios.js';
+import { normalizePhoneForSubmit } from '@/shared/lib/phone.js';
 
 export const DISPLAY_PHONE = '+7 778 391-14-25';
 export const TEL_LINK = 'tel:+77783911425';
@@ -55,7 +56,7 @@ const buildLeadPayload = (formData) => {
   const basePayload = {
     ...formData,
     name: formData.name.trim(),
-    phone: formData.phone,
+    phone: normalizePhoneForSubmit(formData.phone),
   };
 
   if (typeof window === 'undefined') {

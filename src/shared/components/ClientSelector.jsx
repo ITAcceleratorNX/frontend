@@ -16,6 +16,7 @@ import {
 } from '../../components/ui/select';
 import DatePicker from '../ui/DatePicker';
 import { getTodayLocalDateString, formatCalendarDate } from '../lib/utils/date';
+import { normalizePhoneForSubmit } from '../lib/phone';
 
 /** Первый месяц графика: для YYYY-MM-DD — календарная дата в локальной зоне (без сдвига из‑за UTC). */
 function parseScheduleAnchorDate(str) {
@@ -349,7 +350,7 @@ const ClientSelector = ({
       const payload = {
         name: formData.name.trim(),
         email: formData.email.trim() || undefined,
-        phone: formData.phone.trim(),
+        phone: normalizePhoneForSubmit(formData.phone),
         iin: formData.iin.trim(),
         address: formData.address.trim(),
         bday: formData.bday.trim(),
@@ -474,7 +475,7 @@ const ClientSelector = ({
         client: {
           name: formData.name.trim(),
           email: formData.email.trim() || undefined,
-          phone: formData.phone.trim(),
+          phone: normalizePhoneForSubmit(formData.phone),
           iin: formData.iin.trim() || undefined,
           address: formData.address.trim() || undefined,
           bday: formData.bday.trim() || undefined,

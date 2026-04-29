@@ -102,6 +102,14 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
       const result = await checkPhone(phone);
       
       if (result.success) {
+        if (result.userExists) {
+          const message = 'Пользователь с таким номером телефона уже существует. Войдите в аккаунт или восстановите пароль.';
+          setServerError(message);
+          showErrorToast(message);
+          return;
+        }
+
+        setServerError(null);
         setCodeSent(true);
         if (result.remainingSeconds) {
           setTimer(result.remainingSeconds);

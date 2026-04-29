@@ -1,4 +1,5 @@
 import api from './axios';
+import { normalizePhoneForSubmit } from '../lib/phone';
 
 export const usersApi = {
   // Получение всех пользователей (для ADMIN и MANAGER)
@@ -95,8 +96,9 @@ export const usersApi = {
   // Отправка SMS кода для верификации телефона
   sendPhoneVerificationCode: async (phone) => {
     try {
-      console.log('Отправка запроса на отправку SMS кода:', phone);
-      const response = await api.post('/users/me/phone/send-verification-code', { phone });
+      const normalizedPhone = normalizePhoneForSubmit(phone);
+      console.log('Отправка запроса на отправку SMS кода:', normalizedPhone);
+      const response = await api.post('/users/me/phone/send-verification-code', { phone: normalizedPhone });
       console.log('SMS код отправлен:', response.data);
       return response.data;
     } catch (error) {
@@ -108,8 +110,9 @@ export const usersApi = {
   // Верификация телефона по коду
   verifyPhone: async (code, phone) => {
     try {
+      const normalizedPhone = normalizePhoneForSubmit(phone);
       console.log('Отправка запроса на верификацию телефона');
-      const response = await api.post('/users/me/phone/verify', { code, phone });
+      const response = await api.post('/users/me/phone/verify', { code, phone: normalizedPhone });
       console.log('Телефон успешно верифицирован:', response.data);
       return response.data;
     } catch (error) {

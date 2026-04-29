@@ -1,4 +1,5 @@
 import api from './axios';
+import { normalizePhoneForSubmit } from '../lib/phone';
 
 export const authApi = {
   // Проверка существования email в системе
@@ -18,8 +19,9 @@ export const authApi = {
   // Проверка существования телефона в системе и отправка SMS
   checkPhone: async (phone) => {
     try {
-      console.log(`Отправка запроса на проверку телефона: ${phone}`);
-      const response = await api.post('/auth/phone', { phone });
+      const normalizedPhone = normalizePhoneForSubmit(phone);
+      console.log(`Отправка запроса на проверку телефона: ${normalizedPhone}`);
+      const response = await api.post('/auth/phone', { phone: normalizedPhone });
       console.log('Ответ сервера:', response.data);
       return response.data;
     } catch (error) {
@@ -45,9 +47,10 @@ export const authApi = {
   // Регистрация нового пользователя
   register: async (phone, unique_code, password, lead_source = undefined, visitor_id = undefined) => {
     try {
-      console.log(`Отправка запроса на регистрацию пользователя: ${phone}`, lead_source ? `с источником: ${lead_source}` : '');
+      const normalizedPhone = normalizePhoneForSubmit(phone);
+      console.log(`Отправка запроса на регистрацию пользователя: ${normalizedPhone}`, lead_source ? `с источником: ${lead_source}` : '');
       const response = await api.post('/auth/register', {
-        phone,
+        phone: normalizedPhone,
         unique_code,
         password,
         lead_source,
@@ -64,9 +67,10 @@ export const authApi = {
   // Регистрация юридического лица (верификация через SMS по номеру телефона)
   registerLegal: async (phone, unique_code, password, legalData, lead_source = undefined, visitor_id = undefined) => {
     try {
-      console.log(`Отправка запроса на регистрацию юридического лица: ${phone}`, lead_source ? `с источником: ${lead_source}` : '');
+      const normalizedPhone = normalizePhoneForSubmit(phone);
+      console.log(`Отправка запроса на регистрацию юридического лица: ${normalizedPhone}`, lead_source ? `с источником: ${lead_source}` : '');
       const response = await api.post('/auth/register-legal', {
-        phone,
+        phone: normalizedPhone,
         unique_code,
         password,
         lead_source,
@@ -158,8 +162,9 @@ export const authApi = {
   // Проверка существования телефона для восстановления пароля
   checkPhoneForRestore: async (phone) => {
     try {
-      console.log(`Отправка запроса на проверку телефона для восстановления: ${phone}`);
-      const response = await api.post('/auth/check-phone', { phone });
+      const normalizedPhone = normalizePhoneForSubmit(phone);
+      console.log(`Отправка запроса на проверку телефона для восстановления: ${normalizedPhone}`);
+      const response = await api.post('/auth/check-phone', { phone: normalizedPhone });
       console.log('Ответ сервера при проверке телефона:', response.data);
       return response.data;
     } catch (error) {
