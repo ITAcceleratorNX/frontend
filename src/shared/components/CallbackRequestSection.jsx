@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Phone, ChevronRight } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '../lib/toast';
 import api from '@/shared/api/axios.js';
+import { normalizePhoneForSubmit } from '@/shared/lib/phone.js';
 import {
   DISPLAY_PHONE,
   TEL_LINK,
@@ -31,7 +32,7 @@ const formatPhoneNumber = (value) => {
 const validatePhone = (phone) => /^\+7 \d{3} \d{3} \d{2} \d{2}$/.test(phone);
 
 const buildLeadPayload = (formData) => {
-  const base = { ...formData, name: formData.name.trim(), phone: formData.phone };
+  const base = { ...formData, name: formData.name.trim(), phone: normalizePhoneForSubmit(formData.phone) };
   if (typeof window === 'undefined') return base;
   return {
     ...base,

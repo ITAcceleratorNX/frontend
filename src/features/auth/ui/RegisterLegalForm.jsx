@@ -105,6 +105,14 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       const result = await checkPhone(phone);
       
       if (result.success) {
+        if (result.userExists) {
+          const message = 'Пользователь с таким номером телефона уже существует. Войдите в аккаунт или восстановите пароль.';
+          setServerError(message);
+          showErrorToast(message);
+          return;
+        }
+
+        setServerError(null);
         setCodeSent(true);
         if (result.remainingSeconds) {
           setTimer(result.remainingSeconds);
@@ -155,7 +163,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       const legalEntityData = {
         bin_iin: data.bin_iin,
         company_name: data.company_name,
-        email: data.email || null,
+        email: data.email?.trim() || undefined,
       };
       
       const result = await registerLegalUser(
