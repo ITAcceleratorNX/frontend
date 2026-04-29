@@ -135,11 +135,13 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
     return formatCalendarDate(dateString, { day: '2-digit', month: 'short' });
   };
 
+  const services = Array.isArray(order.services) ? order.services : [];
+
   // Расчет общей стоимости услуг
   const getServicesTotal = () => {
-    if (!order.services || order.services.length === 0) return 0;
+    if (services.length === 0) return 0;
     
-    return order.services.reduce((total, service) => {
+    return services.reduce((total, service) => {
       if (service.OrderService && service.OrderService.total_price) {
         return total + (parseFloat(service.OrderService.total_price));
       }
@@ -231,7 +233,7 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
           )}
 
           {/* Заказанные услуги */}
-          {order.services && order.services.length > 0 && (
+          {services.length > 0 && (
             <Card className="border-amber-200 rounded-lg bg-amber-50">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -240,7 +242,7 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                 </div>
                 
                 <div className="space-y-2">
-                  {order.services.map((service, index) => {
+                  {services.map((service, index) => {
                     const serviceIcon = getServiceIcon(service.type);
                     const isImage = typeof serviceIcon === 'string' && (serviceIcon.endsWith('.png') || serviceIcon.endsWith('.jpg') || serviceIcon.endsWith('.jpeg') || serviceIcon.endsWith('.webp'));
                     return (
@@ -283,7 +285,7 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                 <div className="mt-3 pt-3 border-t border-amber-200">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-amber-800">
-                      Услуг выбрано: {order.services.length}
+                      Услуг выбрано: {services.length}
                     </span>
                     <span className="text-sm font-bold text-amber-800">
                       Стоимость услуг: {formatPrice(getServicesTotal())} ₸
@@ -304,7 +306,7 @@ const OrderConfirmModal = ({ isOpen, order, onClose }) => {
                 <span className="text-lg font-bold text-[#1e2c4f]">{formatPrice(order.total_price)} ₸</span>
               </div>
 
-              {order.services && order.services.length > 0 && (
+              {services.length > 0 && (
                 <>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Стоимость услуг:</span>

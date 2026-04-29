@@ -87,8 +87,9 @@ const OrderManagement = () => {
 
   // Функция для расчёта суммы услуг заказа
   const getOrderServicesTotal = (order) => {
-    if (!order.services || order.services.length === 0) return 0;
-    return order.services.reduce((total, service) => {
+    const services = Array.isArray(order.services) ? order.services : [];
+    if (services.length === 0) return 0;
+    return services.reduce((total, service) => {
       if (service.OrderService && service.OrderService.total_price) {
         return total + parseFloat(service.OrderService.total_price);
       }

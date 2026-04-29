@@ -295,6 +295,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
 
   // Определяем, можно ли разбронировать бокс
   const canUnbook = !['ACTIVE', 'CANCELED', 'FINISHED'].includes(order?.status);
+  const canForceUnbookFinished = order?.status === 'FINISHED';
   // Определяем, можно ли расторгнуть контракт
   const canCancelContract = order?.status === 'ACTIVE' && order?.cancel_status === 'NO';
 
@@ -316,6 +317,7 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
     ? parseFloat(order?.total_price)
     : (order?.total_price || 0);
   const totalPrice = (isNaN(basePrice) ? 0 : basePrice) + servicesTotal;
+  const hasSelectedOptions = Boolean(order?.is_selected_moving || order?.is_selected_package);
 
   // Вычисляем количество месяцев
   const months = calculateMonths(order?.start_date, order?.end_date);
@@ -507,6 +509,26 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                   </CardContent>
                 </Card>
               )}
+              {hasSelectedOptions && (
+                <Card className="border-gray-200 rounded-2xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold text-[#202422] flex items-center gap-2">
+                      <Truck className="w-4 h-4" />
+                      Отмеченные опции
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className={order?.is_selected_moving ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : ''}>
+                        Перевозка: {order?.is_selected_moving ? 'выбрано' : 'не выбрано'}
+                      </Badge>
+                      <Badge variant="outline" className={order?.is_selected_package ? 'bg-[#31876D]/10 text-[#31876D] border-[#31876D]/20' : ''}>
+                        Упаковка: {order?.is_selected_package ? 'выбрано' : 'не выбрано'}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               {/* Услуги */}
               {order?.services && Array.isArray(order?.services) && order?.services?.length > 0 && (
                 <Card className="border-gray-200 rounded-2xl">
@@ -622,6 +644,19 @@ const PendingOrderModal = ({ isOpen, order, storageId, onClose, onUnbook, isUnbo
                 <Button
                   variant="destructive"
                   onClick={handleUnbookClick}
+                  disabled={isUnbooking || cancelOrderMutation.isPending}
+                  className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
+                >
+                  <div className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Разбронировать бокс
+                  </div>
+                </Button>
+              )}
+              {canForceUnbookFinished && (
+                <Button
+                  variant="destructive"
+                  onClick={handleForceUnbook}
                   disabled={isUnbooking || cancelOrderMutation.isPending}
                   className="flex-1 h-12 rounded-3xl bg-red-600 hover:bg-red-700"
                 >
