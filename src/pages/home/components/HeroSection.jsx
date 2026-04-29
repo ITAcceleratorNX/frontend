@@ -46,7 +46,7 @@ export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
                             onClick={onBookClick ?? onOpenPromoBooking}
                             className="flex items-center gap-2 bg-[#31876D] hover:bg-[#2a7260] text-white font-medium px-6 py-3 rounded-full text-sm sm:text-base transition-colors duration-300"
                         >
-                            <span>Забронировать</span>
+                            <span>Выбрать склад</span>
                             <ChevronRight size={16} strokeWidth={2.5} />
                         </button>
                     </div>
