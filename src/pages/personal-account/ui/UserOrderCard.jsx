@@ -320,7 +320,9 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
     });
   };
 
-  const totalPriceOfServices = order.services.reduce((total, service) => {
+  const services = Array.isArray(order.services) ? order.services : [];
+
+  const totalPriceOfServices = services.reduce((total, service) => {
     if (order.storage?.storage_type === 'CLOUD' && service.type !== 'GAZELLE_TO') {
       return total;
     }
@@ -783,13 +785,13 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
 
 
       {/* Заказанные услуги */}
-      {order.services && order.services.length > 0 && (
+      {services.length > 0 && (
         <>
           <div className="mb-6">
             <p className="text-white/90 text-sm mb-3">Заказанные услуги:</p>
             <div className="bg-white rounded-2xl p-4">
               <div className="space-y-3">
-                {order.services.map((service, index) => (
+                {services.map((service, index) => (
                   <div key={service.id || index}>
                     <div className="flex items-start gap-2">
                       {service.type === 'GAZELLE' || service.type === 'GAZELLE_FROM' || service.type === 'GAZELLE_TO' ? (
@@ -825,7 +827,7 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
               </div>
               <div className="mt-4 ">
                 <div className="flex flex-col items-end gap-1">
-                  <span className="text-gray-500 text-xs">Услуг выбрано: {order.services.length}</span>
+                  <span className="text-gray-500 text-xs">Услуг выбрано: {services.length}</span>
                   <span className="text-gray-900 font-bold text-sm">Общая стоимость: {formatPrice(totalPriceOfServices)} 〒</span>
                 </div>
               </div>

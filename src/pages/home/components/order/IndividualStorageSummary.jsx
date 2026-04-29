@@ -1,6 +1,5 @@
 import React from 'react'
 import { ChevronDown, ChevronUp, Tag, Check, X } from 'lucide-react';
-import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 
 export default function IndividualStorageSummary({
                                            previewStorage,
@@ -17,11 +16,6 @@ export default function IndividualStorageSummary({
                                            isValidatingPromo,
                                            showPromoInput,
                                            showOrderDetails,
-                                           includeMoving,
-                                           includePacking,
-                                           services,
-                                           serviceOptions,
-                                           serviceSummary,
                                            isPriceCalculating,
                                            monthsNumber,
                                            fullPaymentDiscountInfo,
@@ -221,57 +215,6 @@ export default function IndividualStorageSummary({
                     {/* Детали заказа */}
                     {showOrderDetails && (
                         <div className="pt-4 border-t border-gray-200 space-y-4 text-sm text-[#273655]">
-                            {/* Доставка */}
-                            {includeMoving && serviceSummary.breakdown.some(item =>
-                                item.label.includes('Доставка')
-                            ) && (
-                                <div className="flex justify-between font-medium">
-                                    <span>Доставка</span>
-                                    <span>
-                    {serviceSummary.breakdown
-                        .filter(item => item.label.includes('Доставка'))
-                        .reduce((sum, item) => sum + item.amount, 0)
-                        .toLocaleString()} ₸
-                  </span>
-                                </div>
-                            )}
-
-                            {/* Доп. услуги */}
-                            {includePacking && serviceSummary.breakdown.some(item =>
-                                !item.label.includes('Доставка')
-                            ) && (
-                                <div>
-                                    <h4 className="font-bold mb-2">Дополнительные услуги</h4>
-                                    <ul className="space-y-1">
-                                        {services
-                                            .filter(s => s?.service_id && s?.count > 0)
-                                            .map((service, idx) => {
-                                                const option = serviceOptions.find(o => String(o.id) === String(service.service_id));
-                                                if (!option) return null;
-                                                const amount = option.price * Number(service.count);
-                                                return (
-                                                    <li key={idx} className="flex justify-between">
-                            <span>
-                              {formatServiceDescription(option.description) || 'Услуга'} × {service.count} шт ×{' '}
-                                {option.price.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₸
-                            </span>
-                                                        <span className="font-medium">{amount.toLocaleString('ru-RU')} ₸</span>
-                                                    </li>
-                                                );
-                                            })}
-                                    </ul>
-                                    <div className="mt-2 pt-2 border-t font-semibold flex justify-between">
-                                        <span>Итого доп. услуги:</span>
-                                        <span>
-                      {serviceSummary.breakdown
-                          .filter(item => !item.label.includes('Доставка'))
-                          .reduce((sum, item) => sum + item.amount, 0)
-                          .toLocaleString('ru-RU')} ₸
-                    </span>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Размер бокса */}
                             <div className="flex justify-between font-medium">
                                 <span>Размер бокса:</span>

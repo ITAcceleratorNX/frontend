@@ -17,6 +17,7 @@ import {
 import {
   Tabs,
   TabsContent,
+  Switch,
 } from "../../components/ui";
 import DatePicker from "../../shared/ui/DatePicker";
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
@@ -38,8 +39,6 @@ import {
   showInfoToast,
   toastOrderRequestSent,
 } from "../../shared/lib/toast";
-import {getServiceTypeName} from "../../../src/pages/home/components/order/PackingServicesSection.jsx";
-import {formatServiceDescription} from "@/shared/lib/utils/serviceNames";
 
 import CallbackRequestModal from "@/shared/components/CallbackRequestModal.jsx";
 import CallbackRequestSection from "@/shared/components/CallbackRequestSection.jsx";
@@ -214,43 +213,11 @@ const HomePage = memo(() => {
   const [cloudBookingStartDate, setCloudBookingStartDate] = useState(() => getTodayLocalDateString());
   const [includeMoving, setIncludeMoving] = useState(false);
   const [includePacking, setIncludePacking] = useState(false);
+  const [cloudIncludeMoving, setCloudIncludeMoving] = useState(false);
+  const [cloudIncludePacking, setCloudIncludePacking] = useState(false);
   const [cloudMonths, setCloudMonths] = useState("1");
   const [cloudDimensions, setCloudDimensions] = useState({ width: 1, height: 1, length: 1 });
   const [cloudVolumeDirect, setCloudVolumeDirect] = useState(1); // Прямой ввод объема для тарифов
-  const [movingStreetFrom, setMovingStreetFrom] = useState("");
-  const [movingHouseFrom, setMovingHouseFrom] = useState("");
-  const [movingFloorFrom, setMovingFloorFrom] = useState("");
-  const [movingApartmentFrom, setMovingApartmentFrom] = useState("");
-  const [movingPickupDate, setMovingPickupDate] = useState(() => getTodayLocalDateString());
-  const [cloudStreetFrom, setCloudStreetFrom] = useState("");
-  const [cloudHouseFrom, setCloudHouseFrom] = useState("");
-  const [cloudFloorFrom, setCloudFloorFrom] = useState("");
-  const [cloudApartmentFrom, setCloudApartmentFrom] = useState("");
-  
-  // Функция для формирования полного адреса из отдельных полей
-  const getMovingAddressFrom = useMemo(() => {
-    const parts = [];
-    if (movingStreetFrom.trim()) parts.push(movingStreetFrom.trim());
-    if (movingHouseFrom.trim()) parts.push(`д. ${movingHouseFrom.trim()}`);
-    if (movingFloorFrom.trim()) parts.push(`эт. ${movingFloorFrom.trim()}`);
-    if (movingApartmentFrom.trim()) parts.push(`кв. ${movingApartmentFrom.trim()}`);
-    return parts.length > 0 ? parts.join(', ') : '';
-  }, [movingStreetFrom, movingHouseFrom, movingFloorFrom, movingApartmentFrom]);
-  
-  // Функция для формирования полного адреса облачного хранения из отдельных полей
-  const getCloudPickupAddress = useMemo(() => {
-    const parts = [];
-    if (cloudStreetFrom.trim()) parts.push(cloudStreetFrom.trim());
-    if (cloudHouseFrom.trim()) parts.push(`д. ${cloudHouseFrom.trim()}`);
-    if (cloudFloorFrom.trim()) parts.push(`эт. ${cloudFloorFrom.trim()}`);
-    if (cloudApartmentFrom.trim()) parts.push(`кв. ${cloudApartmentFrom.trim()}`);
-    return parts.length > 0 ? parts.join(', ') : '';
-  }, [cloudStreetFrom, cloudHouseFrom, cloudFloorFrom, cloudApartmentFrom]);
-  
-  // Состояние для moving_orders (для возврата вещей при добавлении GAZELLE_TO)
-  const [movingOrders, setMovingOrders] = useState([]);
-  // Состояние для адреса возврата (GAZELLE_TO)
-  const [movingAddressTo, setMovingAddressTo] = useState("");
   const [previewStorage, setPreviewStorage] = useState(null);
   const [individualPricePreviews, setIndividualPricePreviews] = useState(EMPTY_INDIVIDUAL_PRICE_PREVIEWS);
   const [isPriceCalculating, setIsPriceCalculating] = useState(false);
@@ -265,11 +232,6 @@ const HomePage = memo(() => {
   const [highlightedBoxes, setHighlightedBoxes] = useState([]);
   const [isMobileView, setIsMobileView] = useState(false);
   const mapRef = useRef(null);
-  const [serviceOptions, setServiceOptions] = useState([]);
-  const [isServicesLoading, setIsServicesLoading] = useState(false);
-  const [servicesError, setServicesError] = useState(null);
-  const [services, setServices] = useState([]);
-  const [gazelleService, setGazelleService] = useState(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const [callbackModalContext, setCallbackModalContext] = useState('callback');
@@ -285,8 +247,6 @@ const HomePage = memo(() => {
   const [currentTariffIndex, setCurrentTariffIndex] = useState(0);
   const [tariffsPerView, setTariffsPerView] = useState(4);
   const [selectedTariff, setSelectedTariff] = useState(null);
-  // Состояние для цены доставки
-  const [gazelleFromPrice, setGazelleFromPrice] = useState(null);
   // Состояние для цен тарифов облачного хранения из API
   const [tariffPrices, setTariffPrices] = useState({});
   // Состояние для цен кастомного тарифа (CLOUD_M3 — одна цена за м³)
@@ -359,49 +319,6 @@ const HomePage = memo(() => {
       []
   );
 
-  const ensureServiceOptions = useCallback(async () => {
-    if (serviceOptions.length > 0) {
-      return serviceOptions;
-    }
-
-    if (isServicesLoading) {
-      return serviceOptions;
-    }
-
-    try {
-      setIsServicesLoading(true);
-      setServicesError(null);
-      const pricesData = await paymentsApi.getPrices();
-      
-      const filteredPrices = pricesData.filter((price) => {
-        const excludedTypes = [
-          "DEPOSIT",
-          "M2",
-          "CLOUD_M3",
-          "UTILITY_KNIFE",
-          "FURNITURE_SPECIALIST",
-          "CLOUD_TARIFF_SUMKA",
-          "CLOUD_TARIFF_SHINA",
-          "CLOUD_TARIFF_MOTORCYCLE",
-          "CLOUD_TARIFF_BICYCLE",
-          "CLOUD_TARIFF_SUNUK",
-          "CLOUD_TARIFF_FURNITURE",
-          "CLOUD_TARIFF_SKLAD",
-          "CLOUD_TARIFF_GARAZH",
-        ];
-        return !excludedTypes.includes(price.type);
-      });
-      setServiceOptions(filteredPrices);
-      return filteredPrices;
-    } catch (error) {
-      console.error("Ошибка при загрузке услуг:", error);
-      setServicesError("Не удалось загрузить список услуг. Попробуйте позже.");
-      return [];
-    } finally {
-      setIsServicesLoading(false);
-    }
-  }, [serviceOptions, isServicesLoading]);
-
   const openCallbackModal = useCallback((context = 'callback') => {
     setCallbackModalContext(context);
     setIsCallbackModalOpen(true);
@@ -412,10 +329,6 @@ const HomePage = memo(() => {
     if (!nextOpen) {
       setCallbackModalContext('callback');
     }
-  }, []);
-
-  const addServiceRow = useCallback(() => {
-    setServices((prev) => [...prev, { service_id: "", count: 1 }]);
   }, []);
 
   const monthsNumber = useMemo(() => {
@@ -481,120 +394,17 @@ const HomePage = memo(() => {
     individualBookingStartDate,
   ]);
 
-  const updateServiceRow = useCallback((index, field, value) => {
-    setServices((prev) => {
-      const updated = prev.map((service, i) =>
-        i === index
-          ? {
-              ...service,
-              [field]: field === "count" ? Math.max(1, Number(value) || 1) : value,
-            }
-          : service
-      );
-      
-      // Если изменился service_id, проверяем добавление/удаление GAZELLE_TO
-      if (field === "service_id") {
-        const oldService = prev[index];
-        // Проверяем, была ли добавлена услуга GAZELLE_TO
-        if (value && serviceOptions.length > 0) {
-          const selectedOption = serviceOptions.find(opt => String(opt.id) === String(value));
-          if (selectedOption && selectedOption.type === "GAZELLE_TO") {
-            // Добавляем moving_order для возврата вещей
-            // Дата возврата = дата начала бронирования + количество месяцев
-            const startDate = individualBookingStartDate ? new Date(individualBookingStartDate) : new Date();
-            const returnDate = new Date(startDate);
-            returnDate.setMonth(returnDate.getMonth() + monthsNumber);
-            returnDate.setHours(10, 0, 0, 0);
-            
-            setMovingOrders(prev => {
-              // Проверяем, нет ли уже такого moving_order
-              const exists = prev.some(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
-              if (exists) {
-                return prev;
-              }
-              
-              const newOrder = {
-                moving_date: returnDate.toISOString(),
-                status: "PENDING",
-                direction: "TO_CLIENT",
-                address: movingAddressTo || getMovingAddressFrom || "",
-              };
-              return [...prev, newOrder];
-            });
-          }
-        }
-        
-        // Проверяем, была ли удалена услуга GAZELLE_TO
-        if (oldService?.service_id) {
-          const oldOption = serviceOptions.find(opt => String(opt.id) === String(oldService.service_id));
-          if (oldOption && oldOption.type === "GAZELLE_TO") {
-            // Удаляем moving_order для возврата вещей
-            setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
-          }
-        }
-      }
-      
-      return updated;
-    });
-  }, [serviceOptions, individualBookingStartDate, monthsNumber, movingStreetFrom, movingHouseFrom, movingApartmentFrom, movingAddressTo, getMovingAddressFrom]);
-
-  const removeServiceRow = useCallback((index) => {
-    setServices((prev) => {
-      const serviceToRemove = prev[index];
-      
-      // Если удаляется GAZELLE_TO, удаляем соответствующий moving_order
-      if (serviceToRemove?.service_id && serviceOptions.length > 0) {
-        const option = serviceOptions.find(opt => String(opt.id) === String(serviceToRemove.service_id));
-        if (option && option.type === "GAZELLE_TO") {
-          setMovingOrders(prev => prev.filter(order => !(order.status === "PENDING" && order.direction === "TO_CLIENT")));
-        }
-      }
-      
-      return prev.filter((_, i) => i !== index);
-    });
-  }, [serviceOptions]);
-
   const cloudMonthsNumber = useMemo(() => {
     const parsed = parseInt(cloudMonths, 10);
     return Number.isNaN(parsed) ? 0 : parsed;
   }, [cloudMonths]);
 
   const serviceSummary = useMemo(() => {
-    const breakdown = [];
-    let total = 0;
-
-    if (includeMoving && gazelleService && gazelleFromPrice !== null) {
-      // Для индивидуального хранения: только GAZELLE_FROM (доставка)
-      total += gazelleFromPrice;
-      breakdown.push({
-        label: "Доставка (с клиента на склад)",
-        amount: gazelleFromPrice,
-      });
-    }
-
-    if (includePacking) {
-      services.forEach((service) => {
-        if (!service?.service_id || !service?.count || service.count <= 0) {
-          return;
-        }
-        const option = serviceOptions.find((item) => String(item.id) === String(service.service_id));
-        const unitPrice = option?.price ?? 0;
-        const count = Number(service.count) || 1;
-        const amount = unitPrice * count;
-        total += amount;
-        const serviceName = formatServiceDescription(option?.description) || getServiceTypeName(option?.type) || "Услуга";
-        breakdown.push({
-          label: count > 1 ? `${serviceName} (${count} шт.)` : serviceName,
-          amount,
-        });
-      });
-    }
-
     return {
-      total,
-      breakdown,
+      total: 0,
+      breakdown: [],
     };
-  }, [includeMoving, includePacking, gazelleService, services, serviceOptions, gazelleFromPrice]);
+  }, []);
 
   const callbackModalDescription = useMemo(() => {
     if (callbackModalContext === 'booking') {
@@ -605,17 +415,6 @@ const HomePage = memo(() => {
     }
     return undefined;
   }, [callbackModalContext]);
-
-  const packagingServicesForOrder = useMemo(
-    () =>
-      services
-        .filter((service) => service?.service_id && service?.count && service.count > 0)
-        .map((service) => ({
-          service_id: service.service_id,
-          count: Math.max(1, Number(service.count) || 1),
-        })),
-    [services]
-  );
 
   /** Обязательные условия для брони: срок + свободный бокс (доставка и доп. услуги — по желанию) */
   const isIndividualFormReady = useMemo(() => {
@@ -643,26 +442,12 @@ const HomePage = memo(() => {
     if (!hasVacantBox) {
       return { section: "map", message: INDIVIDUAL_GUIDE_COPY.box };
     }
-    if (
-      includeMoving &&
-      (!movingPickupDate || !String(movingPickupDate).trim() || !movingStreetFrom.trim())
-    ) {
-      return { section: "moving", message: INDIVIDUAL_GUIDE_COPY.delivery };
-    }
-    if (includePacking && packagingServicesForOrder.length === 0) {
-      return { section: "packing", message: INDIVIDUAL_GUIDE_COPY.extras };
-    }
     return { section: null, message: null };
   }, [
     activeStorageTab,
     monthsNumber,
     individualMonths,
     previewStorage,
-    includeMoving,
-    movingPickupDate,
-    movingStreetFrom,
-    includePacking,
-    packagingServicesForOrder.length,
   ]);
 
   const individualMandatoryBookingReady = useMemo(() => {
@@ -719,23 +504,6 @@ const HomePage = memo(() => {
         step: 1,
       };
     }
-    if (
-      includeMoving &&
-      (!movingPickupDate || !String(movingPickupDate).trim() || !movingStreetFrom.trim())
-    ) {
-      return {
-        highlight: "moving",
-        message: "Теперь выберите дату доставки",
-        step: 2,
-      };
-    }
-    if (includePacking && packagingServicesForOrder.length === 0) {
-      return {
-        highlight: "packing",
-        message: "Добавьте нужные дополнительные услуги",
-        step: 3,
-      };
-    }
     const bookReady =
       isIndividualFormReady && !(isAdminOrManager && !selectedClientUser);
     if (bookReady) {
@@ -746,11 +514,6 @@ const HomePage = memo(() => {
     promoGuidedBooking,
     activeStorageTab,
     previewStorage,
-    includeMoving,
-    includePacking,
-    movingPickupDate,
-    movingStreetFrom,
-    packagingServicesForOrder.length,
     isIndividualFormReady,
     isAdminOrManager,
     selectedClientUser,
@@ -796,20 +559,10 @@ const HomePage = memo(() => {
     if (!cloudStorage?.id) return false;
     if (!cloudMonthsNumber || cloudMonthsNumber <= 0) return false;
     if (!cloudVolume || cloudVolume <= 0) return false;
-    if (!cloudStreetFrom.trim()) return false;
     // Требуется либо выбран тариф, либо выбрано "Свои габариты"
     if (!selectedTariff) return false;
     return true;
-  }, [cloudStorage, cloudMonthsNumber, cloudStreetFrom, cloudVolume, selectedTariff]);
-
-  useMemo(() => {
-    // Для индивидуального хранения: только GAZELLE_FROM (доставка)
-    if (gazelleFromPrice !== null) {
-      return gazelleFromPrice;
-    }
-    // Fallback на дефолтные значения, если цены еще не загружены
-    return 14000;
-  }, [gazelleFromPrice]);
+  }, [cloudStorage, cloudMonthsNumber, cloudVolume, selectedTariff]);
 
   const calculatePercentDiscountAmount = useCallback((amount, percent) => {
     const totalAmount = Number(amount) || 0;
@@ -1245,26 +998,6 @@ const HomePage = memo(() => {
     cloudPricePreview,
   ]);
 
-  const buildMovingOrders = useCallback((address, months, pickupDateString = null) => {
-    // Используем переданную дату доставки или текущую дату
-    const pickupDate = pickupDateString 
-      ? new Date(pickupDateString)
-      : new Date();
-    
-    // Устанавливаем время на начало дня для даты доставки
-    pickupDate.setHours(10, 0, 0, 0); // 10:00 утра для доставки
-
-    // Возвращаем доставку (PENDING с direction TO_WAREHOUSE)
-    return [
-      {
-        moving_date: pickupDate.toISOString(),
-        status: "PENDING",
-        direction: "TO_WAREHOUSE",
-        address,
-      },
-    ];
-  }, []);
-
   // Функция для перевода ошибок бэкенда на понятный язык
   const translateBackendError = useCallback((error, errorData) => {
     const message = errorData?.message || errorData?.error || error.message || "";
@@ -1415,14 +1148,6 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (includeMoving && !movingStreetFrom.trim()) {
-      return;
-    }
-
-    if (includePacking && packagingServicesForOrder.length === 0) {
-      return;
-    }
-
     const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
     if (!Number.isFinite(storageId) || storageId <= 0) {
       return;
@@ -1436,16 +1161,6 @@ const HomePage = memo(() => {
     try {
       setIsSubmittingOrder(true);
 
-      let availableOptions = serviceOptions;
-      if ((includePacking || includeMoving) && serviceOptions.length === 0) {
-        const loadedOptions = await ensureServiceOptions();
-        if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
-          availableOptions = loadedOptions;
-        }
-      }
-
-      const trimmedAddress = getMovingAddressFrom;
-
       const orderItems = [
         {
           name: "Вещь",
@@ -1454,49 +1169,8 @@ const HomePage = memo(() => {
         },
       ];
 
-      const packagingEntries = includePacking ? packagingServicesForOrder : [];
-
-      const finalServices = packagingEntries
-        .map((service) => ({
-          service_id: Number(service.service_id),
-          count: service.count,
-        }))
-        .filter(
-          (service) =>
-            Number.isFinite(service.service_id) && service.service_id > 0 && Number.isFinite(service.count) && service.count > 0
-        );
-
-      if (includeMoving) {
-        // Ищем GAZELLE_FROM (доставка)
-        const gazelleFromOption =
-          gazelleService ||
-          availableOptions?.find((option) => option.type === "GAZELLE_FROM");
-        const gazelleFromId =
-          gazelleFromOption?.id ?? gazelleFromOption?.service_id ?? gazelleFromOption ?? null;
-
-        if (!gazelleFromId || !Number.isFinite(Number(gazelleFromId))) {
-          setIsSubmittingOrder(false);
-          return;
-        }
-
-        // Добавляем только GAZELLE_FROM с count: 1
-        finalServices.push({
-          service_id: Number(gazelleFromId),
-          count: 1,
-        });
-      }
-
       // Формируем дату начала бронирования
       const startDate = individualBookingStartDate ? new Date(individualBookingStartDate).toISOString() : new Date().toISOString();
-
-      // is_selected_package должен быть true, если есть услуги упаковки ИЛИ услуга "Газель" при перевозке
-      const hasPackagingServices = packagingEntries.length > 0;
-      // Проверяем наличие услуги "Газель" в finalServices (она добавляется выше, если includeMoving включен)
-      const hasGazelleService = includeMoving && finalServices.some(s => {
-        const service = availableOptions.find(opt => opt.id === s.service_id);
-        return service && service.type === "GAZELLE_FROM";
-      });
-      const isPackageSelected = hasPackagingServices || hasGazelleService;
 
       const orderData = {
         storage_id: storageId,
@@ -1504,7 +1178,7 @@ const HomePage = memo(() => {
         start_date: startDate,
         order_items: orderItems,
         is_selected_moving: includeMoving,
-        is_selected_package: isPackageSelected,
+        is_selected_package: includePacking,
         payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
 
@@ -1515,58 +1189,6 @@ const HomePage = memo(() => {
       // Добавляем промокод, если он применен
       if (promoSuccess && promoCode) {
         orderData.promo_code = promoCode;
-      }
-
-      // Проверяем наличие GAZELLE_TO в услугах (независимо от includeMoving)
-      const hasGazelleTo = finalServices.some(s => {
-        const service = availableOptions.find(opt => opt.id === s.service_id);
-        return service && service.type === "GAZELLE_TO";
-      });
-
-      // Создаем moving_orders
-      const allMovingOrders = [];
-      
-      if (includeMoving) {
-        // Добавляем доставку (PENDING с direction TO_WAREHOUSE)
-        const pickupOrder = buildMovingOrders(trimmedAddress, monthsNumber, movingPickupDate)[0];
-        allMovingOrders.push(pickupOrder);
-      }
-      
-      // Добавляем возврат вещей, если есть GAZELLE_TO в услугах
-      if (hasGazelleTo) {
-        const returnOrder = movingOrders.find(order => order.status === "PENDING" && order.direction === "TO_CLIENT");
-        if (returnOrder) {
-          allMovingOrders.push({
-            moving_date: returnOrder.moving_date,
-            status: "PENDING",
-            direction: "TO_CLIENT",
-            address: returnOrder.address || movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
-          });
-        } else {
-          // Создаем дату возврата: дата начала бронирования + количество месяцев
-          const startDate = new Date(individualBookingStartDate || new Date());
-          const returnDate = new Date(startDate);
-          returnDate.setMonth(returnDate.getMonth() + monthsNumber);
-          returnDate.setHours(10, 0, 0, 0);
-          
-          allMovingOrders.push({
-            moving_date: returnDate.toISOString(),
-            status: "PENDING",
-            direction: "TO_CLIENT",
-            address: movingAddressTo.trim() || (includeMoving ? trimmedAddress : ""),
-          });
-        }
-      }
-      
-      // Добавляем moving_orders только если они есть
-      if (allMovingOrders.length > 0) {
-        orderData.moving_orders = allMovingOrders;
-        // Если есть moving_orders, устанавливаем is_selected_moving в true
-        orderData.is_selected_moving = true;
-      }
-
-      if (finalServices.length > 0) {
-        orderData.services = finalServices;
       }
 
       // MANAGER/ADMIN: сумма аренды и разбивка как в превью (calculate-bulk), иначе на бэкенде пересчёт не совпадёт с orders.total_price
@@ -1642,9 +1264,6 @@ const HomePage = memo(() => {
       setIsSubmittingOrder(false);
     }
   }, [
-    buildMovingOrders,
-    ensureServiceOptions,
-    gazelleService,
     includeMoving,
     includePacking,
     isAuthenticated,
@@ -1654,14 +1273,9 @@ const HomePage = memo(() => {
     selectedClientUser,
     monthsNumber,
     navigate,
-    packagingServicesForOrder,
     previewStorage,
     selectedWarehouse,
-    serviceOptions,
-    getMovingAddressFrom,
-    movingStreetFrom,
     openCallbackModal,
-    movingOrders,
     individualBookingStartDate,
     promoCode,
     fullPricePreview,
@@ -1715,14 +1329,8 @@ const HomePage = memo(() => {
       return;
     }
 
-    if (!cloudStreetFrom.trim()) {
-      return;
-    }
-
     try {
       setIsSubmittingOrder(true);
-
-      const trimmedAddress = getCloudPickupAddress;
 
       // Определяем название для заказа
       const orderItemName = selectedTariff.isCustom 
@@ -1757,33 +1365,13 @@ const HomePage = memo(() => {
       // Формируем дату начала бронирования для облачного хранения
       const cloudStartDate = cloudBookingStartDate ? new Date(cloudBookingStartDate).toISOString() : new Date().toISOString();
 
-      // Для облачного хранения всегда включена перевозка, нужно добавить услугу "Газель"
-      let availableOptions = serviceOptions;
-      if (serviceOptions.length === 0) {
-        const loadedOptions = await ensureServiceOptions();
-        if (Array.isArray(loadedOptions) && loadedOptions.length > 0) {
-          availableOptions = loadedOptions;
-        }
-      }
-
-      // Ищем GAZELLE_FROM для облачного хранения
-      const gazelleFromOption =
-        gazelleService ||
-        availableOptions?.find((option) => option.type === "GAZELLE_FROM");
-      const gazelleFromId =
-        gazelleFromOption?.id ?? gazelleFromOption?.service_id ?? gazelleFromOption ?? null;
-
-      // Для облачного хранения перевозка всегда включена, и если есть услуга "Газель", то is_selected_package = true
-      const hasGazelleForCloud = gazelleFromId && Number.isFinite(Number(gazelleFromId));
-
       const orderData = {
         storage_id: Number(cloudStorage.id),
         months: cloudMonthsNumber,
         start_date: cloudStartDate,
         order_items: orderItems,
-        is_selected_moving: true,
-        is_selected_package: hasGazelleForCloud, // true если есть услуга "Газель"
-        moving_orders: buildMovingOrders(trimmedAddress, cloudMonthsNumber, cloudBookingStartDate),
+        is_selected_moving: cloudIncludeMoving,
+        is_selected_package: cloudIncludePacking,
         tariff_type: tariff_type, // Добавляем тип тарифа
         payment_type: paymentType, // Тип оплаты: MONTHLY или FULL
       };
@@ -1795,18 +1383,6 @@ const HomePage = memo(() => {
       // Добавляем промокод, если он применен
       if (cloudPromoSuccess && cloudPromoCode) {
         orderData.promo_code = cloudPromoCode;
-      }
-
-      console.error("availableOptions: ", availableOptions);
-
-      // Добавляем услугу "Газель - Доставка" для перевозки (только GAZELLE_FROM)
-      if (hasGazelleForCloud) {
-        orderData.services = [
-          {
-            service_id: Number(gazelleFromId),
-            count: 1, // только доставка
-          },
-        ];
       }
 
       if (
@@ -1873,11 +1449,10 @@ const HomePage = memo(() => {
       setIsSubmittingOrder(false);
     }
   }, [
-    buildMovingOrders,
     cloudBookingStartDate,
+    cloudIncludeMoving,
+    cloudIncludePacking,
     cloudMonthsNumber,
-    getCloudPickupAddress,
-    cloudStreetFrom,
     cloudStorage,
     cloudVolume,
     isAuthenticated,
@@ -1887,10 +1462,6 @@ const HomePage = memo(() => {
     selectedClientUser,
     navigate,
     selectedTariff,
-    serviceOptions,
-    gazelleService,
-    ensureServiceOptions,
-    warehouseApi,
     cloudPromoCode,
     cloudPricePreview,
     user,
@@ -1989,10 +1560,6 @@ const HomePage = memo(() => {
 
   useEffect(() => {
     if (activeStorageTab !== "CLOUD") {
-      setCloudStreetFrom("");
-      setCloudHouseFrom("");
-      setCloudFloorFrom("");
-      setCloudApartmentFrom("");
       return;
     }
     // Устанавливаем "Свои габариты" по умолчанию при переключении на облачное хранение
@@ -2089,33 +1656,6 @@ const HomePage = memo(() => {
     }
   }, [selectedWarehouse]);
 
-  // Загрузка цен услуг для расчета процента скидки (только для индивидуальных складов)
-  useEffect(() => {
-    const loadServicePrices = async () => {
-      if (!selectedWarehouse || selectedWarehouse.type !== 'INDIVIDUAL') {
-        setGazelleFromPrice(null);
-        return;
-      }
-
-      try {
-        const prices = await warehouseApi.getWarehouseServicePrices(selectedWarehouse.id);
-        const pricesMap = {};
-        prices.forEach(price => {
-          pricesMap[price.service_type] = parseFloat(price.price);
-          // Сохраняем цену GAZELLE_FROM отдельно для расчета доставки
-          if (price.service_type === 'GAZELLE_FROM') {
-            setGazelleFromPrice(parseFloat(price.price));
-          }
-        });
-      } catch (error) {
-        console.error('Ошибка при загрузке цен услуг для расчета скидки:', error);
-        setGazelleFromPrice(null);
-      }
-    };
-
-    loadServicePrices();
-  }, [selectedWarehouse]);
-
   // Загрузка цен тарифов облачного хранения из API
   // Метаданные (basePrice, baseVolume, maxVolume) остаются захардкоженными на фронтенде
   useEffect(() => {
@@ -2178,30 +1718,6 @@ const HomePage = memo(() => {
     mediaQuery.addListener(updateMatch);
     return () => mediaQuery.removeListener(updateMatch);
   }, []);
-
-  useEffect(() => {
-    if (!includeMoving) {
-      setGazelleService(null);
-      return;
-    }
-
-    if (serviceOptions.length === 0) {
-      ensureServiceOptions();
-      return;
-    }
-
-    // Ищем GAZELLE_FROM вместо GAZELLE
-    const gazelleFrom = serviceOptions.find((option) => option.type === "GAZELLE_FROM");
-    if (gazelleFrom) {
-      setGazelleService({
-        id: String(gazelleFrom.id),
-        name: getServiceTypeName(gazelleFrom.type) || gazelleFrom.description || "Газель - Доставка",
-        price: gazelleFrom.price,
-      });
-    } else {
-      setGazelleService(null);
-    }
-  }, [includeMoving, serviceOptions, ensureServiceOptions]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -3072,18 +2588,6 @@ const HomePage = memo(() => {
                       <MovingSection
                         includeMoving={includeMoving}
                         setIncludeMoving={setIncludeMoving}
-                        previewStorage={previewStorage}
-                        movingPickupDate={movingPickupDate}
-                        setMovingPickupDate={setMovingPickupDate}
-                        movingStreetFrom={movingStreetFrom}
-                        setMovingStreetFrom={setMovingStreetFrom}
-                        movingHouseFrom={movingHouseFrom}
-                        setMovingHouseFrom={setMovingHouseFrom}
-                        movingFloorFrom={movingFloorFrom}
-                        setMovingFloorFrom={setMovingFloorFrom}
-                        movingApartmentFrom={movingApartmentFrom}
-                        setMovingApartmentFrom={setMovingApartmentFrom}
-                        ensureServiceOptions={ensureServiceOptions}
                       />
                     </div>
 
@@ -3091,19 +2595,6 @@ const HomePage = memo(() => {
                       <PackingServicesSection
                         includePacking={includePacking}
                         setIncludePacking={setIncludePacking}
-                        previewStorage={previewStorage}
-                        isServicesLoading={isServicesLoading}
-                        servicesError={servicesError}
-                        services={services}
-                        serviceOptions={serviceOptions}
-                        ensureServiceOptions={ensureServiceOptions}
-                        updateServiceRow={updateServiceRow}
-                        removeServiceRow={removeServiceRow}
-                        addServiceRow={addServiceRow}
-                        movingAddressTo={movingAddressTo}
-                        setMovingAddressTo={setMovingAddressTo}
-                        movingOrders={movingOrders}
-                        setMovingOrders={setMovingOrders}
                       />
                     </div>
                   </div>
@@ -3136,13 +2627,6 @@ const HomePage = memo(() => {
                       isValidatingPromo={isValidatingPromo}
                       showPromoInput={showPromoInput}
                       showOrderDetails={showOrderDetails}
-
-                      // услуги и доставка
-                      includeMoving={includeMoving}
-                      includePacking={includePacking}
-                      services={services}
-                      serviceOptions={serviceOptions}
-                      serviceSummary={serviceSummary}
 
                       // сеттеры состояний
                       setShowOrderDetails={setShowOrderDetails}
@@ -3347,33 +2831,24 @@ const HomePage = memo(() => {
                     />
                   </div>
 
-                  {/* Дополнительные услуги */}
+                  {/* Дополнительные опции */}
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold text-[#273655] mb-3">Дополнительные услуги</h3>
-                    <p className="text-sm text-[#555A65] mb-4">
-                      Мы сами забираем, упаковываем и возвращаем ваши вещи. Все услуги включены в тариф — вам нужно только указать адрес доставки.
-                    </p>
-                    <p className="text-sm text-[#555A65] mb-4">Перевозка и упаковка включены в стоимость.</p>
+                    <h3 className="text-lg font-bold text-[#273655] mb-3">Дополнительно</h3>
                     <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm text-[#373737] mb-1">Дата доставки</label>
-                        <DatePicker
-                          value={cloudBookingStartDate}
-                          onChange={(value) => { setCloudBookingStartDate(value); }}
-                          minDate={getTodayLocalDateString()}
-                          allowFutureDates={true}
-                          placeholder="Дата доставки"
-                          className="[&>div]:bg-gray-100 [&>div]:border-0 [&>div]:rounded-2xl [&_input]:text-[#373737]"
+                      <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                        <span className="text-sm font-medium text-[#273655]">Нужна перевозка</span>
+                        <Switch
+                          checked={cloudIncludeMoving}
+                          onCheckedChange={setCloudIncludeMoving}
+                          className="bg-gray-300 data-[state=checked]:bg-[#00A991]"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm text-[#373737] mb-1">Адрес доставки</label>
-                        <input
-                          type="text"
-                          value={cloudStreetFrom}
-                          onChange={(e) => { setCloudStreetFrom(e.target.value); }}
-                          placeholder="Например: г. Алматы, Абая 25"
-                          className="w-full h-[52px] rounded-2xl bg-gray-100 border-0 px-4 text-sm text-[#373737] placeholder:text-gray-400"
+                      <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                        <span className="text-sm font-medium text-[#273655]">Нужна упаковка</span>
+                        <Switch
+                          checked={cloudIncludePacking}
+                          onCheckedChange={setCloudIncludePacking}
+                          className="bg-gray-300 data-[state=checked]:bg-[#00A991]"
                         />
                       </div>
                     </div>
@@ -3503,9 +2978,7 @@ const HomePage = memo(() => {
             : costSummary.baseTotal || 0
         }
         servicesTotal={
-          paymentPreviewType === 'CLOUD'
-            ? 0
-            : serviceSummary.total || 0
+          0
         }
         discountAmount={
           paymentPreviewType === 'CLOUD'

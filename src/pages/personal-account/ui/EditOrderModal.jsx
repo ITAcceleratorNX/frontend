@@ -175,7 +175,7 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
     // Инициализация при открытии модалки
     useEffect(() => {
         if (order && isOpen) {
-            const initialServices = order.services.map((s) => ({
+            const initialServices = (order.services || []).map((s) => ({
                 service_id: String(s.id),
                 type: s.type,
                 count: s.OrderService?.count || 1,
