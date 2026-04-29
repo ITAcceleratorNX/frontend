@@ -278,6 +278,18 @@ export default function StorageLockersSection({
       }
     }
 
+    // Менеджер: проверяем профиль выбранного клиента
+    if (isAdminOrManager && selectedClientUser) {
+      const clientValidation = validateUserProfile(selectedClientUser);
+      if (!clientValidation.isValid) {
+        const clientName = selectedClientUser.name || selectedClientUser.company_name || 'Клиент';
+        showErrorToast(
+          `Профиль клиента «${clientName}» не заполнен. ${clientValidation.message}`
+        );
+        return;
+      }
+    }
+
     if (!warehouseId) return;
 
     const startIso = startDate

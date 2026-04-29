@@ -1114,28 +1114,32 @@ const HomePage = memo(() => {
       return;
     }
 
-    // Проверка профиля перед отправкой заказа (только для USER, менеджеры создают заказ для клиента)
+    // Проверка профиля перед отправкой заказа
     if (isUserRole && user) {
       const profileValidation = validateUserProfile(user);
       if (!profileValidation.isValid) {
-        // Формируем сообщение в зависимости от типа ошибки
         let errorMessage = profileValidation.message;
-        
-        // Если проблема только в верификации телефона
         if (profileValidation.phoneNotVerified && 
             profileValidation.missingFields.length === 0 && 
             profileValidation.invalidFields.length === 0) {
           errorMessage = 'Пожалуйста, верифицируйте номер телефона в профиле перед созданием заказа.';
         }
-        
         showErrorToast(errorMessage);
         setTimeout(() => {
-          navigate("/personal-account", { 
-            state: { 
-              activeSection: "personal",
-            }
-          });
+          navigate("/personal-account", { state: { activeSection: "personal" } });
         }, 2000);
+        return;
+      }
+    }
+
+    // Менеджер: проверяем профиль выбранного клиента
+    if (isAdminOrManager && selectedClientUser) {
+      const clientValidation = validateUserProfile(selectedClientUser);
+      if (!clientValidation.isValid) {
+        const clientName = selectedClientUser.name || selectedClientUser.company_name || 'Клиент';
+        showErrorToast(
+          `Профиль клиента «${clientName}» не заполнен. ${clientValidation.message}`
+        );
         return;
       }
     }
@@ -1299,7 +1303,7 @@ const HomePage = memo(() => {
       return;
     }
 
-    // Проверка профиля перед отправкой заказа (только для USER)
+    // Проверка профиля перед отправкой заказа
     if (isUserRole && user) {
       const profileValidation = validateUserProfile(user);
       if (!profileValidation.isValid) {
@@ -1313,6 +1317,18 @@ const HomePage = memo(() => {
         setTimeout(() => {
           navigate("/personal-account", { state: { activeSection: "personal" } });
         }, 2000);
+        return;
+      }
+    }
+
+    // Менеджер: проверяем профиль выбранного клиента
+    if (isAdminOrManager && selectedClientUser) {
+      const clientValidation = validateUserProfile(selectedClientUser);
+      if (!clientValidation.isValid) {
+        const clientName = selectedClientUser.name || selectedClientUser.company_name || 'Клиент';
+        showErrorToast(
+          `Профиль клиента «${clientName}» не заполнен. ${clientValidation.message}`
+        );
         return;
       }
     }

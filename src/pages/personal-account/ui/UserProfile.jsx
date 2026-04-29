@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
 import MobileSidebar from './MobileSidebar';
@@ -8,6 +9,316 @@ import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { formatCalendarDateLong } from '../../../shared/lib/utils/date';
+
+const REGIONS = [
+  'Акмолинская область','Актюбинская область','Алматинская область','Атырауская область',
+  'Восточно-Казахстанская область','Жамбылская область','Западно-Казахстанская область',
+  'Карагандинская область','Костанайская область','Кызылординская область',
+  'Мангистауская область','Павлодарская область','Северо-Казахстанская область',
+  'Туркестанская область','Алматы','Астана','Шымкент',
+];
+
+const inputCls = (err) =>
+  `w-full px-3 py-2 text-sm border rounded-lg outline-none transition-colors ${
+    err ? 'border-red-400 bg-red-50' : 'border-gray-300 focus:border-[#00A991]'
+  }`;
+
+const Field = ({ label, name, type = 'text', rules, placeholder, maxLength, onChange, register, errors }) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-xs font-medium text-gray-600">
+      {label}{rules?.required && <span className="text-red-500 ml-0.5">*</span>}
+    </label>
+    <input
+      type={type}
+      placeholder={placeholder}
+      maxLength={maxLength}
+      className={inputCls(errors[name])}
+      {...register(name, { ...rules, ...(onChange ? { onChange } : {}) })}
+    />
+    {errors[name] && <p className="text-xs text-red-500">{errors[name].message}</p>}
+  </div>
+);
+
+const ProfileRow = ({ label, value }) => (
+  <div className="flex flex-col py-1.5 border-b border-gray-100 last:border-0">
+    <span className="text-xs text-gray-500">{label}</span>
+    <span className="text-sm text-gray-900">{value || <span className="text-gray-400 italic">Не указано</span>}</span>
+  </div>
+);
+
+// Форматирование телефона в маску +7 (XXX) XXX-XX-XX
+const formatPhone = (value) => {
+  const digits = value.replace(/\D/g, '');
+  const d = digits.startsWith('8') ? '7' + digits.slice(1) : digits.startsWith('7') ? digits : '7' + digits;
+  const n = d.slice(1, 11);
+  if (!n) return '+7 ';
+  let result = '+7 ';
+  if (n.length > 0) result += '(' + n.slice(0, 3);
+  if (n.length >= 3) result += ') ' + n.slice(3, 6);
+  if (n.length >= 6) result += '-' + n.slice(6, 8);
+  if (n.length >= 8) result += '-' + n.slice(8, 10);
+  return result;
+};
+
+// Парсинг строки адреса в части (улица, дом, этаж, квартира)
+const parseAddress = (addressStr) => {
+  if (!addressStr) return { street: '', house: '', floor: '', apartment: '' };
+  const parts = addressStr.split(',').map(p => p.trim());
+  let street = '', house = '', floor = '', apartment = '';
+  for (const part of parts) {
+    if (part.match(/^д\.?\s*/)) house = part.replace(/^д\.?\s*/, '').trim();
+    else if (part.match(/^эт\.?\s*/)) floor = part.replace(/^эт\.?\s*/, '').trim();
+    else if (part.match(/^кв\.?\s*/)) apartment = part.replace(/^кв\.?\s*/, '').trim();
+    else if (!part.startsWith('г.') && !part.startsWith('г ')) street = part.replace(/^ул\.?\s*/, '').trim();
+  }
+  if (!house && parts.length >= 2) house = parts[parts.length - 1];
+  if (!street && parts.length >= 1) street = parts[0].replace(/^ул\.?\s*/, '').trim();
+  return { street, house, floor, apartment };
+};
+
+const PHONE_PATTERN = {
+  value: /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/,
+  message: 'Номер должен быть в формате +7 (XXX) XXX-XX-XX',
+};
+const EMAIL_PATTERN = {
+  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+  message: 'Некорректный email адрес',
+};
+
+const EditProfileForm = ({ user, onSaved, onCancel }) => {
+  const isLegal = user?.user_type === 'LEGAL';
+  const addr = user?.legal_address || {};
+  const parsedAddr = parseAddress(user?.address || '');
+
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
+    defaultValues: isLegal ? {
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      company_name: user.company_name || '',
+      bin_iin: user.bin_iin || '',
+      bik: user.bik || '',
+      iik: user.iik || '',
+      region: addr.region || '',
+      city: addr.city || '',
+      street: addr.street || '',
+      house: addr.house || '',
+      building: addr.building || '',
+      office: addr.office || '',
+      postal_code: addr.postal_code || '',
+    } : {
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      iin: user.iin || '',
+      addressStreet: parsedAddr.street,
+      addressHouse: parsedAddr.house,
+      addressFloor: parsedAddr.floor,
+      addressApartment: parsedAddr.apartment,
+      bday: user.bday ? user.bday.slice(0, 10) : '',
+    },
+  });
+
+  const handlePhoneChange = (e) => {
+    setValue('phone', formatPhone(e.target.value), { shouldValidate: true });
+  };
+
+  const handleBinIinChange = (e) => {
+    setValue('bin_iin', e.target.value.replace(/\D/g, '').slice(0, 12), { shouldValidate: true });
+  };
+
+  const handleBikChange = (e) => {
+    setValue('bik', e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 11), { shouldValidate: true });
+  };
+
+  const handleIikChange = (e) => {
+    setValue('iik', e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20), { shouldValidate: true });
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      const payload = isLegal ? {
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone,
+        company_name: data.company_name,
+        bin_iin: data.bin_iin,
+        bik: data.bik || null,
+        iik: data.iik || null,
+        legal_address: {
+          region: data.region,
+          city: data.city,
+          street: data.street,
+          house: data.house,
+          building: data.building || '',
+          office: data.office || '',
+          postal_code: data.postal_code,
+        },
+      } : {
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone,
+        iin: data.iin || null,
+        address: [data.addressStreet, data.addressHouse && `д. ${data.addressHouse}`, data.addressFloor && `эт. ${data.addressFloor}`, data.addressApartment && `кв. ${data.addressApartment}`].filter(Boolean).join(', ') || null,
+        bday: data.bday || null,
+      };
+
+      await usersApi.updateUserById(user.id, payload);
+      showSuccessToast('Данные клиента успешно обновлены');
+      onSaved({ ...user, ...payload });
+    } catch (err) {
+      showErrorToast(err.response?.data?.message || 'Ошибка при сохранении данных');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Общие поля */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field
+          register={register} errors={errors}
+          label={isLegal ? 'ФИО представителя' : 'Имя и фамилия'}
+          name="name"
+          rules={{ required: isLegal ? 'ФИО обязательно для заполнения' : 'Имя обязательно для заполнения', minLength: { value: 2, message: 'Минимум 2 символа' } }}
+          placeholder="Иванов Иван Иванович"
+        />
+        <Field
+          register={register} errors={errors}
+          label="Email"
+          name="email"
+          type="email"
+          rules={{ required: 'Email обязателен для заполнения', pattern: EMAIL_PATTERN }}
+          placeholder="example@mail.com"
+        />
+        <Field
+          register={register} errors={errors}
+          label="Телефон"
+          name="phone"
+          type="tel"
+          rules={{ required: 'Телефон обязателен для заполнения', pattern: PHONE_PATTERN }}
+          placeholder="+7 (XXX) XXX-XX-XX"
+          onChange={handlePhoneChange}
+        />
+      </div>
+
+      {isLegal ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field
+              register={register} errors={errors}
+              label="Наименование организации"
+              name="company_name"
+              rules={{ required: 'Наименование обязательно для заполнения' }}
+              placeholder="ООО Компания"
+            />
+            <Field
+              register={register} errors={errors}
+              label="БИН/ИИН"
+              name="bin_iin"
+              maxLength={12}
+              rules={{ required: 'БИН/ИИН обязателен для заполнения', pattern: { value: /^\d{12}$/, message: 'БИН/ИИН должен содержать ровно 12 цифр' } }}
+              placeholder="123456789012"
+              onChange={handleBinIinChange}
+            />
+            <Field
+              register={register} errors={errors}
+              label="БИК"
+              name="bik"
+              maxLength={11}
+              rules={{ required: 'БИК обязателен для заполнения', pattern: { value: /^[A-Za-z0-9]{8}$|^[A-Za-z0-9]{11}$/, message: 'БИК должен содержать 8 или 11 символов (латинские буквы и цифры)' } }}
+              placeholder="KCJBKZKX"
+              onChange={handleBikChange}
+            />
+            <Field
+              register={register} errors={errors}
+              label="ИИК"
+              name="iik"
+              maxLength={20}
+              rules={{ required: 'ИИК обязателен для заполнения', pattern: { value: /^[A-Za-z0-9]{20}$/, message: 'ИИК должен содержать ровно 20 символов (латинские буквы и цифры)' } }}
+              placeholder="KZ00000000000000000000"
+              onChange={handleIikChange}
+            />
+          </div>
+
+          <p className="text-xs font-semibold text-gray-700 pt-1">Юридический адрес</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-600">Регион <span className="text-red-500">*</span></label>
+              <select className={inputCls(errors.region)} {...register('region', { required: 'Регион обязателен для заполнения' })}>
+                <option value="">Выберите регион</option>
+                {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              {errors.region && <p className="text-xs text-red-500">{errors.region.message}</p>}
+            </div>
+            <Field register={register} errors={errors} label="Город" name="city" rules={{ required: 'Город обязателен для заполнения' }} placeholder="Алматы" />
+            <Field register={register} errors={errors} label="Улица" name="street" rules={{ required: 'Улица обязательна для заполнения' }} placeholder="ул. Абая" />
+            <Field register={register} errors={errors} label="Дом" name="house" rules={{ required: 'Дом обязателен для заполнения' }} placeholder="1" />
+            <Field register={register} errors={errors} label="Корпус" name="building" placeholder="А" />
+            <Field register={register} errors={errors} label="Офис" name="office" placeholder="101" />
+            <Field
+              register={register} errors={errors}
+              label="Почтовый индекс"
+              name="postal_code"
+              rules={{ required: 'Индекс обязателен для заполнения', pattern: { value: /^\d{6}$/, message: 'Индекс должен содержать 6 цифр' } }}
+              placeholder="050000"
+              maxLength={6}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field
+              register={register} errors={errors}
+              label="ИИН"
+              name="iin"
+              maxLength={12}
+              rules={{ required: 'ИИН обязателен для заполнения', pattern: { value: /^[0-9]{12}$/, message: 'ИИН должен содержать 12 цифр' } }}
+              placeholder="XXXXXXXXXXXX"
+            />
+            <Field
+              register={register} errors={errors}
+              label="Дата рождения"
+              name="bday"
+              type="date"
+              rules={{
+                required: 'Дата рождения обязательна для заполнения',
+                validate: (value) => {
+                  if (!value) return 'Дата рождения обязательна для заполнения';
+                  const birth = new Date(value);
+                  const today = new Date();
+                  if (isNaN(birth.getTime()) || birth > today) return 'Некорректная дата рождения';
+                  const age = today.getFullYear() - birth.getFullYear() - (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
+                  if (age < 18) return 'Возраст должен быть не менее 18 лет';
+                  if (age > 100) return 'Некорректная дата рождения';
+                  return true;
+                }
+              }}
+            />
+          </div>
+          <p className="text-xs font-semibold text-gray-700 pt-1">Адрес</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field register={register} errors={errors} label="Улица / микрорайон" name="addressStreet" rules={{ required: 'Улица обязательна для заполнения' }} placeholder="ул. Абая" />
+            <Field register={register} errors={errors} label="Дом" name="addressHouse" rules={{ required: 'Дом обязателен для заполнения' }} placeholder="1" />
+            <Field register={register} errors={errors} label="Этаж" name="addressFloor" placeholder="5" />
+            <Field register={register} errors={errors} label="Квартира" name="addressApartment" placeholder="101" />
+          </div>
+        </>
+      )}
+
+      <div className="flex gap-3 pt-2">
+        <button type="submit" disabled={isSubmitting}
+          className="px-4 py-2 text-sm font-medium text-white bg-[#00A991] hover:bg-[#00937d] rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+          {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+        </button>
+        <button type="button" onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">
+          Отмена
+        </button>
+      </div>
+    </form>
+  );
+};
 
 // Компонент модального окна подтверждения удаления
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName, isDeleting }) => {
@@ -81,6 +392,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const [isUpdatingOrderLimit, setIsUpdatingOrderLimit] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Функция для обработки навигации в сайдбаре
   const handleNavClick = (navKey) => {
@@ -365,6 +677,75 @@ const UserProfile = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Редактирование профиля клиента */}
+              {isAdminOrManager && selectedUser?.role === 'USER' && (
+                <div className="px-4 sm:px-6 py-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Данные профиля
+                      <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {selectedUser.user_type === 'LEGAL' ? 'Юр. лицо' : 'Физ. лицо'}
+                      </span>
+                    </h3>
+                    {!isEditingProfile && (
+                      <button
+                        onClick={() => setIsEditingProfile(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-[#00A991] bg-[#00A991]/10 hover:bg-[#00A991]/20 rounded-lg transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Редактировать
+                      </button>
+                    )}
+                  </div>
+
+                  {isEditingProfile ? (
+                    <EditProfileForm
+                      user={selectedUser}
+                      onSaved={(updated) => {
+                        setSelectedUser(updated);
+                        setIsEditingProfile(false);
+                      }}
+                      onCancel={() => setIsEditingProfile(false)}
+                    />
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                      {selectedUser.user_type === 'LEGAL' ? (
+                        <>
+                          <ProfileRow label="Наименование" value={selectedUser.company_name} />
+                          <ProfileRow label="БИН/ИИН" value={selectedUser.bin_iin} />
+                          <ProfileRow label="БИК" value={selectedUser.bik} />
+                          <ProfileRow label="ИИК" value={selectedUser.iik} />
+                          {selectedUser.legal_address && (
+                            <div className="sm:col-span-2">
+                              <ProfileRow label="Юр. адрес" value={[
+                                selectedUser.legal_address.region,
+                                selectedUser.legal_address.city,
+                                selectedUser.legal_address.street,
+                                selectedUser.legal_address.house,
+                                selectedUser.legal_address.postal_code,
+                              ].filter(Boolean).join(', ')} />
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <ProfileRow label="ИИН" value={selectedUser.iin} />
+                          <ProfileRow label="Дата рождения" value={selectedUser.bday ? formatDate(selectedUser.bday) : null} />
+                          <div className="sm:col-span-2">
+                            <ProfileRow label="Адрес" value={selectedUser.address} />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Основная информация */}
               <div className="p-4 sm:p-6">

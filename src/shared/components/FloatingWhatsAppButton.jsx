@@ -6,7 +6,7 @@ const FloatingWhatsAppButton = memo(() => (
     href={WHATSAPP_LINK}
     target="_blank"
     rel="noopener noreferrer"
-    className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-[300] flex max-w-[min(100%,calc(100vw-2rem))] items-center justify-end transition-[filter,opacity] hover:brightness-[0.97] active:brightness-[0.94] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#31876D]/35 focus-visible:ring-offset-2"
+    className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] right-[max(0.75rem,env(safe-area-inset-right))] z-[300] flex max-w-[min(100%,calc(100vw-1.5rem))] items-center justify-end transition-[filter,opacity] hover:brightness-[0.97] active:brightness-[0.94] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#31876D]/35 focus-visible:ring-offset-2 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-[max(1rem,env(safe-area-inset-right))] sm:max-w-[min(100%,calc(100vw-2rem))]"
     aria-label={`Написать в WhatsApp: ${DISPLAY_PHONE}`}
   >
     <span className="inline-flex max-w-full flex-row flex-wrap items-center gap-2 rounded-full border border-black/[0.08] bg-white/95 px-3 py-2.5 text-sm text-black shadow-[0_6px_28px_rgba(15,23,42,0.14)] backdrop-blur-md supports-[backdrop-filter]:bg-white/88 sm:gap-2.5 sm:px-4 sm:py-3 sm:text-base">
