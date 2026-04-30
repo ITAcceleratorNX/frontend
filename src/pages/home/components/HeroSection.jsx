@@ -4,7 +4,10 @@ import heroVideo from "@/video/extraspace.mp4";
 
 export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
     return (
-        <div className="flex-1 relative overflow-hidden -mt-16 pt-16 min-h-[100vh] flex flex-col">
+        <div
+            id="home-hero-section"
+            className="flex-1 relative overflow-hidden -mt-16 pt-16 min-h-[100vh] flex flex-col"
+        >
             <video
                 src={heroVideo}
                 autoPlay
@@ -44,7 +47,7 @@ export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
                         <button
                             type="button"
                             onClick={onBookClick ?? onOpenPromoBooking}
-                            className="flex items-center gap-2 bg-[#31876D] hover:bg-[#2a7260] text-white font-medium px-6 py-3 rounded-full text-sm sm:text-base transition-colors duration-300"
+                            className="flex w-full max-w-[22rem] items-center justify-center gap-2 rounded-full bg-[#31876D] px-6 py-3 text-sm font-medium text-white transition-colors duration-300 hover:bg-[#2a7260] sm:w-auto sm:min-w-[15rem] sm:text-base"
                         >
                             <span>Выбрать склад</span>
                             <ChevronRight size={16} strokeWidth={2.5} />
