@@ -16,6 +16,7 @@ import {
   getBoxRangeImageUrl,
   isMegaTowersWarehouse,
 } from "@/shared/lib/boxRange/boxRangeTemplates.js";
+import { MEGA_TOWER_CEILING_M } from "@/shared/components/MegaTowerVolumeLegend.jsx";
 
 function formatM2(v) {
   const n = Math.round(Number(v) * 100) / 100;
@@ -46,6 +47,14 @@ function BoxVisualModal({ open, onOpenChange, storage, selectedWarehouse, onTake
   const itemsText = BOX_RANGE_TEMPLATES[templateKey]?.items ?? "";
 
   const isMega = isMegaTowersWarehouse(selectedWarehouse);
+  const sizeM3 = useMemo(() => {
+    if (!isMega || sizeM2 == null) return null;
+    return Math.round(sizeM2 * MEGA_TOWER_CEILING_M * 100) / 100;
+  }, [isMega, sizeM2]);
+  const displaySizeM3 = useMemo(
+    () => (sizeM3 != null ? formatM2(sizeM3) : null),
+    [sizeM3]
+  );
   const imageSrc = useMemo(
     () => getBoxRangeImageUrl(templateKey, isMega),
     [templateKey, isMega]
@@ -86,6 +95,7 @@ function BoxVisualModal({ open, onOpenChange, storage, selectedWarehouse, onTake
               className="font-soyuz-grotesk text-xl sm:text-2xl font-bold text-[#202422] leading-tight"
             >
               Размер бокса — {displaySize} м²
+              {displaySizeM3 != null ? ` (${displaySizeM3} м³)` : ""}
             </DialogTitle>
             <DialogDescription id={descId} className="sr-only">
               Просмотр примера наполнения бокса выбранного размера и списка вещей.

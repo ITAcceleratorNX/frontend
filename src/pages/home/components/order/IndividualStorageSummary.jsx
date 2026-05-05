@@ -1,5 +1,15 @@
 import React from 'react'
 import { ChevronDown, ChevronUp, Tag, Check, X } from 'lucide-react';
+import { getStorageM2ForBoxVisual } from '@/shared/lib/boxRange/getStorageM2ForBoxVisual.js';
+import { isMegaTowersWarehouse } from '@/shared/lib/boxRange/boxRangeTemplates.js';
+import { MEGA_TOWER_CEILING_M } from '@/shared/components/MegaTowerVolumeLegend.jsx';
+
+function formatM2(v) {
+    const n = Math.round(Number(v) * 100) / 100;
+    if (Number.isNaN(n)) return '';
+    if (Number.isInteger(n)) return String(n);
+    return String(n).replace('.', ',');
+}
 
 export default function IndividualStorageSummary({
                                            previewStorage,
@@ -27,6 +37,7 @@ export default function IndividualStorageSummary({
                                            setPromoError,
                                            handleApplyPromoCode,
                                            handleRemovePromoCode,
+                                           selectedWarehouse,
                                        }) {
     const showSimpleGuide =
         Boolean(
@@ -62,6 +73,15 @@ export default function IndividualStorageSummary({
 
     const isOccupied = previewStorage.status === 'OCCUPIED' || previewStorage.status === 'PENDING';
     const volume = previewStorage.available_volume || previewStorage.volume || '—';
+    const areaM2Num = getStorageM2ForBoxVisual(previewStorage);
+    const isMegaIndividual = isMegaTowersWarehouse(selectedWarehouse);
+    const volumeM3Num =
+        isMegaIndividual && areaM2Num != null
+            ? Math.round(areaM2Num * MEGA_TOWER_CEILING_M * 100) / 100
+            : null;
+    const monthlySizeSuffix =
+        volumeM3Num != null ? ` / ${formatM2(volumeM3Num)} м³` : '';
+    const monthlyM2Label = areaM2Num != null ? formatM2(areaM2Num) : String(volume);
 
     const occupiedGuideClickable = Boolean(guideMessage && onGuideClick && isOccupied);
 
@@ -164,7 +184,7 @@ export default function IndividualStorageSummary({
                                         <span className="text-2xl leading-none">₸</span>
                                     </span>
                                     <span className="text-sm font-normal text-gray-600 shrink-0">
-                                        ({volume} м²)
+                                        ({monthlyM2Label} м²{monthlySizeSuffix})
                                     </span>
                                 </>
                             ) : (
@@ -218,7 +238,10 @@ export default function IndividualStorageSummary({
                             {/* Размер бокса */}
                             <div className="flex justify-between font-medium">
                                 <span>Размер бокса:</span>
-                                <span>{volume} м²</span>
+                                <span>
+                                    {monthlyM2Label} м²
+                                    {volumeM3Num != null ? ` (${formatM2(volumeM3Num)} м³)` : ''}
+                                </span>
                             </div>
                         </div>
                     )}

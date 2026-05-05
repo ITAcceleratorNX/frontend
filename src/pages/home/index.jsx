@@ -64,6 +64,7 @@ import WarehouseSVGMap from "../../components/WarehouseSVGMap";
 import HeroSection from "../../../src/pages/home/components/HeroSection.jsx";
 import QuickBookingSection from "../../../src/pages/home/components/QuickBookingSection.jsx";
 import StorageFormatsSection from "../../../src/pages/home/components/StorageFormatsSection.jsx";
+import ClimateSensorsSection from "../../../src/pages/home/components/ClimateSensorsSection.jsx";
 import BranchesSection from "../../../src/pages/home/components/BranchesSection.jsx";
 import WarehouseGallery from "../../../src/pages/home/components/WarehouseGallery.jsx";
 import WarehouseSchemePanel from "../../../src/pages/home/components/order/WarehouseSchemePanel.jsx";
@@ -2306,7 +2307,7 @@ const HomePage = memo(() => {
                   </motion.p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-10 md:items-stretch">
                   {["INDIVIDUAL", "LOCKERS", "CLOUD"].map((key, index) => (
                     <motion.button
                       key={key}
@@ -2325,15 +2326,15 @@ const HomePage = memo(() => {
                         setActiveStorageTab(key);
                         setCityStoragePhase(CITY_STORAGE_PHASE.ABOUT);
                       }}
-                      className="group rounded-2xl border-2 border-[#E8EBE9] bg-white p-6 text-left shadow-sm transition-colors duration-300 hover:border-[#31876D] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#31876D] focus-visible:ring-offset-2"
+                      className="group flex h-full min-h-0 flex-col rounded-2xl border-2 border-[#E8EBE9] bg-white p-6 text-left shadow-sm transition-colors duration-300 hover:border-[#31876D] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#31876D] focus-visible:ring-offset-2"
                     >
-                      <span className="block font-soyuz-grotesk text-lg sm:text-xl font-bold text-[#202422] mb-3">
+                      <span className="mb-0 block min-h-[3rem] shrink-0 font-soyuz-grotesk text-lg font-bold leading-snug text-[#202422] sm:min-h-[3.5rem] sm:text-xl">
                         {STORAGE_ABOUT_COPY[key].title}
                       </span>
-                      <span className="text-sm text-[#5C625F] leading-relaxed block">
+                      <span className="-mt-0.5 block min-h-0 flex-1 text-sm leading-relaxed text-[#5C625F]">
                         {STORAGE_ABOUT_COPY[key].teaser}
                       </span>
-                      <span className="mt-4 inline-flex items-center text-sm font-semibold text-[#31876D] group-hover:underline">
+                      <span className="mt-4 inline-flex shrink-0 items-center text-sm font-semibold text-[#31876D] group-hover:underline">
                         Подробнее →
                       </span>
                     </motion.button>
@@ -2661,6 +2662,7 @@ const HomePage = memo(() => {
                       // обработчики
                       handleApplyPromoCode={handleApplyPromoCode}
                       handleRemovePromoCode={handleRemovePromoCode}
+                      selectedWarehouse={selectedWarehouse}
                   />
 
                   {/* Блок выбора клиента для менеджеров/админов */}
@@ -2912,6 +2914,8 @@ const HomePage = memo(() => {
 
       {/* Секция: Форматы хранения */}
       <StorageFormatsSection onMore={scrollToCallbackSection} />
+
+      <ClimateSensorsSection />
 
       {/* Отступ с фоном хэдера */}
       <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
