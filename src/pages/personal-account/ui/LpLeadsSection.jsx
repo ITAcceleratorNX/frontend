@@ -10,13 +10,6 @@ const SERVICE_LABELS = {
   cloud: 'LP-3 · Облачное хранение',
 };
 
-const LP_PATH_OPTIONS = [
-  { value: '', label: 'Все лендинги' },
-  { value: '/lp/arenda-boksa-almaty', label: 'LP-1 · /lp/arenda-boksa-almaty' },
-  { value: '/lp/kamera-hraneniya-almaty', label: 'LP-2 · /lp/kamera-hraneniya-almaty' },
-  { value: '/lp/oblachnoe-hranenie-almaty', label: 'LP-3 · /lp/oblachnoe-hranenie-almaty' },
-];
-
 const SERVICE_FILTER_OPTIONS = [
   { value: '', label: 'Все услуги' },
   { value: 'individual', label: SERVICE_LABELS.individual },
@@ -71,7 +64,6 @@ function LpLeadsSection() {
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
 
   const [filterService, setFilterService] = useState('');
-  const [filterLanding, setFilterLanding] = useState('');
   const [filterClient, setFilterClient] = useState('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
@@ -81,7 +73,7 @@ function LpLeadsSection() {
 
   useEffect(() => {
     setPage(1);
-  }, [filterService, filterLanding, filterClient, filterDateFrom, filterDateTo, deferredSearch, pageSize]);
+  }, [filterService, filterClient, filterDateFrom, filterDateTo, deferredSearch, pageSize]);
 
   const {
     data,
@@ -105,10 +97,6 @@ function LpLeadsSection() {
     return allItems.filter((row) => {
       if (filterService && row.service_type !== filterService) return false;
       if (filterClient && String(row.client_type || '') !== filterClient) return false;
-      if (filterLanding) {
-        const lp = String(row.landing_page || '');
-        if (lp !== filterLanding && !lp.startsWith(`${filterLanding}?`)) return false;
-      }
       if (fromTs != null || toTs != null) {
         const t = new Date(row.submitted_at).getTime();
         if (Number.isNaN(t)) return false;
@@ -118,13 +106,11 @@ function LpLeadsSection() {
       if (deferredSearch) {
         const name = String(row.name || '').toLowerCase();
         const phone = String(row.phone || '').toLowerCase();
-        const pg = String(row.landing_page || '').toLowerCase();
         const section = String(row.page_section || '').toLowerCase();
         const st = String(row.service_type || '').toLowerCase();
         if (
           !name.includes(deferredSearch) &&
           !phone.includes(deferredSearch) &&
-          !pg.includes(deferredSearch) &&
           !section.includes(deferredSearch) &&
           !st.includes(deferredSearch)
         ) {
@@ -136,7 +122,6 @@ function LpLeadsSection() {
   }, [
     allItems,
     filterService,
-    filterLanding,
     filterClient,
     filterDateFrom,
     filterDateTo,
@@ -189,7 +174,7 @@ function LpLeadsSection() {
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm mb-4 space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
             Услуга (LP)
             <select
@@ -198,20 +183,6 @@ function LpLeadsSection() {
               className={selectClass}
             >
               {SERVICE_FILTER_OPTIONS.map((o) => (
-                <option key={o.value || 'all'} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-            Лендинг
-            <select
-              value={filterLanding}
-              onChange={(e) => setFilterLanding(e.target.value)}
-              className={selectClass}
-            >
-              {LP_PATH_OPTIONS.map((o) => (
                 <option key={o.value || 'all'} value={o.value}>
                   {o.label}
                 </option>
@@ -277,14 +248,13 @@ function LpLeadsSection() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Имя, телефон, страница, секция…"
+                placeholder="Имя, телефон, секция…"
                 className={`${selectClass} w-full pl-10`}
               />
             </div>
           </label>
         </div>
         {(filterService ||
-          filterLanding ||
           filterClient ||
           filterDateFrom ||
           filterDateTo ||
@@ -293,7 +263,6 @@ function LpLeadsSection() {
             type="button"
             onClick={() => {
               setFilterService('');
-              setFilterLanding('');
               setFilterClient('');
               setFilterDateFrom('');
               setFilterDateTo('');
@@ -347,7 +316,6 @@ function LpLeadsSection() {
                 <tr>
                   <th className="px-4 py-3 font-semibold">Имя</th>
                   <th className="px-4 py-3 font-semibold">Телефон</th>
-                  <th className="px-4 py-3 font-semibold">Лендинг</th>
                   <th className="px-4 py-3 font-semibold">Секция</th>
                   <th className="px-4 py-3 font-semibold">Услуга</th>
                   <th className="px-4 py-3 font-semibold">Дата</th>
@@ -365,9 +333,6 @@ function LpLeadsSection() {
                         <Phone className="w-3.5 h-3.5 shrink-0" aria-hidden />
                         {row.phone || '—'}
                       </a>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 max-w-[200px] truncate" title={row.landing_page}>
-                      {row.landing_page || '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-600">{row.page_section || '—'}</td>
                     <td className="px-4 py-3 text-gray-700">
@@ -409,9 +374,6 @@ function LpLeadsSection() {
                   </a>
                 </div>
                 <p className="font-mono text-sm text-[#31876D] mt-2">{row.phone || '—'}</p>
-                <p className="text-xs text-gray-600 mt-2">
-                  <span className="text-gray-400">Страница:</span> {row.landing_page || '—'}
-                </p>
                 <p className="text-xs text-gray-600">
                   <span className="text-gray-400">Секция:</span> {row.page_section || '—'}
                 </p>
