@@ -1,4 +1,4 @@
-import { useCallback, useEffect, memo, useMemo } from 'react';
+import { useCallback, useEffect, memo, useMemo, lazy, Suspense } from 'react';
 import { Navigate, useLocation, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../shared/context/AuthContext';
 import UserOnlyRoute from '../shared/routes/UserOnlyRoute';
@@ -15,6 +15,12 @@ import PrivacyPolicy2Page from '../pages/privacy-policy2';
 import PublicOfferPage from '../pages/public-offer';
 import MovingPage from '../pages/moving';
 import ThankYouPage from '../pages/thank-you';
+
+// LP-* pages are isolated and lazy-loaded to keep the main bundle small.
+// They are also intentionally NOT in the main menu and NOT in sitemap.xml.
+const LpArendaBoksaPage = lazy(() => import('../pages/lp/ArendaBoksaAlmaty'));
+const LpKameraHraneniyaPage = lazy(() => import('../pages/lp/KameraHraneniyaAlmaty'));
+const LpOblachnoeHraneniePage = lazy(() => import('../pages/lp/OblachnoeHranenieAlmaty'));
 
 import PersonalAccountPage from '../pages/personal-account';
 import UserProfile from '../pages/personal-account/ui/UserProfile';
@@ -87,6 +93,30 @@ const Routing = memo(() => {
     { path: "/public-offer", element: <PublicOfferPage /> },
     { path: "/moving", element: <MovingPage /> },
     { path: "/thank-you", element: <ThankYouPage /> },
+    {
+      path: "/lp/arenda-boksa-almaty",
+      element: (
+        <Suspense fallback={<LoadingSpinner />}>
+          <LpArendaBoksaPage />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/lp/kamera-hraneniya-almaty",
+      element: (
+        <Suspense fallback={<LoadingSpinner />}>
+          <LpKameraHraneniyaPage />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/lp/oblachnoe-hranenie-almaty",
+      element: (
+        <Suspense fallback={<LoadingSpinner />}>
+          <LpOblachnoeHraneniePage />
+        </Suspense>
+      ),
+    },
   ], []);
 
   const protectedRoutes = useMemo(() => [

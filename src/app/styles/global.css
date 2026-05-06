@@ -433,3 +433,25 @@
 button, a {
   transition: all 0.3s ease;
 }
+
+/* ----------------------------------------------------------------------------
+ * LP hero height — вытягивает hero-секцию ровно на оставшееся место экрана
+ * после sticky LP-хедера (h-14 на мобиле = 3.5rem, sm:h-16 = 4rem).
+ *
+ * Используется на /lp/* страницах, чтобы первый экран всегда заполнял
+ * всю видимую область (как у HomePage).
+ *
+ * dvh — dynamic viewport height, корректно учитывает address-bar мобильных
+ * браузеров. Fallback на vh для старых браузеров.
+ * ------------------------------------------------------------------------- */
+.lp-hero-min-h {
+  min-height: calc(100vh - 3.5rem);
+  min-height: calc(100dvh - 3.5rem);
+}
+
+@media (min-width: 640px) {
+  .lp-hero-min-h {
+    min-height: calc(100vh - 4rem);
+    min-height: calc(100dvh - 4rem);
+  }
+}

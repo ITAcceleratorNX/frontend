@@ -1,0 +1,23 @@
+# ExtraSpace — robots.txt
+
+# Default policy for the public site.
+User-agent: *
+Allow: /
+
+# Landing pages used exclusively for paid traffic must NOT be indexed
+# (см. ТЗ §2 — изоляция от основного сайта).
+# Каждая LP дополнительно имеет <meta name="robots" content="noindex,nofollow">,
+# но Disallow здесь — двойной барьер на уровне краулинга.
+Disallow: /lp/
+
+# Auth / personal area — also off-limits.
+Disallow: /login
+Disallow: /register
+Disallow: /restore-password
+Disallow: /personal-account
+Disallow: /admin/
+Disallow: /manager/
+Disallow: /chat
+
+# Sitemap (если есть/появится — оставляем здесь).
+Sitemap: https://extraspace.kz/sitemap.xml
