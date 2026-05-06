@@ -120,7 +120,7 @@ export default function AboutWarehouseRentPage() {
           <div className="w-full flex justify-center">
             {viewMode === 'map' && (
                 <div className="border border-[#8C5B55] rounded-lg overflow-hidden" style={{ width: 700, height: 400 }}>
-                  <WarehouseMap warehouses={warehouses} />
+                  <WarehouseMap warehouses={warehouses} mapId="about-warehouse-map" />
                 </div>
             )}
 

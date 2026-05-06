@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { submitLead, getRateLimitSecondsLeft } from '@/shared/lib/submitLead.js';
 import { trackEvent, LP_EVENTS } from '@/shared/lib/analytics.js';
@@ -13,7 +13,8 @@ import { isValidKzPhoneDisplay, formatPhoneNumber } from '@/shared/lib/phone.js'
  *  - Honeypot field (CSS-hidden, tabindex=-1) — bot submits return success but
  *    skip the network call.
  *  - Rate limit handled by submitLead (60s per browser via sessionStorage).
- *  - Calls onSuccess(payload) when CRM confirms.
+ *  - Optional `successNavigate: { to, state?, replace? }` — после успеха вызывается
+ *    `navigate()` (например `/thank-you` с state от LP).
  *  - Fires GTM `form_start` (once) on first focus, plus `form_submit_lead`
  *    on success (the latter is fired by submitLead itself).
  *
@@ -39,8 +40,11 @@ export default function LeadForm({
   initialClientType = 'b2c',
   onSuccess,
   onError,
+  /** После успешной отправки — переход (например на /thank-you) с state для аналитики и UI */
+  successNavigate = null,
   className = '',
 }) {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [agreement, setAgreement] = useState(true);
@@ -115,6 +119,12 @@ export default function LeadForm({
     if (result.ok) {
       setCooldown(getRateLimitSecondsLeft());
       onSuccess?.(result.payload);
+      if (successNavigate?.to) {
+        navigate(successNavigate.to, {
+          state: successNavigate.state,
+          replace: successNavigate.replace === true,
+        });
+      }
     } else {
       if (result.error === 'rate_limited') {
         setCooldown(getRateLimitSecondsLeft());

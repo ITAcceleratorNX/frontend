@@ -455,3 +455,16 @@ button, a {
     min-height: calc(100dvh - 4rem);
   }
 }
+
+/* Responsive 2GIS map height — shorter on mobile to keep CTAs visible. */
+.lp-map {
+  height: var(--lp-map-height-mobile, 320px);
+  min-height: var(--lp-map-height-mobile, 320px);
+}
+
+@media (min-width: 640px) {
+  .lp-map {
+    height: var(--lp-map-height-desktop, 480px);
+    min-height: var(--lp-map-height-desktop, 480px);
+  }
+}

@@ -33,17 +33,17 @@ function BranchesSection({
   subtitle = 'Оба склада в черте города, ровно между Бостандыкским и Ауэзовским районами. Работаем круглосуточно.',
 }) {
   return (
-    <section className="w-full bg-[#F7FAF9] py-16 sm:py-20 lg:py-24">
+    <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <header className="mx-auto mb-10 max-w-3xl text-center">
-          <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+          <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
             {title}
           </h2>
           <p className="mt-4 text-sm text-[#555A65] sm:text-base">{subtitle}</p>
         </header>
 
-        <div className="mb-10 overflow-hidden rounded-3xl border border-[#e5e9ed] bg-white shadow-sm">
-          <TwoGisMap height={520} />
+        <div className="mb-8 overflow-hidden rounded-3xl border border-[#e5e9ed] bg-white shadow-sm sm:mb-10">
+          <TwoGisMap height={520} mobileHeight={300} />
         </div>
 
         <div className="grid gap-5 md:grid-cols-2">

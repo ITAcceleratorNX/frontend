@@ -187,7 +187,7 @@ export default function OblachnoeHranenieAlmatyPage() {
       />
 
       {/* HERO */}
-      <section className="lp-hero-min-h relative isolate flex flex-col items-center justify-center overflow-hidden bg-[#0e1729] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8">
+      <section className="lp-hero-min-h relative isolate flex flex-col items-center justify-center overflow-hidden bg-[#0e1729] px-4 py-10 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <img
           src={heroBg}
           alt=""
@@ -202,17 +202,18 @@ export default function OblachnoeHranenieAlmatyPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#0e1729]/80 via-[#0e1729]/60 to-[#31876D]/40" aria-hidden />
 
         <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
-          <span className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-white/90 backdrop-blur">
-            <Truck size={14} aria-hidden /> Облачное хранение · Алматы
+          <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/90 backdrop-blur sm:mb-5 sm:px-4 sm:text-xs sm:tracking-[0.2em]">
+            <Truck size={12} aria-hidden />
+            Облачное хранение · Алматы
           </span>
-          <h1 className="font-soyuz-grotesk text-4xl font-bold leading-[1.05] sm:text-5xl lg:text-6xl">
+          <h1 className="font-soyuz-grotesk text-[26px] font-bold leading-[1.1] xs:text-[28px] sm:text-4xl md:text-5xl lg:text-6xl">
             Облачное хранение · мы заберём и привезём обратно
           </h1>
-          <p className="mt-5 max-w-2xl text-base text-white/85 sm:text-lg">
+          <p className="mt-4 max-w-2xl text-sm text-white/85 sm:mt-5 sm:text-base md:text-lg">
             Платите за объём, не за бокс. Курьер забирает у вас, мы храним и возвращаем по запросу — от 1 месяца.
           </p>
 
-          <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
+          <div className="mt-6 flex w-full flex-col items-stretch gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:items-center sm:justify-center">
             <BookingCtaButton
               section="hero"
               serviceType={SERVICE_TYPE}
@@ -232,10 +233,10 @@ export default function OblachnoeHranenieAlmatyPage() {
       </section>
 
       {/* TARIFFS */}
-      <section id="tarify" className="w-full bg-white py-16 sm:py-20 lg:py-24">
+      <section id="tarify" className="w-full bg-white py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
               Готовые тарифы
             </h2>
             <p className="mt-3 text-sm text-[#555A65] sm:text-base">
@@ -273,10 +274,10 @@ export default function OblachnoeHranenieAlmatyPage() {
       </section>
 
       {/* COMPARISON */}
-      <section className="w-full bg-[#F7FAF9] py-16 sm:py-20">
+      <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl">
               Чем отличается от обычного хранения
             </h2>
             <p className="mt-3 text-sm text-[#555A65] sm:text-base">
@@ -284,7 +285,32 @@ export default function OblachnoeHranenieAlmatyPage() {
             </p>
           </header>
 
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-[#e5e9ed] bg-white shadow-sm">
+          {/* Mobile: cards layout */}
+          <div className="mx-auto grid max-w-4xl gap-3 sm:hidden">
+            {COMPARISON.map((row) => (
+              <div
+                key={row.label}
+                className="overflow-hidden rounded-2xl border border-[#e5e9ed] bg-white shadow-sm"
+              >
+                <div className="border-b border-[#e5e9ed] bg-[#F7FAF9] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[#273655]">
+                  {row.label}
+                </div>
+                <div className="divide-y divide-[#eef1f4] text-sm">
+                  <div className="flex flex-col gap-0.5 px-4 py-3">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-[#94a0a8]">Индивидуальный бокс</span>
+                    <span className="text-[#6b7280]">{row.individual}</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 px-4 py-3">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-[#31876D]">Облачное хранение</span>
+                    <span className="font-semibold text-[#202422]">{row.cloud}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table layout */}
+          <div className="mx-auto hidden max-w-4xl overflow-hidden rounded-3xl border border-[#e5e9ed] bg-white shadow-sm sm:block">
             <div className="grid grid-cols-3 border-b border-[#e5e9ed] bg-[#F7FAF9] text-sm font-semibold text-[#273655]">
               <div className="p-4 sm:p-5">Параметр</div>
               <div className="p-4 sm:p-5">Индивидуальный бокс</div>
@@ -307,10 +333,10 @@ export default function OblachnoeHranenieAlmatyPage() {
       </section>
 
       {/* FOR HOME / FOR BUSINESS */}
-      <section className="w-full bg-white py-16 sm:py-20 lg:py-24">
+      <section className="w-full bg-white py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
               Для дома и для бизнеса
             </h2>
             <p className="mt-3 text-sm text-[#555A65] sm:text-base">
@@ -391,10 +417,10 @@ export default function OblachnoeHranenieAlmatyPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="w-full bg-[#F7FAF9] py-16 sm:py-20 lg:py-24">
+      <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
               Как работает
             </h2>
           </header>
@@ -464,10 +490,10 @@ export default function OblachnoeHranenieAlmatyPage() {
       />
 
       {/* FINAL CTA */}
-      <section className="relative isolate w-full overflow-hidden bg-[#0e1729] py-16 text-white sm:py-20 lg:py-24">
+      <section className="relative isolate w-full overflow-hidden bg-[#0e1729] py-12 text-white sm:py-16 lg:py-24">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0e1729] via-[#142340] to-[#31876D]/40" aria-hidden />
         <div className="container relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="font-soyuz-grotesk text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+          <h2 className="font-soyuz-grotesk text-2xl font-bold leading-tight xs:text-3xl sm:text-4xl lg:text-5xl">
             Заберём вещи сегодня — вернём по запросу
           </h2>
           <p className="mt-4 text-sm text-white/80 sm:text-base">

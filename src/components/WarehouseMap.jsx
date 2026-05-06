@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 
-const WarehouseMap = ({ warehouses = [] }) => {
+function cleanupKeyForMapId(mapId) {
+  return `__esWarehouseMap_${mapId.replace(/[^a-zA-Z0-9]/g, '_')}`;
+}
+
+const WarehouseMap = ({ warehouses = [], mapId = 'warehouse-map' }) => {
   const mapContainer = useRef(null);
 
   useEffect(() => {
@@ -8,6 +12,7 @@ const WarehouseMap = ({ warehouses = [] }) => {
 
     // Create 2GIS map configuration
     const mapConfig = {
+      mapContainerId: mapId,
       orderedGeometries: warehouses.map((warehouse, index) => ({
         type: "Feature",
         properties: {
@@ -49,8 +54,7 @@ const WarehouseMap = ({ warehouses = [] }) => {
         lat: 43.23819991094438,
         lon: 76.92867279052736,
         zoom: 12
-      },
-      isWheelZoomEnabled: true
+      }
     };
 
     // Create the 2GIS map script with improved logic
@@ -59,16 +63,69 @@ const WarehouseMap = ({ warehouses = [] }) => {
       (function(config){
         var geometries = config.orderedGeometries;
         var mapPosition = config.mapPosition;
-        var isWheelZoomEnabled = config.isWheelZoomEnabled;
+        var containerId = config.mapContainerId;
         
         if (typeof DG !== 'undefined') {
           DG.then(function(){
-            var map = DG.map("warehouse-map", {
+            var cleanupKey = '__esWarehouseMap_' + containerId.replace(/[^a-zA-Z0-9]/g, '_');
+            if (typeof window[cleanupKey] === 'function') {
+              window[cleanupKey]();
+            }
+
+            var lockMapToModifier = typeof window.matchMedia === 'function' &&
+              window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+            var map = DG.map(containerId, {
               center: [mapPosition.lat, mapPosition.lon],
               zoom: mapPosition.zoom,
-              scrollWheelZoom: isWheelZoomEnabled,
-              zoomControl: !isWheelZoomEnabled
+              scrollWheelZoom: false,
+              zoomControl: true,
+              dragging: !lockMapToModifier,
+              doubleClickZoom: !lockMapToModifier
             });
+
+            function applyModifierLock(mod) {
+              if (!lockMapToModifier) return;
+              if (mod) {
+                map.scrollWheelZoom.enable();
+                if (map.dragging) map.dragging.enable();
+                if (map.doubleClickZoom) map.doubleClickZoom.enable();
+              } else {
+                map.scrollWheelZoom.disable();
+                if (map.dragging) map.dragging.disable();
+                if (map.doubleClickZoom) map.doubleClickZoom.disable();
+              }
+            }
+
+            function syncMapInteractionFromKeyboard(e) {
+              applyModifierLock(e.ctrlKey || e.metaKey);
+            }
+            function onWindowBlur() {
+              applyModifierLock(false);
+            }
+
+            if (lockMapToModifier) {
+              applyModifierLock(false);
+            }
+
+            window.addEventListener('keydown', syncMapInteractionFromKeyboard, true);
+            window.addEventListener('keyup', syncMapInteractionFromKeyboard, true);
+            window.addEventListener('blur', onWindowBlur);
+
+            var mapContainerEl = map.getContainer();
+            function syncMapInteractionFromWheel(e) {
+              applyModifierLock(e.ctrlKey || e.metaKey);
+            }
+            mapContainerEl.addEventListener('wheel', syncMapInteractionFromWheel, { capture: true, passive: true });
+
+            window[cleanupKey] = function() {
+              window.removeEventListener('keydown', syncMapInteractionFromKeyboard, true);
+              window.removeEventListener('keyup', syncMapInteractionFromKeyboard, true);
+              window.removeEventListener('blur', onWindowBlur);
+              mapContainerEl.removeEventListener('wheel', syncMapInteractionFromWheel, { capture: true, passive: true });
+              try { map.remove(); } catch (err) {}
+              delete window[cleanupKey];
+            };
             
             geometries.forEach(function(geometry) {
               var coords = [geometry.geometry.coordinates[1], geometry.geometry.coordinates[0]];
@@ -243,7 +300,10 @@ const WarehouseMap = ({ warehouses = [] }) => {
     }
 
     return () => {
-      // Cleanup script
+      const key = cleanupKeyForMapId(mapId);
+      if (typeof window[key] === 'function') {
+        window[key]();
+      }
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
@@ -251,12 +311,12 @@ const WarehouseMap = ({ warehouses = [] }) => {
         style.parentNode.removeChild(style);
       }
     };
-  }, [warehouses]);
+  }, [warehouses, mapId]);
 
   return (
       <div className="relative w-full h-full">
         <div
-            id="warehouse-map"
+            id={mapId}
             ref={mapContainer}
             className="absolute inset-0 overflow-hidden"
             style={{width: '100%', height: '100%'}}
@@ -279,15 +339,19 @@ const WarehouseMap = ({ warehouses = [] }) => {
 
         {/* Map controls overlay */}
         <div
-            className="absolute top-4 left-4 bg-white/35 backdrop-blur-sm p-3 rounded-lg border border-gray-200 shadow-sm z-10"
+            className="absolute top-4 left-4 z-10 max-w-[min(100%-2rem,220px)] rounded-lg border border-gray-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm sm:max-w-[240px]"
         >
-          <div className="text-sm font-bold text-[#273655] font-montserrat">Алматы</div>
-          <div className="text-xs text-[#6B6B6B] font-montserrat">
+          <div className="font-montserrat text-sm font-bold text-[#273655]">Алматы</div>
+          <div className="font-montserrat text-xs text-[#6B6B6B]">
             Складские помещения
           </div>
-          <div className="text-xs text-[#6B6B6B] font-montserrat">
+          <div className="font-montserrat text-xs text-[#6B6B6B]">
             ExtraSpace
           </div>
+          <p className="mt-2 hidden border-t border-gray-200/80 pt-2 font-montserrat text-[10px] leading-snug text-[#5c6570] sm:block">
+            Перемещение и масштаб: удерживайте <span className="whitespace-nowrap font-semibold text-[#273655]">Ctrl</span> или{' '}
+            <span className="font-semibold text-[#273655]">⌘</span> (Mac), затем тяните карту или крутите колёсико
+          </p>
         </div>
 
       </div>

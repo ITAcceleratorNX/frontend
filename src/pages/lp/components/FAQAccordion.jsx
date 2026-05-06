@@ -16,10 +16,10 @@ function FAQAccordion({
   id = 'faq',
 }) {
   return (
-    <section id={id} className="w-full bg-white py-16 sm:py-20 lg:py-24">
+    <section id={id} className="w-full bg-white py-12 sm:py-16 lg:py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <header className="mx-auto mb-10 max-w-3xl text-center">
-          <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+          <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
             {title}
           </h2>
           {subtitle && (

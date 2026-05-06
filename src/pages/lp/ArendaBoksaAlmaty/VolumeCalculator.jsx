@@ -25,11 +25,11 @@ export default function VolumeCalculator({ onBook }) {
   const current = useMemo(() => ROOM_OPTIONS[idx], [idx]);
 
   return (
-    <section className="w-full bg-white py-16 sm:py-20 lg:py-24" id="kalkulyator">
+    <section className="w-full bg-white py-12 sm:py-16 lg:py-24" id="kalkulyator">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-[#e5e9ed] bg-[#F7FAF9] p-6 sm:p-10">
+        <div className="mx-auto max-w-4xl rounded-3xl border border-[#e5e9ed] bg-[#F7FAF9] p-5 sm:p-8 lg:p-10">
           <header className="text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl">
               Калькулятор объёма
             </h2>
             <p className="mt-3 text-sm text-[#555A65] sm:text-base">

@@ -34,7 +34,7 @@ const BRANCHES = [
   },
 ];
 
-function TwoGisMap({ height = 480 }) {
+function TwoGisMap({ height = 480, mobileHeight = 320 }) {
   const wrapperRef = useRef(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 
@@ -66,17 +66,20 @@ function TwoGisMap({ height = 480 }) {
     return () => observer.disconnect();
   }, [shouldLoad]);
 
+  // CSS variables drive the responsive height — see app/styles/global.css `.lp-map`.
+  const style = {
+    '--lp-map-height-mobile': `${mobileHeight}px`,
+    '--lp-map-height-desktop': `${height}px`,
+  };
+
   return (
-    <div ref={wrapperRef} className="w-full" style={{ minHeight: height }}>
+    <div ref={wrapperRef} className="lp-map w-full" style={style}>
       {shouldLoad ? (
-        <div style={{ height }}>
+        <div className="lp-map-inner h-full">
           <WarehouseMap warehouses={BRANCHES} mapId="lp-branches-map" />
         </div>
       ) : (
-        <div
-          className="flex w-full items-center justify-center rounded-3xl bg-[#eef2f5] text-sm text-[#6b7280]"
-          style={{ height }}
-        >
+        <div className="lp-map-inner flex h-full w-full items-center justify-center rounded-3xl bg-[#eef2f5] text-sm text-[#6b7280]">
           Карта загрузится автоматически…
         </div>
       )}

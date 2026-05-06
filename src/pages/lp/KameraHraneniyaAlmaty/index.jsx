@@ -123,7 +123,7 @@ export default function KameraHraneniyaAlmatyPage() {
       />
 
       {/* HERO */}
-      <section className="lp-hero-min-h relative isolate flex flex-col items-center justify-center overflow-hidden bg-[#0e1729] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8">
+      <section className="lp-hero-min-h relative isolate flex flex-col items-center justify-center overflow-hidden bg-[#0e1729] px-4 py-10 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <img
           src={heroBg}
           alt=""
@@ -138,25 +138,26 @@ export default function KameraHraneniyaAlmatyPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#0e1729]/80 via-[#0e1729]/60 to-[#31876D]/40" aria-hidden />
 
         <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center text-center">
-          <span className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-white/90 backdrop-blur">
-            <Luggage size={14} aria-hidden /> Камера хранения · от 1 дня
+          <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/90 backdrop-blur sm:mb-5 sm:px-4 sm:text-xs sm:tracking-[0.2em]">
+            <Luggage size={12} aria-hidden />
+            Камера хранения · от 1 дня
           </span>
-          <h1 className="font-soyuz-grotesk text-4xl font-bold leading-[1.05] sm:text-5xl lg:text-6xl">
+          <h1 className="font-soyuz-grotesk text-[26px] font-bold leading-[1.1] xs:text-[28px] sm:text-4xl md:text-5xl lg:text-6xl">
             Камера хранения в Алматы · от 1 дня
           </h1>
-          <p className="mt-5 max-w-2xl text-base text-white/85 sm:text-lg">
+          <p className="mt-4 max-w-2xl text-sm text-white/85 sm:mt-5 sm:text-base md:text-lg">
             Чемоданы, сумки, коробки — храним посуточно. От 4 000 ₸ за м³ в сутки.
           </p>
 
           {/* Disclaimer per ТЗ */}
-          <div className="mt-6 inline-flex items-start gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-left text-xs backdrop-blur sm:text-sm">
-            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-300" aria-hidden />
+          <div className="mt-5 inline-flex w-full items-start gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2.5 text-left text-[12px] leading-snug backdrop-blur sm:mt-6 sm:w-auto sm:px-4 sm:py-3 sm:text-sm">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-300 sm:size-4" aria-hidden />
             <p>
-              Это <strong>городская камера хранения</strong> в черте Алматы. Не аэропорт и не железнодорожный вокзал.
+              Это <strong>городская камера хранения</strong> в черте Алматы. Не аэропорт и не ЖД-вокзал.
             </p>
           </div>
 
-          <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
+          <div className="mt-6 flex w-full flex-col items-stretch gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:items-center sm:justify-center">
             <BookingCtaButton
               section="hero"
               serviceType={SERVICE_TYPE}
@@ -176,10 +177,10 @@ export default function KameraHraneniyaAlmatyPage() {
       </section>
 
       {/* USE CASES */}
-      <section className="w-full bg-[#F7FAF9] py-16 sm:py-20 lg:py-24">
+      <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
               Кому подходит
             </h2>
             <p className="mt-3 text-sm text-[#555A65] sm:text-base">
@@ -205,10 +206,10 @@ export default function KameraHraneniyaAlmatyPage() {
       </section>
 
       {/* WHAT YOU CAN STORE */}
-      <section className="w-full bg-white py-16 sm:py-20">
+      <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl">
               Что можно сдать на хранение
             </h2>
           </header>
@@ -230,10 +231,10 @@ export default function KameraHraneniyaAlmatyPage() {
       </section>
 
       {/* PRICING */}
-      <section className="w-full bg-[#F7FAF9] py-16 sm:py-20 lg:py-24" id="ceny">
+      <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24" id="ceny">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
               Цены
             </h2>
             <p className="mt-3 text-sm text-[#555A65] sm:text-base">
@@ -261,10 +262,10 @@ export default function KameraHraneniyaAlmatyPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="w-full bg-white py-16 sm:py-20 lg:py-24">
+      <section className="w-full bg-white py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
-            <h2 className="font-soyuz-grotesk text-3xl font-bold text-[#202422] sm:text-4xl lg:text-5xl">
+            <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
               Как это работает
             </h2>
           </header>
@@ -301,10 +302,10 @@ export default function KameraHraneniyaAlmatyPage() {
       />
 
       {/* FINAL CTA */}
-      <section className="relative isolate w-full overflow-hidden bg-[#0e1729] py-16 text-white sm:py-20 lg:py-24">
+      <section className="relative isolate w-full overflow-hidden bg-[#0e1729] py-12 text-white sm:py-16 lg:py-24">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0e1729] via-[#142340] to-[#31876D]/40" aria-hidden />
         <div className="container relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="font-soyuz-grotesk text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+          <h2 className="font-soyuz-grotesk text-2xl font-bold leading-tight xs:text-3xl sm:text-4xl lg:text-5xl">
             Привезу сегодня
           </h2>
           <p className="mt-4 text-sm text-white/80 sm:text-base">
