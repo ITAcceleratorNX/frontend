@@ -1,8 +1,9 @@
-import React, { useMemo, useState, useEffect, useDeferredValue } from 'react';
+import React, { useMemo, useState, useEffect, useDeferredValue, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Phone, RefreshCw, Search, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Phone, RefreshCw, Search, ClipboardList, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 import { lpLeadsApi } from '@/shared/api/lpLeadsApi.js';
 import { formatCalendarDateTime } from '@/shared/lib/utils/date.js';
+import { showErrorToast, showSuccessToast } from '@/shared/lib/toast.js';
 
 const SERVICE_LABELS = {
   individual: 'LP-1 · Аренда бокса',
@@ -58,6 +59,54 @@ function endOfLocalDay(dateStr) {
 function rowKey(row) {
   return row.id != null ? String(row.id) : `${row.phone}-${row.submitted_at}`;
 }
+
+/**
+ * Ячейка GCLID: показываем 8-12 первых символов + хвост, по клику копируем
+ * полный ID в буфер. Полный GCLID видно в title (тултипе).
+ */
+/* eslint-disable react/prop-types */
+function GclidCell({ value }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      showSuccessToast('GCLID скопирован');
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      showErrorToast('Не удалось скопировать GCLID');
+    }
+  }, [value]);
+
+  if (!value) {
+    return <span className="text-xs text-gray-400">—</span>;
+  }
+
+  const head = value.slice(0, 10);
+  const tail = value.length > 14 ? `…${value.slice(-4)}` : '';
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title={value}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-[#273655] transition hover:border-[#31876D]/40 hover:bg-[#31876D]/5"
+    >
+      <span className="truncate max-w-[120px]">
+        {head}
+        {tail}
+      </span>
+      {copied ? (
+        <Check className="w-3.5 h-3.5 shrink-0 text-[#31876D]" aria-hidden />
+      ) : (
+        <Copy className="w-3.5 h-3.5 shrink-0 text-gray-400" aria-hidden />
+      )}
+    </button>
+  );
+}
+/* eslint-enable react/prop-types */
 
 function LpLeadsSection() {
   const [search, setSearch] = useState('');
@@ -318,6 +367,7 @@ function LpLeadsSection() {
                   <th className="px-4 py-3 font-semibold">Телефон</th>
                   <th className="px-4 py-3 font-semibold">Секция</th>
                   <th className="px-4 py-3 font-semibold">Услуга</th>
+                  <th className="px-4 py-3 font-semibold">GCLID</th>
                   <th className="px-4 py-3 font-semibold">Дата</th>
                 </tr>
               </thead>
@@ -342,6 +392,9 @@ function LpLeadsSection() {
                           {row.client_type === 'b2b' ? 'B2B' : 'B2C'}
                         </span>
                       ) : null}
+                    </td>
+                    <td className="px-4 py-3">
+                      <GclidCell value={row.gclid} />
                     </td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {formatSubmittedAt(row.submitted_at)}
@@ -377,6 +430,12 @@ function LpLeadsSection() {
                 <p className="text-xs text-gray-600">
                   <span className="text-gray-400">Секция:</span> {row.page_section || '—'}
                 </p>
+                {row.gclid ? (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs text-gray-400">GCLID:</span>
+                    <GclidCell value={row.gclid} />
+                  </div>
+                ) : null}
                 <p className="text-xs text-gray-500 mt-1">{formatSubmittedAt(row.submitted_at)}</p>
               </li>
             ))}
