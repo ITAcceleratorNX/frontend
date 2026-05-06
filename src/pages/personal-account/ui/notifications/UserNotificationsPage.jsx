@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Bell, Settings, Loader2, AlertCircle, Search, X } from 'lucide-react';
 import { useNotifications } from '../../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './UserNotifications';
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 const UserNotificationsPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterRead, setFilterRead] = useState('all');
@@ -97,12 +99,15 @@ const UserNotificationsPage = () => {
   // Переход в нужный раздел ЛК при клике на уведомление
   const handleNotificationClick = useCallback((notification) => {
     const target = getNotificationTarget(notification);
+    if (target.activeSection === 'lpleads') {
+      queryClient.invalidateQueries({ queryKey: ['lp-landing-leads'] });
+    }
     const state = { activeSection: target.activeSection };
     if (target.ordersFilter) state.ordersFilter = target.ordersFilter;
     if (target.orderId) state.orderId = target.orderId;
     if (target.deliveryId) state.deliveryId = target.deliveryId;
     navigate('/personal-account', { state });
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   // Show loading state
   if (isLoading) {

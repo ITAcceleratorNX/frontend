@@ -5,8 +5,50 @@ import { Bell, CheckCircle, MessageSquare } from 'lucide-react';
  * Определяет раздел ЛК для перехода по типу уведомления
  */
 export const getNotificationTarget = (notification) => {
-  const type = notification?.notification_type;
+  const type = (notification?.notification_type || notification?.type || '').toLowerCase();
   const orderId = notification?.order_id ?? notification?.related_order_id;
+
+  // Явный target с бэкенда (JSON в metadata / data)
+  let meta = notification?.metadata || notification?.meta || notification?.data;
+  if (typeof meta === 'string') {
+    try {
+      meta = JSON.parse(meta);
+    } catch {
+      meta = null;
+    }
+  }
+  if (meta && typeof meta === 'object' && !Array.isArray(meta)) {
+    const section = meta.activeSection || meta.target_section || meta.section;
+    if (section === 'lpleads' || section === 'lp_leads') {
+      return { activeSection: 'lpleads' };
+    }
+  }
+
+  // Заявки с лендингов LP (типы могут отличаться на бэкенде)
+  const landingTypes = new Set([
+    'landing_lead',
+    'lp_lead',
+    'lead_landing',
+    'landing_page_lead',
+    'lp_form',
+    'submit_lead',
+    'lead_submit',
+    'extraspace_landing',
+  ]);
+  if (landingTypes.has(type)) {
+    return { activeSection: 'lpleads' };
+  }
+
+  const text = `${notification?.title || ''} ${notification?.message || ''}`.toLowerCase();
+  if (
+    text.includes('лендинг') ||
+    text.includes('landing') ||
+    /lp[-\s]?[123]/.test(text) ||
+    (text.includes('заявк') &&
+      (text.includes('форм') || text.includes('сайт') || text.includes('реклам')))
+  ) {
+    return { activeSection: 'lpleads' };
+  }
 
   switch (type) {
     case 'contract':

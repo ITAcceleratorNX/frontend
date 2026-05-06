@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import icon1 from '../../../assets/1.svg';
@@ -24,6 +24,7 @@ import { Pencil, LogOut, Bell, Package, CreditCard, Truck, Tag, ClipboardList } 
 import lichkaLogo from '../../../assets/Lichka2.png';
 import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './notifications/UserNotifications';
+import { getNotificationTarget } from './notifications/NotificationCard';
 import { Switch } from '../../../components/ui/switch';
 
 // Разделы для обычных пользователей
@@ -90,6 +91,22 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const filteredNotifications = showUnreadOnly 
     ? notifications.filter(n => !n.is_read)
     : notifications;
+
+  const handleNotificationClick = useCallback(
+    (notification) => {
+      const target = getNotificationTarget(notification);
+      if (target.activeSection === 'lpleads') {
+        queryClient.invalidateQueries({ queryKey: ['lp-landing-leads'] });
+      }
+      const state = { activeSection: target.activeSection };
+      if (target.ordersFilter) state.ordersFilter = target.ordersFilter;
+      if (target.orderId) state.orderId = target.orderId;
+      if (target.deliveryId) state.deliveryId = target.deliveryId;
+      navigate('/personal-account', { state });
+      setIsNotificationsOpen(false);
+    },
+    [navigate, queryClient],
+  );
   
   // Подсчитываем общее количество непрочитанных сообщений в чате
   const totalUnreadChatCount = Object.values(unreadMessages).reduce((sum, count) => sum + count, 0);
@@ -331,6 +348,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                       <UserNotifications 
                         notifications={filteredNotifications} 
                         onMarkAsRead={markAsRead}
+                        onNotificationClick={handleNotificationClick}
                         scale={1}
                       />
                     )}

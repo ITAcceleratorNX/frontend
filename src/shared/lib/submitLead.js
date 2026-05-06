@@ -7,8 +7,8 @@
  *  - meta (landing_page, submitted_at, user_agent, referrer)
  *
  * Endpoint resolution:
- *  - VITE_LEAD_ENDPOINT env (e.g. "/api/leads") — wins if set
- *  - otherwise falls back to existing backend route used by site form: POST /submit-lead via shared axios client
+ *  - VITE_LEAD_ENDPOINT env — wins if set (full URL or path on same origin)
+ *  - otherwise POST /api/lp-leads via shared axios client (same base as the rest of the app)
  *
  * Bot protection:
  *  - Honeypot — caller should pre-check `honeypot` field (we also re-check here for safety).
@@ -21,6 +21,9 @@ import api from '@/shared/api/axios.js';
 import { normalizePhoneForSubmit } from '@/shared/lib/phone.js';
 import { getAttribution } from '@/shared/lib/attribution.js';
 import { trackEvent, LP_EVENTS } from '@/shared/lib/analytics.js';
+
+/** Default LP lead ingest route on API host (override with VITE_LEAD_ENDPOINT). */
+const DEFAULT_LP_LEAD_PATH = '/api/lp-leads';
 
 const RATE_LIMIT_KEY = 'extraspace_lp_last_submit_at';
 const RATE_LIMIT_MS = 60 * 1000;
@@ -136,8 +139,7 @@ export async function submitLead(input) {
       });
       ok = res.ok;
     } else {
-      // Fallback to the existing backend lead endpoint already in production.
-      const res = await api.post('/submit-lead', payload);
+      const res = await api.post(DEFAULT_LP_LEAD_PATH, payload);
       ok = !!res?.data?.success || res?.status === 200 || res?.status === 201;
     }
 
