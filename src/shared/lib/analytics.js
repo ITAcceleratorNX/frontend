@@ -25,6 +25,9 @@ export const LP_EVENTS = {
 /**
  * Push an event to GTM dataLayer. Safe in SSR / when dataLayer is missing.
  *
+ * GTM-контейнер (GTM-KC2QCVNN) подключён напрямую в frontend/index.html —
+ * никакой ленивой инжекции в JS не требуется.
+ *
  * @param {string} eventName
  * @param {Record<string, any>} [params]
  */
@@ -34,42 +37,9 @@ export function trackEvent(eventName, params = {}) {
   try {
     window.dataLayer.push({ event: eventName, ...params });
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.debug('[lp/analytics]', eventName, params);
     }
   } catch {
     /* ignore */
   }
-}
-
-/**
- * Inject GTM container into <head> + <noscript> iframe into <body>.
- * Idempotent — multiple LP mounts won't double-load.
- *
- * @param {string|undefined} containerId e.g. "GTM-XXXXXX"
- */
-export function ensureGtmInjected(containerId) {
-  if (typeof window === 'undefined' || !containerId) return;
-  if (window.__lpGtmInjected) return;
-  window.__lpGtmInjected = true;
-
-  // Init dataLayer + gtm.start exactly per Google's snippet.
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(containerId)}`;
-  document.head.appendChild(script);
-
-  // <noscript> iframe fallback.
-  const noscript = document.createElement('noscript');
-  const iframe = document.createElement('iframe');
-  iframe.src = `https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(containerId)}`;
-  iframe.height = '0';
-  iframe.width = '0';
-  iframe.style.display = 'none';
-  iframe.style.visibility = 'hidden';
-  noscript.appendChild(iframe);
-  document.body.insertBefore(noscript, document.body.firstChild);
 }

@@ -52,7 +52,9 @@
 | `booking_click` | Любая кнопка «Забронировать» | `service_type`, `box_size`, `section` |
 | `cta_route_build` | «Построить маршрут» в гео-блоке | `branch` (kekilbayuly / serkebayev), `landing_page` |
 
-GTM-контейнер инжектится автоматически если задан `VITE_GTM_ID` — иначе работает в dry-run режиме (события идут только в dataLayer / dev console).
+GTM-контейнер `GTM-KC2QCVNN` подключён напрямую в `frontend/index.html` (head + noscript) — покрывает и главную, и все 3 LP без env-переменных. Любой push через `trackEvent` сразу попадает в dataLayer и читается контейнером.
+
+На кнопке «Показать номер» (компонент `PhoneGatingButton`) стоит класс `btn-show-phone` — на случай если PM в GTM захочет ловить триггером по классу. Сейчас триггер настраивается на custom event `phone_click` (из dataLayer) — это надёжнее, click-trigger по классу — fallback.
 
 В Google Ads настройте `form_submit_lead` как PRIMARY conversion, остальные — secondary (см. ТЗ §7).
 
@@ -61,7 +63,6 @@ GTM-контейнер инжектится автоматически если 
 См. `frontend/.env.example`. Минимум для прода:
 
 ```
-VITE_GTM_ID=GTM-XXXXXXX
 VITE_LEAD_ENDPOINT=https://api.extraspace.kz/api/lp-leads
 VITE_2GIS_API_KEY=<2gis_api_key>
 ```

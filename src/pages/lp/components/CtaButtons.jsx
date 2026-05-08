@@ -49,7 +49,7 @@ export function PhoneGatingButton({
     <button
       type="button"
       onClick={handleClick}
-      className={`${base} ${variants[variant] || variants.secondary} ${className}`}
+      className={`btn-show-phone ${base} ${variants[variant] || variants.secondary} ${className}`}
     >
       <Phone size={16} aria-hidden />
       {label}

@@ -1,19 +1,19 @@
 import React, { useEffect } from 'react';
 import { initAttribution } from '@/shared/lib/attribution.js';
-import { ensureGtmInjected } from '@/shared/lib/analytics.js';
 import LpHeader from './LpHeader.jsx';
 import LpFooter from './LpFooter.jsx';
 
 /**
  * Wrapper around the LP body. On mount:
  *   - Initializes attribution (GCLID/UTM persistence per ТЗ §3.6).
- *   - Lazily injects GTM container if VITE_GTM_ID is configured.
  *   - Scrolls to anchor (for #remont / #pereezd / #shiny / #biznes deep-links).
+ *
+ * GTM container (GTM-KC2QCVNN) подключён через snippet прямо в frontend/index.html
+ * — он покрывает и главную, и все 3 LP. Здесь делать ничего не нужно.
  */
 export default function LpLayout({ children, onHeaderCta, ctaLabel }) {
   useEffect(() => {
     initAttribution();
-    ensureGtmInjected(import.meta.env.VITE_GTM_ID);
   }, []);
 
   useEffect(() => {
