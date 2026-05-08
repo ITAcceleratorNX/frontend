@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
-  AlertTriangle,
+  Info,
   ChevronRight,
   Plane,
   Briefcase,
@@ -116,9 +116,11 @@ export default function KameraHraneniyaAlmatyPage() {
     <LpLayout onHeaderCta={() => setGateOpen(true)} ctaLabel="Привезу сегодня">
       <LpHelmet
         title="Камера хранения в Алматы · от 1 дня · ExtraSpace"
-        description="Хранение чемоданов и коробок от 24 часов до 2 недель. В черте Алматы — НЕ аэропорт. От 4 000 ₸ за м³ в сутки."
+        description="Хранение чемоданов и коробок от 24 часов до 2 недель. В черте Алматы — НЕ аэропорт. От 4 000 ₸/м³ в сутки."
         canonical={CANONICAL}
-        ogImage="/og/lp-kamera-hraneniya.png"
+        ogTitle="Камера хранения в Алматы · от 1 дня · ExtraSpace"
+        ogDescription="Чемоданы и коробки на 1 день – 2 недели. От 1 000 ₸/сутки. В черте Алматы — не аэропорт и не вокзал."
+        ogImage="https://extraspace.kz/og/lp-kamera-hraneniya.png"
         ogImageAlt="Камера хранения в Алматы — ExtraSpace"
       />
 
@@ -151,7 +153,7 @@ export default function KameraHraneniyaAlmatyPage() {
 
           {/* Disclaimer per ТЗ */}
           <div className="mt-5 inline-flex w-full items-start gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2.5 text-left text-[12px] leading-snug backdrop-blur sm:mt-6 sm:w-auto sm:px-4 sm:py-3 sm:text-sm">
-            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-300 sm:size-4" aria-hidden />
+            <Info size={14} className="mt-0.5 shrink-0 text-sky-200 sm:size-4" aria-hidden />
             <p>
               Это <strong>городская камера хранения</strong> в черте Алматы. Не аэропорт и не ЖД-вокзал.
             </p>

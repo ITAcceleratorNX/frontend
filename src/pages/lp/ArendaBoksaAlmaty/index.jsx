@@ -159,11 +159,11 @@ export default function ArendaBoksaAlmatyPage() {
     <LpLayout onHeaderCta={() => setGateOpen(true)} ctaLabel="Забронировать">
       <LpHelmet
         title="Аренда бокса в Алматы от 6 000 ₸/м² · ExtraSpace"
-        description="Свой бокс с климат-контролем и охраной 24/7. От 1 месяца. 2 филиала в черте Алматы. Бронь онлайн без визита."
+        description="Свой бокс с климат-контролем от 6 000 ₸/м²/мес. От 1 месяца. 2 филиала в черте Алматы. Бронь онлайн без визита."
         canonical={CANONICAL}
-        // Когда заказчик пришлёт уникальный OG (1200×630) для LP-1 —
-        // положить файл в frontend/public/og/lp-arenda-boksa.png. Пока fallback.
-        ogImage="/og/lp-arenda-boksa.png"
+        ogTitle="Аренда бокса в Алматы · ExtraSpace"
+        ogDescription="Свой бокс от 6 000 ₸/м²/мес. Климат контроль, охрана 24/7, в черте города. 2 филиала в Алматы."
+        ogImage="https://extraspace.kz/og/lp-arenda-boksa.png"
         ogImageAlt="Аренда бокса в Алматы — ExtraSpace"
       />
 

@@ -6,7 +6,7 @@ import { useEffect } from 'react';
  * Sets:
  *  - <title>
  *  - <meta name="description">
- *  - <meta name="robots" content="noindex,nofollow">
+ *  - <meta name="robots" content="noindex, nofollow">
  *  - <link rel="canonical">
  *  - Open Graph + Twitter Card (open — for nice WhatsApp/Telegram previews per ТЗ §3.8)
  *  - Schema.org LocalBusiness JSON-LD with both branches
@@ -130,6 +130,8 @@ function injectJsonLd(schema) {
  * @param {string} props.title
  * @param {string} props.description
  * @param {string} props.canonical               Full absolute URL.
+ * @param {string} [props.ogTitle]               OG/Twitter title (defaults to title).
+ * @param {string} [props.ogDescription]         OG/Twitter description (defaults to description).
  * @param {string} [props.ogImage]               Absolute URL or path, 1200x630.
  *                                                If only the file name is missing,
  *                                                falls back to /Frame51.png.
@@ -152,6 +154,8 @@ export default function LpHelmet({
   title,
   description,
   canonical,
+  ogTitle,
+  ogDescription,
   ogImage,
   ogImageAlt = 'ExtraSpace — хранение в Алматы',
   includeJsonLd = true,
@@ -161,19 +165,21 @@ export default function LpHelmet({
     const previousTitle = document.title;
 
     const resolvedOg = resolveOgUrl(ogImage);
+    const ogTitleResolved = ogTitle ?? title;
+    const ogDescriptionResolved = ogDescription ?? description;
 
     if (title) document.title = title;
 
     setMeta({ name: 'description', content: description });
-    setMeta({ name: 'robots', content: 'noindex,nofollow' });
+    setMeta({ name: 'robots', content: 'noindex, nofollow' });
 
     setLink({ rel: 'canonical', href: canonical });
 
     setMeta({ property: 'og:type', content: 'website' });
     setMeta({ property: 'og:site_name', content: 'ExtraSpace' });
     setMeta({ property: 'og:url', content: canonical });
-    setMeta({ property: 'og:title', content: title });
-    setMeta({ property: 'og:description', content: description });
+    setMeta({ property: 'og:title', content: ogTitleResolved });
+    setMeta({ property: 'og:description', content: ogDescriptionResolved });
     setMeta({ property: 'og:image', content: resolvedOg });
     setMeta({ property: 'og:image:width', content: '1200' });
     setMeta({ property: 'og:image:height', content: '630' });
@@ -182,8 +188,8 @@ export default function LpHelmet({
 
     setMeta({ name: 'twitter:card', content: 'summary_large_image' });
     setMeta({ name: 'twitter:url', content: canonical });
-    setMeta({ name: 'twitter:title', content: title });
-    setMeta({ name: 'twitter:description', content: description });
+    setMeta({ name: 'twitter:title', content: ogTitleResolved });
+    setMeta({ name: 'twitter:description', content: ogDescriptionResolved });
     setMeta({ name: 'twitter:image', content: resolvedOg });
 
     if (includeJsonLd) {
@@ -203,7 +209,16 @@ export default function LpHelmet({
         robots.setAttribute('content', 'index,follow');
       }
     };
-  }, [title, description, canonical, ogImage, ogImageAlt, includeJsonLd]);
+  }, [
+    title,
+    description,
+    canonical,
+    ogTitle,
+    ogDescription,
+    ogImage,
+    ogImageAlt,
+    includeJsonLd,
+  ]);
 
   return null;
 }
