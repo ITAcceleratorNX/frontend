@@ -25,6 +25,7 @@ import {
 import MiniFormSection from '../components/MiniFormSection.jsx';
 import Branches from '../components/Branches.jsx';
 import FAQAccordion from '../components/FAQAccordion.jsx';
+import LpVideo from '../components/LpVideo.jsx';
 
 // Один из самых лёгких WebP (≈1.5 MB) вместо тяжёлого 5210 (3.1 MB) — LCP.
 import heroBg from '@/assets/komfort-city/20260226-IMG_5215.webp';
@@ -233,6 +234,12 @@ export default function OblachnoeHranenieAlmatyPage() {
           </div>
         </div>
       </section>
+
+      <LpVideo
+        src="/videos/oblachnoe-hranenie.mp4"
+        poster="/videos/oblachnoe-hranenie-poster.jpg"
+        title="Облачное хранение — ExtraSpace"
+      />
 
       {/* TARIFFS */}
       <section id="tarify" className="w-full bg-white py-12 sm:py-16 lg:py-24">

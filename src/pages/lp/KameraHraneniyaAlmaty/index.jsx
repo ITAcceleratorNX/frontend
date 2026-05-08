@@ -23,6 +23,7 @@ import {
 import MiniFormSection from '../components/MiniFormSection.jsx';
 import Branches from '../components/Branches.jsx';
 import FAQAccordion from '../components/FAQAccordion.jsx';
+import LpVideo from '../components/LpVideo.jsx';
 
 // Один из самых лёгких WebP (≈1.4 MB) — баланс качества и скорости LCP.
 import heroBg from '@/assets/komfort-city/20260226-IMG_5216.webp';
@@ -177,6 +178,12 @@ export default function KameraHraneniyaAlmatyPage() {
           </div>
         </div>
       </section>
+
+      <LpVideo
+        src="/videos/kamera-hraneniya.mp4"
+        poster="/videos/kamera-hraneniya-poster.jpg"
+        title="Камера хранения в Алматы — ExtraSpace"
+      />
 
       {/* USE CASES */}
       <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">

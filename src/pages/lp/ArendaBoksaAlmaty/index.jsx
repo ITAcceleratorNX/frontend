@@ -26,6 +26,7 @@ import MiniFormSection from '../components/MiniFormSection.jsx';
 import Branches from '../components/Branches.jsx';
 import FAQAccordion from '../components/FAQAccordion.jsx';
 import VolumeCalculator from './VolumeCalculator.jsx';
+import LpVideo from '../components/LpVideo.jsx';
 
 // Самый лёгкий WebP из ассетов (≈850 KB) — критично для LCP.
 import heroBg from '@/assets/komfort-city/20260226-IMG_5207.webp';
@@ -212,6 +213,12 @@ export default function ArendaBoksaAlmatyPage() {
           </div>
         </div>
       </section>
+
+      <LpVideo
+        src="/videos/individualnoe-hranenie.mp4"
+        poster="/videos/individualnoe-hranenie-poster.jpg"
+        title="Индивидуальное хранение в боксе — ExtraSpace"
+      />
 
       {/* TRUST STRIP */}
       <section className="border-y border-[#e5e9ed] bg-white py-8 sm:py-10">
