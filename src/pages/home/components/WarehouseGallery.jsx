@@ -6,6 +6,10 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  LIVE_CAMERA_IDS,
+  LiveCameraGalleryTile,
+} from '@/pages/home/components/WarehouseCctvDashboard.jsx';
 
 import img1 from '@/assets/komfort-city/20260226-IMG_5194.webp';
 import img2 from '@/assets/komfort-city/20260226-IMG_5195.webp';
@@ -98,9 +102,22 @@ function WarehouseGallery({ onBookInWarehouse }) {
     <section className="w-full bg-white py-8 sm:py-12 md:py-16 lg:py-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-[90rem] mx-auto">
-          <h2 className="font-soyuz-grotesk text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#202422] text-center mb-6 sm:mb-8 md:mb-20">
+          <h2 className="text-center font-soyuz-grotesk text-2xl font-bold text-[#202422] sm:mb-5 sm:text-3xl md:mb-6 md:text-4xl lg:text-5xl xl:text-6xl">
             <span className="font-['Montserrat']">Г</span>алерея наших складов
           </h2>
+
+          {LIVE_CAMERA_IDS.length > 0 && (
+            <div className="mb-8 sm:mb-10 md:mb-14">
+              <p className="mb-3 text-center font-['Montserrat'] text-sm text-[#5a625f] sm:mb-4 sm:text-base">
+                Прямая трансляция
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 md:gap-6">
+                {LIVE_CAMERA_IDS.map((id) => (
+                  <LiveCameraGalleryTile key={id} cameraId={id} />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-3 sm:gap-6 md:gap-8 lg:gap-12">
             <button

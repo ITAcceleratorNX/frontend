@@ -67,7 +67,6 @@ import StorageFormatsSection from "../../../src/pages/home/components/StorageFor
 import ClimateSensorsSection from "../../../src/pages/home/components/ClimateSensorsSection.jsx";
 import BranchesSection from "../../../src/pages/home/components/BranchesSection.jsx";
 import WarehouseGallery from "../../../src/pages/home/components/WarehouseGallery.jsx";
-import WarehouseCctvDashboard from "@/pages/home/components/WarehouseCctvDashboard.jsx";
 import WarehouseSchemePanel from "../../../src/pages/home/components/order/WarehouseSchemePanel.jsx";
 import StorageWarnings from "../../../src/pages/home/components/order/StorageWarnings.jsx";
 import MovingSection from "../../../src/pages/home/components/order/MovingSection.jsx";
@@ -2926,8 +2925,6 @@ const HomePage = memo(() => {
 
       {/* Галерея складов ЖК Комфорт Сити */}
       <WarehouseGallery onBookInWarehouse={handleGalleryBookInWarehouse} />
-
-      <WarehouseCctvDashboard />
 
       {/* Шестой фрейм: филиалы Extra Space */}
       <BranchesSection warehouses={warehouses} />
