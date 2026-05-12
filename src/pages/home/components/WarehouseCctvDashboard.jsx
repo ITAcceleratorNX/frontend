@@ -2,9 +2,8 @@ import React, { memo, useCallback, useRef } from 'react';
 import { Loader2, Maximize2 } from 'lucide-react';
 import { useMediamtxWhep } from '@/shared/lib/hooks/useMediamtxWhep.js';
 
-// const DEFAULT_WHEP_BASE = 'http://extraspace-rtsp.duckdns.org';
-const DEFAULT_WHEP_BASE = 'http://localhost:8889';
-const DEFAULT_CAMERA_IDS = ['cam1', 'cam2', 'cam3'];
+const DEFAULT_WHEP_BASE = 'http://extraspace-rtsp.duckdns.org';
+const DEFAULT_CAMERA_IDS = ['cam1', 'cam2', 'cam3', 'cam4'];
 
 function parseCameraList(raw) {
   if (typeof raw !== 'string' || !raw.trim()) return null;
@@ -25,7 +24,8 @@ const CAMERA_IDS =
   parseCameraList(import.meta.env.VITE_CCTV_CAMERA_IDS) ?? DEFAULT_CAMERA_IDS;
 
 function whepUrlForCamera(cameraId) {
-  return `http://192.168.100.85:8889/cam1`;
+  const id = typeof cameraId === 'string' && cameraId.trim() ? cameraId.trim() : 'cam1';
+  return `${WHEP_BASE}/${id}/whep`;
 }
 
 function requestFullscreenEl(el) {
