@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu as ReactMenu, MenuButton, MenuItem } from '@szhsin/react-menu';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { showLoading, updateToast } from '../../../shared/lib/utils/notifications';
@@ -46,6 +46,7 @@ const managerNavItems = [
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
+  { label: 'Заявки с лендингов', icon: ClipboardList, key: 'lpleads' },
   // { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
@@ -59,6 +60,7 @@ const adminNavItems = [
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
+  { label: 'Заявки с лендингов', icon: ClipboardList, key: 'lpleads' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
   { label: 'Выйти', icon: icon6, key: 'logout' },
@@ -237,6 +239,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
               )}
             >
               <div className="relative">
+                {typeof item.icon === 'string' ? (
                 <img 
                   src={item.icon} 
                   alt="icon" 
@@ -246,6 +249,15 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
                     item.key === 'logout' ? 'filter brightness-0 saturate-100 hue-rotate-0' : 'filter brightness-0'
                   )} 
                 />
+                ) : item.icon ? (
+                  <item.icon
+                    className={clsx(
+                      'w-5 h-5 flex-shrink-0',
+                      activeNav === item.key ? 'text-white' : 'text-gray-700',
+                    )}
+                    aria-hidden
+                  />
+                ) : null}
                 {/* Красная точка для непрочитанных уведомлений */}
                 {item.key === 'notifications' && unreadCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>

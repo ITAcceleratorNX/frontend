@@ -1,15 +1,34 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Settings, Plus, History, Loader2, AlertCircle, Shield, BarChart3 } from 'lucide-react';
 import { useNotifications, useSearchNotifications } from '../../../../shared/lib/hooks/use-notifications';
-import NotificationCard from './NotificationCard';
+import NotificationCard, { getNotificationTarget } from './NotificationCard';
 import CreateNotificationForm from './CreateNotificationForm';
 import { NotificationSearch } from '../../../../components/ui/NotificationSearch';
 
 const AdminNotifications = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('history');
   const [searchParams, setSearchParams] = useState(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const observerRef = useRef(null);
+
+  const handleNotificationClick = useCallback(
+    (notification) => {
+      const target = getNotificationTarget(notification);
+      if (target.activeSection === 'lpleads') {
+        queryClient.invalidateQueries({ queryKey: ['lp-landing-leads'] });
+      }
+      const state = { activeSection: target.activeSection };
+      if (target.ordersFilter) state.ordersFilter = target.ordersFilter;
+      if (target.orderId) state.orderId = target.orderId;
+      if (target.deliveryId) state.deliveryId = target.deliveryId;
+      navigate('/personal-account', { state });
+    },
+    [navigate, queryClient],
+  );
 
   const {
     notifications,
@@ -280,11 +299,22 @@ const AdminNotifications = () => {
                       if (!isSearchMode && displayData.notifications.length === index + 1) {
                         return (
                             <div ref={lastElementRef} key={n.notification_id}>
-                              <NotificationCard notification={n} onMarkAsRead={markAsRead} />
+                              <NotificationCard
+                                notification={n}
+                                onMarkAsRead={markAsRead}
+                                onNotificationClick={handleNotificationClick}
+                              />
                             </div>
                         );
                       } else {
-                        return <NotificationCard key={n.notification_id} notification={n} onMarkAsRead={markAsRead} />;
+                        return (
+                          <NotificationCard
+                            key={n.notification_id}
+                            notification={n}
+                            onMarkAsRead={markAsRead}
+                            onNotificationClick={handleNotificationClick}
+                          />
+                        );
                       }
                     })
                   )}

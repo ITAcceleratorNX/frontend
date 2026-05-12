@@ -17,6 +17,7 @@ import UserDelivery from './ui/UserDelivery';
 import UserOrdersPage from './ui/UserOrdersPage';
 import ItemSearch from './ui/ItemSearch';
 import Statistics from './ui/Statistics';
+import LpLeadsSection from './ui/LpLeadsSection';
 import PromoCodeManagement from './ui/PromoCodeManagement';
 import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
 import MobileSidebar from './ui/MobileSidebar';
@@ -33,7 +34,7 @@ import { useAuth } from '../../shared/context/AuthContext';
 // ToastContainer уже подключен в главном приложении
 
 // Мемоизированный компонент страницы личного кабинета
-const VALID_SECTION_PARAMS = ['orders', 'payments', 'delivery', 'personal', 'notifications', 'ordersManagement'];
+const VALID_SECTION_PARAMS = ['orders', 'payments', 'delivery', 'personal', 'notifications', 'ordersManagement', 'lpleads'];
 
 const PersonalAccountPage = memo(() => {
   const location = useLocation();
@@ -268,6 +269,7 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'delivery' && <UserDelivery />}
           {activeNav === 'itemsearch' && <ItemSearch />}
           {activeNav === 'statistics' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <Statistics />}
+          {activeNav === 'lpleads' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && <LpLeadsSection />}
           {activeNav === 'promocodes' && user?.role === 'ADMIN' && <PromoCodeManagement />}
         </main>
       </div>

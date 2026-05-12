@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import icon1 from '../../../assets/1.svg';
@@ -20,10 +20,11 @@ import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
 import { useChatStore } from '../../../entities/chat/model';
-import { Pencil, LogOut, Bell, Package, CreditCard, Truck, Tag } from 'lucide-react';
+import { Pencil, LogOut, Bell, Package, CreditCard, Truck, Tag, ClipboardList } from 'lucide-react';
 import lichkaLogo from '../../../assets/Lichka2.png';
 import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './notifications/UserNotifications';
+import { getNotificationTarget } from './notifications/NotificationCard';
 import { Switch } from '../../../components/ui/switch';
 
 // Разделы для обычных пользователей
@@ -43,6 +44,7 @@ const managerNavItems = [
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
+  { label: 'Заявки с лендингов', icon: ClipboardList, key: 'lpleads' },
   // { label: 'Чат', icon: icon3, key: 'chat' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
@@ -56,6 +58,7 @@ const adminNavItems = [
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
+  { label: 'Заявки с лендингов', icon: ClipboardList, key: 'lpleads' },
   { label: 'Промокоды', icon: Tag, key: 'promocodes' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
   { divider: true },
@@ -88,6 +91,22 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const filteredNotifications = showUnreadOnly 
     ? notifications.filter(n => !n.is_read)
     : notifications;
+
+  const handleNotificationClick = useCallback(
+    (notification) => {
+      const target = getNotificationTarget(notification);
+      if (target.activeSection === 'lpleads') {
+        queryClient.invalidateQueries({ queryKey: ['lp-landing-leads'] });
+      }
+      const state = { activeSection: target.activeSection };
+      if (target.ordersFilter) state.ordersFilter = target.ordersFilter;
+      if (target.orderId) state.orderId = target.orderId;
+      if (target.deliveryId) state.deliveryId = target.deliveryId;
+      navigate('/personal-account', { state });
+      setIsNotificationsOpen(false);
+    },
+    [navigate, queryClient],
+  );
   
   // Подсчитываем общее количество непрочитанных сообщений в чате
   const totalUnreadChatCount = Object.values(unreadMessages).reduce((sum, count) => sum + count, 0);
@@ -329,6 +348,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                       <UserNotifications 
                         notifications={filteredNotifications} 
                         onMarkAsRead={markAsRead}
+                        onNotificationClick={handleNotificationClick}
                         scale={1}
                       />
                     )}
