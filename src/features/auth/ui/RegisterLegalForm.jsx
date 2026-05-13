@@ -5,7 +5,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { Mail, Phone, Building2, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
-import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
+import { getStoredLeadSource } from '../../../shared/lib/leadSourceStorage.js';
 import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
 import {

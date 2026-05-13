@@ -28,12 +28,8 @@ import { warehouseApi } from "../../shared/api/warehouseApi";
 import { ordersApi } from "../../shared/api/ordersApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
 import { promoApi } from "../../shared/api/promoApi";
-import { trackVisit } from "@/shared/api/visitsApi";
-
-
 import { useAuth } from "../../shared/context/AuthContext";
 import { validateUserProfile } from "../../shared/lib/validation/profileValidation";
-import { getOrCreateVisitorId } from "@/shared/lib/utm";
 import {
   showSuccessToast,
   showErrorToast,
@@ -56,9 +52,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LeadSourceModal, useLeadSource, shouldShowLeadSourceModal } from "@/shared/components/LeadSourceModal.jsx";
-
-
 import { Header } from "../../widgets";
 import Footer from "../../widgets/Footer";
 import WarehouseSVGMap from "../../components/WarehouseSVGMap";
@@ -80,15 +73,6 @@ import StorageLockersSection from "../../../src/pages/home/components/storage-lo
 
 
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
-
-
-import TelegramIcon from "@/assets/lead-source-icons/telegram.webp";
-import SiteIcon from "@/assets/lead-source-icons/site.webp";
-import WhatsappIcon from "@/assets/lead-source-icons/whatsapp.webp";
-import TwoGisIcon from "@/assets/lead-source-icons/2gis.webp";
-import InstagramIcon from "@/assets/lead-source-icons/instagram.webp";
-import TiktokIcon from "@/assets/lead-source-icons/tiktok.webp";
-import AdsIcon from "@/assets/lead-source-icons/ads.webp";
 
 
 import sumkaImg from "../../assets/cloud-tariffs/sumka.png";
@@ -243,10 +227,8 @@ const HomePage = memo(() => {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const [callbackModalContext, setCallbackModalContext] = useState('callback');
-  const [isLeadSourceModalOpen, setIsLeadSourceModalOpen] = useState(false);
   const [isPromoBookingModalOpen, setIsPromoBookingModalOpen] = useState(false);
   const [promoGuidedBooking, setPromoGuidedBooking] = useState(false);
-  const { saveLeadSource } = useLeadSource();
   // Состояние для модалки предпросмотра платежей
   const [isPaymentPreviewOpen, setIsPaymentPreviewOpen] = useState(false);
   const [paymentPreviewType, setPaymentPreviewType] = useState(null); // 'INDIVIDUAL' или 'CLOUD'
@@ -783,37 +765,6 @@ const HomePage = memo(() => {
       setCloudPromoDiscount(newDiscount);
     }
   }, [cloudPricePreview, cloudPromoCode, cloudPromoDiscountPercent]);
-
-  // Предзагрузка изображений для опросника и показ модального окна источника лида
-  useEffect(() => {
-    // Предзагружаем изображения опросника сразу при загрузке страницы
-    if (typeof window !== 'undefined' && shouldShowLeadSourceModal()) {
-      // Предзагружаем все иконки опросника
-      const icons = [SiteIcon, WhatsappIcon, TwoGisIcon, InstagramIcon, TiktokIcon, AdsIcon, TelegramIcon];
-      icons.forEach((icon) => {
-        const img = new Image();
-        img.src = icon;
-        img.loading = 'eager';
-        // Добавляем preload link в head для еще более ранней загрузки
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = icon;
-        if (!document.querySelector(`link[href="${icon}"]`)) {
-          document.head.appendChild(link);
-        }
-      });
-    }
-    
-    if (!isAuthenticated && shouldShowLeadSourceModal()) {
-      // Небольшая задержка для лучшего UX
-      const timer = setTimeout(() => {
-        setIsLeadSourceModalOpen(true);
-      }, 2000); // Показываем через 2 секунды после загрузки страницы
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2952,20 +2903,6 @@ const HomePage = memo(() => {
         showRegisterPrompt={!isAuthenticated}
         title={callbackModalContext === 'max_orders_limit' ? 'Связаться с поддержкой' : undefined}
         description={callbackModalDescription}
-      />
-
-      <LeadSourceModal
-        open={isLeadSourceModalOpen}
-        onOpenChange={setIsLeadSourceModalOpen}
-        onSelect={(sourceValue) => {
-          saveLeadSource(sourceValue);
-          const visitorId = getOrCreateVisitorId();
-          if (visitorId) {
-            trackVisit({ visitor_id: visitorId, lead_source: sourceValue }).then(() => {
-              sessionStorage.setItem('extraspace_visit_sent', '1');
-            }).catch(() => {});
-          }
-        }}
       />
 
       {isAdminOrManager && (

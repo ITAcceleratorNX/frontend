@@ -10,7 +10,7 @@ import {
 import { EyeIcon, EyeOffIcon, Phone, Lock, RefreshCw } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { authApi } from '../../../shared/api/auth';
-import { getStoredLeadSource } from '../../../shared/components/LeadSourceModal.jsx';
+import { getStoredLeadSource } from '../../../shared/lib/leadSourceStorage.js';
 import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
 import api from '../../../shared/api/axios';
