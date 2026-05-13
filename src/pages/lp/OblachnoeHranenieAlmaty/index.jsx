@@ -183,9 +183,7 @@ export default function OblachnoeHranenieAlmatyPage() {
         title="Облачное хранение в Алматы · мы заберём и привезём · ExtraSpace"
         description="Заберём вещи у вас, упакуем, привезём обратно по запросу. От 6 000 ₸ за коробку в месяц. Для частных лиц и бизнеса."
         canonical={CANONICAL}
-        ogTitle="Облачное хранение в Алматы · ExtraSpace"
-        ogDescription="Курьер заберёт у вас, упакуем, привезём обратно. От 6 000 ₸/мес за коробку. Для дома и бизнеса."
-        ogImage="https://extraspace.kz/og/lp-oblachnoe.png"
+        ogImage="/og/lp-oblachnoe.png"
         ogImageAlt="Облачное хранение в Алматы — ExtraSpace"
       />
 

@@ -119,9 +119,7 @@ export default function KameraHraneniyaAlmatyPage() {
         title="Камера хранения в Алматы · от 1 дня · ExtraSpace"
         description="Хранение чемоданов и коробок от 24 часов до 2 недель. В черте Алматы — НЕ аэропорт. 4 000 ₸/м³ в сутки."
         canonical={CANONICAL}
-        ogTitle="Камера хранения в Алматы · от 1 дня · ExtraSpace"
-        ogDescription="Чемоданы и коробки на 1 день – 2 недели. От 1 000 ₸/сутки. В черте Алматы — не аэропорт и не вокзал."
-        ogImage="https://extraspace.kz/og/lp-kamera-hraneniya.png"
+        ogImage="/og/lp-kamera-hraneniya.png"
         ogImageAlt="Камера хранения в Алматы — ExtraSpace"
       />
 
