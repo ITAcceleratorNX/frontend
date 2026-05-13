@@ -43,3 +43,21 @@ export function trackEvent(eventName, params = {}) {
     /* ignore */
   }
 }
+
+/**
+ * Клики по бронирующим CTA (канонично для GTM GA4/Google Ads micro-conversion).
+ *
+ * @param {object} opts
+ * @param {'individual' | 'camera' | 'cloud'} opts.service_type
+ * @param {string | null} [opts.box_size] — человекочитаемый размер с карточки (напр. «6 м²», «0.25 м³»), иначе null
+ * @param {string} [opts.section] — hero | header | tariffs | ...
+ */
+export function trackBookingClick({ service_type, box_size = null, section } = {}) {
+  if (!service_type) return;
+  trackEvent(LP_EVENTS.BOOKING_CLICK, {
+    landing_page: typeof window !== 'undefined' ? window.location.pathname : '',
+    ...(section !== undefined ? { section } : {}),
+    service_type,
+    box_size,
+  });
+}

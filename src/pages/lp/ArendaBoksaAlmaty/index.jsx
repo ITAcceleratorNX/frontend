@@ -157,7 +157,11 @@ export default function ArendaBoksaAlmatyPage() {
   }, []);
 
   return (
-    <LpLayout onHeaderCta={() => setGateOpen(true)} ctaLabel="Забронировать">
+    <LpLayout
+      bookingServiceType={SERVICE_TYPE}
+      onHeaderCta={() => setGateOpen(true)}
+      ctaLabel="Забронировать"
+    >
       <LpHelmet
         title="Аренда бокса в Алматы от 6 000 ₸/м² · ExtraSpace"
         description="Свой бокс с климат-контролем от 6 000 ₸/м²/мес. От 1 месяца. 2 филиала в черте Алматы. Бронь онлайн без визита."
@@ -269,6 +273,7 @@ export default function ArendaBoksaAlmatyPage() {
                 <BookingCtaButton
                   section={`use_case_${card.anchor}`}
                   serviceType={SERVICE_TYPE}
+                  enableBookingAnalytics={false}
                   variant="outline"
                   onClick={handleBooking}
                   className="mt-auto"
@@ -321,7 +326,7 @@ export default function ArendaBoksaAlmatyPage() {
                 <BookingCtaButton
                   section="box_sizes"
                   serviceType={SERVICE_TYPE}
-                  boxSize={box.sizeKey}
+                  boxSize={box.size}
                   variant="outline"
                   onClick={handleBooking}
                   className="mt-auto"
