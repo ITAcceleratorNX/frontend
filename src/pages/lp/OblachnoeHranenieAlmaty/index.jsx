@@ -223,7 +223,7 @@ export default function OblachnoeHranenieAlmatyPage() {
               onClick={() => openGating('b2c')}
               variant="primary"
             >
-              Забронировать забор вещей
+              Забронировать место
               <ChevronRight size={16} aria-hidden />
             </BookingCtaButton>
             <PhoneGatingButton
@@ -378,7 +378,7 @@ export default function OblachnoeHranenieAlmatyPage() {
                 variant="primary"
                 className="mt-2"
               >
-                Забронировать забор
+                Забронировать бокс
                 <ChevronRight size={16} aria-hidden />
               </BookingCtaButton>
             </article>
@@ -516,7 +516,7 @@ export default function OblachnoeHranenieAlmatyPage() {
               variant="big"
               onClick={() => openGating('b2c')}
             >
-              Забронировать забор
+              Забронировать место
               <ChevronRight size={18} aria-hidden />
             </BookingCtaButton>
             <BookingCtaButton
