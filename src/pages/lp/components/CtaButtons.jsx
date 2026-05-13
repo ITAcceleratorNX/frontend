@@ -1,6 +1,10 @@
 import React from 'react';
 import { Phone, MessageCircle } from 'lucide-react';
-import { trackEvent, LP_EVENTS } from '@/shared/lib/analytics.js';
+import {
+  trackEvent,
+  trackBookingClick as pushBookingClickEvent,
+  LP_EVENTS,
+} from '@/shared/lib/analytics.js';
 
 /**
  * Reusable phone-gating CTA buttons:
@@ -99,19 +103,23 @@ export function BookingCtaButton({
   onClick,
   section,
   serviceType,
+  /** Подпись размера для GTM (напр. «6 м²»); иначе не указывать */
   boxSize,
+  /** false — не отправлять booking_click (напр. «Запросить КП», «Подобрать бокс») */
+  enableBookingAnalytics = true,
   variant = 'primary',
   className = '',
   children,
   type = 'button',
 }) {
   const handleClick = (e) => {
-    trackEvent(LP_EVENTS.BOOKING_CLICK, {
-      landing_page: typeof window !== 'undefined' ? window.location.pathname : '',
-      section,
-      service_type: serviceType,
-      ...(boxSize ? { box_size: boxSize } : {}),
-    });
+    if (enableBookingAnalytics) {
+      pushBookingClickEvent({
+        section,
+        service_type: serviceType,
+        box_size: boxSize ?? null,
+      });
+    }
     onClick?.(e);
   };
 

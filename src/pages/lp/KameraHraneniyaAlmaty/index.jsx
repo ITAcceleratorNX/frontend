@@ -114,7 +114,11 @@ export default function KameraHraneniyaAlmatyPage() {
   }, []);
 
   return (
-    <LpLayout onHeaderCta={() => setGateOpen(true)} ctaLabel="Привезу сегодня">
+    <LpLayout
+      bookingServiceType={SERVICE_TYPE}
+      onHeaderCta={() => setGateOpen(true)}
+      ctaLabel="Привезу сегодня"
+    >
       <LpHelmet
         title="Камера хранения в Алматы · от 1 дня · ExtraSpace"
         description="Хранение чемоданов и коробок от 24 часов до 2 недель. В черте Алматы — НЕ аэропорт. 4 000 ₸/м³ в сутки."

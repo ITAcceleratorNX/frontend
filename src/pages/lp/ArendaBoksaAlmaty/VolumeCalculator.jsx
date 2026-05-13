@@ -76,7 +76,7 @@ export default function VolumeCalculator({ onBook }) {
                 <BookingCtaButton
                   section="calculator"
                   serviceType="individual"
-                  boxSize={current.sizeKey}
+                  boxSize={current.size}
                   onClick={onBook}
                   variant="primary"
                   className="w-full sm:w-auto"

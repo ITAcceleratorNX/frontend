@@ -40,7 +40,6 @@ const TARIFFS = [
     volume: '0.25 м³',
     price: '6 000 ₸/мес',
     description: 'Сезонная одежда, обувь, личные архивы — то, что не помещается в шкаф.',
-    boxSize: '0.25',
   },
   {
     Icon: Disc,
@@ -48,7 +47,6 @@ const TARIFFS = [
     volume: '0.5 м³',
     price: '5 000 ₸/мес',
     description: 'Заберём, упакуем, вернём перед сезоном — без багажника и кладовки.',
-    boxSize: '0.5',
   },
   {
     Icon: Bike,
@@ -56,7 +54,6 @@ const TARIFFS = [
     volume: '1.8 м³',
     price: '25 000 ₸/мес',
     description: 'Отапливаемый склад с охраной — идеально для зимней консервации мотоцикла.',
-    boxSize: '1.8',
   },
   {
     Icon: Ruler,
@@ -64,7 +61,6 @@ const TARIFFS = [
     volume: 'от 1 м³',
     price: 'от 9 500 ₸/м³ в мес',
     description: 'Платите ровно за объём вещей. Менеджер посчитает после визита курьера.',
-    boxSize: 'custom',
   },
 ];
 
@@ -178,7 +174,11 @@ export default function OblachnoeHranenieAlmatyPage() {
   }, []);
 
   return (
-    <LpLayout onHeaderCta={() => openGating('b2c')} ctaLabel="Забронировать">
+    <LpLayout
+      bookingServiceType={SERVICE_TYPE}
+      onHeaderCta={() => openGating('b2c')}
+      ctaLabel="Забронировать"
+    >
       <LpHelmet
         title="Облачное хранение в Алматы · мы заберём и привезём · ExtraSpace"
         description="Заберём вещи у вас, упакуем, привезём обратно по запросу. От 6 000 ₸ за коробку в месяц. Для частных лиц и бизнеса."
@@ -267,7 +267,7 @@ export default function OblachnoeHranenieAlmatyPage() {
                 <BookingCtaButton
                   section="tariffs"
                   serviceType={SERVICE_TYPE}
-                  boxSize={t.boxSize}
+                  boxSize={t.volume}
                   variant="outline"
                   onClick={() => openGating('b2c')}
                   className="mt-auto"
@@ -411,6 +411,7 @@ export default function OblachnoeHranenieAlmatyPage() {
               <BookingCtaButton
                 section="b2b_block"
                 serviceType={SERVICE_TYPE}
+                enableBookingAnalytics={false}
                 onClick={() => openGating('b2b')}
                 variant="primary"
                 className="mt-2"
@@ -520,6 +521,7 @@ export default function OblachnoeHranenieAlmatyPage() {
             <BookingCtaButton
               section="final_cta_b2b"
               serviceType={SERVICE_TYPE}
+              enableBookingAnalytics={false}
               variant="big"
               onClick={() => openGating('b2b')}
               className="!bg-white !text-[#0e1729] hover:!bg-white/90"
