@@ -6,7 +6,7 @@ import { useEffect } from 'react';
  * Sets:
  *  - <title>
  *  - <meta name="description">
- *  - <meta name="robots" content="noindex, nofollow">
+ *  - <meta name="robots" content="noindex,nofollow">
  *  - <link rel="canonical">
  *  - Open Graph + Twitter Card (open — for nice WhatsApp/Telegram previews per ТЗ §3.8)
  *  - Schema.org LocalBusiness JSON-LD with both branches
@@ -171,7 +171,7 @@ export default function LpHelmet({
     if (title) document.title = title;
 
     setMeta({ name: 'description', content: description });
-    setMeta({ name: 'robots', content: 'noindex, nofollow' });
+    setMeta({ name: 'robots', content: 'noindex,nofollow' });
 
     setLink({ rel: 'canonical', href: canonical });
 
