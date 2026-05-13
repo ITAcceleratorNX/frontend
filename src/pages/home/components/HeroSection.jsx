@@ -1,19 +1,68 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import heroVideo from "@/video/extraspace.mp4";
+
+const HERO_VIDEO_POSTER = "/videos/extraspace-poster.jpg";
 
 export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
+    const videoRef = useRef(null);
+    const [videoSrc, setVideoSrc] = useState(null);
+
+    useEffect(() => {
+        if (typeof navigator !== "undefined" && navigator.connection?.saveData) {
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        const load = () => {
+            if (cancelled) return;
+            import("@/video/extraspace.mp4")
+                .then((mod) => {
+                    if (!cancelled) setVideoSrc(mod.default);
+                })
+                .catch(() => {});
+        };
+
+        if (typeof requestIdleCallback === "function") {
+            const id = requestIdleCallback(load, { timeout: 1800 });
+            return () => {
+                cancelled = true;
+                cancelIdleCallback(id);
+            };
+        }
+
+        const t = window.setTimeout(load, 120);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(t);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!videoSrc) return;
+        const el = videoRef.current;
+        if (!el) return;
+        el.load();
+        const p = el.play();
+        if (p !== undefined && typeof p.catch === "function") {
+            p.catch(() => {});
+        }
+    }, [videoSrc]);
+
     return (
         <div
             id="home-hero-section"
             className="flex-1 relative overflow-hidden -mt-16 pt-16 min-h-[100vh] flex flex-col"
         >
             <video
-                src={heroVideo}
+                ref={videoRef}
+                src={videoSrc ?? undefined}
+                poster={HERO_VIDEO_POSTER}
                 autoPlay
                 muted
                 loop
                 playsInline
+                preload={videoSrc ? "metadata" : "none"}
                 className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/60" aria-hidden />
