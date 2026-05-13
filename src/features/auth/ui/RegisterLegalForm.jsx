@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
-import { Mail, Phone, Building2, RefreshCw } from 'lucide-react';
+import { Mail, Phone, Building2, RefreshCw, ArrowLeft } from 'lucide-react';
 import '../styles/auth-forms.css';
 import { getStoredLeadSource } from '../../../shared/lib/leadSourceStorage.js';
 import { getOrCreateVisitorId } from '../../../shared/lib/utm';
@@ -219,8 +219,18 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-[520px] mx-auto">
+    <>
+      <button
+        type="button"
+        onClick={() => navigate('/')}
+        disabled={isLoading}
+        className="auth-nav-back fixed top-3 left-3 z-30 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] sm:text-[14px] font-medium text-[#14716a] hover:text-[#0c3f3b] hover:bg-[#104D4A]/14 outline-none focus-visible:ring-2 focus-visible:ring-[#104D4A]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F5F5] disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <ArrowLeft className="w-[18px] h-[18px] flex-shrink-0" aria-hidden />
+        На главную
+      </button>
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-[520px] mx-auto">
         {/* Карточка формы регистрации */}
         <div className="bg-white rounded-[25px] border border-[#DFDFDF] shadow-[0px_4px_8.8px_rgba(0,0,0,0.25)] overflow-hidden">
           <div className="flex flex-col items-center gap-[20px] sm:gap-[24px] lg:gap-[28px] p-4 sm:p-5 lg:p-6">
@@ -587,6 +597,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -161,6 +161,17 @@ button:active:not(:disabled) {
   transform: translateY(0);
 }
 
+/* Кнопка «На главную» на страницах входа/регистрации — без глобальной тени и сдвига */
+button.auth-nav-back {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+button.auth-nav-back:hover:not(:disabled),
+button.auth-nav-back:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
 /* Анимация вращения для индикатора загрузки */
 @keyframes spin {
   to {

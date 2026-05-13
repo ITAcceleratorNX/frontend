@@ -6,7 +6,7 @@ import {
   toastAuthSuccess,
   showErrorToast,
 } from '../../../shared/lib/toast';
-import { EyeIcon, EyeOffIcon, Mail, Lock } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, Mail, Lock, ArrowLeft } from 'lucide-react';
 import '../styles/auth-forms.css';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
@@ -181,8 +181,18 @@ export const LoginForm = () => {
   const isSubmitting = isLoading || authLoading;
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-[450px] mx-auto">
+    <>
+      <button
+        type="button"
+        onClick={() => navigate('/')}
+        disabled={isSubmitting}
+        className="auth-nav-back fixed top-3 left-3 z-30 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] sm:text-[14px] font-medium text-[#14716a] hover:text-[#0c3f3b] hover:bg-[#104D4A]/14 outline-none focus-visible:ring-2 focus-visible:ring-[#104D4A]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F5F5] disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <ArrowLeft className="w-[18px] h-[18px] flex-shrink-0" aria-hidden />
+        На главную
+      </button>
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-[450px] mx-auto">
         {/* Карточка формы входа */}
         <div className="bg-white rounded-[25px] border border-[#DFDFDF] shadow-[0px_4px_8.8px_rgba(0,0,0,0.25)] overflow-hidden">
           <div className="flex flex-col items-center gap-[24px] sm:gap-[28px] lg:gap-[35px] p-5 sm:p-6 lg:p-8">
@@ -403,6 +413,7 @@ export const LoginForm = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
