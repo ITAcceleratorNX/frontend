@@ -286,7 +286,7 @@ export default function ArendaBoksaAlmatyPage() {
       </section>
 
       {/* BOX SIZES */}
-      <section id="razmery" className="w-full bg-white py-12 sm:py-16 lg:py-24">
+      <section id="ceny" className="w-full bg-white py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
             <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
@@ -341,7 +341,7 @@ export default function ArendaBoksaAlmatyPage() {
       <VolumeCalculator onBook={handleBooking} />
 
       {/* HOW IT WORKS */}
-      <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
+      <section id="kak-rabotaet" className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
             <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">

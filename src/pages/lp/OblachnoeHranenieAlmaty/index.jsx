@@ -281,7 +281,7 @@ export default function OblachnoeHranenieAlmatyPage() {
       </section>
 
       {/* COMPARISON */}
-      <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-20">
+      <section id="sravnenie" className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl">
@@ -352,7 +352,7 @@ export default function OblachnoeHranenieAlmatyPage() {
           </header>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <article className="flex flex-col gap-4 rounded-3xl border border-[#e5e9ed] bg-[#F7FAF9] p-6 sm:p-8">
+            <article id="dlya-doma" className="flex flex-col gap-4 rounded-3xl border border-[#e5e9ed] bg-[#F7FAF9] p-6 sm:p-8">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#31876D]/10 text-[#31876D]">
                   <Home size={22} aria-hidden />
@@ -381,7 +381,7 @@ export default function OblachnoeHranenieAlmatyPage() {
               </BookingCtaButton>
             </article>
 
-            <article className="flex flex-col gap-4 rounded-3xl border border-[#31876D]/30 bg-[#0e1729] p-6 text-white sm:p-8">
+            <article id="dlya-biznesa" className="flex flex-col gap-4 rounded-3xl border border-[#31876D]/30 bg-[#0e1729] p-6 text-white sm:p-8">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
                   <Building2 size={22} aria-hidden />
@@ -425,7 +425,7 @@ export default function OblachnoeHranenieAlmatyPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
+      <section id="kak-rabotaet" className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">

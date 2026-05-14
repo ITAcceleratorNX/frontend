@@ -33,7 +33,7 @@ function BranchesSection({
   subtitle = 'Оба склада в черте города, ровно между Бостандыкским и Ауэзовским районами. Работаем круглосуточно.',
 }) {
   return (
-    <section className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
+    <section id="geo" className="w-full bg-[#F7FAF9] py-12 sm:py-16 lg:py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <header className="mx-auto mb-10 max-w-3xl text-center">
           <h2 className="font-soyuz-grotesk text-2xl font-bold text-[#202422] xs:text-3xl sm:text-4xl lg:text-5xl">
