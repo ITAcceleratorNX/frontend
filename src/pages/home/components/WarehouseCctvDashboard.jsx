@@ -3,7 +3,8 @@ import { Loader2, Maximize2 } from 'lucide-react';
 import { useMediamtxWhep } from '@/shared/lib/hooks/useMediamtxWhep.js';
 
 const DEFAULT_WHEP_BASE = 'https://camera.extraspace.kz';
-const DEFAULT_CAMERA_IDS = ['cam1', 'cam2', 'cam3', 'cam4'];
+const DEFAULT_STAFF_CAMERA_IDS = ['cam1', 'cam2', 'cam3', 'cam4'];
+const DEFAULT_HOME_CAMERA_IDS = ['cam3', 'cam4'];
 
 function parseCameraList(raw) {
   if (typeof raw !== 'string' || !raw.trim()) return null;
@@ -21,8 +22,13 @@ function parseBaseUrl(raw) {
 
 const WHEP_BASE = parseBaseUrl(import.meta.env.VITE_CCTV_WHEP_BASE_URL);
 
-export const LIVE_CAMERA_IDS =
-  parseCameraList(import.meta.env.VITE_CCTV_CAMERA_IDS) ?? DEFAULT_CAMERA_IDS;
+/** Все камеры (личный кабинет админа и менеджера). */
+export const STAFF_LIVE_CAMERA_IDS =
+  parseCameraList(import.meta.env.VITE_CCTV_CAMERA_IDS) ?? DEFAULT_STAFF_CAMERA_IDS;
+
+/** Публичная трансляция на главной странице. */
+export const HOME_LIVE_CAMERA_IDS =
+  parseCameraList(import.meta.env.VITE_CCTV_HOME_CAMERA_IDS) ?? DEFAULT_HOME_CAMERA_IDS;
 
 function whepUrlForCamera(cameraId) {
   const id = typeof cameraId === 'string' && cameraId.trim() ? cameraId.trim() : 'cam1';
@@ -131,3 +137,17 @@ function LiveCameraGalleryTileInner({ cameraId }) {
 }
 
 export const LiveCameraGalleryTile = memo(LiveCameraGalleryTileInner);
+
+/** Сетка плиток прямой трансляции (главная и личный кабинет). */
+export function LiveCameraGrid({ cameraIds, className = '' }) {
+  if (!cameraIds?.length) return null;
+  return (
+    <div className={className}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 md:gap-6">
+        {cameraIds.map((id) => (
+          <LiveCameraGalleryTile key={id} cameraId={id} />
+        ))}
+      </div>
+    </div>
+  );
+}

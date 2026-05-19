@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu as ReactMenu, MenuButton, MenuItem } from '@szhsin/react-menu';
-import { Menu, X, ClipboardList } from 'lucide-react';
+import { Menu, X, ClipboardList, Video } from 'lucide-react';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { showLoading, updateToast } from '../../../shared/lib/utils/notifications';
@@ -43,6 +43,7 @@ const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Видеонаблюдение', icon: Video, key: 'cctv' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
@@ -57,6 +58,7 @@ const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Видеонаблюдение', icon: Video, key: 'cctv' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },

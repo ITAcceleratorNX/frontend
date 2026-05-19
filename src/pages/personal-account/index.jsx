@@ -19,6 +19,7 @@ import ItemSearch from './ui/ItemSearch';
 import Statistics from './ui/Statistics';
 import LpLeadsSection from './ui/LpLeadsSection';
 import PromoCodeManagement from './ui/PromoCodeManagement';
+import StaffCctvSection from './ui/StaffCctvSection';
 import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
 import MobileSidebar from './ui/MobileSidebar';
 import MobileOrdersLayout from './ui/MobileOrdersLayout';
@@ -255,6 +256,9 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'adminusers' && <AllUsers />}
           {activeNav === 'managerusers' && <AllUsers />}
           {activeNav === 'warehouses' && <InfoWarehouses />}
+          {activeNav === 'cctv' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
+            <StaffCctvSection />
+          )}
           {activeNav === 'ordersManagement' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
             <StaffOrdersSection initialMode={ordersManagementInitialMode} />
           )}

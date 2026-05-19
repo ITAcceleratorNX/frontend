@@ -20,7 +20,7 @@ import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExtensionOrdersCount, NOTIFICATION_QUERY_KEYS } from '../../../shared/lib/hooks/use-notifications';
 import { useChatStore } from '../../../entities/chat/model';
-import { Pencil, LogOut, Bell, Package, CreditCard, Truck, Tag, ClipboardList } from 'lucide-react';
+import { Pencil, LogOut, Bell, Package, CreditCard, Truck, Tag, ClipboardList, Video } from 'lucide-react';
 import lichkaLogo from '../../../assets/Lichka2.png';
 import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './notifications/UserNotifications';
@@ -41,6 +41,7 @@ const userNavItems = [
 const managerNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'managerusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Видеонаблюдение', icon: Video, key: 'cctv' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
@@ -55,6 +56,7 @@ const managerNavItems = [
 const adminNavItems = [
   { label: 'Пользователи', icon: icon8, key: 'adminusers' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
+  { label: 'Видеонаблюдение', icon: Video, key: 'cctv' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
   { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
