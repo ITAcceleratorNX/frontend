@@ -2,7 +2,7 @@ import React, { memo, useCallback, useRef } from 'react';
 import { Loader2, Maximize2 } from 'lucide-react';
 import { useMediamtxWhep } from '@/shared/lib/hooks/useMediamtxWhep.js';
 
-const DEFAULT_WHEP_BASE = 'http://extraspace-rtsp.duckdns.org';
+const DEFAULT_WHEP_BASE = 'https://camera.extraspace.kz';
 const DEFAULT_CAMERA_IDS = ['cam1', 'cam2', 'cam3', 'cam4'];
 
 function parseCameraList(raw) {
