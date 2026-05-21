@@ -1,9 +1,32 @@
-import React, { useMemo, useState, useEffect, useDeferredValue, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Phone, RefreshCw, Search, ClipboardList, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
+import {
+  Phone,
+  RefreshCw,
+  Search,
+  ClipboardList,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Check,
+  Download,
+} from 'lucide-react';
 import { lpLeadsApi } from '@/shared/api/lpLeadsApi.js';
 import { formatCalendarDateTime } from '@/shared/lib/utils/date.js';
 import { showErrorToast, showSuccessToast } from '@/shared/lib/toast.js';
+import LpLeadModal from './LpLeadModal.jsx';
+import {
+  ACTUAL_INTEREST_FILTER_OPTIONS,
+  LEAD_OUTCOME_FILTER_OPTIONS,
+  LEAD_QUALITY_FILTER_OPTIONS,
+  LEAD_STATUS_FILTER_OPTIONS,
+  PROCESSING_FILTER_OPTIONS,
+  PROCESSING_STATE_LABELS,
+  REJECTION_REASON_FILTER_OPTIONS,
+  getActionButtonLabel,
+  getFieldLabel,
+  processingStateBadgeClass,
+} from '@/shared/constants/lpLeadProcessing.js';
 
 const SERVICE_LABELS = {
   individual: 'LP-1 · Аренда бокса',
@@ -41,34 +64,16 @@ function phoneToTelHref(phone) {
   return `tel:${phone}`;
 }
 
-/** Начало дня по локальной дате из input type=date (YYYY-MM-DD) */
-function startOfLocalDay(dateStr) {
-  if (!dateStr) return null;
-  const [y, m, d] = dateStr.split('-').map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d, 0, 0, 0, 0);
-}
-
-function endOfLocalDay(dateStr) {
-  if (!dateStr) return null;
-  const [y, m, d] = dateStr.split('-').map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d, 23, 59, 59, 999);
-}
-
 function rowKey(row) {
   return row.id != null ? String(row.id) : `${row.phone}-${row.submitted_at}`;
 }
 
-/**
- * Ячейка GCLID: показываем 8-12 первых символов + хвост, по клику копируем
- * полный ID в буфер. Полный GCLID видно в title (тултипе).
- */
 /* eslint-disable react/prop-types */
 function GclidCell({ value }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = useCallback(async () => {
+  const handleCopy = useCallback(async (e) => {
+    e.stopPropagation();
     if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
@@ -106,23 +111,110 @@ function GclidCell({ value }) {
     </button>
   );
 }
+
+function ProcessingBadge({ state }) {
+  const label = PROCESSING_STATE_LABELS[state] || state || '—';
+  return (
+    <span
+      className={`inline-flex rounded-lg border px-2 py-0.5 text-xs font-medium ${processingStateBadgeClass(state)}`}
+    >
+      {label}
+    </span>
+  );
+}
 /* eslint-enable react/prop-types */
+
+function buildListParams(filters, page, pageSize) {
+  const params = {
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  };
+  if (filters.service_type) params.service_type = filters.service_type;
+  if (filters.client_type) params.client_type = filters.client_type;
+  if (filters.date_from) params.date_from = filters.date_from;
+  if (filters.date_to) params.date_to = filters.date_to;
+  if (filters.q) params.q = filters.q;
+  if (filters.processing_state) params.processing_state = filters.processing_state;
+  if (filters.lead_status) params.lead_status = filters.lead_status;
+  if (filters.lead_quality) params.lead_quality = filters.lead_quality;
+  if (filters.actual_interest) params.actual_interest = filters.actual_interest;
+  if (filters.lead_outcome) params.lead_outcome = filters.lead_outcome;
+  if (filters.rejection_reason) params.rejection_reason = filters.rejection_reason;
+  return params;
+}
 
 function LpLeadsSection() {
   const [search, setSearch] = useState('');
-  const deferredSearch = useDeferredValue(search.trim().toLowerCase());
-
   const [filterService, setFilterService] = useState('');
   const [filterClient, setFilterClient] = useState('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
+  const [filterProcessing, setFilterProcessing] = useState('');
+  const [filterLeadStatus, setFilterLeadStatus] = useState('');
+  const [filterLeadQuality, setFilterLeadQuality] = useState('');
+  const [filterActualInterest, setFilterActualInterest] = useState('');
+  const [filterLeadOutcome, setFilterLeadOutcome] = useState('');
+  const [filterRejectionReason, setFilterRejectionReason] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState(null);
+  const [exporting, setExporting] = useState(false);
+
+  const filters = useMemo(
+    () => ({
+      service_type: filterService,
+      client_type: filterClient,
+      date_from: filterDateFrom,
+      date_to: filterDateTo,
+      q: search.trim() || undefined,
+      processing_state: filterProcessing,
+      lead_status: filterLeadStatus,
+      lead_quality: filterLeadQuality,
+      actual_interest: filterActualInterest,
+      lead_outcome: filterLeadOutcome,
+      rejection_reason: filterRejectionReason,
+    }),
+    [
+      filterService,
+      filterClient,
+      filterDateFrom,
+      filterDateTo,
+      search,
+      filterProcessing,
+      filterLeadStatus,
+      filterLeadQuality,
+      filterActualInterest,
+      filterLeadOutcome,
+      filterRejectionReason,
+    ],
+  );
+
+  const listParams = useMemo(
+    () => buildListParams(filters, page, pageSize),
+    [filters, page, pageSize],
+  );
+
+  const listQueryKey = useMemo(() => ['lp-landing-leads', listParams], [listParams]);
+
   useEffect(() => {
     setPage(1);
-  }, [filterService, filterClient, filterDateFrom, filterDateTo, deferredSearch, pageSize]);
+  }, [
+    filterService,
+    filterClient,
+    filterDateFrom,
+    filterDateTo,
+    search,
+    pageSize,
+    filterProcessing,
+    filterLeadStatus,
+    filterLeadQuality,
+    filterActualInterest,
+    filterLeadOutcome,
+    filterRejectionReason,
+  ]);
 
   const {
     data,
@@ -132,52 +224,13 @@ function LpLeadsSection() {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ['lp-landing-leads'],
-    queryFn: () => lpLeadsApi.getLandingPageLeads({ limit: 5000 }),
+    queryKey: listQueryKey,
+    queryFn: () => lpLeadsApi.getLandingPageLeads(listParams),
     staleTime: 30 * 1000,
   });
 
-  const allItems = data?.items ?? [];
-
-  const filtered = useMemo(() => {
-    const fromTs = startOfLocalDay(filterDateFrom)?.getTime() ?? null;
-    const toTs = endOfLocalDay(filterDateTo)?.getTime() ?? null;
-
-    return allItems.filter((row) => {
-      if (filterService && row.service_type !== filterService) return false;
-      if (filterClient && String(row.client_type || '') !== filterClient) return false;
-      if (fromTs != null || toTs != null) {
-        const t = new Date(row.submitted_at).getTime();
-        if (Number.isNaN(t)) return false;
-        if (fromTs != null && t < fromTs) return false;
-        if (toTs != null && t > toTs) return false;
-      }
-      if (deferredSearch) {
-        const name = String(row.name || '').toLowerCase();
-        const phone = String(row.phone || '').toLowerCase();
-        const section = String(row.page_section || '').toLowerCase();
-        const st = String(row.service_type || '').toLowerCase();
-        if (
-          !name.includes(deferredSearch) &&
-          !phone.includes(deferredSearch) &&
-          !section.includes(deferredSearch) &&
-          !st.includes(deferredSearch)
-        ) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [
-    allItems,
-    filterService,
-    filterClient,
-    filterDateFrom,
-    filterDateTo,
-    deferredSearch,
-  ]);
-
-  const totalFiltered = filtered.length;
+  const pageRows = data?.items ?? [];
+  const totalFiltered = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
 
   useEffect(() => {
@@ -186,18 +239,80 @@ function LpLeadsSection() {
 
   const safePage = Math.min(page, totalPages);
   const pageOffset = (safePage - 1) * pageSize;
-  const pageRows = useMemo(
-    () => filtered.slice(pageOffset, pageOffset + pageSize),
-    [filtered, pageOffset, pageSize],
-  );
-
   const rangeFrom = totalFiltered === 0 ? 0 : pageOffset + 1;
   const rangeTo = Math.min(pageOffset + pageSize, totalFiltered);
 
   const goPage = (p) => setPage(Math.max(1, Math.min(totalPages, p)));
 
+  const openLead = (row, e) => {
+    if (e?.target?.closest?.('button, a')) return;
+    if (row.id == null) return;
+    setSelectedLeadId(row.id);
+    setModalOpen(true);
+  };
+
+  const openLeadByButton = (row, e) => {
+    e.stopPropagation();
+    if (row.id == null) return;
+    setSelectedLeadId(row.id);
+    setModalOpen(true);
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const { limit, offset, ...exportParams } = listParams;
+      await lpLeadsApi.exportLandingPageLeads(exportParams);
+      showSuccessToast('Экспорт загружен');
+    } catch (err) {
+      showErrorToast(err?.response?.data?.message || err?.message || 'Не удалось экспортировать');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const resetFilters = () => {
+    setFilterService('');
+    setFilterClient('');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setSearch('');
+    setFilterProcessing('');
+    setFilterLeadStatus('');
+    setFilterLeadQuality('');
+    setFilterActualInterest('');
+    setFilterLeadOutcome('');
+    setFilterRejectionReason('');
+  };
+
+  const hasActiveFilters =
+    filterService ||
+    filterClient ||
+    filterDateFrom ||
+    filterDateTo ||
+    search ||
+    filterProcessing ||
+    filterLeadStatus ||
+    filterLeadQuality ||
+    filterActualInterest ||
+    filterLeadOutcome ||
+    filterRejectionReason;
+
   const selectClass =
     'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#273655] focus:border-[#31876D] focus:outline-none focus:ring-2 focus:ring-[#31876D]/20 min-w-0';
+
+  const filterSelect = (label, value, onChange, options) => (
+    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+      {label}
+      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
+        {options.map((o) => (
+          <option key={o.value || 'all'} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -208,50 +323,51 @@ function LpLeadsSection() {
             Заявки с лендингов
           </h1>
           <p className="text-sm text-gray-600 mt-1 max-w-xl">
-            Контакты с форм LP-1, LP-2 и LP-3. Фильтры и пагинация применяются к загруженному списку.
+            Контакты с форм LP-1, LP-2 и LP-3. Обработка лидов, фильтры и экспорт для анализа рекламы.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-[#273655] hover:bg-gray-50 disabled:opacity-60"
-        >
-          <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
-          Обновить
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting || isLoading}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-[#273655] hover:bg-gray-50 disabled:opacity-60"
+          >
+            <Download className={`w-4 h-4 ${exporting ? 'animate-pulse' : ''}`} aria-hidden />
+            Экспорт CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-[#273655] hover:bg-gray-50 disabled:opacity-60"
+          >
+            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
+            Обновить
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm mb-4 space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-            Услуга (LP)
-            <select
-              value={filterService}
-              onChange={(e) => setFilterService(e.target.value)}
-              className={selectClass}
-            >
-              {SERVICE_FILTER_OPTIONS.map((o) => (
-                <option key={o.value || 'all'} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-            Тип клиента
-            <select
-              value={filterClient}
-              onChange={(e) => setFilterClient(e.target.value)}
-              className={selectClass}
-            >
-              {CLIENT_FILTER_OPTIONS.map((o) => (
-                <option key={o.value || 'all'} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {filterSelect('Услуга (LP)', filterService, setFilterService, SERVICE_FILTER_OPTIONS)}
+          {filterSelect('Тип клиента', filterClient, setFilterClient, CLIENT_FILTER_OPTIONS)}
+          {filterSelect('Обработка', filterProcessing, setFilterProcessing, PROCESSING_FILTER_OPTIONS)}
+          {filterSelect('Статус лида', filterLeadStatus, setFilterLeadStatus, LEAD_STATUS_FILTER_OPTIONS)}
+          {filterSelect('Качество лида', filterLeadQuality, setFilterLeadQuality, LEAD_QUALITY_FILTER_OPTIONS)}
+          {filterSelect(
+            'Фактический интерес',
+            filterActualInterest,
+            setFilterActualInterest,
+            ACTUAL_INTEREST_FILTER_OPTIONS,
+          )}
+          {filterSelect('Итог лида', filterLeadOutcome, setFilterLeadOutcome, LEAD_OUTCOME_FILTER_OPTIONS)}
+          {filterSelect(
+            'Причина отказа',
+            filterRejectionReason,
+            setFilterRejectionReason,
+            REJECTION_REASON_FILTER_OPTIONS,
+          )}
           <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
             На странице
             <select
@@ -303,20 +419,10 @@ function LpLeadsSection() {
             </div>
           </label>
         </div>
-        {(filterService ||
-          filterClient ||
-          filterDateFrom ||
-          filterDateTo ||
-          search) && (
+        {hasActiveFilters && (
           <button
             type="button"
-            onClick={() => {
-              setFilterService('');
-              setFilterClient('');
-              setFilterDateFrom('');
-              setFilterDateTo('');
-              setSearch('');
-            }}
+            onClick={resetFilters}
             className="text-sm font-medium text-[#31876D] hover:underline"
           >
             Сбросить фильтры
@@ -329,10 +435,10 @@ function LpLeadsSection() {
           <p className="font-semibold">Не удалось загрузить заявки</p>
           <p className="mt-1 text-amber-800">
             {error?.response?.status === 404 || error?.response?.status === 501
-              ? 'На сервере нужно добавить метод GET /leads/landing-pages для ролей ADMIN и MANAGER (список лидов из POST /submit-lead с полями LP).'
-              : (error?.response?.data?.message ||
-                  error?.message ||
-                  'Проверьте доступ или попробуйте позже.')}
+              ? 'На сервере нужен метод GET /leads/landing-pages (и миграция 108 для полей обработки).'
+              : error?.response?.data?.message ||
+                error?.message ||
+                'Проверьте доступ или попробуйте позже.'}
           </p>
         </div>
       )}
@@ -340,12 +446,6 @@ function LpLeadsSection() {
       {!isLoading && !isError && totalFiltered > 0 && (
         <p className="text-sm text-gray-600 mb-3">
           Найдено: <span className="font-semibold text-[#273655]">{totalFiltered}</span>
-          {totalFiltered !== allItems.length ? (
-            <span className="text-gray-500"> из {allItems.length} загруженных</span>
-          ) : null}
-          {deferredSearch !== search.trim().toLowerCase() ? (
-            <span className="text-gray-400"> (поиск обновляется…)</span>
-          ) : null}
         </p>
       )}
 
@@ -353,9 +453,9 @@ function LpLeadsSection() {
         <div className="flex justify-center py-16 text-gray-500 text-sm">Загрузка…</div>
       ) : totalFiltered === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center text-gray-500 text-sm">
-          {allItems.length === 0 && !isError
-            ? 'Пока нет заявок с лендингов или список пуст после ответа сервера.'
-            : 'Нет записей по выбранным фильтрам.'}
+          {!isError
+            ? 'Пока нет заявок с лендингов или нет записей по выбранным фильтрам.'
+            : null}
         </div>
       ) : (
         <>
@@ -365,24 +465,38 @@ function LpLeadsSection() {
                 <tr>
                   <th className="px-4 py-3 font-semibold">Имя</th>
                   <th className="px-4 py-3 font-semibold">Телефон</th>
+                  <th className="px-4 py-3 font-semibold">Обработка</th>
+                  <th className="px-4 py-3 font-semibold">Статус лида</th>
                   <th className="px-4 py-3 font-semibold">Секция</th>
                   <th className="px-4 py-3 font-semibold">Услуга</th>
                   <th className="px-4 py-3 font-semibold">GCLID</th>
                   <th className="px-4 py-3 font-semibold">Дата</th>
+                  <th className="px-4 py-3 font-semibold w-36" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {pageRows.map((row) => (
-                  <tr key={rowKey(row)} className="hover:bg-gray-50/80">
+                  <tr
+                    key={rowKey(row)}
+                    className="hover:bg-gray-50/80 cursor-pointer"
+                    onClick={(e) => openLead(row, e)}
+                  >
                     <td className="px-4 py-3 font-medium text-gray-900">{row.name || '—'}</td>
                     <td className="px-4 py-3">
                       <a
                         href={phoneToTelHref(row.phone)}
+                        onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center gap-1.5 font-mono text-[#31876D] font-semibold hover:underline"
                       >
                         <Phone className="w-3.5 h-3.5 shrink-0" aria-hidden />
                         {row.phone || '—'}
                       </a>
+                    </td>
+                    <td className="px-4 py-3">
+                      <ProcessingBadge state={row.processing_state} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">
+                      {getFieldLabel('lead_status', row.lead_status)}
                     </td>
                     <td className="px-4 py-3 text-gray-600">{row.page_section || '—'}</td>
                     <td className="px-4 py-3 text-gray-700">
@@ -399,6 +513,15 @@ function LpLeadsSection() {
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {formatSubmittedAt(row.submitted_at)}
                     </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={(e) => openLeadByButton(row, e)}
+                        className="rounded-lg border border-[#31876D]/30 bg-[#31876D]/5 px-2.5 py-1.5 text-xs font-semibold text-[#31876D] hover:bg-[#31876D]/10"
+                      >
+                        {getActionButtonLabel(row.processing_state)}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -409,17 +532,25 @@ function LpLeadsSection() {
             {pageRows.map((row) => (
               <li
                 key={rowKey(row)}
-                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm cursor-pointer"
+                onClick={(e) => openLead(row, e)}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-semibold text-gray-900">{row.name || '—'}</p>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      <ProcessingBadge state={row.processing_state} />
+                      <span className="text-xs text-gray-600">
+                        {getFieldLabel('lead_status', row.lead_status)}
+                      </span>
+                    </div>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {SERVICE_LABELS[row.service_type] || row.service_type || '—'}
                     </p>
                   </div>
                   <a
                     href={phoneToTelHref(row.phone)}
+                    onClick={(e) => e.stopPropagation()}
                     className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-[#31876D] px-3 py-1.5 text-xs font-semibold text-white"
                   >
                     <Phone className="w-3.5 h-3.5" aria-hidden />
@@ -427,16 +558,13 @@ function LpLeadsSection() {
                   </a>
                 </div>
                 <p className="font-mono text-sm text-[#31876D] mt-2">{row.phone || '—'}</p>
-                <p className="text-xs text-gray-600">
-                  <span className="text-gray-400">Секция:</span> {row.page_section || '—'}
-                </p>
-                {row.gclid ? (
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-xs text-gray-400">GCLID:</span>
-                    <GclidCell value={row.gclid} />
-                  </div>
-                ) : null}
-                <p className="text-xs text-gray-500 mt-1">{formatSubmittedAt(row.submitted_at)}</p>
+                <button
+                  type="button"
+                  onClick={(e) => openLeadByButton(row, e)}
+                  className="mt-3 w-full rounded-lg border border-[#31876D]/30 bg-[#31876D]/5 px-3 py-2 text-xs font-semibold text-[#31876D]"
+                >
+                  {getActionButtonLabel(row.processing_state)}
+                </button>
               </li>
             ))}
           </ul>
@@ -475,6 +603,13 @@ function LpLeadsSection() {
           </div>
         </>
       )}
+
+      <LpLeadModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        leadId={selectedLeadId}
+        listQueryKey={listQueryKey}
+      />
     </div>
   );
 }

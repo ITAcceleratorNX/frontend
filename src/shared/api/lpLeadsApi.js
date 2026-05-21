@@ -1,9 +1,5 @@
 import api from './axios';
 
-/**
- * Путь к списку лидов с лендингов. Если бэкенд вешает роут иначе — задайте в .env:
- *   VITE_LP_LEADS_GET_PATH=/api/leads/landing-pages
- */
 function getListPath() {
   const fromEnv = import.meta.env.VITE_LP_LEADS_GET_PATH;
   return (typeof fromEnv === 'string' && fromEnv.trim()) || '/leads/landing-pages';
@@ -17,7 +13,6 @@ function isLikelyLeadRow(item) {
   );
 }
 
-/** Явные ключи, где бэкенд кладёт массив заявок */
 function normalizeItemsArray(data) {
   if (!data) return [];
   if (Array.isArray(data)) return data;
@@ -30,7 +25,6 @@ function normalizeItemsArray(data) {
   if (Array.isArray(data.data)) return data.data;
   if (data.success && Array.isArray(data.result)) return data.result;
 
-  // { data: { leads: [...] } } и похожие вложения (один уровень)
   if (data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
     const inner = data.data;
     for (const key of tryKeys) {
@@ -38,35 +32,6 @@ function normalizeItemsArray(data) {
     }
   }
 
-  // Последний шанс: обход дерева в поисках массива объектов «как лиды»
-  const found = findLeadArrayDeep(data, 0);
-  if (import.meta.env.DEV && found.length === 0 && typeof data === 'object') {
-    // eslint-disable-next-line no-console
-    console.warn(
-      '[lpLeadsApi] Не удалось извлечь массив лидов из ответа. Ключи корня:',
-      Object.keys(data),
-    );
-  }
-  return found;
-}
-
-function findLeadArrayDeep(node, depth) {
-  if (depth > 6 || node == null) return [];
-  if (Array.isArray(node)) {
-    if (node.length === 0) return [];
-    return isLikelyLeadRow(node[0]) ? node : [];
-  }
-  if (typeof node !== 'object') return [];
-
-  for (const v of Object.values(node)) {
-    if (Array.isArray(v) && v.length > 0 && isLikelyLeadRow(v[0])) return v;
-  }
-  for (const v of Object.values(node)) {
-    if (v && typeof v === 'object') {
-      const inner = findLeadArrayDeep(v, depth + 1);
-      if (inner.length) return inner;
-    }
-  }
   return [];
 }
 
@@ -80,6 +45,15 @@ function parseLandingLeadsResponse(data) {
   return { items, total };
 }
 
+function buildListQueryParams(params = {}) {
+  const out = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value === '' || value === undefined || value === null) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
 export const lpLeadsApi = {
   /**
    * @param {object} [params]
@@ -87,7 +61,47 @@ export const lpLeadsApi = {
    */
   async getLandingPageLeads(params = {}) {
     const path = getListPath();
-    const response = await api.get(path, { params });
+    const response = await api.get(path, { params: buildListQueryParams(params) });
     return parseLandingLeadsResponse(response.data);
+  },
+
+  /**
+   * @param {number|string} id
+   * @returns {Promise<object>}
+   */
+  async getLandingPageLeadById(id) {
+    const path = `${getListPath()}/${id}`;
+    const response = await api.get(path);
+    return response.data?.lead ?? response.data;
+  },
+
+  /**
+   * @param {number|string} id
+   * @param {object} body
+   * @returns {Promise<object>}
+   */
+  async updateLandingPageLead(id, body) {
+    const path = `${getListPath()}/${id}`;
+    const response = await api.patch(path, body);
+    return response.data?.lead ?? response.data;
+  },
+
+  /**
+   * @param {object} [params] — те же фильтры, что у списка (без limit/offset)
+   */
+  async exportLandingPageLeads(params = {}) {
+    const { limit, offset, ...rest } = params;
+    const path = `${getListPath()}/export`;
+    const response = await api.get(path, {
+      params: buildListQueryParams(rest),
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `lp_leads_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   },
 };
