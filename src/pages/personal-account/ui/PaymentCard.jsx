@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 import { useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
 import { showSuccessToast } from '../../../shared/lib/toast';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
 import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
 import { formatCalendarDateLong } from '../../../shared/lib/utils/date';
+import { isCurrentPeriodPaidButOrderUnpaid } from '../../../shared/lib/orderPaymentStatus';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -131,7 +132,7 @@ const PaymentCard = ({ order, embeddedMobile = false, isHighlighted = false }) =
               Оплатить
             </button>
           </>
-        ) : payment.status === 'UNPAID' && order.status === 'PROCESSING' ? (
+        ) : payment.status === 'UNPAID' && (order.status === 'PROCESSING' || order.status === 'ACTIVE') ? (
           <>
             <button
               onClick={() => handlePay(payment)}
@@ -153,6 +154,15 @@ const PaymentCard = ({ order, embeddedMobile = false, isHighlighted = false }) =
         isHighlighted ? 'ring-4 ring-[#00A991] ring-offset-2 ring-offset-gray-50 z-[1]' : ''
       }`}
     >
+      {order.status === 'ACTIVE' && order.payment_status !== 'PAID' && isCurrentPeriodPaidButOrderUnpaid(order) && (
+        <div className={`flex flex-wrap items-center gap-1.5 min-[360px]:gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
+            <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
+            Оплачен текущий период
+          </span>
+        </div>
+      )}
+
       {/* Заголовок заказа */}
       <div className={`flex items-start justify-between gap-2 ${embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}`}>
         <div className="flex-1 min-w-0 overflow-hidden">

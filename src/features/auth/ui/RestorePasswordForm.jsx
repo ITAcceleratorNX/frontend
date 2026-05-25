@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast'
 import { EyeIcon, EyeOffIcon, Phone, Lock, RefreshCw } from 'lucide-react'
 import { authApi } from '../../../shared/api/auth'
+import { useAuth } from '../../../shared/context/AuthContext'
 import '../styles/auth-forms.css'
 import loginLogo from '../../../assets/login-logo-66f0b4.png'
 
@@ -40,6 +41,7 @@ const validationSchema = Yup.object({
 
 export const RestorePasswordForm = () => {
   const navigate = useNavigate()
+  const { refetchUser } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -193,19 +195,21 @@ export const RestorePasswordForm = () => {
     setIsLoading(true)
     try {
       await authApi.restorePassword(values.login, values.unique_code, values.password)
-      
+
       showSuccessToast('Пароль успешно восстановлен!')
-      
-      // Перенаправляем на страницу логина через 2 секунды
+
+      // Бэк уже выставил JWT-cookie — перетягиваем юзера в контекст и сразу ведём в ЛК на «Платежи».
+      // Это полезный landing для офлайн-клиента, который пришёл сюда из SMS-напоминания об оплате.
+      try {
+        await refetchUser?.()
+      } catch (refetchError) {
+        console.warn('Не удалось обновить пользователя после restore-password:', refetchError)
+      }
+
       setTimeout(() => {
-        navigate('/login', { 
-          state: { 
-            login: values.login,
-            message: 'Пароль восстановлен. Войдите с новым паролем.' 
-          } 
-        })
-      }, 2000)
-      
+        navigate('/personal-account?section=payments', { replace: true })
+      }, 1200)
+
     } catch (error) {
       console.error('Ошибка при восстановлении пароля:', error)
       

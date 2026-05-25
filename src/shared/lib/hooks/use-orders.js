@@ -411,6 +411,36 @@ export const useExtendOrder = () => {
 }; 
 
 /**
+ * Хук для отправки SMS-напоминания об оплате (ADMIN/MANAGER ручная отправка).
+ */
+export const useSendPaymentSms = () => {
+  return useMutation({
+    mutationFn: (orderId) => ordersApi.sendPaymentSms(orderId),
+    onSuccess: () => {
+      showGenericSuccess('SMS-напоминание об оплате отправлено клиенту');
+    },
+    onError: (error) => {
+      console.error('Ошибка при отправке SMS на оплату:', error);
+      const status = error?.response?.status;
+      const details = error?.response?.data;
+      if (status === 400) {
+        showGenericError(details?.message || 'Не удалось отправить SMS: у клиента не указан телефон');
+        return;
+      }
+      if (status === 409) {
+        showGenericError('У заказа нет неоплаченных периодов — SMS не требуется');
+        return;
+      }
+      if (status === 404) {
+        showGenericError('Заказ не найден');
+        return;
+      }
+      showGenericError('Не удалось отправить SMS-напоминание клиенту');
+    }
+  });
+};
+
+/**
  * Хук для получения деталей договора по order_id
  */
 export const useContractDetails = (orderId, options = {}) => {
