@@ -1,28 +1,33 @@
 import React, { useState } from "react";
-import { Box, FileText, CreditCard, Truck, Play } from "lucide-react";
+import { Box, FileText, CreditCard, Truck, Play, MessageSquareText } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui";
 import arendaBoksaVideo from "@/video/arenda_boksa.mp4";
 
 const steps = [
     {
         Icon: Box,
-        title: "Забронируйте бокс",
-        text: "Выберите подходящий размер бокса и забронируйте его онлайн за пару минут без визита в офис.",
+        title: "Выберите формат хранения",
+        text: "Определите нужный вариант: индивидуальный бокс, облачное хранение или камеру хранения.",
     },
     {
         Icon: FileText,
+        title: "Оставьте заявку или бронь",
+        text: "Заполните заявку онлайн и зафиксируйте подходящий формат и сроки хранения.",
+    },
+    {
+        Icon: MessageSquareText,
         title: "Подпишите договор по СМС",
         text: "Подтвердите договор прямо с телефона — код придёт по СМС, никаких бумаг и встреч.",
     },
     {
         Icon: CreditCard,
-        title: "Оплатите онлайн или по СМС",
-        text: "Оплатите хранение удобным способом: картой онлайн или подтверждением через СМС.",
+        title: "Оплатите хранение",
+        text: "Оплатите онлайн удобным способом и получите подтверждение бронирования.",
     },
     {
         Icon: Truck,
-        title: "Назначьте доставку",
-        text: "Укажите удобное время, и мы организуем доставку ваших вещей до бокса.",
+        title: "Передайте вещи или оформите доставку",
+        text: "Привезите вещи на склад сами или выберите услугу доставки в удобное время.",
     },
 ];
 
@@ -69,11 +74,11 @@ export default function QuickBookingSection() {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
                 <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-bold text-center mb-8 sm:mb-10">
-                    быстрое бронирование
+                    инструкция по флоу заказа
                 </h2>
 
-                {/* четыре шага в один ряд */}
-                <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 w-full max-w-6xl mx-auto mb-10 sm:mb-12 lg:before:content-[''] lg:before:absolute lg:before:left-[12.5%] lg:before:w-[75%] lg:before:top-7 lg:before:h-[2px] lg:before:bg-[#31876D] lg:before:opacity-60 lg:before:z-0">
+                {/* пять шагов в одном блоке */}
+                <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8 w-full max-w-6xl mx-auto mb-10 sm:mb-12 lg:before:content-[''] lg:before:absolute lg:before:left-[10%] lg:before:w-[80%] lg:before:top-7 lg:before:h-[2px] lg:before:bg-[#31876D] lg:before:opacity-60 lg:before:z-0">
                     {steps.map((step, i) => (
                         <StepCard key={i} {...step} />
                     ))}

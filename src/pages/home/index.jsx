@@ -57,10 +57,11 @@ import Footer from "../../widgets/Footer";
 import WarehouseSVGMap from "../../components/WarehouseSVGMap";
 import HeroSection from "../../../src/pages/home/components/HeroSection.jsx";
 import QuickBookingSection from "../../../src/pages/home/components/QuickBookingSection.jsx";
-import StorageFormatsSection from "../../../src/pages/home/components/StorageFormatsSection.jsx";
 import ClimateSensorsSection from "../../../src/pages/home/components/ClimateSensorsSection.jsx";
 import BranchesSection from "../../../src/pages/home/components/BranchesSection.jsx";
 import WarehouseGallery from "../../../src/pages/home/components/WarehouseGallery.jsx";
+import StorageFormatsSection from "@/components/home/StorageFormatsSection.jsx";
+import StorageFormatsExplainerSection from "@/components/home/StorageFormatsExplainerSection.jsx";
 import WarehouseSchemePanel from "../../../src/pages/home/components/order/WarehouseSchemePanel.jsx";
 import StorageWarnings from "../../../src/pages/home/components/order/StorageWarnings.jsx";
 import MovingSection from "../../../src/pages/home/components/order/MovingSection.jsx";
@@ -166,10 +167,34 @@ const STORAGE_ABOUT_COPY = {
 
 const CITY_STORAGE_EASE = [0.22, 1, 0.36, 1];
 
-const HomePage = memo(() => {
+/**
+ * Booking shell: inline-блок на product-страницах (`isEmbed=true`)
+ * или модальное окно `<Dialog>` на главной (`isEmbed=false`).
+ * Один и тот же контент в обоих случаях — без дублирования JSX.
+ */
+function BookingShell({ isEmbed, isOpen, onOpenChange, children }) {
+  if (isEmbed) {
+    return <div className="w-full bg-white">{children}</div>;
+  }
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="h-[92vh] w-[96vw] max-w-[1240px] overflow-y-auto rounded-2xl border border-gray-200 bg-white p-0 sm:h-[90vh]">
+        {children}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const HomePage = memo(({
+  bookingEmbedFormat = null,
+  embedInitialVolume = null,
+  embedInitialMonths = null,
+  embedInitialDays = null,
+} = {}) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
+  const isEmbed = !!bookingEmbedFormat;
   const isUserRole = user?.role === "USER";
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
 
@@ -189,6 +214,7 @@ const HomePage = memo(() => {
   /** about: кнопки типов и описание → booking: карта и формы */
   const [cityStoragePhase, setCityStoragePhase] = useState(CITY_STORAGE_PHASE.ABOUT);
   const [cityStorageVideoModalOpen, setCityStorageVideoModalOpen] = useState(false);
+  const [isStorageFormatModalOpen, setIsStorageFormatModalOpen] = useState(false);
   const tabsSectionRef = useRef(null);
   const promoMapSectionRef = useRef(null);
   const promoRentalSectionRef = useRef(null);
@@ -1517,9 +1543,19 @@ const HomePage = memo(() => {
     setIsPromoBookingModalOpen(true);
   }, []);
 
-  /** Скролл из hero к секции «Хранение в городе». */
+  const openStorageFormatModal = useCallback((formatKey = "INDIVIDUAL") => {
+    setActiveStorageTab(formatKey);
+    setCityStoragePhase(CITY_STORAGE_PHASE.BOOKING);
+    setIsStorageFormatModalOpen(true);
+  }, []);
+
+  /** CTA hero: сразу открываем модал с бронированием индивидуального хранения. */
   const scrollToCityStorageSection = useCallback(() => {
-    tabsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    openStorageFormatModal("INDIVIDUAL");
+  }, [openStorageFormatModal]);
+
+  const scrollToStorageFormatsSection = useCallback(() => {
+    document.getElementById("storage-formats-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
   const handlePromoModalContinue = useCallback(() => {
@@ -1528,10 +1564,52 @@ const HomePage = memo(() => {
     setIndividualMonths("2");
     setActiveStorageTab("INDIVIDUAL");
     setCityStoragePhase(CITY_STORAGE_PHASE.BOOKING);
-    setTimeout(() => {
-      tabsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+    setIsStorageFormatModalOpen(true);
   }, []);
+
+  const handleStorageFormatCardClick = useCallback((formatKey) => {
+    openStorageFormatModal(formatKey);
+  }, [openStorageFormatModal]);
+
+  /**
+   * Embed-режим: страница встроена в product-страницу как inline-секция.
+   * Сразу открываем нужный формат в фазе BOOKING и предзаполняем параметры,
+   * выбранные в калькуляторе на product-странице (объём, срок).
+   */
+  useEffect(() => {
+    if (!bookingEmbedFormat) return;
+    if (!["INDIVIDUAL", "CLOUD", "LOCKERS"].includes(bookingEmbedFormat)) return;
+    setActiveStorageTab(bookingEmbedFormat);
+    setCityStoragePhase(CITY_STORAGE_PHASE.BOOKING);
+    setIsStorageFormatModalOpen(true);
+
+    const months = Number.parseInt(embedInitialMonths, 10);
+    const volume = Number.parseFloat(embedInitialVolume);
+
+    if (bookingEmbedFormat === "INDIVIDUAL") {
+      if (Number.isFinite(months) && months > 0) {
+        setIndividualMonths(String(months));
+      }
+    } else if (bookingEmbedFormat === "CLOUD") {
+      if (Number.isFinite(volume) && volume > 0) {
+        setCloudVolumeDirect(volume);
+        // Активируем тариф «Свои габариты» и подгоняем объём через габариты —
+        // тогда `cloudVolume` в расчётах будет равен запрошенному объёму.
+        setSelectedTariff({
+          id: 'custom',
+          name: 'Свои габариты',
+          image: null,
+          isCustom: true,
+        });
+        setCloudDimensions({ width: volume, height: 1, length: 1 });
+      }
+      if (Number.isFinite(months) && months > 0) {
+        setCloudMonths(String(months));
+      }
+    }
+    // Для LOCKERS параметры (объём/дни) прокидываются в StorageLockersSection
+    // напрямую через initialVolumeM3 / initialDays, см. рендер.
+  }, [bookingEmbedFormat, embedInitialVolume, embedInitialMonths]);
 
   const scrollToCallbackSection = useCallback(() => {
     document.getElementById('callback-request-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2200,15 +2278,23 @@ const HomePage = memo(() => {
   ]);
 
   return (
-    <div className="font-['Montserrat'] min-h-screen bg-white flex flex-col">
-      <Header />
+    <div
+      className={
+        isEmbed
+          ? "font-['Montserrat'] w-full bg-white"
+          : "font-['Montserrat'] min-h-screen bg-white flex flex-col"
+      }
+    >
+      {!isEmbed && <Header />}
 
-      {/* Первая секция: Храните там, где удобно */}
-      <HeroSection
-        onOpenPromoBooking={openPromoBookingModal}
-        onBookClick={scrollToCityStorageSection}
-      />
+      {!isEmbed && (
+        <HeroSection
+          onOpenPromoBooking={openPromoBookingModal}
+          onBookClick={scrollToStorageFormatsSection}
+        />
+      )}
 
+      {!isEmbed && (
       <Dialog open={isPromoBookingModalOpen} onOpenChange={setIsPromoBookingModalOpen}>
         <DialogContent className="sm:max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
           <DialogHeader>
@@ -2229,7 +2315,9 @@ const HomePage = memo(() => {
           </button>
         </DialogContent>
       </Dialog>
+      )}
 
+      {!isEmbed && (
       <Dialog open={cityStorageVideoModalOpen} onOpenChange={setCityStorageVideoModalOpen}>
         <DialogContent className="!max-w-[100vw] w-[100vw] sm:w-auto sm:max-w-[95vw] !h-[95vh] sm:!h-auto sm:!min-h-0 p-0 gap-0 overflow-hidden bg-transparent sm:bg-transparent border-0 shadow-none rounded-none [&>button]:text-white [&>button]:hover:text-white [&>button]:sm:bg-black/50 [&>button]:sm:rounded-full">
           <div className="relative w-full h-full min-h-[85vh] sm:min-h-0 sm:flex sm:items-center sm:justify-center">
@@ -2250,10 +2338,9 @@ const HomePage = memo(() => {
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
-      {/* Секция: Быстрое бронирование */}
-      < QuickBookingSection />
-
+      <BookingShell isEmbed={isEmbed} isOpen={isStorageFormatModalOpen} onOpenChange={setIsStorageFormatModalOpen}>
       {/* Секция: Хранение в городе */}
       <section ref={tabsSectionRef} className="w-full scroll-mt-14 bg-[#FFF] py-6 sm:scroll-mt-16 sm:py-8">
         <div className="container mx-auto px-2 sm:px-2 lg:px-3 xl:px-3 max-w-7xl">
@@ -2433,39 +2520,41 @@ const HomePage = memo(() => {
                 transition={{ duration: 0.48, ease: CITY_STORAGE_EASE }}
                 className="w-full"
               >
-              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                <motion.button
-                  type="button"
-                  onClick={() => setCityStoragePhase(CITY_STORAGE_PHASE.ABOUT)}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-[#31876D] hover:text-[#276b57]"
-                  whileHover={{ x: -3 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                >
-                  <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-                  Назад к описанию
-                </motion.button>
-                <div className="flex flex-wrap gap-2 sm:justify-end">
-                  {["INDIVIDUAL", "LOCKERS", "CLOUD"].map((key) => (
-                    <motion.button
-                      key={key}
-                      type="button"
-                      layout
-                      onClick={() => setActiveStorageTab(key)}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold sm:text-sm ${
-                        activeStorageTab === key
-                          ? "bg-[#31876D] text-white shadow-md"
-                          : "bg-[#DFDFDF] text-gray-600 hover:bg-[#d0d0d0]"
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.96 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                    >
-                      {CITY_STORAGE_SHORT_LABEL[key]}
-                    </motion.button>
-                  ))}
+              {!isEmbed && (
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <motion.button
+                    type="button"
+                    onClick={() => setCityStoragePhase(CITY_STORAGE_PHASE.ABOUT)}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-[#31876D] hover:text-[#276b57]"
+                    whileHover={{ x: -3 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                  >
+                    <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                    Назад к описанию
+                  </motion.button>
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                    {["INDIVIDUAL", "LOCKERS", "CLOUD"].map((key) => (
+                      <motion.button
+                        key={key}
+                        type="button"
+                        layout
+                        onClick={() => setActiveStorageTab(key)}
+                        className={`rounded-full px-4 py-2 text-xs font-semibold sm:text-sm ${
+                          activeStorageTab === key
+                            ? "bg-[#31876D] text-white shadow-md"
+                            : "bg-[#DFDFDF] text-gray-600 hover:bg-[#d0d0d0]"
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                      >
+                        {CITY_STORAGE_SHORT_LABEL[key]}
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Tabs value={activeStorageTab} onValueChange={setActiveStorageTab} className="w-full">
 
@@ -2499,6 +2588,11 @@ const HomePage = memo(() => {
                     }
                     onHighlightedBoxes={setHighlightedBoxes}
                     onBoxSelect={handleBoxSelect}
+                    initialSearchSize={
+                      isEmbed && bookingEmbedFormat === "INDIVIDUAL"
+                        ? embedInitialVolume
+                        : undefined
+                    }
                   />
                 </div>
 
@@ -2868,6 +2962,16 @@ const HomePage = memo(() => {
                 isAdminOrManager={isAdminOrManager}
                 isUserRole={isUserRole}
                 onOpenClientSelector={() => setIsClientSelectorOpen(true)}
+                initialVolumeM3={
+                  isEmbed && bookingEmbedFormat === "LOCKERS"
+                    ? embedInitialVolume
+                    : undefined
+                }
+                initialDays={
+                  isEmbed && bookingEmbedFormat === "LOCKERS"
+                    ? embedInitialDays
+                    : undefined
+                }
               />
             </TabsContent>
           </Tabs>
@@ -2876,26 +2980,21 @@ const HomePage = memo(() => {
           </AnimatePresence>
         </div>
       </section>
+      </BookingShell>
 
-      {/* Отступ с фоном хэдера */}
-      <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
+      {!isEmbed && <StorageFormatsSection />}
 
-      {/* Секция: Форматы хранения */}
-      <StorageFormatsSection onMore={scrollToCallbackSection} />
+      {!isEmbed && <StorageFormatsExplainerSection />}
 
-      <ClimateSensorsSection />
+      {!isEmbed && <CallbackRequestSection showRegisterPrompt={!isAuthenticated} />}
 
-      {/* Отступ с фоном хэдера */}
-      <div className="w-full bg-[#FFF] h-4 sm:h-8"></div>
+      {!isEmbed && <QuickBookingSection />}
 
-      {/* Заказать обратный звонок */}
-      <CallbackRequestSection showRegisterPrompt={!isAuthenticated} />
+      {!isEmbed && <WarehouseGallery onBookInWarehouse={handleGalleryBookInWarehouse} />}
 
-      {/* Галерея складов ЖК Комфорт Сити */}
-      <WarehouseGallery onBookInWarehouse={handleGalleryBookInWarehouse} />
+      {!isEmbed && <ClimateSensorsSection />}
 
-      {/* Шестой фрейм: филиалы Extra Space */}
-      <BranchesSection warehouses={warehouses} />
+      {!isEmbed && <BranchesSection warehouses={warehouses} />}
 
       <CallbackRequestModal
         open={isCallbackModalOpen}
@@ -3065,7 +3164,7 @@ const HomePage = memo(() => {
         </div>
       )}
 
-      {/* Анимированная бегущая строка с преимуществами перед футером */}
+      {!isEmbed && (
       <section className="w-full bg-[#FFF] pt-12 sm:pt-16 lg:pt-20 pb-6 overflow-hidden relative">
         <div className="flex animate-scroll">
           {/* Первый набор элементов */}
@@ -3170,10 +3269,11 @@ const HomePage = memo(() => {
           }
         `}</style>
       </section>
+      )}
 
-      <div className="w-full bg-[#FFF] h-8 sm:h-16"></div>
+      {!isEmbed && <div className="w-full bg-[#FFF] h-8 sm:h-16"></div>}
 
-      <Footer />
+      {!isEmbed && <Footer />}
     </div>
   );
 });

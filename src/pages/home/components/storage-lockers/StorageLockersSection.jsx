@@ -39,15 +39,23 @@ export default function StorageLockersSection({
   isAdminOrManager = false,
   isUserRole = true,
   onOpenClientSelector,
+  initialVolumeM3,
+  initialDays,
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
 
   const [warehouseId, setWarehouseId] = useState(null);
-  const [volumeM3, setVolumeM3] = useState(1);
+  const [volumeM3, setVolumeM3] = useState(() => {
+    const n = Number(initialVolumeM3);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  });
   const [startDate, setStartDate] = useState(() => getTodayLocalDateString());
-  const [days, setDays] = useState(1);
+  const [days, setDays] = useState(() => {
+    const n = Number(initialDays);
+    return Number.isFinite(n) && n >= 1 && n <= 14 ? Math.round(n) : 1;
+  });
 
   const [serverTotalPrice, setServerTotalPrice] = useState(null);
   const [isPriceLoading, setIsPriceLoading] = useState(false);

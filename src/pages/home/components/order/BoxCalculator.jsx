@@ -33,8 +33,11 @@ function BoxCalculator({
   selectedMap = 1,
   onHighlightedBoxes,
   onBoxSelect,
+  initialSearchSize,
 }) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(() =>
+    initialSearchSize ? String(initialSearchSize) : "",
+  );
   const [lastSearchedSize, setLastSearchedSize] = useState(null);
 
   const layoutBoxNames = useMemo(() => {
@@ -115,6 +118,20 @@ function BoxCalculator({
     setLastSearchedSize(null);
     onHighlightedBoxes?.([]);
   }, [selectedWarehouse?.id, selectedMap, onHighlightedBoxes]);
+
+  /**
+   * Авто-подсветка, когда из калькулятора product-страницы передан размер бокса.
+   * Срабатывает на смену значения и после того, как storageBoxes/склад готов.
+   */
+  useEffect(() => {
+    if (!initialSearchSize) return;
+    if (individualBoxes.length === 0) return;
+    const sizeStr = String(initialSearchSize);
+    setInputValue(sizeStr);
+    setLastSearchedSize(sizeStr);
+    const { boxes } = findMatchingBoxes(sizeStr);
+    onHighlightedBoxes?.(boxes);
+  }, [initialSearchSize, individualBoxes.length, findMatchingBoxes, onHighlightedBoxes]);
 
   const handleSearch = useCallback(() => {
     const trimmed = inputValue.trim();
