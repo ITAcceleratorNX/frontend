@@ -24,6 +24,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import WarehouseData from './WarehouseData';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { Search, Filter, ChevronRight, Plus, RotateCcw, ClipboardList, Users, CheckCircle2, Clock, Zap, Undo2, X, CreditCard, FileText, Package, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CONTRACT_EXPIRY_STATUS, getOrderContractExpiry } from '../../../shared/lib/orderContractExpiry';
 
 // Функция для расчета месяцев аренды
 const calculateRentalMonths = (startDate, endDate) => {
@@ -263,6 +264,13 @@ const OrderManagement = () => {
     return parseFloat(price).toLocaleString('ru-RU') + ' ₸';
   };
 
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'Не указана';
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return 'Не указана';
+    return date.toLocaleDateString('ru-RU');
+  };
+
   // Обработчик открытия детальной информации о заказе
   const handleOrderClick = (order) => {
     setSelectedOrder(order);
@@ -348,6 +356,35 @@ const OrderManagement = () => {
         {isSigned ? 'Подписан' : 'Не подписан'}
       </span>
     );
+  };
+
+  const getContractExpiryBadge = (order) => {
+    const expiry = getOrderContractExpiry(order);
+    if (expiry.status === CONTRACT_EXPIRY_STATUS.NO_END_DATE) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+          <FileText className="w-3 h-3" />
+          Дата окончания не указана
+        </span>
+      );
+    }
+    if (expiry.status === CONTRACT_EXPIRY_STATUS.EXPIRED) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
+          <FileText className="w-3 h-3" />
+          Договор истёк
+        </span>
+      );
+    }
+    if (expiry.status === CONTRACT_EXPIRY_STATUS.ENDING_SOON) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
+          <FileText className="w-3 h-3" />
+          Договор заканчивается
+        </span>
+      );
+    }
+    return null;
   };
 
   // Расчёт цены для отображения
@@ -631,7 +668,11 @@ const OrderManagement = () => {
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {getPaymentBadge(order)}
                         {getContractBadge(order)}
+                        {getContractExpiryBadge(order)}
                       </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Окончание: {formatDate(order.contract_end_date || order.end_date)}{typeof getOrderContractExpiry(order).daysRemaining === 'number' ? ` · ${getOrderContractExpiry(order).daysRemaining} дн.` : ''}
                     </div>
                   </div>
                 );
@@ -721,6 +762,10 @@ const OrderManagement = () => {
                           <div className="flex flex-col gap-1">
                             {getPaymentBadge(order)}
                             {getContractBadge(order)}
+                            {getContractExpiryBadge(order)}
+                            <span className="text-xs text-gray-500">
+                              Окончание: {formatDate(order.contract_end_date || order.end_date)}{typeof getOrderContractExpiry(order).daysRemaining === 'number' ? ` · ${getOrderContractExpiry(order).daysRemaining} дн.` : ''}
+                            </span>
                           </div>
                         </TableCell>
                       </TableRow>

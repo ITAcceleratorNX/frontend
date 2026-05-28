@@ -15,6 +15,7 @@ import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { OrderDocumentsSection } from '../../../features/order-documents';
 import { AlertTriangle, Unlock, Tag, User, Package, CreditCard, FileText, Truck } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
+import { CONTRACT_EXPIRY_STATUS, getOrderContractExpiry } from '../../../shared/lib/orderContractExpiry';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -106,6 +107,8 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
     if (!price) return '0';
     return parseFloat(price).toLocaleString('ru-RU') + ' ₸';
   };
+
+  const contractExpiry = getOrderContractExpiry(order);
 
   const MOVING_STATUS_TEXT = {
     PENDING: 'Ожидает доставки',
@@ -359,6 +362,35 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 </Badge>
               )}
             </div>
+            <div className="border-t border-gray-100" />
+            <div className="flex justify-between items-center py-2.5">
+              <span className="text-sm text-[#6B6B6B]">Окончание договора</span>
+              <span className="text-sm font-medium text-[#273655]">
+                {formatDate(contractExpiry.endDate)}
+              </span>
+            </div>
+            <div className="border-t border-gray-100" />
+            <div className="flex justify-between items-center py-2.5">
+              <span className="text-sm text-[#6B6B6B]">Статус срока</span>
+              {contractExpiry.status === CONTRACT_EXPIRY_STATUS.NO_END_DATE ? (
+                <Badge variant="secondary">Дата окончания не указана</Badge>
+              ) : contractExpiry.status === CONTRACT_EXPIRY_STATUS.EXPIRED ? (
+                <Badge variant="destructive">Договор истёк</Badge>
+              ) : contractExpiry.status === CONTRACT_EXPIRY_STATUS.ENDING_SOON ? (
+                <Badge className="bg-amber-100 text-amber-900 border border-amber-300">Договор заканчивается</Badge>
+              ) : (
+                <Badge variant="outline">В сроке</Badge>
+              )}
+            </div>
+            {typeof contractExpiry.daysRemaining === 'number' && (
+              <>
+                <div className="border-t border-gray-100" />
+                <div className="flex justify-between items-center py-2.5">
+                  <span className="text-sm text-[#6B6B6B]">Осталось дней</span>
+                  <span className="text-sm font-medium text-[#273655]">{contractExpiry.daysRemaining}</span>
+                </div>
+              </>
+            )}
             {order.payment_status !== 'PAID' && (
               <>
                 <div className="border-t border-gray-100" />
