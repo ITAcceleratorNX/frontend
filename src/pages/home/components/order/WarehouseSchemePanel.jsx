@@ -11,6 +11,7 @@ function WarehouseSchemePanel({ dropdownItems = [],
                                   selectedMap = 1,
                                   onHighlightedBoxes,
                                   onBoxSelect,
+                                  initialSearchSize,
                               }) {
 
     return (
@@ -72,6 +73,7 @@ function WarehouseSchemePanel({ dropdownItems = [],
                 selectedMap={selectedMap}
                 onHighlightedBoxes={onHighlightedBoxes}
                 onBoxSelect={onBoxSelect}
+                initialSearchSize={initialSearchSize}
             />
 
             <div className="flex-1 w-full h-full min-h-0 min-w-0 relative z-0">

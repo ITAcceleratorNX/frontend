@@ -1105,6 +1105,8 @@ const WarehouseSVGMap = React.forwardRef(({
           {config.layoutData.map((box) => {
             const { fillColor, strokeColor, strokeWidth, textColor, isOccupied } = getBoxColors(box.name);
             const boxData = getBoxData(box.name);
+            const boxStatus = boxData?.status ?? getBoxStatus(box.name);
+            const showBookedLock = boxStatus === 'PENDING';
             
             let centerX, centerY;
             
@@ -1223,7 +1225,33 @@ const WarehouseSVGMap = React.forwardRef(({
                 
                 {/* Информация при hover: Mega Tower — площадь и объём (× высота потолков) */}
                 {(hoveredId === box.name || isBoxSelected(box?.name)) && boxData && (
-                  isMegaWarehouse ? (
+                  showBookedLock ? (
+                    <g style={{ pointerEvents: 'none', userSelect: 'none' }}>
+                      <rect
+                        x={centerX - 8}
+                        y={centerY + 10}
+                        width="16"
+                        height="11"
+                        rx="2.5"
+                        fill={textColor}
+                        opacity="0.95"
+                      />
+                      <path
+                        d={`M ${centerX - 4.5} ${centerY + 10} v-3.2 a 4.5 4.5 0 0 1 9 0 v3.2`}
+                        fill="none"
+                        stroke={textColor}
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        opacity="0.95"
+                      />
+                      <circle
+                        cx={centerX}
+                        cy={centerY + 15.5}
+                        r="1.2"
+                        fill={fillColor}
+                      />
+                    </g>
+                  ) : isMegaWarehouse ? (
                     <text
                       x={centerX}
                       y={centerY + 20}

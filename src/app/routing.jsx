@@ -22,6 +22,11 @@ const LpArendaBoksaPage = lazy(() => import('../pages/lp/ArendaBoksaAlmaty'));
 const LpKameraHraneniyaPage = lazy(() => import('../pages/lp/KameraHraneniyaAlmaty'));
 const LpOblachnoeHraneniePage = lazy(() => import('../pages/lp/OblachnoeHranenieAlmaty'));
 
+// Product pages for storage formats on the main site (lazy to keep main bundle small).
+const IndividualStoragePage = lazy(() => import('../pages/services/IndividualStoragePage'));
+const CloudStoragePage = lazy(() => import('../pages/services/CloudStoragePage'));
+const StorageRoomPage = lazy(() => import('../pages/services/StorageRoomPage'));
+
 import PersonalAccountPage from '../pages/personal-account';
 import UserProfile from '../pages/personal-account/ui/UserProfile';
 import WarehouseData from '../pages/personal-account/ui/WarehouseData';
@@ -114,6 +119,30 @@ const Routing = memo(() => {
       element: (
         <Suspense fallback={<LoadingSpinner />}>
           <LpOblachnoeHraneniePage />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/individual-storage",
+      element: (
+        <Suspense fallback={<LoadingSpinner />}>
+          <IndividualStoragePage />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/cloud-storage",
+      element: (
+        <Suspense fallback={<LoadingSpinner />}>
+          <CloudStoragePage />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/storage-room",
+      element: (
+        <Suspense fallback={<LoadingSpinner />}>
+          <StorageRoomPage />
         </Suspense>
       ),
     },
