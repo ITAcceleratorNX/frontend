@@ -44,6 +44,7 @@ import { ordersApi } from '../../../shared/api/ordersApi';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
 import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
+import { isCurrentPeriodPaidButOrderUnpaid } from '../../../shared/lib/orderPaymentStatus';
 
 const WHATSAPP_PHONE = '77783911425';
 const getWhatsAppReturnLink = (orderId) => {
@@ -586,6 +587,12 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
             <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
             Оплачен
+          </span>
+        )}
+        {order.status === 'ACTIVE' && order.payment_status !== 'PAID' && isCurrentPeriodPaidButOrderUnpaid(order) && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-gray-700">
+            <CheckCircle className="w-3.5 h-3.5 text-gray-500" />
+            Оплачен текущий период
           </span>
         )}
       </div>

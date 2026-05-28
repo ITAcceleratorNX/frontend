@@ -10,6 +10,7 @@ import {
 import { getServiceTypeName, formatServiceDescription } from '../../../shared/lib/utils/serviceNames';
 import EditLocationModal from './EditLocationModal';
 import ReturnApprovalPanel from './ReturnApprovalPanel';
+import SendPaymentSmsButton from './SendPaymentSmsButton';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { AlertTriangle, Unlock, Tag, User, Package, CreditCard, FileText, Truck } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
@@ -357,6 +358,14 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
                 </Badge>
               )}
             </div>
+            {order.payment_status !== 'PAID' && (
+              <>
+                <div className="border-t border-gray-100" />
+                <div className="pt-3">
+                  <SendPaymentSmsButton order={order} className="w-full" />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 

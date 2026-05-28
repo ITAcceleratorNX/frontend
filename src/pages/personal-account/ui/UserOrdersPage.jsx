@@ -21,6 +21,22 @@ const ORDER_FILTER_OPTIONS = [
   { value: 'archive', label: 'В архиве' },
 ];
 
+// Заказ ждёт первую оплату по онлайн-сценарию (договор подписан, статус PROCESSING).
+const isOnlineAwaitingFirstPayment = (order) =>
+  order.order_source !== 'OFFLINE_IMPORT' &&
+  order.status === 'PROCESSING' &&
+  order.contract_status === 'SIGNED' &&
+  order.payment_status === 'UNPAID';
+
+// Офлайн-импорт: активный заказ с непогашенными периодами оплаты.
+const isOfflineActiveWithUnpaid = (order) =>
+  order.order_source === 'OFFLINE_IMPORT' &&
+  order.status === 'ACTIVE' &&
+  order.payment_status !== 'PAID';
+
+const isAwaitingPayment = (order) =>
+  isOnlineAwaitingFirstPayment(order) || isOfflineActiveWithUnpaid(order);
+
 const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -100,14 +116,8 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) =
             order.contract_status !== 'SIGNED'
         );
       case 'payment':
-        // Ожидают оплаты (договор подписан, но не оплачено)
-        return orders.filter(
-          (order) =>
-            order.order_source !== 'OFFLINE_IMPORT' &&
-            order.status === 'PROCESSING' &&
-            order.contract_status === 'SIGNED' &&
-            order.payment_status === 'UNPAID'
-        );
+        // Онлайн: ждут первую оплату; Офлайн-импорт: активные с непогашенными периодами.
+        return orders.filter(isAwaitingPayment);
       case 'active':
         return orders.filter(order => order.status === 'ACTIVE');
       case 'archive':
@@ -123,13 +133,7 @@ const UserOrdersPage = ({ embeddedMobile = false, onPayOrder, initialFilter }) =
     const awaitingContract = orders.filter(
       (o) => o.order_source !== 'OFFLINE_IMPORT' && o.status === 'APPROVED' && o.contract_status !== 'SIGNED'
     ).length;
-    const awaitingPayment = orders.filter(
-      (o) =>
-        o.order_source !== 'OFFLINE_IMPORT' &&
-        o.status === 'PROCESSING' &&
-        o.contract_status === 'SIGNED' &&
-        o.payment_status === 'UNPAID'
-    ).length;
+    const awaitingPayment = orders.filter(isAwaitingPayment).length;
     const active = orders.filter(o => o.status === 'ACTIVE').length;
     
     return { total, awaitingContract, awaitingPayment, active };

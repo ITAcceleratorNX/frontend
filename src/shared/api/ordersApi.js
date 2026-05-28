@@ -54,6 +54,17 @@ export const ordersApi = {
     }
   },
 
+  // Отправка SMS-напоминания об оплате (для ADMIN/MANAGER, ручная отправка)
+  sendPaymentSms: async (orderId) => {
+    try {
+      const response = await api.post(`/orders/${orderId}/send-payment-sms`);
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при отправке SMS на оплату:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   searchOrders: async (query) => {
     if (!query || query.length < 2) return [];
 
