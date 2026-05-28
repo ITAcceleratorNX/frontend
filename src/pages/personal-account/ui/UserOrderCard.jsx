@@ -42,6 +42,7 @@ import OrderCancelTimer from '../../../shared/components/OrderCancelTimer';
 import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 import { ordersApi } from '../../../shared/api/ordersApi';
 import StorageBadge from "../../../../src/pages/personal-account/ui/StorageBadge.jsx";
+import { OrderDocumentsSection } from '../../../features/order-documents';
 import PaymentDisabledModal from '../../../shared/components/PaymentDisabledModal';
 import { usePaymentSettings } from '../../../shared/lib/hooks/use-payments';
 import { isCurrentPeriodPaidButOrderUnpaid } from '../../../shared/lib/orderPaymentStatus';
@@ -1059,6 +1060,18 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
           </div>
         )}
       </div>
+
+      {/* Документы заказа (видны клиенту только публичные) */}
+      {order?.id && (
+        <div className={embeddedMobile ? 'mt-3' : 'mt-6'}>
+          <OrderDocumentsSection
+            orderId={order.id}
+            mode="client"
+            title="Документы по заказу"
+            emptyText="Документы появятся, когда менеджер их откроет."
+          />
+        </div>
+      )}
 
       {/* Модальные окна для удаления и подтверждения заказа */}
       <OrderDeleteModal

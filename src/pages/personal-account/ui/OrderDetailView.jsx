@@ -12,6 +12,7 @@ import EditLocationModal from './EditLocationModal';
 import ReturnApprovalPanel from './ReturnApprovalPanel';
 import SendPaymentSmsButton from './SendPaymentSmsButton';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
+import { OrderDocumentsSection } from '../../../features/order-documents';
 import { AlertTriangle, Unlock, Tag, User, Package, CreditCard, FileText, Truck } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
 
@@ -575,6 +576,16 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Документы / ЭДО (только для менеджера) */}
+      {order?.id && (
+        <OrderDocumentsSection
+          orderId={order.id}
+          mode="manager"
+          title="Документы заказа"
+          className="mt-2"
+        />
       )}
 
       {/* Кнопки действий */}
