@@ -28,6 +28,12 @@ import {StoragePricesMatrix} from "../../../../src/pages/personal-account/admin/
 import {useStoragePrices} from "../../../../src/shared/hooks/useStoragePrices.js";
 import { formatServiceDescription } from '@/shared/lib/utils/serviceNames';
 import { promoApi } from '@/shared/api/promoApi';
+import {
+  calculateAllWarehousesAreaStats,
+  calculateWarehouseAreaStats,
+  formatAreaM2,
+  formatAreaWithPercent,
+} from '../../../shared/lib/warehouse/calculateWarehouseAreaStats';
 import CloudTariffs from '@/pages/home/components/order/CloudTariffs.jsx';
 import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
 import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
@@ -913,8 +919,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           const formData = {
             name: data.name || '',
             address: data.address || '',
-            work_start: data.work_start || '',
-            work_end: data.work_end || '',
             status: data.status || 'AVAILABLE',
             total_volume: data.storage?.[0]?.total_volume || '',
             ...priceTypes.reduce((acc, type) => {
@@ -934,8 +938,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           const emptyFormData = {
             name: data.name || '',
             address: data.address || '',
-            work_start: data.work_start || '',
-            work_end: data.work_end || '',
             status: data.status || 'AVAILABLE',
             total_volume: data.storage?.[0]?.total_volume || '',
             ...priceTypes.reduce((acc, type) => {
@@ -1032,15 +1034,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     try {
       setIsSaving(true);
 
-      // Обрезаем секунды от времени (09:00:00 -> 09:00)
-      const formatTime = (timeString) => {
-        if (!timeString) return timeString;
-        return timeString.substring(0, 5); // Берем только HH:MM
-      };
-
-      // Определяем типы цен в зависимости от типа склада
-      const priceTypes = warehouse?.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
-
       // Сравниваем текущие значения с исходными и собираем только измененные поля
       const updateData = {};
 
@@ -1051,8 +1044,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         updateData.address = isCloud && (!data.address || data.address.trim() === '')
           ? null
           : data.address;
-        updateData.work_start = formatTime(data.work_start);
-        updateData.work_end = formatTime(data.work_end);
         updateData.status = data.status;
         if (isCloud && data.total_volume !== undefined) {
           updateData.total_volume = data.total_volume;
@@ -1076,14 +1067,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           updateData.address = currentAddress;
         }
 
-        if (formatTime(data.work_start) !== formatTime(initialFormData.work_start)) {
-          updateData.work_start = formatTime(data.work_start);
-        }
-
-        if (formatTime(data.work_end) !== formatTime(initialFormData.work_end)) {
-          updateData.work_end = formatTime(data.work_end);
-        }
-
         if (data.status !== initialFormData.status) {
           updateData.status = data.status;
         }
@@ -1092,6 +1075,8 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           updateData.total_volume = data.total_volume;
         }
       }
+
+      const priceTypes = warehouse?.type === 'CLOUD' ? ['CLOUD_M3'] : ['M2'];
 
       // Формируем массив измененных цен для отправки
       const changedPrices = [];
@@ -1153,8 +1138,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
         const updated = { ...prev };
         if (updateData.name !== undefined) updated.name = updateData.name;
         if (updateData.address !== undefined) updated.address = updateData.address;
-        if (updateData.work_start !== undefined) updated.work_start = updateData.work_start;
-        if (updateData.work_end !== undefined) updated.work_end = updateData.work_end;
         if (updateData.status !== undefined) updated.status = updateData.status;
         if (updateData.total_volume !== undefined && updated.storage?.[0]) {
           updated.storage[0].total_volume = updateData.total_volume;
@@ -1248,8 +1231,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     const cancelFormData = {
       name: warehouse.name || '',
       address: warehouse?.address || '',
-      work_start: warehouse.work_start || '',
-      work_end: warehouse.work_end || '',
       status: warehouse.status || 'AVAILABLE',
       total_volume: warehouse.storage?.[0]?.total_volume || '',
       ...priceTypes.reduce((acc, type) => {
@@ -1281,11 +1262,15 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     return 'bg-gray-100 text-gray-800 border border-gray-200';
   };
 
-  // Функция для форматирования времени (убираем секунды)
-  const formatTime = (timeString) => {
-    if (!timeString) return timeString;
-    return timeString.substring(0, 5); // Берем только HH:MM
-  };
+  const warehouseAreaStats = useMemo(
+    () => calculateWarehouseAreaStats(warehouse?.storage, { warehouseType: warehouse?.type }),
+    [warehouse?.storage, warehouse?.type]
+  );
+
+  const allWarehousesAreaStats = useMemo(
+    () => calculateAllWarehousesAreaStats(allWarehouses),
+    [allWarehouses]
+  );
 
   const getStatCard = (title, value, icon, color = 'text-gray-600') => (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -1735,6 +1720,38 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
             {/* Информация о складе — только для полной страницы и вкладки "склад" */}
             {!embedded && warehouseTab === 'warehouse' && (
+            <>
+            {!isEditing && isAdminOrManager && allWarehouses.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+                <h2 className="text-lg font-semibold text-gray-900">Площадь всех складов</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {getStatCard(
+                    'Всего',
+                    formatAreaM2(allWarehousesAreaStats.total),
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                    </svg>,
+                    'text-gray-900'
+                  )}
+                  {getStatCard(
+                    'Свободно',
+                    formatAreaWithPercent(allWarehousesAreaStats.free, allWarehousesAreaStats.freePercent),
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>,
+                    'text-green-600'
+                  )}
+                  {getStatCard(
+                    'Занято',
+                    formatAreaWithPercent(allWarehousesAreaStats.occupied, allWarehousesAreaStats.occupiedPercent),
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>,
+                    'text-red-600'
+                  )}
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Основная информация */}
               <div className="lg:col-span-2 space-y-6">
@@ -1753,21 +1770,9 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
 
                     <div className="p-6 space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Название</label>
-                            <p className="text-lg font-semibold text-gray-900 mt-1">{warehouse.name}</p>
-                          </div>
-
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Время работы</label>
-                            <div className="flex items-center mt-1">
-                              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <p className="text-gray-900">{formatTime(warehouse.work_start)} - {formatTime(warehouse.work_end)}</p>
-                            </div>
-                          </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Название</label>
+                          <p className="text-lg font-semibold text-gray-900 mt-1">{warehouse.name}</p>
                         </div>
 
                         <div>
@@ -1781,13 +1786,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                           </div>
                         </div>
                       </div>
-
-                      {warehouse.latitude && warehouse.longitude && (
-                        <div className="pt-4 border-t border-gray-100">
-                          <label className="text-sm font-medium text-gray-500">Координаты</label>
-                          <p className="text-gray-900 mt-1">{warehouse.latitude}, {warehouse.longitude}</p>
-                        </div>
-                      )}
 
 
                       {/* Секция цен облачного хранения в режиме просмотра */}
@@ -1876,50 +1874,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                               {errors.address.message}
                             </p>
                           )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Время открытия *
-                            </label>
-                            <input
-                              type="time"
-                              {...register('work_start', { required: 'Время начала обязательно' })}
-                              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                errors.work_start ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                              }`}
-                            />
-                            {errors.work_start && (
-                              <p className="mt-1 text-sm text-red-600 flex items-center">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {errors.work_start.message}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Время закрытия *
-                            </label>
-                            <input
-                              type="time"
-                              {...register('work_end', { required: 'Время окончания обязательно' })}
-                              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors ${
-                                errors.work_end ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                              }`}
-                            />
-                            {errors.work_end && (
-                              <p className="mt-1 text-sm text-red-600 flex items-center">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {errors.work_end.message}
-                              </p>
-                            )}
-                          </div>
                         </div>
 
                         {isCloud && (
@@ -2017,6 +1971,47 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                 
               </div>
 
+              <div className="space-y-6">
+              {/* Площадь склада */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Площадь склада</h3>
+
+                {warehouse.storage ? (
+                  <>
+                    {getStatCard(
+                      'Всего',
+                      formatAreaM2(warehouseAreaStats.total),
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                      </svg>,
+                      'text-gray-900'
+                    )}
+
+                    {getStatCard(
+                      'Свободно',
+                      formatAreaWithPercent(warehouseAreaStats.free, warehouseAreaStats.freePercent),
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>,
+                      'text-green-600'
+                    )}
+
+                    {getStatCard(
+                      'Занято',
+                      formatAreaWithPercent(warehouseAreaStats.occupied, warehouseAreaStats.occupiedPercent),
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>,
+                      'text-red-600'
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                    <p className="text-sm text-gray-500">Нет данных о площади</p>
+                  </div>
+                )}
+              </div>
+
               {/* Статистика боксов */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Статистика боксов</h3>
@@ -2049,15 +2044,6 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                       </svg>,
                       'text-red-600'
                     )}
-                    
-                    {!isCloud && getStatCard(
-                      'Ожидающие',
-                      warehouse.storage.filter(s => s.status === 'PENDING').length,
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>,
-                      'text-yellow-600'
-                    )}
                   </>
                 ) : (
                   <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
@@ -2070,7 +2056,9 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                   </div>
                 )}
               </div>
+              </div>
             </div>
+            </>
             )}
 
             </div>

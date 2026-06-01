@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showErrorToast } from '../../../shared/lib/toast';
+import {
+  calculateAllWarehousesAreaStats,
+  calculateWarehouseAreaStats,
+  formatAreaM2,
+  formatAreaWithPercent,
+} from '../../../shared/lib/warehouse/calculateWarehouseAreaStats';
 
 const InfoWarehouses = () => {
   const navigate = useNavigate();
@@ -103,11 +109,17 @@ const InfoWarehouses = () => {
       : 'border-gray-200 hover:border-gray-300 hover:shadow-md opacity-75';
   };
 
-  // Функция для форматирования времени (убираем секунды)
-  const formatTime = (timeString) => {
-    if (!timeString) return timeString;
-    return timeString.substring(0, 5); // Берем только HH:MM
-  };
+  const allWarehousesAreaStats = useMemo(
+    () => calculateAllWarehousesAreaStats(warehouses),
+    [warehouses]
+  );
+
+  const getStatCard = (title, value, color = 'text-gray-900') => (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <p className="text-sm font-medium text-gray-600">{title}</p>
+      <p className={`text-xl font-bold mt-1 ${color}`}>{value}</p>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -228,6 +240,25 @@ const InfoWarehouses = () => {
         </div>
       </div>
 
+      {warehouses.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Площадь всех складов</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {getStatCard('Всего', formatAreaM2(allWarehousesAreaStats.total))}
+            {getStatCard(
+              'Свободно',
+              formatAreaWithPercent(allWarehousesAreaStats.free, allWarehousesAreaStats.freePercent),
+              'text-green-600'
+            )}
+            {getStatCard(
+              'Занято',
+              formatAreaWithPercent(allWarehousesAreaStats.occupied, allWarehousesAreaStats.occupiedPercent),
+              'text-red-600'
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Список складов */}
       {filteredWarehouses.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -301,30 +332,34 @@ const InfoWarehouses = () => {
                       </svg>
                       <span className="line-clamp-2">{warehouse?.address}</span>
                     </div>
-                    
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>{formatTime(warehouse.work_start)} - {formatTime(warehouse.work_end)}</span>
-                    </div>
                   </div>
 
-                  {/* Статистика боксов */}
+                  {/* Статистика */}
                   {warehouse.storage && (
-                    <div className="pt-3 border-t border-gray-100">
+                    <div className="pt-3 border-t border-gray-100 space-y-1">
+                      {(() => {
+                        const areaStats = calculateWarehouseAreaStats(warehouse.storage, {
+                          warehouseType: warehouse.type,
+                        });
+                        return (
+                          <>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Площадь:</span>
+                              <span className="font-medium text-gray-900">{formatAreaM2(areaStats.total)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Свободно:</span>
+                              <span className="font-medium text-green-600">
+                                {formatAreaWithPercent(areaStats.free, areaStats.freePercent)}
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Всего {warehouse.type === "CLOUD" ? 'мест:' : 'боксов:' }</span>
                         <span className="font-medium text-gray-900">{warehouse.type === "CLOUD" ? warehouse.storage[0].total_volume : warehouse.storage.length}</span>
                       </div>
-                      {warehouse.storage.filter && (
-                        <div className="flex items-center justify-between text-sm mt-1">
-                          <span className="text-gray-600">Свободно:</span>
-                          <span className="font-medium text-green-600">
-                            {warehouse.type === "CLOUD" ? warehouse.storage[0].available_volume : warehouse.storage.filter(s => s.status === 'VACANT').length}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
