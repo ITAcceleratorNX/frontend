@@ -9,7 +9,6 @@ import {
   useUpdateOrderStatus,
   useDeleteOrder,
   useSearchOrders,
-  useOrdersStats,
   useApproveCancelOrder,
   useUnlockStorage
 } from '../../../shared/lib/hooks/use-orders';
@@ -61,9 +60,26 @@ const getStorageTypeText = (type) => {
     return 'Индивидуальное';
   } else if (type === 'CLOUD') {
     return 'Облачное';
+  } else if (type === 'CAMERA') {
+    return 'Камера хранения';
   }
   return type || 'Не указано';
 };
+
+const SORT_OPTIONS = [
+  { value: 'createdAtDesc', label: 'Дата создания (сначала новые)' },
+  { value: 'createdAtAsc', label: 'Дата создания (сначала старые)' },
+  { value: 'endDateAsc', label: 'Дата окончания договора (сначала ближайшие)' },
+  { value: 'endDateDesc', label: 'Дата окончания договора (сначала дальние)' },
+  { value: 'amountDesc', label: 'Сумма (по убыванию)' },
+  { value: 'amountAsc', label: 'Сумма (по возрастанию)' },
+  { value: 'warehouseAsc', label: 'Склад (А-Я)' },
+  { value: 'warehouseDesc', label: 'Склад (Я-А)' },
+  { value: 'storageTypeAsc', label: 'Тип хранения (А-Я)' },
+  { value: 'storageTypeDesc', label: 'Тип хранения (Я-А)' },
+  { value: 'statusAsc', label: 'Статус заказа (А-Я)' },
+  { value: 'statusDesc', label: 'Статус заказа (Я-А)' },
+];
 
 // Конфигурация статусов с иконками и цветами
 const statusConfig = {
@@ -80,6 +96,11 @@ const OrderManagement = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [warehouseFilter, setWarehouseFilter] = useState('ALL');
+  const [storageTypeFilter, setStorageTypeFilter] = useState('ALL');
+  const [boxOrLocationFilter, setBoxOrLocationFilter] = useState('');
+  const [tierFilter, setTierFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('createdAtDesc');
   const [modalData, setModalData] = useState(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -161,34 +182,151 @@ const OrderManagement = () => {
     );
   };
 
+  const getOrderTier = (order) => {
+    const value = order?.storage?.tier;
+    if (value === null || value === undefined || value === '') return '';
+    return String(value);
+  };
+
+  const getOrderBoxOrLocation = (order) => {
+    const storageType = order?.storage?.storage_type;
+    // "Камера хранения" считается типом хранения, а не боксом.
+    if (storageType === 'CAMERA') return '';
+    const storageName = order?.storage?.name ? String(order.storage.name).trim() : '';
+    if (storageName) return storageName;
+    const firstItemLocation = Array.isArray(order?.items)
+      ? order.items.find((item) => item?.physical_location)?.physical_location
+      : '';
+    return firstItemLocation ? String(firstItemLocation).trim() : '';
+  };
+
   // Проверяем загрузку мутаций
   const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading || approveCancelOrder.isPending || unlockStorage.isPending;
 
   // Определяем какие данные показывать
   const ordersToShow = isSearchActive ? searchedOrders : allOrders;
 
-  // Фильтрация по статусу и возвратам
-  const filteredOrders = useMemo(() => {
+  const filteredByStatusOrders = useMemo(() => {
     if (statusFilter === 'RETURN') {
       return ordersToShow.filter(order =>
         order.cancel_status === 'PENDING' || order.cancel_status === 'APPROVED' || order.status === 'CANCELED',
       );
     }
     if (statusFilter === 'ALL') return ordersToShow;
-    return ordersToShow.filter(order => order.status === statusFilter);
+    return ordersToShow.filter((order) => order.status === statusFilter);
   }, [ordersToShow, statusFilter]);
 
-  // Получаем статистику отдельно
-  const { stats: ordersStats } = useOrdersStats({ enabled: canFetchOrders });
+  const warehouseFilterOptions = useMemo(() => {
+    const map = new Map();
+    ordersToShow.forEach((order) => {
+      const id = order?.storage?.warehouse_id;
+      if (id == null) return;
+      const key = String(id);
+      const name = getOrderWarehouseName(order) || `Склад #${id}`;
+      map.set(key, name);
+    });
+    return Array.from(map.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'ru'));
+  }, [ordersToShow, warehousesById]);
+
+  const storageTypeOptions = useMemo(() => {
+    const values = new Set();
+    ordersToShow.forEach((order) => {
+      if (order?.storage?.storage_type) {
+        values.add(order.storage.storage_type);
+      }
+    });
+    return Array.from(values)
+      .map((value) => ({ value, label: getStorageTypeText(value) }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'ru'));
+  }, [ordersToShow]);
+
+  const tierOptions = useMemo(() => {
+    const values = new Set();
+    ordersToShow.forEach((order) => {
+      const tierValue = getOrderTier(order);
+      if (tierValue) values.add(tierValue);
+    });
+    return Array.from(values).sort((a, b) => Number(a) - Number(b));
+  }, [ordersToShow]);
+
+  const filteredOrders = useMemo(() => {
+    const normalizedBoxSearch = boxOrLocationFilter.trim().toLowerCase();
+    return filteredByStatusOrders.filter((order) => {
+      const orderWarehouseId = order?.storage?.warehouse_id != null ? String(order.storage.warehouse_id) : '';
+      const storageType = order?.storage?.storage_type || '';
+      const orderTier = getOrderTier(order);
+      const boxOrLocation = getOrderBoxOrLocation(order).toLowerCase();
+
+      const matchesWarehouse = warehouseFilter === 'ALL' || orderWarehouseId === warehouseFilter;
+      const matchesStorageType = storageTypeFilter === 'ALL' || storageType === storageTypeFilter;
+      const matchesTier = tierFilter === 'ALL' || orderTier === tierFilter;
+      const matchesBoxOrLocation = !normalizedBoxSearch || boxOrLocation.includes(normalizedBoxSearch);
+
+      return matchesWarehouse && matchesStorageType && matchesTier && matchesBoxOrLocation;
+    });
+  }, [filteredByStatusOrders, warehouseFilter, storageTypeFilter, tierFilter, boxOrLocationFilter]);
+
+  const sortedOrders = useMemo(() => {
+    const list = [...filteredOrders];
+    const textCompare = (a, b) => String(a || '').localeCompare(String(b || ''), 'ru');
+    const dateValue = (value) => {
+      const t = value ? new Date(value).getTime() : 0;
+      return Number.isFinite(t) ? t : 0;
+    };
+    const amountValue = (order) => {
+      const servicesTotal = getOrderServicesTotal(order);
+      const base = Number(order?.total_price || 0);
+      const discount = Number(order?.discount_amount || 0);
+      return Math.max(0, base + servicesTotal - discount);
+    };
+
+    list.sort((a, b) => {
+      switch (sortBy) {
+        case 'createdAtAsc':
+          return dateValue(a.created_at) - dateValue(b.created_at);
+        case 'createdAtDesc':
+          return dateValue(b.created_at) - dateValue(a.created_at);
+        case 'endDateAsc':
+          return dateValue(a.end_date) - dateValue(b.end_date);
+        case 'endDateDesc':
+          return dateValue(b.end_date) - dateValue(a.end_date);
+        case 'amountAsc':
+          return amountValue(a) - amountValue(b);
+        case 'amountDesc':
+          return amountValue(b) - amountValue(a);
+        case 'warehouseAsc':
+          return textCompare(getOrderWarehouseName(a), getOrderWarehouseName(b));
+        case 'warehouseDesc':
+          return textCompare(getOrderWarehouseName(b), getOrderWarehouseName(a));
+        case 'storageTypeAsc':
+          return textCompare(getStorageTypeText(a?.storage?.storage_type), getStorageTypeText(b?.storage?.storage_type));
+        case 'storageTypeDesc':
+          return textCompare(getStorageTypeText(b?.storage?.storage_type), getStorageTypeText(a?.storage?.storage_type));
+        case 'statusAsc':
+          return textCompare(a.status, b.status);
+        case 'statusDesc':
+          return textCompare(b.status, a.status);
+        default:
+          return 0;
+      }
+    });
+
+    return list;
+  }, [filteredOrders, sortBy]);
 
   // Статистика заказов
-  const statistics = useMemo(() => ({
-    total: ordersStats.total,
-    inactive: ordersStats.inactive,
-    approved: ordersStats.approved,
-    processing: ordersStats.processing,
-    active: ordersStats.active,
-  }), [ordersStats]);
+  const statistics = useMemo(() => {
+    return sortedOrders.reduce((acc, order) => {
+      acc.total += 1;
+      if (order.status === 'INACTIVE') acc.inactive += 1;
+      if (order.status === 'APPROVED') acc.approved += 1;
+      if (order.status === 'PROCESSING') acc.processing += 1;
+      if (order.status === 'ACTIVE') acc.active += 1;
+      return acc;
+    }, { total: 0, inactive: 0, approved: 0, processing: 0, active: 0 });
+  }, [sortedOrders]);
 
   // Обновляем selectedOrder при изменении данных заказов
   useEffect(() => {
@@ -225,6 +363,17 @@ const OrderManagement = () => {
     setSearchQuery('');
     setIsSearchActive(false);
     resetToFirstPage();
+  };
+
+  const handleResetAllFilters = () => {
+    setSearchQuery('');
+    setIsSearchActive(false);
+    setStatusFilter('ALL');
+    setWarehouseFilter('ALL');
+    setStorageTypeFilter('ALL');
+    setBoxOrLocationFilter('');
+    setTierFilter('ALL');
+    setSortBy('createdAtDesc');
   };
 
   const handleDeleteOrder = async (orderId) => {
@@ -545,10 +694,70 @@ const OrderManagement = () => {
             })}
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-4">
+            <select
+              value={warehouseFilter}
+              onChange={(e) => setWarehouseFilter(e.target.value)}
+              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20"
+            >
+              <option value="ALL">Все склады</option>
+              {warehouseFilterOptions.map((warehouse) => (
+                <option key={warehouse.value} value={warehouse.value}>
+                  {warehouse.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={storageTypeFilter}
+              onChange={(e) => setStorageTypeFilter(e.target.value)}
+              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20"
+            >
+              <option value="ALL">Все типы хранения</option>
+              {storageTypeOptions.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={tierFilter}
+              onChange={(e) => setTierFilter(e.target.value)}
+              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20"
+            >
+              <option value="ALL">Все ярусы</option>
+              {tierOptions.map((tier) => (
+                <option key={tier} value={tier}>
+                  {tier} ярус
+                </option>
+              ))}
+            </select>
+
+            <Input
+              value={boxOrLocationFilter}
+              onChange={(e) => setBoxOrLocationFilter(e.target.value)}
+              className="h-10 rounded-xl border-gray-200 focus:border-[#00A991] focus:ring-[#00A991]/20 text-sm"
+              placeholder="Номер бокса / место хранения"
+            />
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20 lg:col-span-2"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Информация о фильтрации */}
-          {(searchQuery || statusFilter !== 'ALL') && (
+          {(searchQuery || statusFilter !== 'ALL' || warehouseFilter !== 'ALL' || storageTypeFilter !== 'ALL' || tierFilter !== 'ALL' || boxOrLocationFilter.trim()) && (
             <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500 mt-3 pt-3 border-t border-gray-100">
-              <span>Показано {filteredOrders.length} из {meta.total}</span>
+              <span>Показано {sortedOrders.length} из {meta.total}</span>
               {searchQuery && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#00A991]/10 text-[#00A991] text-xs font-medium">
                   <Search className="w-3 h-3" />
@@ -560,6 +769,33 @@ const OrderManagement = () => {
                   {statusConfig[statusFilter]?.label}
                 </span>
               )}
+              {warehouseFilter !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#273655]/10 text-[#273655] text-xs font-medium">
+                  {warehouseFilterOptions.find((item) => item.value === warehouseFilter)?.label || 'Склад'}
+                </span>
+              )}
+              {storageTypeFilter !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#273655]/10 text-[#273655] text-xs font-medium">
+                  {getStorageTypeText(storageTypeFilter)}
+                </span>
+              )}
+              {tierFilter !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#273655]/10 text-[#273655] text-xs font-medium">
+                  {tierFilter} ярус
+                </span>
+              )}
+              {boxOrLocationFilter.trim() && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#273655]/10 text-[#273655] text-xs font-medium">
+                  {boxOrLocationFilter.trim()}
+                </span>
+              )}
+              <button
+                onClick={handleResetAllFilters}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Сбросить всё
+              </button>
             </div>
           )}
         </div>
@@ -571,24 +807,21 @@ const OrderManagement = () => {
           <h2 className="text-base sm:text-lg font-semibold text-[#273655]">Список заказов</h2>
         </div>
 
-        {filteredOrders.length === 0 ? (
+        {sortedOrders.length === 0 ? (
           <div className="p-8 sm:p-12 flex flex-col items-center justify-center gap-3">
             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
               <Package className="w-8 h-8 text-gray-300" />
             </div>
             <div className="text-gray-500 text-sm sm:text-base font-medium text-center">Заказы не найдены</div>
             <div className="text-gray-400 text-xs sm:text-sm text-center max-w-xs">
-              {searchQuery || statusFilter !== 'ALL'
+              {searchQuery || statusFilter !== 'ALL' || warehouseFilter !== 'ALL' || storageTypeFilter !== 'ALL' || tierFilter !== 'ALL' || boxOrLocationFilter.trim()
                 ? 'Попробуйте изменить критерии поиска или фильтры'
                 : 'Пока нет заказов для отображения'
               }
             </div>
-            {(searchQuery || statusFilter !== 'ALL') && (
+            {(searchQuery || statusFilter !== 'ALL' || warehouseFilter !== 'ALL' || storageTypeFilter !== 'ALL' || tierFilter !== 'ALL' || boxOrLocationFilter.trim()) && (
               <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('ALL');
-                }}
+                onClick={handleResetAllFilters}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors mt-2"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -600,7 +833,7 @@ const OrderManagement = () => {
           <>
             {/* Мобильные карточки (видны только на маленьких экранах) */}
             <div className="block lg:hidden divide-y divide-gray-50">
-              {filteredOrders.map((order) => {
+              {sortedOrders.map((order) => {
                 const priceInfo = getOrderPriceDisplay(order);
                 return (
                   <div
@@ -695,7 +928,7 @@ const OrderManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrders.map((order) => {
+                  {sortedOrders.map((order) => {
                     const priceInfo = getOrderPriceDisplay(order);
                     return (
                       <TableRow
