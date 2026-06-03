@@ -87,6 +87,24 @@ export const lpLeadsApi = {
   },
 
   /**
+   * @param {object} body
+   * @returns {Promise<object>}
+   */
+  async createManualLandingPageLead(body) {
+    const path = getListPath();
+    const response = await api.post(path, body);
+    return response.data?.lead ?? response.data;
+  },
+
+  /**
+   * @param {number|string} id
+   */
+  async deleteLandingPageLead(id) {
+    const path = `${getListPath()}/${id}`;
+    await api.delete(path);
+  },
+
+  /**
    * @param {object} [params] — те же фильтры, что у списка (без limit/offset)
    */
   async exportLandingPageLeads(params = {}) {

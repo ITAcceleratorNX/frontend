@@ -10,11 +10,14 @@ import {
   Copy,
   Check,
   Download,
+  Plus,
 } from 'lucide-react';
 import { lpLeadsApi } from '@/shared/api/lpLeadsApi.js';
+import { getServiceDisplayLabel } from '@/shared/constants/manualLpLead.js';
 import { formatCalendarDateTime } from '@/shared/lib/utils/date.js';
 import { showErrorToast, showSuccessToast } from '@/shared/lib/toast.js';
 import LpLeadModal from './LpLeadModal.jsx';
+import CreateManualLeadModal from './CreateManualLeadModal.jsx';
 import {
   ACTUAL_INTEREST_FILTER_OPTIONS,
   LEAD_OUTCOME_FILTER_OPTIONS,
@@ -39,6 +42,8 @@ const SERVICE_FILTER_OPTIONS = [
   { value: 'individual', label: SERVICE_LABELS.individual },
   { value: 'camera', label: SERVICE_LABELS.camera },
   { value: 'cloud', label: SERVICE_LABELS.cloud },
+  { value: 'undecided', label: 'Не определился' },
+  { value: 'other', label: 'Другое' },
 ];
 
 const CLIENT_FILTER_OPTIONS = [
@@ -160,6 +165,7 @@ function LpLeadsSection() {
   const [pageSize, setPageSize] = useState(25);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState(null);
   const [exporting, setExporting] = useState(false);
 
@@ -327,6 +333,14 @@ function LpLeadsSection() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setCreateModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#31876D] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#2a735c]"
+          >
+            <Plus className="w-4 h-4" aria-hidden />
+            Добавить лид вручную
+          </button>
           <button
             type="button"
             onClick={handleExport}
@@ -500,7 +514,7 @@ function LpLeadsSection() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{row.page_section || '—'}</td>
                     <td className="px-4 py-3 text-gray-700">
-                      {SERVICE_LABELS[row.service_type] || row.service_type || '—'}
+                      {getServiceDisplayLabel(row)}
                       {row.client_type ? (
                         <span className="block text-xs text-gray-500 mt-0.5">
                           {row.client_type === 'b2b' ? 'B2B' : 'B2C'}
@@ -545,7 +559,7 @@ function LpLeadsSection() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {SERVICE_LABELS[row.service_type] || row.service_type || '—'}
+                      {getServiceDisplayLabel(row)}
                     </p>
                   </div>
                   <a
@@ -603,6 +617,17 @@ function LpLeadsSection() {
           </div>
         </>
       )}
+
+      <CreateManualLeadModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onCreated={(id) => {
+          if (id != null) {
+            setSelectedLeadId(id);
+            setModalOpen(true);
+          }
+        }}
+      />
 
       <LpLeadModal
         open={modalOpen}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,29 +13,17 @@ import { lpLeadsApi } from '@/shared/api/lpLeadsApi.js';
 import { formatCalendarDateTime } from '@/shared/lib/utils/date.js';
 import { showErrorToast, showSuccessToast } from '@/shared/lib/toast.js';
 import {
-  ACTUAL_INTEREST_OPTIONS,
-  LEAD_OUTCOME_OPTIONS,
-  LEAD_QUALITY_OPTIONS,
-  LEAD_STATUS_OPTIONS,
-  NEXT_ACTION_OPTIONS,
   PROCESSING_STATE_LABELS,
-  REJECTION_REASON_OPTIONS,
-  REQUEST_SCENARIO_OPTIONS,
-  STORAGE_DURATION_OPTIONS,
-  STORAGE_ITEMS_OPTIONS,
   displayValue,
   formStateToPayload,
   leadToFormState,
 } from '@/shared/constants/lpLeadProcessing.js';
-
-const SERVICE_LABELS = {
-  individual: 'LP-1 · Аренда бокса',
-  camera: 'LP-2 · Камера хранения',
-  cloud: 'LP-3 · Облачное хранение',
-};
-
-const selectClass =
-  'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#273655] focus:border-[#31876D] focus:outline-none focus:ring-2 focus:ring-[#31876D]/20 w-full';
+import {
+  getLeadChannelLabel,
+  getServiceDisplayLabel,
+  isManualLpLead,
+} from '@/shared/constants/manualLpLead.js';
+import LpLeadProcessingForm from './LpLeadProcessingForm.jsx';
 
 /* eslint-disable react/prop-types */
 function ReadOnlyField({ label, value }) {
@@ -43,22 +32,6 @@ function ReadOnlyField({ label, value }) {
       <p className="text-xs font-medium text-gray-500">{label}</p>
       <p className="text-sm text-gray-900 mt-0.5 break-words">{displayValue(value)}</p>
     </div>
-  );
-}
-
-function SelectField({ label, value, onChange, options }) {
-  return (
-    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-      {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
-        <option value="">Не выбрано</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }
 /* eslint-enable react/prop-types */
@@ -95,11 +68,39 @@ function LpLeadModal({ open, onOpenChange, leadId, listQueryKey }) {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => lpLeadsApi.deleteLandingPageLead(leadId),
+    onSuccess: () => {
+      showSuccessToast('Лид удалён');
+      queryClient.invalidateQueries({ queryKey: ['lp-landing-leads'] });
+      if (listQueryKey) {
+        queryClient.invalidateQueries({ queryKey: listQueryKey });
+      }
+      queryClient.removeQueries({ queryKey: ['lp-lead', leadId] });
+      onOpenChange(false);
+    },
+    onError: (err) => {
+      showErrorToast(
+        err?.response?.data?.message || err?.message || 'Не удалось удалить лид',
+      );
+    },
+  });
+
+  const handleDelete = () => {
+    const label = lead?.name && lead.name !== '—' ? lead.name : 'этот лид';
+    if (!window.confirm(`Удалить лид «${label}» безвозвратно?`)) return;
+    deleteMutation.mutate();
+  };
+
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const isBusy = saveMutation.isPending || deleteMutation.isPending;
 
   const processingLabel = lead?.processing_state
     ? PROCESSING_STATE_LABELS[lead.processing_state] || lead.processing_state
     : '—';
+
+  const manual = lead ? isManualLpLead(lead) : false;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -126,114 +127,77 @@ function LpLeadModal({ open, onOpenChange, leadId, listQueryKey }) {
         ) : (
           <div className="space-y-6">
             <section>
-              <h3 className="text-sm font-semibold text-[#273655] mb-3">Данные заявки</h3>
+              <h3 className="text-sm font-semibold text-[#273655] mb-3">
+                {manual ? 'Данные лида' : 'Данные заявки'}
+              </h3>
               <div className="grid gap-3 sm:grid-cols-2 rounded-xl border border-gray-100 bg-gray-50/80 p-4">
                 <ReadOnlyField label="Имя" value={lead.name} />
                 <ReadOnlyField label="Телефон" value={lead.phone} />
-                <ReadOnlyField label="Секция формы" value={lead.page_section} />
-                <ReadOnlyField
-                  label="Услуга / LP"
-                  value={SERVICE_LABELS[lead.service_type] || lead.service_type}
-                />
-                <ReadOnlyField label="Страница заявки" value={lead.landing_page} />
-                <ReadOnlyField label="GCLID" value={lead.gclid} />
-                <ReadOnlyField label="Дата заявки" value={formatCalendarDateTime(lead.submitted_at)} />
-                <ReadOnlyField label="UTM-метки" value={lead.utm_summary} />
-                {lead.utm_source ? (
-                  <ReadOnlyField label="utm_source" value={lead.utm_source} />
-                ) : null}
-                {lead.utm_medium ? (
-                  <ReadOnlyField label="utm_medium" value={lead.utm_medium} />
-                ) : null}
-                {lead.utm_campaign ? (
-                  <ReadOnlyField label="utm_campaign" value={lead.utm_campaign} />
+                {manual ? (
+                  <>
+                    <ReadOnlyField
+                      label="Источник лида"
+                      value={lead.lead_channel_label || getLeadChannelLabel(lead.lead_channel)}
+                    />
+                    <ReadOnlyField label="Секция" value={lead.page_section} />
+                    <ReadOnlyField
+                      label="Услуга / интерес"
+                      value={getServiceDisplayLabel(lead)}
+                    />
+                    <ReadOnlyField label="Комментарий при создании" value={lead.notes} />
+                    <ReadOnlyField label="GCLID" value={null} />
+                    <ReadOnlyField label="Страница заявки" value={null} />
+                    <ReadOnlyField label="UTM-метки" value={null} />
+                  </>
+                ) : (
+                  <>
+                    <ReadOnlyField label="Секция формы" value={lead.page_section} />
+                    <ReadOnlyField label="Услуга / LP" value={getServiceDisplayLabel(lead)} />
+                    <ReadOnlyField label="Страница заявки" value={lead.landing_page} />
+                    <ReadOnlyField label="GCLID" value={lead.gclid} />
+                    <ReadOnlyField
+                      label="Дата заявки"
+                      value={formatCalendarDateTime(lead.submitted_at)}
+                    />
+                    <ReadOnlyField label="UTM-метки" value={lead.utm_summary} />
+                    {lead.utm_source ? (
+                      <ReadOnlyField label="utm_source" value={lead.utm_source} />
+                    ) : null}
+                    {lead.utm_medium ? (
+                      <ReadOnlyField label="utm_medium" value={lead.utm_medium} />
+                    ) : null}
+                    {lead.utm_campaign ? (
+                      <ReadOnlyField label="utm_campaign" value={lead.utm_campaign} />
+                    ) : null}
+                  </>
+                )}
+                {manual ? (
+                  <ReadOnlyField
+                    label="Дата создания"
+                    value={formatCalendarDateTime(lead.submitted_at)}
+                  />
                 ) : null}
               </div>
             </section>
 
             <section>
               <h3 className="text-sm font-semibold text-[#273655] mb-3">Обработка лида</h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <SelectField
-                  label="Статус лида"
-                  value={form.lead_status}
-                  onChange={(v) => setField('lead_status', v)}
-                  options={LEAD_STATUS_OPTIONS}
-                />
-                <SelectField
-                  label="Качество лида"
-                  value={form.lead_quality}
-                  onChange={(v) => setField('lead_quality', v)}
-                  options={LEAD_QUALITY_OPTIONS}
-                />
-                <SelectField
-                  label="Фактический интерес клиента"
-                  value={form.actual_interest}
-                  onChange={(v) => setField('actual_interest', v)}
-                  options={ACTUAL_INTEREST_OPTIONS}
-                />
-                <SelectField
-                  label="Тип запроса / сценарий клиента"
-                  value={form.request_scenario}
-                  onChange={(v) => setField('request_scenario', v)}
-                  options={REQUEST_SCENARIO_OPTIONS}
-                />
-                <SelectField
-                  label="Срок хранения"
-                  value={form.storage_duration}
-                  onChange={(v) => setField('storage_duration', v)}
-                  options={STORAGE_DURATION_OPTIONS}
-                />
-                <SelectField
-                  label="Что хочет хранить"
-                  value={form.storage_items}
-                  onChange={(v) => setField('storage_items', v)}
-                  options={STORAGE_ITEMS_OPTIONS}
-                />
-                <SelectField
-                  label="Причина отказа"
-                  value={form.rejection_reason}
-                  onChange={(v) => setField('rejection_reason', v)}
-                  options={REJECTION_REASON_OPTIONS}
-                />
-                <SelectField
-                  label="Следующее действие"
-                  value={form.next_action}
-                  onChange={(v) => setField('next_action', v)}
-                  options={NEXT_ACTION_OPTIONS}
-                />
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-                  Дата следующего контакта
-                  <input
-                    type="date"
-                    value={form.next_contact_at}
-                    onChange={(e) => setField('next_contact_at', e.target.value)}
-                    className={selectClass}
-                  />
-                </label>
-                <SelectField
-                  label="Итог лида"
-                  value={form.lead_outcome}
-                  onChange={(v) => setField('lead_outcome', v)}
-                  options={LEAD_OUTCOME_OPTIONS}
-                />
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600 sm:col-span-2">
-                  Комментарий менеджера
-                  <textarea
-                    value={form.manager_comment}
-                    onChange={(e) => setField('manager_comment', e.target.value)}
-                    rows={4}
-                    className={`${selectClass} resize-y min-h-[88px]`}
-                    placeholder="Суть разговора, результат контакта…"
-                  />
-                </label>
-              </div>
+              <LpLeadProcessingForm form={form} setField={setField} />
             </section>
 
             {(lead.first_processed_at || lead.last_processed_at) && (
               <section className="rounded-xl border border-dashed border-gray-200 bg-white p-4 text-xs text-gray-600 space-y-2">
                 <h3 className="text-sm font-semibold text-[#273655]">Служебные данные</h3>
-                {lead.first_processed_at ? (
+                {manual && lead.first_processed_by_name ? (
+                  <p>
+                    Создал лид:{' '}
+                    <span className="font-medium text-gray-800">{lead.first_processed_by_name}</span>
+                    {lead.first_processed_at
+                      ? `, ${formatCalendarDateTime(lead.first_processed_at) || '—'}`
+                      : null}
+                  </p>
+                ) : null}
+                {lead.first_processed_at && !manual ? (
                   <p>
                     Первое заполнение:{' '}
                     <span className="font-medium text-gray-800">
@@ -258,24 +222,40 @@ function LpLeadModal({ open, onOpenChange, leadId, listQueryKey }) {
           </div>
         )}
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-[#273655] hover:bg-gray-50"
-          >
-            Закрыть
-          </button>
+        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
           {lead && !isLoading ? (
             <button
               type="button"
-              onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
-              className="rounded-xl bg-[#31876D] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a735c] disabled:opacity-60"
+              onClick={handleDelete}
+              disabled={isBusy}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
             >
-              {saveMutation.isPending ? 'Сохранение…' : 'Сохранить'}
+              <Trash2 className="w-4 h-4" aria-hidden />
+              {deleteMutation.isPending ? 'Удаление…' : 'Удалить'}
             </button>
-          ) : null}
+          ) : (
+            <span />
+          )}
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              disabled={isBusy}
+              className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-[#273655] hover:bg-gray-50 disabled:opacity-60"
+            >
+              Закрыть
+            </button>
+            {lead && !isLoading ? (
+              <button
+                type="button"
+                onClick={() => saveMutation.mutate()}
+                disabled={isBusy}
+                className="rounded-xl bg-[#31876D] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a735c] disabled:opacity-60"
+              >
+                {saveMutation.isPending ? 'Сохранение…' : 'Сохранить'}
+              </button>
+            ) : null}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
