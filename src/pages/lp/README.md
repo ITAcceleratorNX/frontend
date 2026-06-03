@@ -63,7 +63,7 @@ GTM-контейнер `GTM-KC2QCVNN` подключён напрямую в `fr
 См. `frontend/.env.example`. Минимум для прода:
 
 ```
-VITE_LEAD_ENDPOINT=http://localhost:8080/api/lp-leads
+VITE_LEAD_ENDPOINT=https://api.extraspace.kz/api/lp-leads
 VITE_2GIS_API_KEY=<2gis_api_key>
 ```
 
