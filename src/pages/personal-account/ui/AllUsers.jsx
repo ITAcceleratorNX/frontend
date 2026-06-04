@@ -4,6 +4,52 @@ import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
+const getUserProfilePath = (userId, staffRole) =>
+  staffRole === 'ADMIN'
+    ? `/admin/users/${userId}/profile`
+    : `/personal-account/manager/users/${userId}`;
+
+const ArchiveConfirmModal = ({ isOpen, onClose, onConfirm, userName, isProcessing }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-2 sm:mx-4 transform transition-all max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-amber-100 rounded-full">
+            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 text-center mb-2">
+            Перенести в архив?
+          </h3>
+          <p className="text-sm text-gray-600 text-center mb-6">
+            Клиент{' '}
+            <span className="font-semibold text-gray-900">"{userName}"</span>{' '}
+            и все его заказы будут перенесены в архив.
+          </p>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:space-x-3">
+            <button
+              onClick={onClose}
+              disabled={isProcessing}
+              className="flex-1 w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Отмена
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isProcessing}
+              className="flex-1 w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              {isProcessing ? 'Архивация...' : 'В архив'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Компонент модального окна подтверждения удаления
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName, isDeleting }) => {
@@ -66,6 +112,80 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName, isDeleting }
   );
 };
 
+const UserRowActions = ({
+  user,
+  variant = 'desktop',
+  isAdmin,
+  canManageArchive,
+  archiveStatusFilter,
+  onProfileClick,
+  onArchiveClick,
+  onUnarchiveClick,
+  onDeleteClick,
+}) => {
+  const isMobile = variant === 'mobile';
+  const btn =
+    'inline-flex items-center justify-center font-medium rounded-lg transition-colors ' +
+    (isMobile
+      ? 'w-full px-3 py-2.5 text-xs sm:text-sm'
+      : 'px-2.5 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm');
+  const iconMr = isMobile ? 'mr-1.5 flex-shrink-0' : 'mr-1 lg:mr-1.5';
+  const wrapClass = isMobile
+    ? 'grid grid-cols-2 gap-2 sm:gap-3 w-full'
+    : 'inline-flex flex-wrap items-center justify-end gap-2.5 lg:gap-3';
+
+  return (
+    <div className={wrapClass}>
+      <button
+        type="button"
+        onClick={() => onProfileClick(user.id)}
+        className={`${btn} text-[#00A991] bg-[#00A991]/10 hover:bg-[#00A991]/20`}
+      >
+        <svg className={`w-4 h-4 ${iconMr}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        Профиль
+      </button>
+      {canManageArchive && user.role === 'USER' && archiveStatusFilter === 'active' && (
+        <button
+          type="button"
+          onClick={() => onArchiveClick(user)}
+          className={`${btn} text-amber-700 bg-amber-50 hover:bg-amber-100`}
+        >
+          <svg className={`w-4 h-4 ${iconMr}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          </svg>
+          В архив
+        </button>
+      )}
+      {canManageArchive && user.role === 'USER' && archiveStatusFilter === 'archived' && (
+        <button
+          type="button"
+          onClick={() => onUnarchiveClick(user)}
+          className={`${btn} text-[#00A991] bg-[#00A991]/10 hover:bg-[#00A991]/20`}
+        >
+          <svg className={`w-4 h-4 ${iconMr}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Восстановить
+        </button>
+      )}
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={() => onDeleteClick(user)}
+          className={`${btn} text-red-600 bg-red-50 hover:bg-red-100`}
+        >
+          <svg className={`w-4 h-4 ${iconMr}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Удалить
+        </button>
+      )}
+    </div>
+  );
+};
+
 const AllUsers = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
@@ -75,8 +195,15 @@ const AllUsers = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
+  const [archiveStatusFilter, setArchiveStatusFilter] = useState('active');
   const [isUpdatingRole, setIsUpdatingRole] = useState(null);
   
+  const [archiveModal, setArchiveModal] = useState({
+    isOpen: false,
+    user: null,
+    isProcessing: false,
+  });
+
   // Состояния для модального окна удаления
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
@@ -90,12 +217,13 @@ const AllUsers = () => {
 
   // Проверяем роль текущего пользователя
   const isAdmin = currentUser?.role === 'ADMIN';
+  const canManageArchive = currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER';
 
   // Загрузка пользователей
-  const fetchUsers = async () => {
+  const fetchUsers = async (status = archiveStatusFilter) => {
     try {
       setLoading(true);
-      const data = await usersApi.getAllUsers();
+      const data = await usersApi.getAllUsers(status);
       setUsers(Array.isArray(data) ? data : []);
       setFilteredUsers(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -107,8 +235,8 @@ const AllUsers = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(archiveStatusFilter);
+  }, [archiveStatusFilter]);
 
   // Обновление роли пользователя (только для ADMIN)
   const handleRoleUpdate = async (userId, newRole) => {
@@ -157,6 +285,48 @@ const AllUsers = () => {
     }
   };
 
+  const openArchiveModal = (user) => {
+    setArchiveModal({ isOpen: true, user, isProcessing: false });
+  };
+
+  const closeArchiveModal = () => {
+    if (!archiveModal.isProcessing) {
+      setArchiveModal({ isOpen: false, user: null, isProcessing: false });
+    }
+  };
+
+  const confirmArchiveUser = async () => {
+    if (!canManageArchive || !archiveModal.user) return;
+
+    try {
+      setArchiveModal((prev) => ({ ...prev, isProcessing: true }));
+      await usersApi.archiveUser(archiveModal.user.id);
+      showSuccessToast('Клиент и его заказы перенесены в архив');
+      closeArchiveModal();
+      await fetchUsers('active');
+      if (archiveStatusFilter === 'archived') {
+        setArchiveStatusFilter('active');
+      }
+    } catch (error) {
+      console.error('Ошибка при архивации пользователя:', error);
+      showErrorToast(error.response?.data?.message || 'Не удалось перенести клиента в архив');
+      setArchiveModal((prev) => ({ ...prev, isProcessing: false }));
+    }
+  };
+
+  const handleUnarchiveUser = async (user) => {
+    if (!canManageArchive) return;
+
+    try {
+      await usersApi.unarchiveUser(user.id);
+      showSuccessToast('Клиент восстановлен из архива');
+      await fetchUsers(archiveStatusFilter);
+    } catch (error) {
+      console.error('Ошибка при восстановлении пользователя:', error);
+      showErrorToast(error.response?.data?.message || 'Не удалось восстановить клиента');
+    }
+  };
+
   // Подтверждение удаления пользователя
   const confirmDeleteUser = async () => {
     if (!isAdmin || !deleteModal.user) {
@@ -183,12 +353,8 @@ const AllUsers = () => {
     }
   };
 
-  // Переход к профилю пользователя
   const handleProfileClick = (userId) => {
-    const isAdminUser = currentUser?.role === 'ADMIN';
-    const basePath = isAdminUser ? '/admin/users' : '/personal-account/manager/users';
-    const profilePath = isAdminUser ? `${basePath}/${userId}/profile` : `${basePath}/${userId}`;
-    navigate(profilePath);
+    navigate(getUserProfilePath(userId, currentUser?.role));
   };
 
   // Получение отображаемого имени роли
@@ -315,6 +481,14 @@ const AllUsers = () => {
 
   return (
     <div className="space-y-3 sm:space-y-4 min-w-0">
+      <ArchiveConfirmModal
+        isOpen={archiveModal.isOpen}
+        onClose={closeArchiveModal}
+        onConfirm={confirmArchiveUser}
+        userName={archiveModal.user?.name || archiveModal.user?.email}
+        isProcessing={archiveModal.isProcessing}
+      />
+
       {/* Модальное окно подтверждения удаления */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
@@ -365,6 +539,16 @@ const AllUsers = () => {
           </div>
           <div className="w-full sm:w-44 md:w-48 flex-shrink-0">
             <select
+              value={archiveStatusFilter}
+              onChange={(e) => setArchiveStatusFilter(e.target.value)}
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent transition-colors"
+            >
+              <option value="active">Активные</option>
+              <option value="archived">Архивные</option>
+            </select>
+          </div>
+          <div className="w-full sm:w-44 md:w-48 flex-shrink-0">
+            <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent transition-colors"
@@ -400,7 +584,7 @@ const AllUsers = () => {
       </div>
 
       {/* Список пользователей: карточки на мобильных, таблица на десктопе */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         {/* Мобильный вид — карточки */}
         <div className="md:hidden divide-y divide-gray-100">
           {currentUsers.map((user) => (
@@ -442,34 +626,25 @@ const AllUsers = () => {
                 <div>{user.phone || 'Телефон не указан'}</div>
                 <div className="text-gray-500">{formatDate(user.registration_date)}</div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => handleProfileClick(user.id)}
-                  className="inline-flex items-center px-3 py-2 text-xs sm:text-sm font-medium text-[#00A991] bg-[#00A991]/10 hover:bg-[#00A991]/20 rounded-lg transition-colors flex-1 sm:flex-none justify-center"
-                >
-                  <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Профиль
-                </button>
-                {isAdmin && (
-                  <button
-                    onClick={() => openDeleteModal(user)}
-                    className="inline-flex items-center px-3 py-2 text-xs sm:text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Удалить
-                  </button>
-                )}
+              <div className="w-full min-w-0">
+                <UserRowActions
+                  user={user}
+                  variant="mobile"
+                  isAdmin={isAdmin}
+                  canManageArchive={canManageArchive}
+                  archiveStatusFilter={archiveStatusFilter}
+                  onProfileClick={handleProfileClick}
+                  onArchiveClick={openArchiveModal}
+                  onUnarchiveClick={handleUnarchiveUser}
+                  onDeleteClick={openDeleteModal}
+                />
               </div>
             </div>
           ))}
         </div>
 
         {/* Десктоп — таблица */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto overflow-hidden rounded-b-xl">
           <table className="w-full min-w-[640px]">
             <thead className="bg-gray-50/50">
               <tr>
@@ -538,27 +713,18 @@ const AllUsers = () => {
                   <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-gray-600 font-medium">
                     {formatDate(user.registration_date)}
                   </td>
-                  <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm space-x-2 lg:space-x-3">
-                    <button
-                      onClick={() => handleProfileClick(user.id)}
-                      className="inline-flex items-center px-2.5 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm font-medium text-[#00A991] bg-[#00A991]/10 hover:bg-[#00A991]/20 rounded-lg transition-colors"
-                    >
-                      <svg className="w-4 h-4 mr-1 lg:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Профиль
-                    </button>
-                    {isAdmin && (
-                      <button
-                        onClick={() => openDeleteModal(user)}
-                        className="inline-flex items-center px-2.5 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-1 lg:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Удалить
-                      </button>
-                    )}
+                  <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm">
+                    <UserRowActions
+                      user={user}
+                      variant="desktop"
+                      isAdmin={isAdmin}
+                      canManageArchive={canManageArchive}
+                      archiveStatusFilter={archiveStatusFilter}
+                      onProfileClick={handleProfileClick}
+                      onArchiveClick={openArchiveModal}
+                      onUnarchiveClick={handleUnarchiveUser}
+                      onDeleteClick={openDeleteModal}
+                    />
                   </td>
                 </tr>
               ))}

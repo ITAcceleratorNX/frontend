@@ -3,9 +3,9 @@ import axios from 'axios';
 
 export const ordersApi = {
   // Получение всех заказов (для MANAGER и ADMIN)
-  getAllOrders: async (page = 1) => {
+  getAllOrders: async (page = 1, archiveStatus = 'active') => {
     try {
-      const response = await api.get('/orders', { params: { page } });
+      const response = await api.get('/orders', { params: { page, archiveStatus } });
       return response.data;
     } catch (error) {
       console.error('OrdersAPI: Ошибка при получении всех заказов:', error.response?.data || error.message);
@@ -65,11 +65,11 @@ export const ordersApi = {
     }
   },
 
-  searchOrders: async (query) => {
+  searchOrders: async (query, archiveStatus = 'active') => {
     if (!query || query.length < 2) return [];
 
     try {
-      const response = await api.get('/orders/search', { params: { query } });
+      const response = await api.get('/orders/search', { params: { query, archiveStatus } });
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error("Ошибка при поиске заказов:", error);

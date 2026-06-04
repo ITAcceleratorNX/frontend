@@ -22,7 +22,7 @@ import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
 import { useAuth } from '../../../shared/context/AuthContext';
 import WarehouseData from './WarehouseData';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
-import { Search, Filter, ChevronRight, Plus, RotateCcw, ClipboardList, Users, CheckCircle2, Clock, Zap, Undo2, X, CreditCard, FileText, Package, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Search, Filter, ChevronRight, Plus, RotateCcw, ClipboardList, Users, CheckCircle2, Clock, Zap, Undo2, X, CreditCard, FileText, Package, ArrowLeft, ArrowRight, Archive } from 'lucide-react';
 import { CONTRACT_EXPIRY_STATUS, getOrderContractExpiry } from '../../../shared/lib/orderContractExpiry';
 
 // Функция для расчета месяцев аренды
@@ -95,6 +95,7 @@ const OrderManagement = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [archiveStatusFilter, setArchiveStatusFilter] = useState('active');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [warehouseFilter, setWarehouseFilter] = useState('ALL');
   const [storageTypeFilter, setStorageTypeFilter] = useState('ALL');
@@ -128,7 +129,7 @@ const OrderManagement = () => {
     isLoading: isAllLoading,
     error: allError,
     refetch
-  } = useAllOrders(currentPage, {
+  } = useAllOrders(currentPage, archiveStatusFilter, {
     enabled: canFetchOrders,
     onError: (error) => {
       showOrderLoadError();
@@ -144,7 +145,7 @@ const OrderManagement = () => {
     data: searchedOrders = [],
     isLoading: isSearchLoading,
     refetch: refetchSearch
-  } = useSearchOrders(searchQuery);
+  } = useSearchOrders(searchQuery, archiveStatusFilter);
 
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
@@ -327,6 +328,12 @@ const OrderManagement = () => {
       return acc;
     }, { total: 0, inactive: 0, approved: 0, processing: 0, active: 0 });
   }, [sortedOrders]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setIsSearchActive(false);
+    setSearchQuery('');
+  }, [archiveStatusFilter]);
 
   // Обновляем selectedOrder при изменении данных заказов
   useEffect(() => {
@@ -664,6 +671,35 @@ const OrderManagement = () => {
                 </button>
               )}
             </div>
+          </div>
+        </div>
+
+        <div className="p-3 sm:p-5 border-b border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <Archive className="w-4 h-4 text-gray-400" />
+            <span className="text-sm font-medium text-gray-600">Статус</span>
+          </div>
+          <div className="flex gap-2">
+            {[
+              { key: 'active', label: 'Активные' },
+              { key: 'archived', label: 'Архивные' },
+            ].map(({ key, label }) => {
+              const isActive = archiveStatusFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setArchiveStatusFilter(key)}
+                  className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-[#273655] text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1107,21 +1143,21 @@ const OrderManagement = () => {
             <div className="mt-4 sm:mt-6">
               <OrderDetailView
                 order={selectedOrder}
-                onUpdate={() => {
+                onUpdate={archiveStatusFilter === 'active' ? () => {
                   handleCloseOrderDetail();
                   openConfirmModal('update', selectedOrder);
-                }}
-                onDelete={() => {
+                } : undefined}
+                onDelete={archiveStatusFilter === 'active' ? () => {
                   handleCloseOrderDetail();
                   openConfirmModal('delete', selectedOrder);
-                }}
-                onApprove={() => {
+                } : undefined}
+                onApprove={archiveStatusFilter === 'active' ? () => {
                   handleCloseOrderDetail();
                   openConfirmModal('approve', selectedOrder);
-                }}
+                } : undefined}
                 isLoading={isMutating}
-                onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
-                onUnlockStorage={statusFilter === 'RETURN' ? handleUnlockStorage : undefined}
+                onApproveReturn={archiveStatusFilter === 'active' && statusFilter === 'RETURN' ? handleApproveReturn : undefined}
+                onUnlockStorage={archiveStatusFilter === 'active' && statusFilter === 'RETURN' ? handleUnlockStorage : undefined}
               />
             </div>
           )}

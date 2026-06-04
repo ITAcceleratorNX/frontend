@@ -3,10 +3,10 @@ import { normalizePhoneForSubmit } from '../lib/phone';
 
 export const usersApi = {
   // Получение всех пользователей (для ADMIN и MANAGER)
-  getAllUsers: async () => {
+  getAllUsers: async (archiveStatus = 'active') => {
     try {
       console.log('Отправка запроса на получение всех пользователей');
-      const response = await api.get('/users');
+      const response = await api.get('/users', { params: { archiveStatus } });
       console.log('Пользователи загружены:', response.data);
       return response.data;
     } catch (error) {
@@ -14,6 +14,16 @@ export const usersApi = {
       throw error;
     }
   },
+  getUserById: async (userId) => {
+    try {
+      const response = await api.get(`/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при загрузке пользователя:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   getCountAllUsers: async () => {
     try {
       console.log('Отправка запроса на получение всех пользователей');
@@ -53,10 +63,30 @@ export const usersApi = {
   },
 
   // Поиск пользователей по email, phone или name (для ADMIN и MANAGER)
-  searchUsers: async (query) => {
+  archiveUser: async (userId) => {
+    try {
+      const response = await api.patch(`/users/${userId}/archive`);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при архивации пользователя:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  unarchiveUser: async (userId) => {
+    try {
+      const response = await api.patch(`/users/${userId}/unarchive`);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при восстановлении пользователя:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  searchUsers: async (query, archiveStatus = 'active') => {
     try {
       console.log('Отправка запроса на поиск пользователей:', query);
-      const response = await api.get('/users/search', { params: { query } });
+      const response = await api.get('/users/search', { params: { query, archiveStatus } });
       console.log('Пользователи найдены:', response.data);
       return response.data;
     } catch (error) {

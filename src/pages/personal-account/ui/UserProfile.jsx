@@ -387,7 +387,6 @@ const UserProfile = () => {
   const { user: currentUser } = useAuth();
   const { isMobile } = useDeviceType();
   
-  const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
@@ -411,30 +410,26 @@ const UserProfile = () => {
   const isAdminOrManager = isAdmin || isManager;
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchUser = async () => {
       try {
         setLoading(true);
-        const data = await usersApi.getAllUsers();
-        setUsers(Array.isArray(data) ? data : []);
-        
-        // Находим пользователя по ID
-        const user = Array.isArray(data) ? data.find(u => u.id === parseInt(userId)) : null;
+        const user = await usersApi.getUserById(userId);
         setSelectedUser(user);
-        
-        if (!user) {
-          showErrorToast('Пользователь не найден');
-          handleBackToUsers();
-        }
       } catch (error) {
-        console.error('Ошибка при загрузке пользователей:', error);
-        showErrorToast('Не удалось загрузить данные пользователя');
+        console.error('Ошибка при загрузке пользователя:', error);
+        if (error.response?.status === 404) {
+          showErrorToast('Пользователь не найден');
+        } else {
+          showErrorToast('Не удалось загрузить данные пользователя');
+        }
+        setSelectedUser(null);
       } finally {
         setLoading(false);
       }
     };
 
     if (userId) {
-      fetchUsers();
+      fetchUser();
     }
   }, [userId]);
 

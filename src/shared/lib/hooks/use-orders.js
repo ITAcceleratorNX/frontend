@@ -21,10 +21,10 @@ const shouldRetryOrders = (failureCount, error) => {
 /**
  * Хук для получения всех заказов (для MANAGER и ADMIN)
  */
-export const useAllOrders = (page = 1, options = {}) => {
+export const useAllOrders = (page = 1, archiveStatus = 'active', options = {}) => {
   return useQuery({
-    queryKey: [...ORDERS_QUERY_KEYS.ALL_ORDERS, page],
-    queryFn: () => ordersApi.getAllOrders(page),
+    queryKey: [...ORDERS_QUERY_KEYS.ALL_ORDERS, page, archiveStatus],
+    queryFn: () => ordersApi.getAllOrders(page, archiveStatus),
     staleTime: 5 * 60 * 1000, // 5 минут
     cacheTime: 10 * 60 * 1000, // 10 минут
     retry: shouldRetryOrders,
@@ -33,10 +33,10 @@ export const useAllOrders = (page = 1, options = {}) => {
     ...options
   });
 };
-export const useSearchOrders = (query) => {
+export const useSearchOrders = (query, archiveStatus = 'active') => {
   return useQuery({
-    queryKey: ['orders', 'search', query],
-        queryFn: () => ordersApi.searchOrders(query),
+    queryKey: ['orders', 'search', query, archiveStatus],
+        queryFn: () => ordersApi.searchOrders(query, archiveStatus),
     enabled: false,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
