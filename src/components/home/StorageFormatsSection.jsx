@@ -10,7 +10,7 @@ const STORAGE_FORMATS = [
     points: ["Личный бокс", "Доступ 24/7", "Для дома и бизнеса"],
     to: "/individual-storage",
     imageWebp: "/images/formats/01.webp",
-    imagePng: "/images/formats/01.png",
+    imagePng: "/images/formats/01.jpg",
     imageAlt: "Индивидуальное хранение — личный бокс",
     loading: "eager",
     badge: "Популярно",

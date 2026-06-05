@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   CloudUpload,
   Truck,
@@ -17,7 +17,6 @@ import ServiceMeta from './components/ServiceMeta.jsx';
 import ServiceHero from './components/ServiceHero.jsx';
 import UsefulGrid from './components/UsefulGrid.jsx';
 import OtherFormatsBlock from './components/OtherFormatsBlock.jsx';
-import CloudCalculator from './components/calculators/CloudCalculator.jsx';
 import InlineBookingScheme from './components/InlineBookingScheme.jsx';
 import FAQAccordion from '../lp/components/FAQAccordion.jsx';
 
@@ -85,30 +84,17 @@ const FAQ_ITEMS = [
 ];
 
 export default function CloudStoragePage() {
-  const [schemeParams, setSchemeParams] = useState(null);
   const schemeRef = useRef(null);
 
-  const scrollToCalc = useCallback(() => {
-    document.getElementById('kalkulyator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
-  const handleCalculatorSubmit = useCallback((data) => {
-    setSchemeParams(data);
-    requestAnimationFrame(() => {
-      schemeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }, []);
-
-  const handleResetScheme = useCallback(() => {
-    setSchemeParams(null);
-    document.getElementById('kalkulyator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToBooking = useCallback(() => {
+    document.getElementById('booking-scheme')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   return (
     <ServiceShell>
       <ServiceMeta
         title="Облачное хранение в Алматы · Extra Space"
-        description="Заберём вещи у вас, упакуем, привезём обратно по запросу. Платите за объём, а не за бокс. Калькулятор стоимости и заявка онлайн."
+        description="Заберём вещи у вас, упакуем, привезём обратно по запросу. Платите за объём, а не за бокс. Тарифы и заявка онлайн."
         canonical="https://extraspace.kz/cloud-storage"
       />
 
@@ -116,23 +102,16 @@ export default function CloudStoragePage() {
         badge="Облачное хранение"
         title="Мы заберём и привезём обратно"
         description="Платите за объём, не за бокс. Курьер забирает вещи у вас, мы храним и возвращаем по запросу — от 1 месяца."
-        ctaLabel="Рассчитать стоимость"
-        onCtaClick={scrollToCalc}
+        ctaLabel="Выбрать тариф"
+        onCtaClick={scrollToBooking}
         videoSrc="/videos/oblachnoe-hranenie.mp4"
         videoPoster="/videos/oblachnoe-hranenie-poster.jpg"
         videoTitle="Облачное хранение — Extra Space"
       />
 
-      {schemeParams ? (
-        <InlineBookingScheme
-          ref={schemeRef}
-          format="CLOUD"
-          params={schemeParams}
-          onReset={handleResetScheme}
-        />
-      ) : (
-        <CloudCalculator onSubmit={handleCalculatorSubmit} />
-      )}
+      <InlineBookingScheme ref={schemeRef} format="CLOUD" />
+
+      <OtherFormatsBlock exclude="CLOUD" />
 
       <UsefulGrid
         id="kak-rabotaet"
@@ -166,7 +145,6 @@ export default function CloudStoragePage() {
         subtitle="Если не нашли ответ — оставьте контакт выше, и мы перезвоним."
       />
 
-      <OtherFormatsBlock exclude="CLOUD" />
     </ServiceShell>
   );
 }

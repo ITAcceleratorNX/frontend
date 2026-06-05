@@ -16,19 +16,8 @@ import { trackEvent, LP_EVENTS } from '@/shared/lib/analytics.js';
 
 export const DISPLAY_PHONE = '+7 778 391-14-25';
 export const TEL_LINK = 'tel:+77783911425';
-const WHATSAPP_DIGITS = '77783911425';
 
-function buildWhatsAppLink(serviceType) {
-  const messages = {
-    individual: 'Здравствуйте! Хочу подобрать индивидуальный бокс в ExtraSpace.',
-    camera: 'Здравствуйте! Хочу узнать про камеру хранения ExtraSpace.',
-    cloud: 'Здравствуйте! Хочу узнать про облачное хранение ExtraSpace.',
-  };
-  const msg = encodeURIComponent(messages[serviceType] || messages.individual);
-  return `https://wa.me/${WHATSAPP_DIGITS}?text=${msg}`;
-}
-
-export { buildWhatsAppLink };
+export { buildLpWhatsAppLink as buildWhatsAppLink } from '../constants/whatsappMessages.js';
 
 export default function PhoneGatingModal({
   open,

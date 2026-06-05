@@ -6,6 +6,10 @@ import {
   LP_EVENTS,
 } from '@/shared/lib/analytics.js';
 
+import {
+  buildLpWhatsAppLink,
+} from '../constants/whatsappMessages.js';
+
 /**
  * Reusable phone-gating CTA buttons:
  *  - "Показать номер" — ALWAYS opens the phone gating modal (no tel: link).
@@ -13,14 +17,6 @@ import {
  *
  * Section param is used in GTM events so we can split conversions by hero / final / etc.
  */
-
-const WHATSAPP_LINK_BASE = 'https://wa.me/77783911425';
-
-const SERVICE_MESSAGES = {
-  individual: 'Здравствуйте! Хочу подобрать индивидуальный бокс в ExtraSpace.',
-  camera: 'Здравствуйте! Хочу узнать про камеру хранения ExtraSpace.',
-  cloud: 'Здравствуйте! Хочу узнать про облачное хранение ExtraSpace.',
-};
 
 export function PhoneGatingButton({
   onClick,
@@ -68,8 +64,7 @@ export function WhatsAppButton({
   className = '',
   label = 'Написать в WhatsApp',
 }) {
-  const message = encodeURIComponent(SERVICE_MESSAGES[serviceType] || SERVICE_MESSAGES.individual);
-  const href = `${WHATSAPP_LINK_BASE}?text=${message}`;
+  const href = buildLpWhatsAppLink(serviceType);
 
   const base =
     'inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition sm:h-14 sm:px-8 sm:text-base';
