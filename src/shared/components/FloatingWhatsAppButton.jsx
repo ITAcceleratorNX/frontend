@@ -2,12 +2,12 @@ import React, { memo, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { WHATSAPP_LINK, DISPLAY_PHONE } from "@/shared/components/CallbackRequestModal.jsx";
 import { useAuth } from "@/shared/context/AuthContext";
-
-const STAFF_ROLES = new Set(["MANAGER", "ADMIN"]);
 import {
   buildLpWhatsAppLink,
   getLpServiceTypeFromPath,
 } from "@/pages/lp/constants/whatsappMessages.js";
+
+const STAFF_ROLES = new Set(["MANAGER", "ADMIN"]);
 
 const FloatingWhatsAppButton = memo(() => {
   const { user } = useAuth();
