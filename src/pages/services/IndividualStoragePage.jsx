@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   Hammer,
   Truck,
@@ -15,7 +15,6 @@ import ServiceMeta from './components/ServiceMeta.jsx';
 import ServiceHero from './components/ServiceHero.jsx';
 import UsefulGrid from './components/UsefulGrid.jsx';
 import OtherFormatsBlock from './components/OtherFormatsBlock.jsx';
-import IndividualCalculator from './components/calculators/IndividualCalculator.jsx';
 import InlineBookingScheme from './components/InlineBookingScheme.jsx';
 import FAQAccordion from '../lp/components/FAQAccordion.jsx';
 
@@ -81,30 +80,17 @@ const FAQ_ITEMS = [
 ];
 
 export default function IndividualStoragePage() {
-  const [schemeParams, setSchemeParams] = useState(null);
   const schemeRef = useRef(null);
 
-  const scrollToCalc = useCallback(() => {
-    document.getElementById('kalkulyator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
-  const handleCalculatorSubmit = useCallback((data) => {
-    setSchemeParams(data);
-    requestAnimationFrame(() => {
-      schemeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }, []);
-
-  const handleResetScheme = useCallback(() => {
-    setSchemeParams(null);
-    document.getElementById('kalkulyator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToBooking = useCallback(() => {
+    document.getElementById('booking-scheme')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   return (
     <ServiceShell>
       <ServiceMeta
         title="Индивидуальное хранение в Алматы · Extra Space"
-        description="Личный бокс с климат-контролем и охраной 24/7. От 1 месяца, доступ только у вас. Калькулятор бокса и бронь онлайн."
+        description="Личный бокс с климат-контролем и охраной 24/7. От 1 месяца, доступ только у вас. Выбор бокса на карте и бронь онлайн."
         canonical="https://extraspace.kz/individual-storage"
       />
 
@@ -113,22 +99,15 @@ export default function IndividualStoragePage() {
         title="Личный бокс с самостоятельным доступом"
         description="Свой ключ, доступ 24/7, климат-контроль и охрана. Подойдёт для дома и бизнеса — храните мебель, сезонные вещи, документы и товары."
         ctaLabel="Подобрать бокс"
-        onCtaClick={scrollToCalc}
+        onCtaClick={scrollToBooking}
         videoSrc="/videos/individualnoe-hranenie.mp4"
         videoPoster="/videos/individualnoe-hranenie-poster.jpg"
         videoTitle="Индивидуальное хранение в боксе — Extra Space"
       />
 
-      {schemeParams ? (
-        <InlineBookingScheme
-          ref={schemeRef}
-          format="INDIVIDUAL"
-          params={schemeParams}
-          onReset={handleResetScheme}
-        />
-      ) : (
-        <IndividualCalculator onSubmit={handleCalculatorSubmit} />
-      )}
+      <InlineBookingScheme ref={schemeRef} format="INDIVIDUAL" />
+
+      <OtherFormatsBlock exclude="INDIVIDUAL" />
 
       <UsefulGrid
         id="kak-rabotaet"
@@ -163,7 +142,6 @@ export default function IndividualStoragePage() {
         subtitle="Если не нашли ответ — оставьте контакт выше, и мы перезвоним."
       />
 
-      <OtherFormatsBlock exclude="INDIVIDUAL" />
     </ServiceShell>
   );
 }

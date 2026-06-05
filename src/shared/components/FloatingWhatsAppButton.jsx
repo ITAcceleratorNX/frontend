@@ -1,10 +1,22 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { WHATSAPP_LINK, DISPLAY_PHONE } from "@/shared/components/CallbackRequestModal.jsx";
+import {
+  buildLpWhatsAppLink,
+  getLpServiceTypeFromPath,
+} from "@/pages/lp/constants/whatsappMessages.js";
 
 const FloatingWhatsAppButton = memo(() => {
   const { pathname } = useLocation();
   const [isVisible, setIsVisible] = useState(false);
+
+  const whatsAppHref = useMemo(() => {
+    const lpServiceType = getLpServiceTypeFromPath(pathname);
+    if (lpServiceType) {
+      return buildLpWhatsAppLink(lpServiceType);
+    }
+    return WHATSAPP_LINK;
+  }, [pathname]);
 
   useEffect(() => {
     const updateVisibility = () => {
@@ -32,7 +44,7 @@ const FloatingWhatsAppButton = memo(() => {
 
   return (
     <a
-      href={WHATSAPP_LINK}
+      href={whatsAppHref}
       target="_blank"
       rel="noopener noreferrer"
       className={`fixed bottom-5 right-4 z-[300] flex max-w-[calc(100vw-1.5rem)] items-center justify-end transition-[filter,opacity,transform] duration-300 hover:brightness-[0.97] active:brightness-[0.94] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#31876D]/35 focus-visible:ring-offset-2 sm:bottom-4 sm:right-4 sm:max-w-[calc(100vw-2rem)] ${isVisible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}

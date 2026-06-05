@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   Plane,
   Briefcase,
@@ -15,7 +15,6 @@ import ServiceMeta from './components/ServiceMeta.jsx';
 import ServiceHero from './components/ServiceHero.jsx';
 import UsefulGrid from './components/UsefulGrid.jsx';
 import OtherFormatsBlock from './components/OtherFormatsBlock.jsx';
-import RoomCalculator from './components/calculators/RoomCalculator.jsx';
 import InlineBookingScheme from './components/InlineBookingScheme.jsx';
 import FAQAccordion from '../lp/components/FAQAccordion.jsx';
 
@@ -88,30 +87,17 @@ const FAQ_ITEMS = [
 ];
 
 export default function StorageRoomPage() {
-  const [schemeParams, setSchemeParams] = useState(null);
   const schemeRef = useRef(null);
 
-  const scrollToCalc = useCallback(() => {
-    document.getElementById('kalkulyator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
-  const handleCalculatorSubmit = useCallback((data) => {
-    setSchemeParams(data);
-    requestAnimationFrame(() => {
-      schemeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }, []);
-
-  const handleResetScheme = useCallback(() => {
-    setSchemeParams(null);
-    document.getElementById('kalkulyator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToBooking = useCallback(() => {
+    document.getElementById('booking-scheme')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   return (
     <ServiceShell>
       <ServiceMeta
         title="Камера хранения в Алматы · от 1 дня · Extra Space"
-        description="Краткосрочное хранение чемоданов, сумок и коробок — от 1 дня до 2 недель. Калькулятор стоимости и бронь онлайн."
+        description="Краткосрочное хранение чемоданов, сумок и коробок — от 1 дня до 2 недель. Бронь онлайн."
         canonical="https://extraspace.kz/storage-room"
       />
 
@@ -119,23 +105,16 @@ export default function StorageRoomPage() {
         badge="Камера хранения"
         title="Краткосрочное хранение вещей"
         description="Чемоданы, сумки, коробки — храним посуточно. От 1 дня до 2 недель, без долгого договора."
-        ctaLabel="Рассчитать стоимость"
-        onCtaClick={scrollToCalc}
+        ctaLabel="Забронировать"
+        onCtaClick={scrollToBooking}
         videoSrc="/videos/kamera-hraneniya.mp4"
         videoPoster="/videos/kamera-hraneniya-poster.jpg"
         videoTitle="Камера хранения — Extra Space"
       />
 
-      {schemeParams ? (
-        <InlineBookingScheme
-          ref={schemeRef}
-          format="LOCKERS"
-          params={schemeParams}
-          onReset={handleResetScheme}
-        />
-      ) : (
-        <RoomCalculator onSubmit={handleCalculatorSubmit} />
-      )}
+      <InlineBookingScheme ref={schemeRef} format="LOCKERS" />
+
+      <OtherFormatsBlock exclude="LOCKERS" />
 
       <UsefulGrid
         id="kak-rabotaet"
@@ -169,7 +148,6 @@ export default function StorageRoomPage() {
         subtitle="Если не нашли ответ — оставьте контакт выше, и мы перезвоним."
       />
 
-      <OtherFormatsBlock exclude="LOCKERS" />
     </ServiceShell>
   );
 }

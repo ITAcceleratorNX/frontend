@@ -2345,9 +2345,11 @@ const HomePage = memo(({
       <section ref={tabsSectionRef} className="w-full scroll-mt-14 bg-[#FFF] py-6 sm:scroll-mt-16 sm:py-8">
         <div className="container mx-auto px-2 sm:px-2 lg:px-3 xl:px-3 max-w-7xl">
           {/* Заголовок */}
-          <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-bold mb-6">
-            хранение в городе
-          </h2>
+          {!isEmbed && (
+            <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#202422] font-bold mb-6">
+              хранение в городе
+            </h2>
+          )}
 
           <AnimatePresence mode="wait">
             {/* Типы слева, описание и «Выбрать» справа */}
