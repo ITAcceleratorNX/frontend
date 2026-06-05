@@ -18,7 +18,11 @@
  */
 
 import api from '@/shared/api/axios.js';
-import { normalizePhoneForSubmit } from '@/shared/lib/phone.js';
+import {
+  validateKzPhone,
+  KZ_PHONE_INVALID_MESSAGE,
+  normalizePhoneForSubmit,
+} from '@/shared/lib/phone.js';
 import { getAttribution } from '@/shared/lib/attribution.js';
 import { trackEvent, LP_EVENTS } from '@/shared/lib/analytics.js';
 
@@ -99,6 +103,16 @@ export async function submitLead(input) {
     return {
       ok: false,
       error: 'rate_limited',
+      payload: { name: trimmedName, phone, service_type: input?.service_type },
+    };
+  }
+
+  const phoneValidationError = validateKzPhone(input?.phone, { required: true });
+  if (phoneValidationError) {
+    return {
+      ok: false,
+      error: 'invalid_phone',
+      message: KZ_PHONE_INVALID_MESSAGE,
       payload: { name: trimmedName, phone, service_type: input?.service_type },
     };
   }

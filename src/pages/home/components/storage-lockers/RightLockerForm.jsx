@@ -1,12 +1,6 @@
 import React from "react";
 import { MapPin, Package, Calendar, Clock, User } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FormSelect } from "@/shared/ui/FormSelect.jsx";
 import VolumePills from "./VolumePills";
 import LockerStepper from "./LockerStepper";
 import LockerDatePicker from "./LockerDatePicker";
@@ -57,21 +51,13 @@ export default function RightLockerForm({
               Загрузка списка складов…
             </p>
           ) : (
-            <Select
-              value={warehouseId != null ? String(warehouseId) : undefined}
-              onValueChange={(v) => onWarehouseChange?.(Number(v))}
-            >
-              <SelectTrigger className="h-[52px] w-full rounded-2xl border border-gray-200 bg-white text-left text-base font-medium text-[#202422] shadow-sm focus:ring-2 focus:ring-[#31876D] focus:ring-offset-0">
-                <SelectValue placeholder="Выберите склад" />
-              </SelectTrigger>
-              <SelectContent>
-                {locations.map((l) => (
-                  <SelectItem key={l.id} value={String(l.id)}>
-                    {l.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormSelect
+              value={warehouseId != null ? String(warehouseId) : ''}
+              onChange={(v) => onWarehouseChange?.(Number(v))}
+              options={locations.map((l) => ({ value: String(l.id), label: l.label }))}
+              placeholder="Выберите склад"
+              triggerClassName="h-[52px] w-full rounded-2xl border border-gray-200 bg-white text-left text-base font-medium text-[#202422] shadow-sm focus:ring-2 focus:ring-[#31876D] focus:ring-offset-0"
+            />
           )}
         </div>
 

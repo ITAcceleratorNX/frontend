@@ -19,7 +19,7 @@ import {
   leadToFormState,
 } from '@/shared/constants/lpLeadProcessing.js';
 import {
-  getLeadChannelLabel,
+  getLeadSourceDisplayLabel,
   getServiceDisplayLabel,
   isManualLpLead,
 } from '@/shared/constants/manualLpLead.js';
@@ -110,13 +110,21 @@ function LpLeadModal({ open, onOpenChange, leadId, listQueryKey }) {
             {lead?.name ? `Лид: ${lead.name}` : 'Карточка лида'}
           </DialogTitle>
           <DialogDescription>
-            Обработка: {processingLabel}
-            {lead?.submitted_at ? (
-              <span className="text-gray-500">
-                {' '}
-                · заявка {formatCalendarDateTime(lead.submitted_at) || ''}
-              </span>
-            ) : null}
+            {lead ? (
+              <>
+                Источник: {getLeadSourceDisplayLabel(lead)}
+                {' · '}
+                Обработка: {processingLabel}
+                {lead.submitted_at ? (
+                  <span className="text-gray-500">
+                    {' '}
+                    · заявка {formatCalendarDateTime(lead.submitted_at) || ''}
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              'Карточка лида'
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -135,10 +143,6 @@ function LpLeadModal({ open, onOpenChange, leadId, listQueryKey }) {
                 <ReadOnlyField label="Телефон" value={lead.phone} />
                 {manual ? (
                   <>
-                    <ReadOnlyField
-                      label="Источник лида"
-                      value={lead.lead_channel_label || getLeadChannelLabel(lead.lead_channel)}
-                    />
                     <ReadOnlyField label="Секция" value={lead.page_section} />
                     <ReadOnlyField
                       label="Услуга / интерес"

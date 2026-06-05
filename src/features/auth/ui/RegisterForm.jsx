@@ -16,7 +16,8 @@ import loginLogo from '../../../assets/login-logo-66f0b4.png';
 import api from '../../../shared/api/axios';
 import {
   formatPhoneNumber,
-  KZ_PHONE_DISPLAY_REGEX,
+  validateKzPhone,
+  RHF_PHONE_RULES,
 } from '../../../shared/lib/phone';
 
 export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSelector = true }) => {
@@ -92,7 +93,7 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
       return;
     }
 
-    if (!KZ_PHONE_DISPLAY_REGEX.test(phone)) {
+    if (validateKzPhone(phone, { required: true })) {
       toastValidationError('Введите корректный номер телефона');
       return;
     }
@@ -362,12 +363,8 @@ export const RegisterForm = ({ userType = 'INDIVIDUAL', setUserType, showTypeSel
                       placeholder="+7 (___) ___-__-__"
                       disabled={isLoading}
                       {...register('phone', {
-                        required: 'Телефон обязателен',
-                        pattern: {
-                          value: KZ_PHONE_DISPLAY_REGEX,
-                          message: 'Неверный формат телефона',
-                        },
-                        onChange: handlePhoneChange
+                        ...RHF_PHONE_RULES,
+                        onChange: handlePhoneChange,
                       })}
                     />
                   </div>

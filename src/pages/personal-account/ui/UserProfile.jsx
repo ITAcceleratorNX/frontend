@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
 import MobileSidebar from './MobileSidebar';
@@ -9,6 +9,16 @@ import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { formatCalendarDateLong } from '../../../shared/lib/utils/date';
+import { formatPhoneNumber, RHF_PHONE_RULES } from '../../../shared/lib/phone';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+import { DateField } from '@/shared/ui/DateField.jsx';
+
+const ROLE_OPTIONS = [
+  { value: 'ADMIN', label: 'Администратор' },
+  { value: 'MANAGER', label: 'Менеджер' },
+  { value: 'USER', label: 'Пользователь' },
+  { value: 'COURIER', label: 'Курьер' },
+];
 
 const REGIONS = [
   'Акмолинская область','Актюбинская область','Алматинская область','Атырауская область',
@@ -46,20 +56,6 @@ const ProfileRow = ({ label, value }) => (
   </div>
 );
 
-// Форматирование телефона в маску +7 (XXX) XXX-XX-XX
-const formatPhone = (value) => {
-  const digits = value.replace(/\D/g, '');
-  const d = digits.startsWith('8') ? '7' + digits.slice(1) : digits.startsWith('7') ? digits : '7' + digits;
-  const n = d.slice(1, 11);
-  if (!n) return '+7 ';
-  let result = '+7 ';
-  if (n.length > 0) result += '(' + n.slice(0, 3);
-  if (n.length >= 3) result += ') ' + n.slice(3, 6);
-  if (n.length >= 6) result += '-' + n.slice(6, 8);
-  if (n.length >= 8) result += '-' + n.slice(8, 10);
-  return result;
-};
-
 // Парсинг строки адреса в части (улица, дом, этаж, квартира)
 const parseAddress = (addressStr) => {
   if (!addressStr) return { street: '', house: '', floor: '', apartment: '' };
@@ -76,10 +72,6 @@ const parseAddress = (addressStr) => {
   return { street, house, floor, apartment };
 };
 
-const PHONE_PATTERN = {
-  value: /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/,
-  message: 'Номер должен быть в формате +7 (XXX) XXX-XX-XX',
-};
 const EMAIL_PATTERN = {
   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
   message: 'Некорректный email адрес',
@@ -90,7 +82,7 @@ const EditProfileForm = ({ user, onSaved, onCancel }) => {
   const addr = user?.legal_address || {};
   const parsedAddr = parseAddress(user?.address || '');
 
-  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, setValue, control, formState: { errors, isSubmitting } } = useForm({
     defaultValues: isLegal ? {
       name: user.name || '',
       email: user.email || '',
@@ -120,7 +112,7 @@ const EditProfileForm = ({ user, onSaved, onCancel }) => {
   });
 
   const handlePhoneChange = (e) => {
-    setValue('phone', formatPhone(e.target.value), { shouldValidate: true });
+    setValue('phone', formatPhoneNumber(e.target.value), { shouldValidate: true });
   };
 
   const handleBinIinChange = (e) => {
@@ -195,7 +187,7 @@ const EditProfileForm = ({ user, onSaved, onCancel }) => {
           label="Телефон"
           name="phone"
           type="tel"
-          rules={{ required: 'Телефон обязателен для заполнения', pattern: PHONE_PATTERN }}
+          rules={RHF_PHONE_RULES}
           placeholder="+7 (XXX) XXX-XX-XX"
           onChange={handlePhoneChange}
         />
@@ -243,11 +235,26 @@ const EditProfileForm = ({ user, onSaved, onCancel }) => {
           <p className="text-xs font-semibold text-gray-700 pt-1">Юридический адрес</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-600">Регион <span className="text-red-500">*</span></label>
-              <select className={inputCls(errors.region)} {...register('region', { required: 'Регион обязателен для заполнения' })}>
-                <option value="">Выберите регион</option>
-                {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <Controller
+                name="region"
+                control={control}
+                rules={{ required: 'Регион обязателен для заполнения' }}
+                render={({ field }) => (
+                  <FormSelect
+                    label={
+                      <>
+                        Регион <span className="text-red-500">*</span>
+                      </>
+                    }
+                    labelVariant="compact"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={REGIONS.map((r) => ({ value: r, label: r }))}
+                    placeholder="Выберите регион"
+                    triggerClassName={inputCls(errors.region)}
+                  />
+                )}
+              />
               {errors.region && <p className="text-xs text-red-500">{errors.region.message}</p>}
             </div>
             <Field register={register} errors={errors} label="Город" name="city" rules={{ required: 'Город обязателен для заполнения' }} placeholder="Алматы" />
@@ -276,11 +283,9 @@ const EditProfileForm = ({ user, onSaved, onCancel }) => {
               rules={{ required: 'ИИН обязателен для заполнения', pattern: { value: /^[0-9]{12}$/, message: 'ИИН должен содержать 12 цифр' } }}
               placeholder="XXXXXXXXXXXX"
             />
-            <Field
-              register={register} errors={errors}
-              label="Дата рождения"
+            <Controller
               name="bday"
-              type="date"
+              control={control}
               rules={{
                 required: 'Дата рождения обязательна для заполнения',
                 validate: (value) => {
@@ -292,8 +297,21 @@ const EditProfileForm = ({ user, onSaved, onCancel }) => {
                   if (age < 18) return 'Возраст должен быть не менее 18 лет';
                   if (age > 100) return 'Некорректная дата рождения';
                   return true;
-                }
+                },
               }}
+              render={({ field }) => (
+                <DateField
+                  label="Дата рождения"
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.bday?.message}
+                  variant="account"
+                  captionLayout="dropdown"
+                  allowFutureDates={false}
+                  required
+                />
+              )}
             />
           </div>
           <p className="text-xs font-semibold text-gray-700 pt-1">Адрес</p>
@@ -794,19 +812,15 @@ const UserProfile = () => {
                             Текущая роль:
                           </label>
                           {isAdmin ? (
-                            <select
+                            <FormSelect
                               value={selectedUser.role}
-                              onChange={(e) => handleRoleUpdate(e.target.value)}
+                              onChange={handleRoleUpdate}
+                              options={ROLE_OPTIONS}
                               disabled={isUpdatingRole}
-                              className={`w-full px-3 py-2 text-sm font-semibold rounded-lg transition-all ${getRoleClass(selectedUser.role)} ${
+                              triggerClassName={`w-full h-auto px-3 py-2 text-sm font-semibold rounded-lg transition-all ${getRoleClass(selectedUser.role)} ${
                                 isUpdatingRole ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
                               }`}
-                            >
-                              <option value="ADMIN">Администратор</option>
-                              <option value="MANAGER">Менеджер</option>
-                              <option value="USER">Пользователь</option>
-                              <option value="COURIER">Курьер</option>
-                            </select>
+                            />
                           ) : (
                             <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-lg ${getRoleClass(selectedUser.role)}`}>
                               {getRoleDisplayName(selectedUser.role)}

@@ -192,6 +192,8 @@ export function leadToFormState(lead) {
     ? new Date(lead.next_contact_at).toISOString().slice(0, 10)
     : '';
   return {
+    responsible_manager_id: lead.responsible_manager_id ? String(lead.responsible_manager_id) : '',
+    client_type: lead.client_type || '',
     lead_status: lead.lead_status || '',
     lead_quality: lead.lead_quality || '',
     actual_interest: lead.actual_interest || '',
@@ -208,6 +210,13 @@ export function leadToFormState(lead) {
 
 export function formStateToPayload(form) {
   const payload = {};
+  if (Object.prototype.hasOwnProperty.call(form, 'responsible_manager_id')) {
+    const managerId = form.responsible_manager_id;
+    payload.responsible_manager_id = managerId ? Number(managerId) : null;
+  }
+  if (Object.prototype.hasOwnProperty.call(form, 'client_type')) {
+    payload.client_type = form.client_type || null;
+  }
   for (const key of PROCESSING_FORM_KEYS) {
     if (!Object.prototype.hasOwnProperty.call(form, key)) continue;
     const v = form[key];

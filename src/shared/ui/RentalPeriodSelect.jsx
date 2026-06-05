@@ -1,17 +1,11 @@
 import React from 'react';
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from '../../components/ui';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { getMonthLabel } from '../lib/utils/monthLabel';
 import { cn } from '../lib/utils/cn';
 
 /**
  * Переиспользуемый компонент для выбора срока аренды (в месяцах)
- * 
+ *
  * @param {Object} props
  * @param {string} props.value - Текущее значение (количество месяцев как строка)
  * @param {Function} props.onChange - Callback при изменении значения (принимает строку)
@@ -37,7 +31,6 @@ export const RentalPeriodSelect = ({
   showLabelInside = false,
   ...props
 }) => {
-  // Стили для разных вариантов
   const variantStyles = {
     'individual-home': {
       trigger: 'w-full h-12 text-base bg-transparent border-gray-200 rounded-3xl text-[#373737]',
@@ -51,11 +44,11 @@ export const RentalPeriodSelect = ({
       trigger: 'h-12 rounded-2xl border-[#273655]/20 text-[#273655]',
       container: '',
     },
-    'modal': {
+    modal: {
       trigger: 'w-full h-12 text-base rounded-3xl border-[#d7dbe6] bg-gray-50 focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20',
       container: '',
     },
-    'default': {
+    default: {
       trigger: 'w-full h-12 rounded-lg border border-gray-300',
       container: '',
     },
@@ -63,37 +56,40 @@ export const RentalPeriodSelect = ({
 
   const styles = variantStyles[variant] || variantStyles.default;
 
-  const handleValueChange = (newValue) => {
-    if (onChange) {
-      onChange(newValue);
-    }
-  };
+  const options = Array.from({ length: maxMonths }, (_, i) => i + 1).map((month) => ({
+    value: String(month),
+    label: getMonthLabel(month),
+  }));
+
+  const triggerStart =
+    showLabelInside && label ? (
+      <span className={cn('text-sm text-[#373737] mb-1 block w-full text-left', labelClassName)}>
+        {label}
+      </span>
+    ) : null;
+
+  const select = (
+    <FormSelect
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder={placeholder}
+      triggerClassName={cn(styles.trigger, triggerClassName)}
+      triggerStart={triggerStart}
+      {...props}
+    />
+  );
 
   return (
     <div className={cn(styles.container, className)}>
       {label && !showLabelInside && (
-        <label className={cn("block text-sm font-medium text-[#373737] mb-2", labelClassName)}>
+        <label className={cn('block text-sm font-medium text-[#373737] mb-2', labelClassName)}>
           {label}
         </label>
       )}
-      <Select value={value} onValueChange={handleValueChange} {...props}>
-        <SelectTrigger className={cn(styles.trigger, triggerClassName)}>
-          {showLabelInside && label && (
-            <span className={cn("text-sm text-[#373737] mb-1", labelClassName)}>{label}</span>
-          )}
-          <SelectValue className={showLabelInside ? 'text-base' : ''} placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {Array.from({ length: maxMonths }, (_, i) => i + 1).map((month) => (
-            <SelectItem key={month} value={String(month)}>
-              {getMonthLabel(month)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {select}
     </div>
   );
 };
 
 export default RentalPeriodSelect;
-

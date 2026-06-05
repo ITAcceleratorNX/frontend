@@ -9,6 +9,13 @@ import {
   formatAreaM2,
   formatAreaWithPercent,
 } from '../../../shared/lib/warehouse/calculateWarehouseAreaStats';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+
+const STATUS_FILTER_OPTIONS = [
+  { value: 'ALL', label: 'Все склады' },
+  { value: 'ACTIVE', label: 'Активные' },
+  { value: 'INACTIVE', label: 'Неактивные' },
+];
 
 const InfoWarehouses = () => {
   const navigate = useNavigate();
@@ -212,22 +219,13 @@ const InfoWarehouses = () => {
             </div>
 
             {/* Фильтр по статусу */}
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent transition-colors"
-              >
-                <option value="ALL">Все склады</option>
-                <option value="ACTIVE">Активные</option>
-                <option value="INACTIVE">Неактивные</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
-                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            <FormSelect
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={STATUS_FILTER_OPTIONS}
+              placeholder="Все склады"
+              triggerClassName="h-auto px-4 py-2.5 text-sm rounded-lg"
+            />
           </div>
           
           {/* Статистика */}

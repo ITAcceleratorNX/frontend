@@ -20,13 +20,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { Switch } from '@/components/ui/switch';
 import { useAdminPayments, useConfirmManualPayment, usePaymentSettings, useUpdatePaymentSettings } from '@/shared/lib/hooks/use-payments';
 import { useDeviceType } from '@/shared/lib/hooks/useWindowWidth';
@@ -272,36 +266,24 @@ const AdminPaymentsPage = () => {
             </Tabs>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#273655] mb-1">Месяц</label>
-              <Select value={filterMonth || ' '} onValueChange={(v) => setFilterMonth(v === ' ' ? '' : v)}>
-                <SelectTrigger className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Любой месяц" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m.value || 'any'} value={m.value || ' '}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#273655] mb-1">Год</label>
-              <Select value={filterYear || ' '} onValueChange={(v) => setFilterYear(v === ' ' ? '' : v)}>
-                <SelectTrigger className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Любой год" />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEARS.map((y) => (
-                    <SelectItem key={y.value || 'any'} value={y.value || ' '}>
-                      {y.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormSelect
+              label="Месяц"
+              value={filterMonth}
+              onChange={setFilterMonth}
+              options={MONTHS}
+              placeholder="Любой месяц"
+              labelVariant="default"
+              labelClassName="block mb-1 text-[#273655]"
+            />
+            <FormSelect
+              label="Год"
+              value={filterYear}
+              onChange={setFilterYear}
+              options={YEARS}
+              placeholder="Любой год"
+              labelVariant="default"
+              labelClassName="block mb-1 text-[#273655]"
+            />
             <div>
               <label className="block text-sm font-medium text-[#273655] mb-1">Телефон клиента</label>
               <Input

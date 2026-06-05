@@ -7,7 +7,7 @@ import UserNotifications from './UserNotifications';
 import { getNotificationTarget } from './NotificationCard';
 import { Input } from '../../../../components/ui/input';
 import { Button } from '../../../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
 const UserNotificationsPage = () => {
   const navigate = useNavigate();
@@ -209,28 +209,30 @@ const UserNotificationsPage = () => {
               />
             </div>
             
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Все типы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
-                <SelectItem value="general">Общие</SelectItem>
-                <SelectItem value="payment">Платежи</SelectItem>
-                <SelectItem value="contract">Договоры</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormSelect
+              value={filterType}
+              onChange={setFilterType}
+              options={[
+                { value: 'all', label: 'Все типы' },
+                { value: 'general', label: 'Общие' },
+                { value: 'payment', label: 'Платежи' },
+                { value: 'contract', label: 'Договоры' },
+              ]}
+              placeholder="Все типы"
+              triggerClassName="w-[180px]"
+            />
 
-            <Select value={filterRead} onValueChange={setFilterRead}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Все статусы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="false">Непрочитанные</SelectItem>
-                <SelectItem value="true">Прочитанные</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormSelect
+              value={filterRead}
+              onChange={setFilterRead}
+              options={[
+                { value: 'all', label: 'Все статусы' },
+                { value: 'false', label: 'Непрочитанные' },
+                { value: 'true', label: 'Прочитанные' },
+              ]}
+              placeholder="Все статусы"
+              triggerClassName="w-[150px]"
+            />
 
             <Button
               onClick={applyFilters}

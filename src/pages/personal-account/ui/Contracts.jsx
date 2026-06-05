@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Badge } from '../../../components/ui/badge';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
 import {useNavigate} from "react-router-dom";
-import DatePicker from '../../../shared/ui/DatePicker';
+import { DateField } from '@/shared/ui/DateField.jsx';
 import { formatCalendarDate, getTodayLocalDateString } from '@/shared/lib/utils/date';
 
 const WHATSAPP_PHONE = '77783911425';
@@ -799,17 +799,14 @@ const CancelSurveyModal = ({
                 {/* Форма для доставки */}
                 {pickupMethod === 'delivery' && (
                   <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-xl">
-                    <div>
-                      <DatePicker
-                        label="Дата доставки"
-                        value={deliveryDate}
-                        onChange={setDeliveryDate}
-                        placeholder="Выберите дату доставки"
-                        minDate={getTodayLocalDateString()}
-                        allowFutureDates={true}
-                        className="w-full"
-                      />
-                    </div>
+                    <DateField
+                      label="Дата доставки"
+                      value={deliveryDate}
+                      onChange={setDeliveryDate}
+                      minDate={getTodayLocalDateString()}
+                      allowFutureDates
+                      variant="account"
+                    />
                     <div>
                       <label className="text-sm font-medium text-gray-700 block mb-2">
                         Адрес доставки (необязательно)

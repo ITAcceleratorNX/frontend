@@ -1,12 +1,19 @@
 import React, { memo, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { WHATSAPP_LINK, DISPLAY_PHONE } from "@/shared/components/CallbackRequestModal.jsx";
+import { useAuth } from "@/shared/context/AuthContext";
+
+const STAFF_ROLES = new Set(["MANAGER", "ADMIN"]);
 
 const FloatingWhatsAppButton = memo(() => {
+  const { user } = useAuth();
   const { pathname } = useLocation();
   const [isVisible, setIsVisible] = useState(false);
+  const isStaffUser = STAFF_ROLES.has(user?.role);
 
   useEffect(() => {
+    if (isStaffUser) return;
+
     const updateVisibility = () => {
       if (pathname !== "/") {
         setIsVisible(true);
@@ -28,7 +35,11 @@ const FloatingWhatsAppButton = memo(() => {
       window.removeEventListener("scroll", updateVisibility);
       window.removeEventListener("resize", updateVisibility);
     };
-  }, [pathname]);
+  }, [pathname, isStaffUser]);
+
+  if (isStaffUser) {
+    return null;
+  }
 
   return (
     <a

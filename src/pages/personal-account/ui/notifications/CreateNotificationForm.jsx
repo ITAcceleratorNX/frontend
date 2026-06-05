@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Send, Users, Mail, MessageSquare, Search, X, Check, User, ChevronDown, Loader2 } from 'lucide-react';
+import { Send, Users, Mail, MessageSquare, Search, X, Check, User, Loader2 } from 'lucide-react';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { showSuccessToast, showErrorToast } from '../../../../shared/lib/toast';
 
 const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) => {
@@ -128,18 +129,17 @@ const CreateNotificationForm = ({ users = [], onSendNotification, scale = 1 }) =
             <label className="block text-sm font-semibold text-gray-900 mb-3">
                 Тип уведомления *
               </label>
-              <div className="relative">
-                <select
-                    value={notificationType}
-                    onChange={(e) => setNotificationType(e.target.value)}
-                className="w-full appearance-none px-4 py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-[#1e2c4f] focus:border-transparent transition-colors text-sm pr-10"
-                >
-                <option value="general">📢 Общее уведомление</option>
-                <option value="payment">💳 Уведомление о платеже</option>
-                <option value="contract">📋 Уведомление о договоре</option>
-                </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-            </div>
+              <FormSelect
+                value={notificationType}
+                onChange={setNotificationType}
+                options={[
+                  { value: 'general', label: '📢 Общее уведомление' },
+                  { value: 'payment', label: '💳 Уведомление о платеже' },
+                  { value: 'contract', label: '📋 Уведомление о договоре' },
+                ]}
+                variant="slate"
+                triggerClassName="h-12 rounded-lg border-gray-300 focus:ring-[#1e2c4f] focus:border-transparent"
+              />
           </div>
 
           {/* Способы доставки */}

@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
 import warehouseImg from '../../assets/warehouse.png';
 import api from '../../shared/api/axios';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+
+const MONTH_OPTIONS = [
+  { value: '1', label: '1 месяц' },
+  { value: '2', label: '2 месяца' },
+  { value: '3', label: '3 месяца' },
+  { value: '6', label: '6 месяцев' },
+  { value: '12', label: '12 месяцев' },
+];
 
 const CostCalculator = () => {
   const [area, setArea] = useState(10);
@@ -207,12 +216,6 @@ const CostCalculator = () => {
     }
   };
 
-  const ArrowDownIcon = () => (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-  );
-
   return (
       <section className="w-full flex justify-center items-center mb-24 mt-40 px-4">
         <div className="w-full max-w-[1100px] mx-auto flex flex-col lg:flex-row items-start gap-10 lg:gap-[60px] bg-transparent">
@@ -394,27 +397,19 @@ const CostCalculator = () => {
 
             {/* Срок аренды */}
             <label htmlFor="period" className="text-[16px] sm:text-[18px] text-[#9C9C9C] font-bold mb-4">Срок аренды (месяцы):</label>
-            <div className="relative w-full mb-8">
-              <select
-                  value={month}
-                  onChange={(e) => {
-                    setMonth(Number(e.target.value));
-                    localStorage.setItem("prep_duration", e.target.value);
-                    setTotalCost(null);
-                    localStorage.setItem("calculated_price", null);
-                  }}
-                  className="w-full h-[56px] rounded-lg border-none bg-white pr-10 pl-4 text-[16px] sm:text-[18px] text-[#273655] font-normal focus:outline-none appearance-none"
-                  style={{ boxShadow: '4px 4px 8px 0 #B0B0B0' }}
-              >
-                <option value={1}>1 месяц</option>
-                <option value={2}>2 месяца</option>
-                <option value={3}>3 месяца</option>
-                <option value={6}>6 месяцев</option>
-                <option value={12}>12 месяцев</option>
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                <ArrowDownIcon />
-              </div>
+            <div className="w-full mb-8">
+              <FormSelect
+                value={String(month)}
+                onChange={(value) => {
+                  setMonth(Number(value));
+                  localStorage.setItem('prep_duration', value);
+                  setTotalCost(null);
+                  localStorage.setItem('calculated_price', null);
+                }}
+                options={MONTH_OPTIONS}
+                variant="slate"
+                triggerClassName="w-full h-[56px] rounded-lg border-none bg-white px-4 text-[16px] sm:text-[18px] text-[#273655] font-normal shadow-[4px_4px_8px_0_#B0B0B0]"
+              />
             </div>
 
             {/* Тип услуги */}

@@ -9,6 +9,8 @@ import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
 import Footer from '../../widgets/Footer';
 
 import MovingPricingTable from '../../shared/components/MovingPricingTable';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+import { DateField } from '@/shared/ui/DateField.jsx';
 
 const ProgressCircle = ({ step }) => {
     const total = 5;
@@ -99,21 +101,14 @@ const StepperForm = () => {
                             <label className="block text-xl font-medium font-['Montserrat'] mb-4">
                                 Выберите город:
                             </label>
-                            <select
-                                className="w-full border border-[#E6E9F5] rounded px-4 py-2 text-lg focus:outline-none"
+                            <FormSelect
                                 value={city}
-                                onChange={e => setCity(e.target.value)}
-                                required
-                            >
-                                <option value="" disabled>
-                                    Выберите...
-                                </option>
-                                {cities.map(c => (
-                                    <option key={c} value={c}>
-                                        {c}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={setCity}
+                                options={cities.map(c => ({ value: c, label: c }))}
+                                placeholder="Выберите..."
+                                variant="slate"
+                                triggerClassName="w-full h-auto rounded border-[#E6E9F5] px-4 py-2 text-lg"
+                            />
                         </div>
                         <button
                             type="submit"
@@ -237,12 +232,12 @@ const StepperForm = () => {
                         }}
                     >
                         <div className="mb-8">
-                            <label className="block text-xl font-medium mb-4">Выберите дату:</label>
-                            <input
-                                type="date"
+                            <DateField
+                                label="Выберите дату"
                                 value={date}
-                                onChange={e => setDate(e.target.value)}
-                                className="w-full border border-[#E6E9F5] rounded px-4 py-2 text-lg focus:outline-none"
+                                onChange={setDate}
+                                variant="input"
+                                allowFutureDates
                                 required
                             />
                         </div>

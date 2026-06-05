@@ -12,13 +12,7 @@ import {
   DialogTitle,
   DialogTrigger 
 } from '../../../components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '../../../components/ui/select';
+import { RentalPeriodSelect } from '@/shared/ui/RentalPeriodSelect';
 import { Button } from '../../../components/ui/button';
 import { useExtendOrder, useDownloadContract, useCancelContract, useContractDetails } from '../../../shared/lib/hooks/use-orders';
 import { useCreateMoving, useCreateAdditionalServicePayment, useDownloadPaymentReceipt, useCreateManualPayment } from '../../../shared/lib/hooks/use-payments';
@@ -26,6 +20,7 @@ import { EditOrderModal } from '@/pages/personal-account/ui/EditOrderModal.jsx';
 import { Zap, CheckCircle, Download, Plus, Truck, Package, ChevronDown, ChevronUp, FileText, AlertTriangle, MapPin, Eye, Tag, CreditCard, MessageCircle } from 'lucide-react';
 import { showSuccessToast } from '../../../shared/lib/toast';
 import { formatCalendarDateLong, getTodayLocalDateString } from '@/shared/lib/utils/date';
+import { DateField } from '@/shared/ui/DateField.jsx';
 // Импортируем иконки дополнительных услуг
 import streychPlenkaIcon from '../../../assets/стрейч_пленка.png';
 import bubbleWrap100Icon from '../../../assets/Воздушно-пузырчатая_плёнка_(100 м).png';
@@ -991,18 +986,13 @@ const UserOrderCard = ({ order, onPayOrder, embeddedMobile = false }) => {
                     </DialogHeader>
                     
                     <div className="py-4">
-                      <Select value={selectedMonths} onValueChange={setSelectedMonths}>
-                        <SelectTrigger className="w-full h-11 rounded-xl border-gray-200">
-                          <SelectValue placeholder="Выберите срок" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[...Array(6)].map((_, i) => (
-                            <SelectItem key={i + 1} value={(i + 1).toString()}>
-                              {i + 1} {i + 1 === 1 ? 'месяц' : (i + 1 < 5 ? 'месяца' : 'месяцев')}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <RentalPeriodSelect
+                        value={selectedMonths}
+                        onChange={setSelectedMonths}
+                        maxMonths={6}
+                        placeholder="Выберите срок"
+                        triggerClassName="w-full h-11 rounded-xl border-gray-200"
+                      />
                     </div>
                     
                     <DialogFooter className="gap-2">
@@ -1338,32 +1328,30 @@ const CancelSurveyModal = ({
                           <span className="text-xs">{orderDetails.warehouseAddress}</span>
                         </div>
                       )}
-                      <div>
-                        <label className="text-xs font-medium text-white/90 block mb-1">Когда заберёте?</label>
-                        <input
-                          type="date"
-                          value={selfPickupDate}
-                          onChange={(e) => setSelfPickupDate(e.target.value)}
-                          min={getTodayLocalDateString()}
-                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
-                        />
-                      </div>
+                      <DateField
+                        label="Когда заберёте?"
+                        labelClassName="text-xs font-medium text-white/90"
+                        value={selfPickupDate}
+                        onChange={setSelfPickupDate}
+                        minDate={getTodayLocalDateString()}
+                        variant="dark"
+                        allowFutureDates
+                      />
                     </div>
                   )}
 
                   {/* Форма для доставки */}
                   {pickupMethod === 'delivery' && (
                     <div className="mt-3 p-3 bg-gradient-to-r from-[#26B3AB] to-[#104D4A] rounded-xl space-y-2">
-                      <div>
-                        <label className="text-xs font-medium text-white/90 block mb-1">Дата доставки</label>
-                        <input
-                          type="date"
-                          value={deliveryDate}
-                          onChange={(e) => setDeliveryDate(e.target.value)}
-                          min={getTodayLocalDateString()}
-                          className="w-full h-9 rounded-xl border border-white/30 bg-transparent px-3 text-sm text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
-                        />
-                      </div>
+                      <DateField
+                        label="Дата доставки"
+                        labelClassName="text-xs font-medium text-white/90"
+                        value={deliveryDate}
+                        onChange={setDeliveryDate}
+                        minDate={getTodayLocalDateString()}
+                        variant="dark"
+                        allowFutureDates
+                      />
                       <div>
                         <label className="text-xs font-medium text-white/90 block mb-1">Адрес доставки</label>
                         <input

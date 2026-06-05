@@ -10,24 +10,29 @@ import {
   STORAGE_DURATION_OPTIONS,
   STORAGE_ITEMS_OPTIONS,
 } from '@/shared/constants/lpLeadProcessing.js';
+import {
+  CLIENT_TYPE_OPTIONS,
+  EMPTY_CLIENT_TYPE_OPTION,
+} from '@/shared/constants/manualLpLead.js';
+import { FormSelect, getFormInputClass } from '@/shared/ui/FormSelect.jsx';
+import { DateField } from '@/shared/ui/DateField.jsx';
+import ResponsibleManagerSelect from './ResponsibleManagerSelect.jsx';
 
-const selectClass =
-  'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#273655] focus:border-[#31876D] focus:outline-none focus:ring-2 focus:ring-[#31876D]/20 w-full';
+const LP_INPUT_CLASS = getFormInputClass('account');
+
+const EMPTY_OPTION = { value: '', label: 'Не выбрано' };
 
 /* eslint-disable react/prop-types */
 function SelectField({ label, value, onChange, options }) {
   return (
-    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-      {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
-        <option value="">Не выбрано</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <FormSelect
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={[EMPTY_OPTION, ...options]}
+      placeholder="Не выбрано"
+      variant="account"
+    />
   );
 }
 
@@ -37,6 +42,17 @@ function SelectField({ label, value, onChange, options }) {
 export default function LpLeadProcessingForm({ form, setField }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
+      <FormSelect
+        label="Тип клиента"
+        value={form.client_type || ''}
+        onChange={(v) => setField('client_type', v)}
+        options={[EMPTY_CLIENT_TYPE_OPTION, ...CLIENT_TYPE_OPTIONS]}
+        variant="account"
+      />
+      <ResponsibleManagerSelect
+        value={form.responsible_manager_id || ''}
+        onChange={(v) => setField('responsible_manager_id', v)}
+      />
       <SelectField
         label="Статус лида"
         value={form.lead_status}
@@ -85,15 +101,13 @@ export default function LpLeadProcessingForm({ form, setField }) {
         onChange={(v) => setField('next_action', v)}
         options={NEXT_ACTION_OPTIONS}
       />
-      <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-        Дата следующего контакта
-        <input
-          type="date"
-          value={form.next_contact_at}
-          onChange={(e) => setField('next_contact_at', e.target.value)}
-          className={selectClass}
-        />
-      </label>
+      <DateField
+        label="Дата следующего контакта"
+        value={form.next_contact_at}
+        onChange={(v) => setField('next_contact_at', v)}
+        variant="account"
+        allowFutureDates
+      />
       <SelectField
         label="Итог лида"
         value={form.lead_outcome}
@@ -106,7 +120,7 @@ export default function LpLeadProcessingForm({ form, setField }) {
           value={form.manager_comment}
           onChange={(e) => setField('manager_comment', e.target.value)}
           rows={4}
-          className={`${selectClass} resize-y min-h-[88px]`}
+          className={`${LP_INPUT_CLASS} h-auto min-h-[88px] resize-y py-2`}
           placeholder="Суть разговора, результат контакта…"
         />
       </label>

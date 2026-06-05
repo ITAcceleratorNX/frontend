@@ -4,7 +4,7 @@ import { showPaymentLoadError } from '../../../shared/lib/utils/notifications';
 import { useAuth } from '../../../shared/context/AuthContext';
 import PaymentCard from './PaymentCard';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { useNavigate } from 'react-router-dom';
 import { List, Zap, FileText, HelpCircle, CreditCard } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
@@ -161,19 +161,13 @@ const UserPayments = ({
             </div>
           )}
           {embeddedMobile && (
-            <Select value={activeFilter} onValueChange={setActiveFilter}>
-              <SelectTrigger className="w-[100px] min-[360px]:w-[120px] min-[400px]:w-[130px] h-8 min-[360px]:h-9 bg-white border border-[#00A991]/70 rounded-xl flex items-center gap-1.5 flex-shrink-0 text-gray-700 shadow-none [&>svg]:text-[#00A991]">
-                <List className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 text-[#00A991] flex-shrink-0" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAYMENT_FILTER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormSelect
+              value={activeFilter}
+              onChange={setActiveFilter}
+              options={PAYMENT_FILTER_OPTIONS}
+              triggerClassName="w-[100px] min-[360px]:w-[120px] min-[400px]:w-[130px] h-8 min-[360px]:h-9 bg-white border border-[#00A991]/70 rounded-xl flex items-center gap-1.5 flex-shrink-0 text-gray-700 shadow-none [&>svg]:text-[#00A991]"
+              triggerStart={<List className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 text-[#00A991] flex-shrink-0" />}
+            />
           )}
         </div>
         {!embeddedMobile && (

@@ -13,4 +13,4 @@ export { Label } from './label';
 
 // Export other UI components
 export { default as DatePicker } from '../../shared/ui/DatePicker';
-export { DateInput } from '../../shared/ui/DateInput'; 
+export { DateField, DateField as DateInput } from '../../shared/ui/DateField'; 

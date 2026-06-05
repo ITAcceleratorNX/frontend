@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { 
   Dialog, 
   DialogContent, 
@@ -300,6 +300,9 @@ const UserDelivery = ({ embeddedMobile = false }) => {
 
     const summaryLine = `Всего доставок: ${stats.total}; Ожидает курьера: ${stats.awaitingCourier}; Курьер в пути: ${stats.courierOnTheWay}; Завершено: ${stats.completed}; Адресов: ${stats.addresses}`;
 
+    const activeFilterOption = DELIVERY_FILTER_OPTIONS.find(opt => opt.value === activeFilter);
+    const ActiveFilterIcon = activeFilterOption?.icon || List;
+
     const deliveriesContent = (
         <>
             <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
@@ -307,29 +310,13 @@ const UserDelivery = ({ embeddedMobile = false }) => {
                     <div className={embeddedMobile ? 'flex flex-wrap items-center justify-between gap-2' : ''}>
                         <h2 className="text-base min-[360px]:text-2xl sm:text-3xl font-semibold text-[#363636] min-w-0 flex-1">Доставка</h2>
                         {embeddedMobile && (
-                            <Select value={activeFilter} onValueChange={setActiveFilter}>
-                                <SelectTrigger className="w-[100px] min-[360px]:w-[120px] min-[400px]:w-[130px] h-8 min-[360px]:h-9 bg-white border border-[#00A991]/70 rounded-xl flex items-center gap-1.5 flex-shrink-0 text-gray-700 shadow-none [&>svg]:text-[#00A991]">
-                                    {(() => {
-                                        const currentOption = DELIVERY_FILTER_OPTIONS.find(opt => opt.value === activeFilter);
-                                        const Icon = currentOption?.icon || List;
-                                        return <Icon className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 text-[#00A991] flex-shrink-0" />;
-                                    })()}
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {DELIVERY_FILTER_OPTIONS.map((opt) => {
-                                        const Icon = opt.icon;
-                                        return (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                <div className="flex items-center gap-2">
-                                                    <Icon className="w-4 h-4" />
-                                                    <span>{opt.label}</span>
-                                                </div>
-                                            </SelectItem>
-                                        );
-                                    })}
-                                </SelectContent>
-                            </Select>
+                            <FormSelect
+                                value={activeFilter}
+                                onChange={setActiveFilter}
+                                options={DELIVERY_FILTER_OPTIONS.map(({ value, label }) => ({ value, label }))}
+                                triggerClassName="w-[100px] min-[360px]:w-[120px] min-[400px]:w-[130px] h-8 min-[360px]:h-9 bg-white border border-[#00A991]/70 rounded-xl flex items-center gap-1.5 flex-shrink-0 text-gray-700 shadow-none [&>svg]:text-[#00A991]"
+                                triggerStart={<ActiveFilterIcon className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 text-[#00A991] flex-shrink-0" />}
+                            />
                         )}
                     </div>
                     {embeddedMobile && (

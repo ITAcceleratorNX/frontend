@@ -1,4 +1,5 @@
 import { showErrorToast } from '../toast';
+import { normalizePhoneForSubmit } from '../phone';
 
 // Константы для валидации для INDIVIDUAL пользователей
 export const REQUIRED_PROFILE_FIELDS_INDIVIDUAL = [
@@ -30,9 +31,8 @@ const validators = {
     return value && emailRegex.test(value.trim());
   },
   phone: (value) => {
-    // Казахстанские номера: +7 или 8, затем 10 цифр
-    const phoneRegex = /^(\+7|8|7)\d{10}$/;
-    return value && phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''));
+    const normalized = normalizePhoneForSubmit(value || '');
+    return /^\+7\d{10}$/.test(normalized);
   },
   iin: (value) => {
     // ИИН: 12 цифр

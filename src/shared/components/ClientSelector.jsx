@@ -7,16 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select';
-import DatePicker from '../ui/DatePicker';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+import { DateField } from '@/shared/ui/DateField.jsx';
 import { getTodayLocalDateString, formatCalendarDate } from '../lib/utils/date';
-import { normalizePhoneForSubmit } from '../lib/phone';
+import { normalizePhoneForSubmit, validateKzPhone } from '../lib/phone';
+import { PhoneInput } from '@/shared/ui/PhoneInput.jsx';
 
 /** Первый месяц графика: для YYYY-MM-DD — календарная дата в локальной зоне (без сдвига из‑за UTC). */
 function parseScheduleAnchorDate(str) {
@@ -293,8 +288,9 @@ const ClientSelector = ({
       }
     }
 
-    if (!formData.phone.trim()) {
-      errors.phone = 'Телефон обязателен';
+    const phoneError = validateKzPhone(formData.phone, { required: true });
+    if (phoneError) {
+      errors.phone = phoneError;
     }
 
     // MODE.CREATE: ИИН/адрес/дата рождения обязательны (нужны для договоров)
@@ -508,27 +504,6 @@ const ClientSelector = ({
   const handleSelectUser = (user) => {
     onUserSelect(user);
     onClose();
-  };
-
-  const handlePhoneChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, '');
-    let formatted = raw;
-    if (raw.startsWith('8')) {
-      formatted = '7' + raw.slice(1);
-    }
-    if (raw && !raw.startsWith('7') && !raw.startsWith('8')) {
-      formatted = '7' + raw;
-    }
-    let display = formatted;
-    if (formatted.length > 0) {
-      display = '+7';
-      const rest = formatted.slice(1);
-      if (rest.length > 0) display += ' (' + rest.slice(0, 3);
-      if (rest.length > 3) display += ') ' + rest.slice(3, 6);
-      if (rest.length > 6) display += '-' + rest.slice(6, 8);
-      if (rest.length > 8) display += '-' + rest.slice(8, 10);
-    }
-    setFormData({ ...formData, phone: display });
   };
 
   const title =
@@ -750,26 +725,20 @@ const ClientSelector = ({
                   )}
                 </div>
 
-                <div>
-                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Телефон *
-                  </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handlePhoneChange}
-                    className={`h-12 rounded-2xl border transition-colors ${
-                      formErrors.phone
-                        ? 'border-red-300 bg-red-50 focus:ring-red-300'
-                        : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
-                    }`}
-                    placeholder="+7 (___) ___-__-__"
-                  />
-                  {formErrors.phone && (
-                    <p className="mt-1.5 text-sm text-red-600">{formErrors.phone}</p>
-                  )}
-                </div>
+                <PhoneInput
+                  id="phone"
+                  label="Телефон"
+                  required
+                  labelClassName="text-sm font-medium text-gray-700 mb-2 block"
+                  value={formData.phone}
+                  onChange={(value) => setFormData({ ...formData, phone: value })}
+                  error={formErrors.phone}
+                  inputClassName={`h-12 rounded-2xl border transition-colors ${
+                    formErrors.phone
+                      ? 'border-red-300 bg-red-50 focus:ring-red-300'
+                      : 'border-gray-200 focus:ring-[#31876D]/30 focus:border-[#31876D]/50'
+                  }`}
+                />
 
                 <div>
                   <Label htmlFor="iin" className="text-sm font-medium text-gray-700 mb-2 block">
@@ -813,20 +782,16 @@ const ClientSelector = ({
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bday" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Дата рождения {mode === MODE.LEGACY ? '' : '*'}
-                  </Label>
-                  <DatePicker
-                    placeholder=""
-                    value={formData.bday || ''}
-                    onChange={(value) => setFormData({ ...formData, bday: value || '' })}
-                    error={formErrors.bday}
-                    captionLayout="dropdown"
-                    allowFutureDates={false}
-                    variant="input"
-                  />
-                </div>
+                <DateField
+                  label={`Дата рождения${mode === MODE.LEGACY ? '' : ' *'}`}
+                  value={formData.bday || ''}
+                  onChange={(value) => setFormData({ ...formData, bday: value || '' })}
+                  error={formErrors.bday}
+                  captionLayout="dropdown"
+                  allowFutureDates={false}
+                  variant="account"
+                  required={mode !== MODE.LEGACY}
+                />
               </div>
 
               {mode === MODE.CREATE && (
@@ -893,15 +858,12 @@ const ClientSelector = ({
 
                   {bookingSummary && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-2">
-                      <Label className="text-sm font-medium text-gray-700 block">
-                        Дата начала брони (для графика платежей)
-                      </Label>
-                      <DatePicker
-                        placeholder=""
+                      <DateField
+                        label="Дата начала брони (для графика платежей)"
                         value={legacyBookingStartDate || ''}
                         onChange={(value) => setLegacyBookingStartDate(value || '')}
                         allowFutureDates
-                        variant="input"
+                        variant="account"
                         className="max-w-xs"
                       />
                       <p className="text-xs text-gray-500">
@@ -913,19 +875,17 @@ const ClientSelector = ({
 
                   <div className="max-w-md">
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">Тип оплаты</Label>
-                    <Select value={legacyPaymentType} onValueChange={handleLegacyPaymentTypeChange}>
-                      <SelectTrigger className="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-[#202422] text-base shadow-sm focus:ring-2 focus:ring-[#31876D]/30 focus:ring-offset-0 focus:border-[#31876D]/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border border-gray-200">
-                        <SelectItem value="MONTHLY" className="rounded-xl">
-                          Помесячно
-                        </SelectItem>
-                        <SelectItem value="FULL" className="rounded-xl">
-                          Полностью
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormSelect
+                      value={legacyPaymentType}
+                      onChange={handleLegacyPaymentTypeChange}
+                      options={[
+                        { value: 'MONTHLY', label: 'Помесячно' },
+                        { value: 'FULL', label: 'Полностью' },
+                      ]}
+                      triggerClassName="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-[#202422] text-base shadow-sm focus:ring-2 focus:ring-[#31876D]/30 focus:ring-offset-0 focus:border-[#31876D]/50"
+                      contentClassName="rounded-2xl border border-gray-200"
+                      itemClassName="rounded-xl"
+                    />
                   </div>
 
                   {isMonthlyLegacy && bookingSummary && (
@@ -997,11 +957,10 @@ const ClientSelector = ({
                           </div>
                           <div className="col-span-1 md:col-span-2">
                             <span className="text-xs text-gray-500">Статус</span>
-                            <select
+                            <FormSelect
                               value={row.status || 'UNPAID'}
-                              onChange={(e) => {
+                              onChange={(newStatus) => {
                                 const next = [...legacyOrderPayments];
-                                const newStatus = e.target.value;
                                 let paidAt = '';
                                 if (newStatus === 'UNPAID') {
                                   paidAt = '';
@@ -1018,18 +977,16 @@ const ClientSelector = ({
                                 };
                                 setLegacyOrderPayments(next);
                               }}
-                              className="w-full h-10 rounded-xl border border-gray-200 px-2 text-sm text-[#202422]"
-                            >
-                              <option value="PAID">Оплачено</option>
-                              <option value="UNPAID">К оплате</option>
-                            </select>
+                              options={[
+                                { value: 'PAID', label: 'Оплачено' },
+                                { value: 'UNPAID', label: 'К оплате' },
+                              ]}
+                              triggerClassName="w-full h-10 rounded-xl border border-gray-200 px-2 text-sm text-[#202422]"
+                            />
                           </div>
                           <div className="col-span-2 md:col-span-2">
-                            <span className="text-xs text-gray-500">
-                              Дата оплаты {row.status === 'PAID' ? '*' : '(только если оплачено)'}
-                            </span>
-                            <DatePicker
-                              placeholder=""
+                            <DateField
+                              label={`Дата оплаты ${row.status === 'PAID' ? '*' : '(только если оплачено)'}`}
                               value={row.paid_at || ''}
                               disabled={row.status !== 'PAID'}
                               onChange={(value) => {
@@ -1038,7 +995,7 @@ const ClientSelector = ({
                                 setLegacyOrderPayments(next);
                               }}
                               allowFutureDates
-                              variant="input"
+                              variant="account"
                             />
                           </div>
                           <div className="col-span-1 md:col-span-1">

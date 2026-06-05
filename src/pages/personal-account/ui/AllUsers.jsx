@@ -4,6 +4,39 @@ import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+
+const ARCHIVE_FILTER_OPTIONS = [
+  { value: 'active', label: 'Активные' },
+  { value: 'archived', label: 'Архивные' },
+];
+
+const ROLE_FILTER_OPTIONS = [
+  { value: '', label: 'Все роли' },
+  { value: 'ADMIN', label: 'Администратор' },
+  { value: 'MANAGER', label: 'Менеджер' },
+  { value: 'USER', label: 'Клиент' },
+  { value: 'COURIER', label: 'Курьер' },
+];
+
+const ITEMS_PER_PAGE_OPTIONS = [
+  { value: '10', label: '10' },
+  { value: '20', label: '20' },
+];
+
+const ROLE_OPTIONS = [
+  { value: 'ADMIN', label: 'Администратор' },
+  { value: 'MANAGER', label: 'Менеджер' },
+  { value: 'USER', label: 'Клиент' },
+  { value: 'COURIER', label: 'Курьер' },
+];
+
+const ROLE_OPTIONS_SHORT = [
+  { value: 'ADMIN', label: 'Админ' },
+  { value: 'MANAGER', label: 'Менеджер' },
+  { value: 'USER', label: 'Клиент' },
+  { value: 'COURIER', label: 'Курьер' },
+];
 const getUserProfilePath = (userId, staffRole) =>
   staffRole === 'ADMIN'
     ? `/admin/users/${userId}/profile`
@@ -538,27 +571,21 @@ const AllUsers = () => {
             </div>
           </div>
           <div className="w-full sm:w-44 md:w-48 flex-shrink-0">
-            <select
+            <FormSelect
               value={archiveStatusFilter}
-              onChange={(e) => setArchiveStatusFilter(e.target.value)}
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent transition-colors"
-            >
-              <option value="active">Активные</option>
-              <option value="archived">Архивные</option>
-            </select>
+              onChange={setArchiveStatusFilter}
+              options={ARCHIVE_FILTER_OPTIONS}
+              triggerClassName="h-auto px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg"
+            />
           </div>
           <div className="w-full sm:w-44 md:w-48 flex-shrink-0">
-            <select
+            <FormSelect
               value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent transition-colors"
-            >
-              <option value="">Все роли</option>
-              <option value="ADMIN">Администратор</option>
-              <option value="MANAGER">Менеджер</option>
-              <option value="USER">Клиент</option>
-              <option value="COURIER">Курьер</option>
-            </select>
+              onChange={setSelectedRole}
+              options={ROLE_FILTER_OPTIONS}
+              placeholder="Все роли"
+              triggerClassName="h-auto px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg"
+            />
           </div>
         </div>
 
@@ -566,14 +593,12 @@ const AllUsers = () => {
         <div className="flex flex-col sm:flex-row sm:flex-wrap justify-between items-stretch sm:items-center gap-3 mt-4 pt-4 border-t border-gray-100">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <span className="text-xs sm:text-sm font-medium text-gray-700">Показать:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-              className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-            </select>
+            <FormSelect
+              value={String(itemsPerPage)}
+              onChange={(value) => handleItemsPerPageChange(Number(value))}
+              options={ITEMS_PER_PAGE_OPTIONS}
+              triggerClassName="h-auto w-auto min-w-[4rem] px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg"
+            />
             <span className="text-xs sm:text-sm text-gray-700">записей</span>
           </div>
           
@@ -601,19 +626,15 @@ const AllUsers = () => {
                 </div>
                 <div className="flex-shrink-0">
                   {isAdmin ? (
-                    <select
+                    <FormSelect
                       value={user.role}
-                      onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
+                      onChange={(value) => handleRoleUpdate(user.id, value)}
+                      options={ROLE_OPTIONS_SHORT}
                       disabled={isUpdatingRole === user.id}
-                      className={`text-xs font-semibold px-2 py-1.5 rounded-lg transition-all ${getRoleClass(user.role, user.user_type)} ${
+                      triggerClassName={`h-auto w-auto text-xs font-semibold px-2 py-1.5 rounded-lg transition-all ${getRoleClass(user.role, user.user_type)} ${
                         isUpdatingRole === user.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
                       }`}
-                    >
-                      <option value="ADMIN">Админ</option>
-                      <option value="MANAGER">Менеджер</option>
-                      <option value="USER">Клиент</option>
-                      <option value="COURIER">Курьер</option>
-                    </select>
+                    />
                   ) : (
                     <span className={`inline-flex px-2 py-1.5 text-xs font-semibold rounded-lg ${getRoleClass(user.role, user.user_type)}`}>
                       {getRoleDisplayName(user.role, user.user_type)}
@@ -691,19 +712,15 @@ const AllUsers = () => {
                   </td>
                   <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
                     {isAdmin ? (
-                      <select
+                      <FormSelect
                         value={user.role}
-                        onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
+                        onChange={(value) => handleRoleUpdate(user.id, value)}
+                        options={ROLE_OPTIONS}
                         disabled={isUpdatingRole === user.id}
-                        className={`text-xs font-semibold px-3 py-2 rounded-lg transition-all ${getRoleClass(user.role, user.user_type)} ${
+                        triggerClassName={`h-auto w-auto text-xs font-semibold px-3 py-2 rounded-lg transition-all ${getRoleClass(user.role, user.user_type)} ${
                           isUpdatingRole === user.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
                         }`}
-                      >
-                        <option value="ADMIN">Администратор</option>
-                        <option value="MANAGER">Менеджер</option>
-                        <option value="USER">Клиент</option>
-                        <option value="COURIER">Курьер</option>
-                      </select>
+                      />
                     ) : (
                       <span className={`inline-flex px-3 py-2 text-xs font-semibold rounded-lg ${getRoleClass(user.role, user.user_type)}`}>
                         {getRoleDisplayName(user.role, user.user_type)}

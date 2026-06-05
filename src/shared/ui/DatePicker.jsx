@@ -227,6 +227,10 @@ const DatePicker = forwardRef(({
   const isGrayBackground = className.includes('[&>div]:bg-gray-100');
   const hasNoBorder = className.includes('[&>div]:border-0');
   const isInputVariant = variant === 'input';
+  const isAccountVariant = variant === 'account';
+  const isSlateVariant = variant === 'slate';
+  const isDarkVariant = variant === 'dark';
+  const isCompactVariant = isInputVariant || isAccountVariant || isSlateVariant || isDarkVariant;
 
   const showInternalLabel = Boolean(label || hasInlineLabel);
 
@@ -237,6 +241,35 @@ const DatePicker = forwardRef(({
     'focus:outline-none focus:ring-0 focus:ring-offset-0 ' +
     'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ' +
     'appearance-none';
+
+  const compactContainerClassName = cn(
+    'relative flex w-full items-center',
+    isInputVariant && 'h-12 rounded-2xl border border-gray-200 bg-white px-4 focus-within:ring-2 focus-within:ring-[#31876D]/30 focus-within:border-[#31876D]/50',
+    isAccountVariant && 'h-10 rounded-xl border border-gray-200 bg-white px-3 focus-within:ring-2 focus-within:ring-[#31876D]/20 focus-within:border-[#31876D]',
+    isSlateVariant && 'h-10 rounded-xl border border-slate-200 bg-white px-3 focus-within:ring-2 focus-within:ring-[#273655]/20 focus-within:border-[#273655]',
+    isDarkVariant && 'h-9 rounded-xl border border-white/30 bg-transparent px-3 focus-within:border-white/60',
+    error && 'border-red-500',
+    disabled && 'cursor-not-allowed opacity-50',
+    className.includes('[&_input]:bg-transparent') && !isDarkVariant && 'bg-transparent',
+  );
+
+  const compactInputClassName = cn(
+    inputResetClassName,
+    'h-full min-w-0 flex-1 pr-10',
+    isDarkVariant
+      ? 'text-sm text-white placeholder:text-white/60'
+      : 'text-sm text-[#273655] placeholder:text-gray-400',
+    disabled && 'cursor-not-allowed',
+  );
+
+  const compactCalendarButtonClassName = cn(
+    'absolute top-1/2 -translate-y-1/2 h-8 w-8 shrink-0 p-0 shadow-none hover:!-translate-y-1/2 transition-none',
+    isInputVariant ? 'right-2' : 'right-1',
+    isDarkVariant
+      ? 'text-white/90 hover:bg-white/10 hover:text-white'
+      : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900',
+    disabled && 'cursor-not-allowed opacity-50',
+  );
 
   const sharedInputProps = {
     ref: (node) => {
@@ -267,11 +300,14 @@ const DatePicker = forwardRef(({
           size="icon"
           disabled={disabled}
           className={cn(
-            'absolute top-1/2 -translate-y-1/2 h-8 w-8 shrink-0 p-0 shadow-none',
-            isInputVariant ? 'right-2' : 'right-1',
-            'hover:bg-gray-200 text-gray-600 hover:text-gray-900',
-            'hover:!-translate-y-1/2 transition-none',
-            disabled && 'cursor-not-allowed opacity-50'
+            isCompactVariant
+              ? compactCalendarButtonClassName
+              : cn(
+                  'absolute top-1/2 -translate-y-1/2 h-8 w-8 shrink-0 p-0 shadow-none',
+                  'right-1 hover:bg-gray-200 text-gray-600 hover:text-gray-900',
+                  'hover:!-translate-y-1/2 transition-none',
+                  disabled && 'cursor-not-allowed opacity-50',
+                ),
           )}
           onClick={(e) => {
             e.preventDefault();
@@ -358,32 +394,15 @@ const DatePicker = forwardRef(({
 
   return (
     <div className={cn('w-full', className)}>
-      {isInputVariant ? (
+      {isCompactVariant ? (
         <>
           {showInternalLabel && (
             <label className="text-sm font-medium text-[#273655] mb-1 block">
               {label || placeholder}
             </label>
           )}
-          <div
-            className={cn(
-              'relative flex h-12 w-full items-center rounded-2xl border border-gray-200 bg-white px-4',
-              'focus-within:ring-2 focus-within:ring-[#31876D]/30 focus-within:ring-offset-0 focus-within:border-[#31876D]/50',
-              error && 'border-red-500 border-2',
-              disabled && 'cursor-not-allowed opacity-50',
-              className.includes('[&_input]:bg-transparent') && 'bg-transparent'
-            )}
-          >
-            <input
-              {...sharedInputProps}
-              className={cn(
-                inputResetClassName,
-                'h-full min-w-0 flex-1',
-                'text-base font-sf-pro-text text-[#737373] placeholder:text-[#A6A6A6]',
-                'pr-10',
-                disabled && 'cursor-not-allowed'
-              )}
-            />
+          <div className={compactContainerClassName}>
+            <input {...sharedInputProps} className={compactInputClassName} />
             {calendarPopover}
           </div>
         </>

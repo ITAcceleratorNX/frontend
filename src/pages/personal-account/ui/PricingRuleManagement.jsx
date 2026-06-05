@@ -17,6 +17,32 @@ import {
   Layers,
   Warehouse
 } from 'lucide-react';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+import { DateField } from '@/shared/ui/DateField.jsx';
+
+const WAREHOUSE_FILTER_OPTIONS = [
+  { value: 'all', label: 'Все склады' },
+  { value: 'none', label: 'Без склада (все)' },
+];
+
+const STATUS_FILTER_OPTIONS = [
+  { value: 'all', label: 'Все статусы' },
+  { value: 'active', label: 'Активные' },
+  { value: 'inactive', label: 'Неактивные' },
+];
+
+const TIER_OPTIONS = [
+  { value: '', label: 'Все ярусы' },
+  { value: '1', label: '1 ярус' },
+  { value: '2', label: '2 ярус' },
+  { value: '3', label: '3 ярус' },
+];
+
+const PAYMENT_TYPE_OPTIONS = [
+  { value: '', label: 'Любой' },
+  { value: 'FULL', label: 'Полная оплата' },
+  { value: 'MONTHLY', label: 'Помесячно' },
+];
 
 const PricingRuleManagement = () => {
   const [rules, setRules] = useState([]);
@@ -276,18 +302,25 @@ const PricingRuleManagement = () => {
           <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Поиск по названию..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]" />
         </div>
-        <select value={warehouseFilter} onChange={(e) => setWarehouseFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]">
-          <option value="all">Все склады</option>
-          <option value="none">Без склада (все)</option>
-          {warehouses.map(wh => <option key={wh.id} value={String(wh.id)}>{wh.name}</option>)}
-        </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]">
-          <option value="all">Все статусы</option>
-          <option value="active">Активные</option>
-          <option value="inactive">Неактивные</option>
-        </select>
+        <FormSelect
+          value={warehouseFilter}
+          onChange={setWarehouseFilter}
+          options={[
+            ...WAREHOUSE_FILTER_OPTIONS,
+            ...warehouses.map((wh) => ({ value: String(wh.id), label: wh.name })),
+          ]}
+          placeholder="Все склады"
+          variant="slate"
+          triggerClassName="h-auto px-4 py-2 rounded-lg"
+        />
+        <FormSelect
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={STATUS_FILTER_OPTIONS}
+          placeholder="Все статусы"
+          variant="slate"
+          triggerClassName="h-auto px-4 py-2 rounded-lg"
+        />
       </div>
 
       {/* Таблица */}
@@ -406,24 +439,27 @@ const PricingRuleManagement = () => {
 
               {/* Склад и Ярус */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#273655] mb-1">Склад</label>
-                  <select value={formData.warehouse_id} onChange={(e) => setFormData({ ...formData, warehouse_id: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]">
-                    <option value="">Все склады</option>
-                    {warehouses.map(wh => <option key={wh.id} value={String(wh.id)}>{wh.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#273655] mb-1">Ярус</label>
-                  <select value={formData.tier} onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]">
-                    <option value="">Все ярусы</option>
-                    <option value="1">1 ярус</option>
-                    <option value="2">2 ярус</option>
-                    <option value="3">3 ярус</option>
-                  </select>
-                </div>
+                <FormSelect
+                  label="Склад"
+                  labelVariant="default"
+                  value={formData.warehouse_id}
+                  onChange={(value) => setFormData({ ...formData, warehouse_id: value })}
+                  options={[
+                    { value: '', label: 'Все склады' },
+                    ...warehouses.map((wh) => ({ value: String(wh.id), label: wh.name })),
+                  ]}
+                  placeholder="Все склады"
+                  variant="slate"
+                />
+                <FormSelect
+                  label="Ярус"
+                  labelVariant="default"
+                  value={formData.tier}
+                  onChange={(value) => setFormData({ ...formData, tier: value })}
+                  options={TIER_OPTIONS}
+                  placeholder="Все ярусы"
+                  variant="slate"
+                />
               </div>
 
               {/* Площадь */}
@@ -458,19 +494,16 @@ const PricingRuleManagement = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#273655] mb-1">Тип оплаты</label>
-                <select
-                  value={formData.payment_type}
-                  onChange={(e) => setFormData({ ...formData, payment_type: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                >
-                  <option value="">Любой</option>
-                  <option value="FULL">Полная оплата</option>
-                  <option value="MONTHLY">Помесячно</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Если не выбирать тип, правило будет действовать для любого способа оплаты</p>
-              </div>
+              <FormSelect
+                label="Тип оплаты"
+                labelVariant="default"
+                value={formData.payment_type}
+                onChange={(value) => setFormData({ ...formData, payment_type: value })}
+                options={PAYMENT_TYPE_OPTIONS}
+                placeholder="Любой"
+                variant="slate"
+              />
+              <p className="text-xs text-gray-500 mt-1">Если не выбирать тип, правило будет действовать для любого способа оплаты</p>
 
               {/* Тип цены */}
               <div>
@@ -530,16 +563,20 @@ const PricingRuleManagement = () => {
 
               {/* Период действия */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#273655] mb-1">Дата начала</label>
-                  <input type="date" value={formData.valid_from} onChange={(e) => setFormData({ ...formData, valid_from: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#273655] mb-1">Дата окончания</label>
-                  <input type="date" value={formData.valid_until} onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]" />
-                </div>
+                <DateField
+                  label="Дата начала"
+                  value={formData.valid_from}
+                  onChange={(v) => setFormData({ ...formData, valid_from: v })}
+                  variant="account"
+                  allowFutureDates
+                />
+                <DateField
+                  label="Дата окончания"
+                  value={formData.valid_until}
+                  onChange={(v) => setFormData({ ...formData, valid_until: v })}
+                  variant="account"
+                  allowFutureDates
+                />
               </div>
 
               {/* Активен */}

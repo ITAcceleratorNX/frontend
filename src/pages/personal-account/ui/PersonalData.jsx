@@ -4,7 +4,7 @@ import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import Input from '../../../shared/ui/Input';
-import DatePicker from '../../../shared/ui/DatePicker';
+import { DateField } from '@/shared/ui/DateField.jsx';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
@@ -13,6 +13,12 @@ import { Lock, User, CheckCircle2, LogOut } from 'lucide-react';
 import IinTooltip from '../../../shared/ui/IinTooltip';
 import { usersApi } from '../../../shared/api/usersApi';
 import { getApiErrorMessage } from '../../../shared/lib/utils/apiErrorMessage';
+import {
+  formatPhoneNumber,
+  formatPhoneForDisplay,
+  normalizePhoneForSubmit,
+  RHF_PHONE_RULES,
+} from '../../../shared/lib/phone';
 import {
   Dialog,
   DialogContent,
@@ -36,64 +42,6 @@ const PersonalData = memo(({ embeddedMobile = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-
-  // Функция форматирования номера телефона
-  const formatPhoneNumber = (value) => {
-    // Удаляем все символы кроме цифр
-    const numbers = value.replace(/\D/g, '');
-    
-    // Если начинается с 8, заменяем на 7
-    let cleaned = numbers;
-    if (cleaned.startsWith('8')) {
-      cleaned = '7' + cleaned.slice(1);
-    }
-    
-    // Если не начинается с 7, добавляем 7
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    
-    // Ограничиваем до 11 цифр (7 + 10 цифр)
-    cleaned = cleaned.slice(0, 11);
-    
-    // Форматируем в формат +7 (XXX) XXX-XX-XX
-    let formatted = '';
-    if (cleaned.length > 0) {
-      formatted = '+7';
-      if (cleaned.length > 1) {
-        formatted += ' (' + cleaned.slice(1, 4);
-      }
-      if (cleaned.length > 4) {
-        formatted += ') ' + cleaned.slice(4, 7);
-      }
-      if (cleaned.length > 7) {
-        formatted += '-' + cleaned.slice(7, 9);
-      }
-      if (cleaned.length > 9) {
-        formatted += '-' + cleaned.slice(9, 11);
-      }
-      if (cleaned.length > 4 && cleaned.length <= 7) {
-        formatted += ')';
-      }
-    }
-    
-    return formatted;
-  };
-
-  // Функция для преобразования телефона в формат для отображения
-  const formatPhoneForDisplay = (phone) => {
-    if (!phone) return '';
-    // Удаляем все символы кроме цифр
-    const numbers = phone.replace(/\D/g, '');
-    // Если номер начинается с 8, заменяем на 7
-    let cleaned = numbers.startsWith('8') ? '7' + numbers.slice(1) : numbers;
-    // Если не начинается с 7, добавляем 7
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    // Форматируем
-    return formatPhoneNumber(cleaned);
-  };
 
   // Функция для парсинга адреса из строки в отдельные компоненты
   const parseAddress = (addressStr) => {
@@ -200,21 +148,6 @@ const PersonalData = memo(({ embeddedMobile = false }) => {
   }, [location.state, navigate, location.pathname]);
 
 
-
-  // Функция для преобразования отформатированного телефона в формат для отправки на сервер
-  const normalizePhoneForSubmit = (phone) => {
-    if (!phone) return '';
-    // Удаляем все символы кроме цифр
-    const numbers = phone.replace(/\D/g, '');
-    // Если начинается с 8, заменяем на 7
-    let cleaned = numbers.startsWith('8') ? '7' + numbers.slice(1) : numbers;
-    // Если не начинается с 7, добавляем 7
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    // Возвращаем в формате +7XXXXXXXXXX
-    return cleaned.startsWith('7') ? '+7' + cleaned.slice(1) : cleaned;
-  };
 
   // Мемоизируем функцию обработки обновления данных пользователя
   const onSubmit = async (formData) => {
@@ -511,12 +444,8 @@ const PersonalData = memo(({ embeddedMobile = false }) => {
                       type="tel"
                       disabled={!isEditing}
                       {...register('phone', {
-                        required: 'Телефон обязателен для заполнения',
-                        pattern: {
-                          value: /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/,
-                          message: 'Номер телефона должен быть в формате +7 (XXX) XXX-XX-XX'
-                        },
-                        onChange: handlePhoneChange
+                        ...RHF_PHONE_RULES,
+                        onChange: handlePhoneChange,
                       })}
                       error={errors.phone?.message}
                       className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 flex-1' : 'bg-white rounded-lg flex-1'}
@@ -658,19 +587,15 @@ const PersonalData = memo(({ embeddedMobile = false }) => {
                       }
                     }}
                     render={({ field }) => (
-                      <DatePicker
-                        placeholder=""
+                      <DateField
                         disabled={!isEditing}
                         value={field.value || ''}
-                        onChange={(value) => {
-                          field.onChange(value);
-                        }}
+                        onChange={field.onChange}
                         onBlur={field.onBlur}
                         error={errors.bday?.message}
                         captionLayout="dropdown"
-                        className={embeddedMobile
-                          ? 'w-full [&>div]:border-0 [&>div]:rounded-[25px] [&>div]:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] [&>div]:bg-white [&>div]:min-h-[42px] [&>div]:p-0 [&>div]:px-4 [&>div]:py-2.5'
-                          : 'w-full [&>div]:rounded-lg [&>div]:bg-white [&>div]:border-gray-300 [&>div]:min-h-[42px] [&>div]:p-0 [&>div]:px-4 [&>div]:py-2.5 [&>div]:min-h-[42px]'}
+                        allowFutureDates={false}
+                        variant={embeddedMobile ? 'input' : 'account'}
                       />
                     )}
                   />

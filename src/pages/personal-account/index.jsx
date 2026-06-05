@@ -237,11 +237,11 @@ const PersonalAccountPage = memo(() => {
     // Если не загрузка и пользователь аутентифицирован, показываем контент
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-w-0">
         {!isMobile && (
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
         )}
-        <main className={`flex-1 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 max-w-full mx-auto bg-gray-50`}>
+        <main className="flex-1 min-w-0 overflow-x-hidden px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 max-w-full mx-auto bg-gray-50">
           {isMobile && (
             <MobileSidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           )}

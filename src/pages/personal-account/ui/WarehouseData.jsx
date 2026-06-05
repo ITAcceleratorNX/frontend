@@ -1,20 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {showInfoToast, showSuccessToast, showErrorToast} from '../../../shared/lib/toast';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
 import Sidebar from './Sidebar';
 import WarehouseCanvasViewer from '../../../shared/components/WarehouseCanvasViewer';
 import WarehouseSVGMap from '../../../components/WarehouseSVGMap';
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue
-} from '../../../components/ui';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
 import { X, Info, User } from 'lucide-react';
 import { Dropdown } from '../../../shared/components/Dropdown';
@@ -43,6 +37,17 @@ import shinaImg from '../../../assets/cloud-tariffs/shina.png';
 import sunukImg from '../../../assets/cloud-tariffs/sunuk.png';
 import garazhImg from '../../../assets/cloud-tariffs/garazh.png';
 import skladImg from '../../../assets/cloud-tariffs/sklad.png';
+
+const BULK_TIER_OPTIONS = [
+  { value: '', label: 'Все ярусы' },
+  { value: '1', label: '1' },
+  { value: '2', label: '2' },
+];
+
+const WAREHOUSE_STATUS_OPTIONS = [
+  { value: 'AVAILABLE', label: 'Активный' },
+  { value: 'UNAVAILABLE', label: 'Неактивный' },
+];
 
 const MOVING_SERVICE_ESTIMATE = 7000;
 const PACKING_SERVICE_ESTIMATE = 4000;
@@ -181,6 +186,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     handleSubmit,
     reset,
     getValues,
+    control,
     formState: { errors, isDirty }
   } = useForm();
 
@@ -1523,18 +1529,13 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                 </svg>
                 {warehouse && isAdminOrManager && allWarehouses.length > 1 ? (
-                  <Select value={String(warehouseId)} onValueChange={handleWarehouseChange}>
-                    <SelectTrigger className="w-full min-w-[200px] max-w-[280px] border-gray-300 rounded-lg text-base font-semibold text-gray-900">
-                      <SelectValue placeholder="Выберите склад" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allWarehouses.map((w) => (
-                        <SelectItem key={w.id} value={String(w.id)}>
-                          {w.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormSelect
+                    value={String(warehouseId)}
+                    onChange={handleWarehouseChange}
+                    options={allWarehouses.map((w) => ({ value: String(w.id), label: w.name }))}
+                    placeholder="Выберите склад"
+                    triggerClassName="w-full min-w-[200px] max-w-[280px] h-auto border-gray-300 rounded-lg text-base font-semibold text-gray-900"
+                  />
                 ) : (
                   <h1 className="text-2xl font-bold text-gray-900">{warehouse?.name}</h1>
                 )}
@@ -1599,31 +1600,29 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                   </div>
 
                   <div className="p-6 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Склад</label>
-                      <select
-                        value={bulkPriceWarehouseId || ''}
-                        onChange={(e) => setBulkPriceWarehouseId(e.target.value)}
-                        className="w-full md:w-72 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
-                      >
-                        <option value="">Текущий склад</option>
-                        {allWarehouses.map(w => (
-                          <option key={w.id} value={String(w.id)}>{w.name}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <FormSelect
+                      label="Склад"
+                      labelVariant="default"
+                      value={bulkPriceWarehouseId || ''}
+                      onChange={setBulkPriceWarehouseId}
+                      options={[
+                        { value: '', label: 'Текущий склад' },
+                        ...allWarehouses.map((w) => ({ value: String(w.id), label: w.name })),
+                      ]}
+                      placeholder="Текущий склад"
+                      triggerClassName="h-auto w-full md:w-72"
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Ярус (tier)</label>
-                        <select
+                        <FormSelect
+                          label="Ярус (tier)"
+                          labelVariant="default"
                           value={bulkPriceTier}
-                          onChange={(e) => setBulkPriceTier(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:border-transparent"
-                        >
-                          <option value="">Все ярусы</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                        </select>
+                          onChange={setBulkPriceTier}
+                          options={BULK_TIER_OPTIONS}
+                          placeholder="Все ярусы"
+                          triggerClassName="h-auto"
+                        />
                         <p className="text-xs text-gray-500 mt-1">Пусто = все ярусы</p>
                       </div>
 
@@ -1838,18 +1837,20 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
                             )}
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Статус
-                            </label>
-                            <select
-                              {...register('status')}
-                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#273655] focus:border-transparent transition-colors"
-                            >
-                              <option value="AVAILABLE">Активный</option>
-                              <option value="UNAVAILABLE">Неактивный</option>
-                            </select>
-                          </div>
+                          <Controller
+                            name="status"
+                            control={control}
+                            render={({ field }) => (
+                              <FormSelect
+                                label="Статус"
+                                labelVariant="default"
+                                value={field.value}
+                                onChange={field.onChange}
+                                options={WAREHOUSE_STATUS_OPTIONS}
+                                variant="account"
+                              />
+                            )}
+                          />
                         </div>
 
                         <div>

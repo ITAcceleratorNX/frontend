@@ -4,7 +4,7 @@ import { useNotifications } from '../../../../shared/lib/hooks/use-notifications
 import UserNotifications from './UserNotifications';
 import { Input } from '../../../../components/ui/input';
 import { Button } from '../../../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { Card, CardContent } from '../../../../components/ui/card';
 
 const CourierNotifications = () => {
@@ -168,27 +168,29 @@ const CourierNotifications = () => {
                 />
               </div>
               <div className="flex flex-wrap gap-2 sm:gap-3">
-                <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="w-full sm:w-[140px] rounded-lg border-gray-200">
-                    <SelectValue placeholder="Все типы" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Все типы</SelectItem>
-                    <SelectItem value="general">Общие</SelectItem>
-                    <SelectItem value="payment">Платежи</SelectItem>
-                    <SelectItem value="contract">Договоры</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterRead} onValueChange={setFilterRead}>
-                  <SelectTrigger className="w-full sm:w-[140px] rounded-lg border-gray-200">
-                    <SelectValue placeholder="Все статусы" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Все статусы</SelectItem>
-                    <SelectItem value="false">Непрочитанные</SelectItem>
-                    <SelectItem value="true">Прочитанные</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormSelect
+                  value={filterType}
+                  onChange={setFilterType}
+                  options={[
+                    { value: 'all', label: 'Все типы' },
+                    { value: 'general', label: 'Общие' },
+                    { value: 'payment', label: 'Платежи' },
+                    { value: 'contract', label: 'Договоры' },
+                  ]}
+                  placeholder="Все типы"
+                  triggerClassName="w-full sm:w-[140px]"
+                />
+                <FormSelect
+                  value={filterRead}
+                  onChange={setFilterRead}
+                  options={[
+                    { value: 'all', label: 'Все статусы' },
+                    { value: 'false', label: 'Непрочитанные' },
+                    { value: 'true', label: 'Прочитанные' },
+                  ]}
+                  placeholder="Все статусы"
+                  triggerClassName="w-full sm:w-[140px]"
+                />
                 <Button
                   onClick={applyFilters}
                   disabled={!hasUnappliedChanges}

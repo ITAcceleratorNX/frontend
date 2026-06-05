@@ -2,9 +2,23 @@
  * Kazakhstan mobile phone: same formatting as registration (+7 (XXX) XXX-XX-XX).
  */
 
-/** Matches formatted display used in RegisterForm validation */
+/** Matches formatted display used across the app (+7 (XXX) XXX-XX-XX and spaced variants). */
 export const KZ_PHONE_DISPLAY_REGEX =
-  /^\+7\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/;
+  /^\+7\s?\(?\d{3}\)?\s?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
+
+export const KZ_PHONE_REQUIRED_MESSAGE = 'Телефон обязателен для заполнения';
+
+export const KZ_PHONE_INVALID_MESSAGE =
+  'Номер телефона должен быть в формате +7 (XXX) XXX-XX-XX';
+
+/** Rules for react-hook-form `register('phone', RHF_PHONE_RULES)` */
+export const RHF_PHONE_RULES = {
+  required: KZ_PHONE_REQUIRED_MESSAGE,
+  pattern: {
+    value: KZ_PHONE_DISPLAY_REGEX,
+    message: KZ_PHONE_INVALID_MESSAGE,
+  },
+};
 
 /**
  * @param {string} value
@@ -58,6 +72,31 @@ export function formatPhoneNumber(value) {
  */
 export function isValidKzPhoneDisplay(value) {
   return KZ_PHONE_DISPLAY_REGEX.test(value || '');
+}
+
+/**
+ * Formats stored/API phone (+7XXXXXXXXXX) for display in inputs.
+ * @param {string} phone
+ * @returns {string}
+ */
+export function formatPhoneForDisplay(phone) {
+  if (!phone) return '';
+  const numbers = phone.replace(/\D/g, '');
+  let cleaned = numbers.startsWith('8') ? `7${numbers.slice(1)}` : numbers;
+  if (cleaned && !cleaned.startsWith('7')) cleaned = `7${cleaned}`;
+  return formatPhoneNumber(cleaned);
+}
+
+/**
+ * @param {string} value
+ * @param {{ required?: boolean }} [opts]
+ * @returns {string|null} error message or null if valid
+ */
+export function validateKzPhone(value, { required = false } = {}) {
+  if (!value || !String(value).trim()) {
+    return required ? KZ_PHONE_REQUIRED_MESSAGE : null;
+  }
+  return isValidKzPhoneDisplay(value) ? null : KZ_PHONE_INVALID_MESSAGE;
 }
 
 /**

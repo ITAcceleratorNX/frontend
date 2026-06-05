@@ -24,6 +24,7 @@ import WarehouseData from './WarehouseData';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { Search, Filter, ChevronRight, Plus, RotateCcw, ClipboardList, Users, CheckCircle2, Clock, Zap, Undo2, X, CreditCard, FileText, Package, ArrowLeft, ArrowRight, Archive } from 'lucide-react';
 import { CONTRACT_EXPIRY_STATUS, getOrderContractExpiry } from '../../../shared/lib/orderContractExpiry';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
 // Функция для расчета месяцев аренды
 const calculateRentalMonths = (startDate, endDate) => {
@@ -731,44 +732,35 @@ const OrderManagement = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-4">
-            <select
+            <FormSelect
               value={warehouseFilter}
-              onChange={(e) => setWarehouseFilter(e.target.value)}
-              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20"
-            >
-              <option value="ALL">Все склады</option>
-              {warehouseFilterOptions.map((warehouse) => (
-                <option key={warehouse.value} value={warehouse.value}>
-                  {warehouse.label}
-                </option>
-              ))}
-            </select>
+              onChange={setWarehouseFilter}
+              options={[
+                { value: 'ALL', label: 'Все склады' },
+                ...warehouseFilterOptions,
+              ]}
+              placeholder="Все склады"
+            />
 
-            <select
+            <FormSelect
               value={storageTypeFilter}
-              onChange={(e) => setStorageTypeFilter(e.target.value)}
-              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20"
-            >
-              <option value="ALL">Все типы хранения</option>
-              {storageTypeOptions.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
+              onChange={setStorageTypeFilter}
+              options={[
+                { value: 'ALL', label: 'Все типы хранения' },
+                ...storageTypeOptions,
+              ]}
+              placeholder="Все типы хранения"
+            />
 
-            <select
+            <FormSelect
               value={tierFilter}
-              onChange={(e) => setTierFilter(e.target.value)}
-              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20"
-            >
-              <option value="ALL">Все ярусы</option>
-              {tierOptions.map((tier) => (
-                <option key={tier} value={tier}>
-                  {tier} ярус
-                </option>
-              ))}
-            </select>
+              onChange={setTierFilter}
+              options={[
+                { value: 'ALL', label: 'Все ярусы' },
+                ...tierOptions.map((tier) => ({ value: tier, label: `${tier} ярус` })),
+              ]}
+              placeholder="Все ярусы"
+            />
 
             <Input
               value={boxOrLocationFilter}
@@ -777,17 +769,9 @@ const OrderManagement = () => {
               placeholder="Номер бокса / место хранения"
             />
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="h-10 rounded-xl border border-gray-200 px-3 text-sm text-gray-700 focus:border-[#00A991] focus:outline-none focus:ring-2 focus:ring-[#00A991]/20 lg:col-span-2"
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div className="lg:col-span-2">
+              <FormSelect value={sortBy} onChange={setSortBy} options={SORT_OPTIONS} />
+            </div>
           </div>
 
           {/* Информация о фильтрации */}

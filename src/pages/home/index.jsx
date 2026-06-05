@@ -20,7 +20,7 @@ import {
   TabsContent,
   Switch,
 } from "../../components/ui";
-import DatePicker from "../../shared/ui/DatePicker";
+import { DateField } from '@/shared/ui/DateField.jsx';
 import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import { getTodayLocalDateString } from "../../shared/lib/utils/date";
 
@@ -2894,15 +2894,13 @@ const HomePage = memo(({
                 <div className="flex flex-col order-2 lg:order-2 lg:pt-14">
                   {/* Дата начала бронирования */}
                   <div className="mb-3">
-                    <DatePicker
+                    <DateField
+                      label="Дата начала бронирования"
                       value={cloudBookingStartDate}
-                      onChange={(value) => {
-                        setCloudBookingStartDate(value);
-                      }}
+                      onChange={setCloudBookingStartDate}
                       minDate={getTodayLocalDateString()}
-                      allowFutureDates={true}
-                      placeholder="Дата начала бронирования"
-                      className="[&>div]:bg-white [&>div]:border [&>div]:border-gray-200 [&>div]:rounded-2xl [&_input]:text-[#373737]"
+                      allowFutureDates
+                      variant="account"
                     />
                   </div>
 

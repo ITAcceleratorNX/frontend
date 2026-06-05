@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { submitLead, getRateLimitSecondsLeft } from '@/shared/lib/submitLead.js';
 import { trackEvent, LP_EVENTS } from '@/shared/lib/analytics.js';
-import { isValidKzPhoneDisplay, formatPhoneNumber } from '@/shared/lib/phone.js';
+import { validateKzPhone } from '@/shared/lib/phone.js';
+import { PhoneInput } from '@/shared/ui/PhoneInput.jsx';
 
 /**
  * Reusable phone-gating / mini-form for all 3 LPs.
@@ -75,8 +76,8 @@ export default function LeadForm({
     });
   }, [formId, variant, pageSection, serviceType]);
 
-  const handlePhoneChange = useCallback((e) => {
-    setPhone(formatPhoneNumber(e.target.value));
+  const handlePhoneChange = useCallback((value) => {
+    setPhone(value);
     setErrors((prev) => ({ ...prev, phone: undefined }));
   }, []);
 
@@ -88,7 +89,8 @@ export default function LeadForm({
   const validate = () => {
     const next = {};
     if (!name.trim() || name.trim().length < 2) next.name = 'Введите имя (минимум 2 символа)';
-    if (!isValidKzPhoneDisplay(phone)) next.phone = 'Введите номер +7 (___) ___-__-__';
+    const phoneError = validateKzPhone(phone, { required: true });
+    if (phoneError) next.phone = phoneError;
     if (showAgreement && !agreement) next.agreement = 'Нужно согласие на обработку данных';
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -198,24 +200,18 @@ export default function LeadForm({
         {errors.name && <span className="text-xs text-red-500">{errors.name}</span>}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`lp-phone-${formId}`} className="text-sm font-medium text-[#273655]">
-          Телефон
-        </label>
-        <input
-          id={`lp-phone-${formId}`}
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+7 (___) ___-__-__"
-          value={phone}
-          onChange={handlePhoneChange}
-          className={`h-12 w-full rounded-xl border bg-white px-4 text-[15px] text-[#273655] placeholder:text-[#9ba3b4] focus:outline-none focus:ring-2 focus:ring-[#31876D]/40 ${
-            errors.phone ? 'border-red-400' : 'border-[#d5d8e1]'
-          }`}
-        />
-        {errors.phone && <span className="text-xs text-red-500">{errors.phone}</span>}
-      </div>
+      <PhoneInput
+        id={`lp-phone-${formId}`}
+        label="Телефон"
+        labelClassName="text-sm font-medium text-[#273655]"
+        value={phone}
+        onChange={handlePhoneChange}
+        error={errors.phone}
+        variant="account"
+        inputClassName={`h-12 rounded-xl px-4 text-[15px] placeholder:text-[#9ba3b4] focus:ring-[#31876D]/40 ${
+          errors.phone ? 'border-red-400' : 'border-[#d5d8e1]'
+        }`}
+      />
 
       {showClientType && (
         <fieldset className="flex flex-col gap-2">

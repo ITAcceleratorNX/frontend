@@ -10,7 +10,8 @@ import { getOrCreateVisitorId } from '../../../shared/lib/utm';
 import loginLogo from '../../../assets/login-logo-66f0b4.png';
 import {
   formatPhoneNumber,
-  KZ_PHONE_DISPLAY_REGEX,
+  validateKzPhone,
+  RHF_PHONE_RULES,
 } from '../../../shared/lib/phone';
 
 export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSelector = true }) => {
@@ -95,7 +96,7 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
       return;
     }
 
-    if (!KZ_PHONE_DISPLAY_REGEX.test(phone)) {
+    if (validateKzPhone(phone, { required: true })) {
       showErrorToast('Введите корректный номер телефона');
       return;
     }
@@ -365,12 +366,8 @@ export const RegisterLegalForm = ({ userType = 'LEGAL', setUserType, showTypeSel
                         placeholder="+7 (___) ___-__-__"
                         disabled={isLoading}
                         {...register('phone', {
-                          required: 'Телефон обязателен',
-                          pattern: {
-                            value: KZ_PHONE_DISPLAY_REGEX,
-                            message: 'Введите корректный номер телефона'
-                          },
-                          onChange: handlePhoneChange
+                          ...RHF_PHONE_RULES,
+                          onChange: handlePhoneChange,
                         })}
                       />
                       

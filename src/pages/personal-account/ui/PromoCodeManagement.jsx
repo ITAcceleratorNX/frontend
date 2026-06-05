@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { promoApi } from '../../../shared/api/promoApi';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { formatCalendarDate, getTodayLocalDateString } from '../../../shared/lib/utils/date';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+import { DateField } from '@/shared/ui/DateField.jsx';
 import { 
   Plus, 
   Edit2, 
@@ -271,15 +273,17 @@ const PromoCodeManagement = () => {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
           />
         </div>
-        <select
+        <FormSelect
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-        >
-          <option value="all">Все статусы</option>
-          <option value="active">Активные</option>
-          <option value="inactive">Неактивные</option>
-        </select>
+          onChange={setStatusFilter}
+          options={[
+            { value: 'all', label: 'Все статусы' },
+            { value: 'active', label: 'Активные' },
+            { value: 'inactive', label: 'Неактивные' },
+          ]}
+          variant="account"
+          triggerClassName="w-full sm:w-[180px]"
+        />
       </div>
 
       {/* Таблица промокодов */}
@@ -507,28 +511,20 @@ const PromoCodeManagement = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#273655] mb-1">
-                    Дата начала
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.valid_from}
-                    onChange={(e) => setFormData({ ...formData, valid_from: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#273655] mb-1">
-                    Дата окончания
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.valid_until}
-                    onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#273655]"
-                  />
-                </div>
+                <DateField
+                  label="Дата начала"
+                  value={formData.valid_from}
+                  onChange={(v) => setFormData({ ...formData, valid_from: v })}
+                  variant="account"
+                  allowFutureDates
+                />
+                <DateField
+                  label="Дата окончания"
+                  value={formData.valid_until}
+                  onChange={(v) => setFormData({ ...formData, valid_until: v })}
+                  variant="account"
+                  allowFutureDates
+                />
               </div>
 
               <div className="flex items-center gap-3">

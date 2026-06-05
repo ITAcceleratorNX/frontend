@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { statisticsApi } from '../../../shared/api/statisticsApi';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
 const INITIAL_FILTERS = {
   period: 'year',
@@ -960,39 +961,14 @@ const PieChart = ({ data, highlightedKey = 'all', totalCount }) => {
 };
 
 const FilterSelect = ({ label, value, onChange, options }) => (
-  <label className="flex flex-col gap-1 text-sm text-slate-500">
-    <span className="font-medium text-slate-600">{label}</span>
-    <select
-      value={value}
-      onChange={onChange}
-      className="rounded-xl border border-slate-200 px-4 py-2.5 text-slate-700 shadow-sm focus:border-[#273655] focus:outline-none focus:ring-2 focus:ring-[#273655]/20"
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  </label>
-);
-
-const InlineSelect = ({ value, onChange, options, placeholder }) => (
-  <select
+  <FormSelect
+    label={label}
     value={value}
     onChange={onChange}
-    className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-700 shadow-sm focus:border-[#273655] focus:outline-none focus:ring-2 focus:ring-[#273655]/20"
-  >
-    {placeholder ? (
-      <option value="all" hidden>
-        {placeholder}
-      </option>
-    ) : null}
-    {options.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
+    options={options}
+    variant="slate"
+    labelVariant="slate"
+  />
 );
 
 const Statistics = () => {
@@ -1084,8 +1060,7 @@ const Statistics = () => {
   const requestsMeta = requestsData?.meta || { total: 0, page: 1, pageSize: 50, totalPages: 0 };
   const logsMeta = logsData?.meta || { total: 0, page: 1, pageSize: 50, totalPages: 0 };
 
-  const handleFilterChange = (field) => (event) => {
-    const value = event.target.value;
+  const handleFilterChange = (field) => (value) => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
@@ -1535,10 +1510,11 @@ const Statistics = () => {
 
             {activeTab === 'requests' ? (
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <InlineSelect
+                <FormSelect
                   value={requestStatusFilter}
-                  onChange={(event) => setRequestStatusFilter(event.target.value)}
+                  onChange={setRequestStatusFilter}
                   options={REQUEST_STATUS_OPTIONS}
+                  variant="slate"
                 />
                 <div className="relative">
                   <input
@@ -1565,10 +1541,11 @@ const Statistics = () => {
               </div>
             ) : (
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <InlineSelect
+                <FormSelect
                   value={logTypeFilter}
-                  onChange={(event) => setLogTypeFilter(event.target.value)}
+                  onChange={setLogTypeFilter}
                   options={ACTION_TYPE_OPTIONS}
+                  variant="slate"
                 />
                 <div className="relative">
                   <input

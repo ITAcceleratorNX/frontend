@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../../shared/context/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -16,11 +17,17 @@ import {
 } from '@/shared/constants/manualLpLead.js';
 import { formStateToPayload } from '@/shared/constants/lpLeadProcessing.js';
 import LpLeadProcessingForm from './LpLeadProcessingForm.jsx';
+import { FormSelect, getFormInputClass } from '@/shared/ui/FormSelect.jsx';
+import { PhoneInput } from '@/shared/ui/PhoneInput.jsx';
+import { normalizePhoneForSubmit, validateKzPhone } from '@/shared/lib/phone.js';
 
-const selectClass =
-  'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#273655] focus:border-[#31876D] focus:outline-none focus:ring-2 focus:ring-[#31876D]/20 w-full';
+const LP_INPUT_CLASS = getFormInputClass('account');
+
+const EMPTY_OPTION = { value: '', label: 'Не выбрано' };
 
 const EMPTY_PROCESSING = {
+  client_type: '',
+  responsible_manager_id: '',
   lead_status: '',
   lead_quality: '',
   actual_interest: '',
@@ -44,24 +51,8 @@ function TextField({ label, value, onChange, type = 'text', placeholder }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={selectClass}
+        className={LP_INPUT_CLASS}
       />
-    </label>
-  );
-}
-
-function SelectField({ label, value, onChange, options }) {
-  return (
-    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-      {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
-        <option value="">Не выбрано</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
     </label>
   );
 }
@@ -69,12 +60,23 @@ function SelectField({ label, value, onChange, options }) {
 
 function CreateManualLeadModal({ open, onOpenChange, onCreated }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [leadChannel, setLeadChannel] = useState('');
   const [serviceType, setServiceType] = useState('');
   const [notes, setNotes] = useState('');
   const [processing, setProcessing] = useState(EMPTY_PROCESSING);
+  const [phoneError, setPhoneError] = useState('');
+
+  useEffect(() => {
+    if (open && user?.id) {
+      setProcessing((prev) => ({
+        ...prev,
+        responsible_manager_id: String(user.id),
+      }));
+    }
+  }, [open, user?.id]);
 
   const resetForm = () => {
     setName('');
@@ -82,7 +84,11 @@ function CreateManualLeadModal({ open, onOpenChange, onCreated }) {
     setLeadChannel('');
     setServiceType('');
     setNotes('');
-    setProcessing(EMPTY_PROCESSING);
+    setProcessing({
+      ...EMPTY_PROCESSING,
+      responsible_manager_id: user?.id ? String(user.id) : '',
+    });
+    setPhoneError('');
   };
 
   const setProcessingField = (key, value) => {
@@ -93,7 +99,7 @@ function CreateManualLeadModal({ open, onOpenChange, onCreated }) {
     mutationFn: () =>
       lpLeadsApi.createManualLandingPageLead({
         name: name.trim() || undefined,
-        phone: phone.trim() || undefined,
+        phone: phone.trim() ? normalizePhoneForSubmit(phone) : undefined,
         lead_channel: leadChannel || undefined,
         service_type: serviceType || undefined,
         notes: notes.trim() || undefined,
@@ -118,6 +124,16 @@ function CreateManualLeadModal({ open, onOpenChange, onCreated }) {
     onOpenChange(next);
   };
 
+  const handleSubmit = () => {
+    const error = phone.trim() ? validateKzPhone(phone, { required: true }) : null;
+    if (error) {
+      setPhoneError(error);
+      return;
+    }
+    setPhoneError('');
+    createMutation.mutate();
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl">
@@ -133,23 +149,29 @@ function CreateManualLeadModal({ open, onOpenChange, onCreated }) {
             <h3 className="text-sm font-semibold text-[#273655] mb-3">Базовые данные лида</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <TextField label="Имя клиента" value={name} onChange={setName} placeholder="Иван" />
-              <TextField
+              <PhoneInput
                 label="Телефон"
                 value={phone}
-                onChange={setPhone}
-                placeholder="+7 …"
+                onChange={(value) => {
+                  setPhone(value);
+                  setPhoneError('');
+                }}
+                error={phoneError}
+                variant="account"
               />
-              <SelectField
+              <FormSelect
                 label="Источник лида"
                 value={leadChannel}
                 onChange={setLeadChannel}
-                options={LEAD_CHANNEL_OPTIONS}
+                options={[EMPTY_OPTION, ...LEAD_CHANNEL_OPTIONS]}
+                variant="account"
               />
-              <SelectField
+              <FormSelect
                 label="Услуга / интерес"
                 value={serviceType}
                 onChange={setServiceType}
-                options={MANUAL_SERVICE_TYPE_OPTIONS}
+                options={[EMPTY_OPTION, ...MANUAL_SERVICE_TYPE_OPTIONS]}
+                variant="account"
               />
               <label className="flex flex-col gap-1 text-xs font-medium text-gray-600 sm:col-span-2">
                 Комментарий менеджера
@@ -157,7 +179,7 @@ function CreateManualLeadModal({ open, onOpenChange, onCreated }) {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  className={`${selectClass} resize-y min-h-[72px]`}
+                  className={`${LP_INPUT_CLASS} h-auto min-h-[72px] resize-y py-2`}
                   placeholder="Кратко о сути обращения…"
                 />
               </label>
@@ -180,7 +202,7 @@ function CreateManualLeadModal({ open, onOpenChange, onCreated }) {
           </button>
           <button
             type="button"
-            onClick={() => createMutation.mutate()}
+            onClick={handleSubmit}
             disabled={createMutation.isPending}
             className="rounded-xl bg-[#31876D] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a735c] disabled:opacity-60"
           >

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { FormSelect } from "@/shared/ui/FormSelect.jsx"
 import { CalendarIcon, Plus, Trash2, Package, Truck } from "lucide-react"
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
@@ -816,19 +816,17 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-end min-w-0">
                                     <div className="flex-1 min-w-0">
                                         <Label className="text-xs sm:text-sm font-medium text-[#273655] mb-1.5 sm:mb-2 block">Тип груза</Label>
-                                        <Select
+                                        <FormSelect
                                             value={item.cargo_mark}
-                                            onValueChange={(value) => updateOrderItem(index, "cargo_mark", value)}
-                                        >
-                                            <SelectTrigger className="h-11 sm:h-12 rounded-2xl sm:rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20">
-                                                <SelectValue placeholder="Выберите тип" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="NO">Обычный</SelectItem>
-                                                <SelectItem value="HEAVY">Тяжелый</SelectItem>
-                                                <SelectItem value="FRAGILE">Хрупкий</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                            onChange={(value) => updateOrderItem(index, "cargo_mark", value)}
+                                            options={[
+                                                { value: "NO", label: "Обычный" },
+                                                { value: "HEAVY", label: "Тяжелый" },
+                                                { value: "FRAGILE", label: "Хрупкий" },
+                                            ]}
+                                            placeholder="Выберите тип"
+                                            triggerClassName="h-11 sm:h-12 rounded-2xl sm:rounded-3xl border-[#d7dbe6] focus:border-[#00A991] focus:ring-2 focus:ring-[#00A991]/20"
+                                        />
                                     </div>
                                     {formData.order_items.length > 1 && (
                                         <Button
@@ -899,19 +897,20 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                             </div>
                                             <div className="min-w-0">
                                                 <Label className="text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2 block">Тип перевозки</Label>
-                                                <Select value={`${mo.status}:${mo.direction || 'TO_WAREHOUSE'}`} onValueChange={(value) => {
-                                                    const [status, direction] = value.split(':');
-                                                    updateMovingOrder(index, "status", status);
-                                                    updateMovingOrder(index, "direction", direction);
-                                                }}>
-                                                    <SelectTrigger className="h-11 sm:h-12 rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white min-w-0">
-                                                        <SelectValue placeholder="Выберите тип" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="PENDING:TO_WAREHOUSE">Забрать вещи (от клиента)</SelectItem>
-                                                        <SelectItem value="PENDING:TO_CLIENT">Доставить вещи (клиенту)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                                                <FormSelect
+                                                    value={`${mo.status}:${mo.direction || 'TO_WAREHOUSE'}`}
+                                                    onChange={(value) => {
+                                                        const [status, direction] = value.split(':');
+                                                        updateMovingOrder(index, "status", status);
+                                                        updateMovingOrder(index, "direction", direction);
+                                                    }}
+                                                    options={[
+                                                        { value: "PENDING:TO_WAREHOUSE", label: "Забрать вещи (от клиента)" },
+                                                        { value: "PENDING:TO_CLIENT", label: "Доставить вещи (клиенту)" },
+                                                    ]}
+                                                    placeholder="Выберите тип"
+                                                    triggerClassName="h-11 sm:h-12 rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white min-w-0"
+                                                />
                                             </div>
                                             <div className="sm:col-span-2 lg:col-span-1 min-w-0">
                                                 <Label className="text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2 block">Адрес</Label>
@@ -997,31 +996,19 @@ export const EditOrderModal = ({ isOpen, order, onSuccess, onCancel }) => {
                                                         <div className="flex flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 rounded-2xl sm:rounded-3xl border border-white bg-white/10 px-3 sm:px-4 py-3">
                                                             <div className="flex-1 min-w-0 w-full sm:min-w-[180px] sm:w-auto">
                                                                 <Label className="text-xs text-white/90 mb-1 block">Услуга</Label>
-                                                                <Select
+                                                                <FormSelect
                                                                     value={service.service_id}
-                                                                    onValueChange={(val) => !isGazelle && updateService(index, "service_id", val)}
+                                                                    onChange={(val) => !isGazelle && updateService(index, "service_id", val)}
                                                                     disabled={isGazelle}
-                                                                >
-                                                                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white min-w-0" disabled={isGazelle}>
-                                                                        <SelectValue placeholder={getServiceTypeName(service.type)} />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        {prices
-                                                                            .filter(price => {
-                                                                                // Скрываем старый GAZELLE
-                                                                                if (price.type === "GAZELLE") return false;
-                                                                                return true;
-                                                                            })
-                                                                            .map((price) => (
-                                                                                <SelectItem
-                                                                                    key={price.id}
-                                                                                    value={String(price.id)}
-                                                                                >
-                                                                                    {getServiceTypeName(price.type) || formatServiceDescription(price.description) || "Услуга"} (₸{price.price})
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                    </SelectContent>
-                                                                </Select>
+                                                                    options={prices
+                                                                        .filter((price) => price.type !== "GAZELLE")
+                                                                        .map((price) => ({
+                                                                            value: String(price.id),
+                                                                            label: `${getServiceTypeName(price.type) || formatServiceDescription(price.description) || "Услуга"} (₸${price.price})`,
+                                                                        }))}
+                                                                    placeholder={getServiceTypeName(service.type)}
+                                                                    triggerClassName="h-9 sm:h-10 text-xs sm:text-sm rounded-2xl sm:rounded-3xl bg-white/10 border-white text-white min-w-0"
+                                                                />
                                                             </div>
                                                             <div className="w-20 sm:w-24 min-w-0 flex-shrink-0">
                                                                 <Label className="text-xs text-white/90 mb-1 block">Кол-во</Label>

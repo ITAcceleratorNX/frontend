@@ -151,6 +151,17 @@ export const usersApi = {
     }
   },
 
+  // Получение списка менеджеров (для ADMIN и MANAGER)
+  getManagers: async () => {
+    try {
+      const response = await api.get('/users/manager');
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при загрузке менеджеров:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Получение списка курьеров (для ADMIN и MANAGER)
   getCouriers: async () => {
     try {

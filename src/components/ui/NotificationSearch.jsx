@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from './input';
 import { Button } from './button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { Calendar } from './calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { CalendarIcon, Search, X } from 'lucide-react';
@@ -133,62 +133,47 @@ export const NotificationSearch = ({ onSearch, onClear, isLoading = false }) => 
       {/* Расширенные фильтры */}
       {showAdvanced && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Тип уведомления */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Тип уведомления</label>
-            <Select
-              value={searchParams.notification_type}
-              onValueChange={(value) => handleInputChange('notification_type', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Все типы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
-                <SelectItem value="general">Общие</SelectItem>
-                <SelectItem value="payment">Платежи</SelectItem>
-                <SelectItem value="contract">Договоры</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormSelect
+            label="Тип уведомления"
+            labelVariant="default"
+            value={searchParams.notification_type}
+            onChange={(value) => handleInputChange('notification_type', value)}
+            options={[
+              { value: 'all', label: 'Все типы' },
+              { value: 'general', label: 'Общие' },
+              { value: 'payment', label: 'Платежи' },
+              { value: 'contract', label: 'Договоры' },
+            ]}
+            placeholder="Все типы"
+          />
 
-          {/* Статус прочтения */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Статус</label>
-            <Select
-              value={searchParams.is_read}
-              onValueChange={(value) => handleInputChange('is_read', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Все статусы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="false">Непрочитанные</SelectItem>
-                <SelectItem value="true">Прочитанные</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormSelect
+            label="Статус"
+            labelVariant="default"
+            value={searchParams.is_read}
+            onChange={(value) => handleInputChange('is_read', value)}
+            options={[
+              { value: 'all', label: 'Все статусы' },
+              { value: 'false', label: 'Непрочитанные' },
+              { value: 'true', label: 'Прочитанные' },
+            ]}
+            placeholder="Все статусы"
+          />
 
-          {/* Роль пользователя */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Роль пользователя</label>
-            <Select
-              value={searchParams.user_role}
-              onValueChange={(value) => handleInputChange('user_role', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Все роли" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все роли</SelectItem>
-                <SelectItem value="USER">Пользователь</SelectItem>
-                <SelectItem value="MANAGER">Менеджер</SelectItem>
-                <SelectItem value="ADMIN">Администратор</SelectItem>
-                <SelectItem value="COURIER">Курьер</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormSelect
+            label="Роль пользователя"
+            labelVariant="default"
+            value={searchParams.user_role}
+            onChange={(value) => handleInputChange('user_role', value)}
+            options={[
+              { value: 'all', label: 'Все роли' },
+              { value: 'USER', label: 'Пользователь' },
+              { value: 'MANAGER', label: 'Менеджер' },
+              { value: 'ADMIN', label: 'Администратор' },
+              { value: 'COURIER', label: 'Курьер' },
+            ]}
+            placeholder="Все роли"
+          />
 
           {/* Дата от */}
           <div className="space-y-2">

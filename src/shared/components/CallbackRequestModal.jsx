@@ -6,7 +6,12 @@ import { Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccessToast, showErrorToast } from '../lib/toast';
 import api from '@/shared/api/axios.js';
-import { normalizePhoneForSubmit } from '@/shared/lib/phone.js';
+import {
+  validateKzPhone,
+  normalizePhoneForSubmit,
+  KZ_PHONE_INVALID_MESSAGE,
+} from '@/shared/lib/phone.js';
+import { PhoneInput } from '@/shared/ui/PhoneInput.jsx';
 
 export const DISPLAY_PHONE = '+7 778 391-14-25';
 export const TEL_LINK = 'tel:+77783911425';
@@ -15,42 +20,6 @@ const WHATSAPP_MESSAGE = encodeURIComponent('Здравствуйте! Хочу 
 export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE}?text=${WHATSAPP_MESSAGE}`;
 export const TELEGRAM_LINK =
   import.meta.env.VITE_TELEGRAM_URL || 'https://t.me/extraspacekz';
-
-const formatPhoneNumber = (value) => {
-  const numbers = value.replace(/\D/g, '');
-
-  let cleaned = numbers;
-  if (cleaned.startsWith('8')) {
-    cleaned = '7' + cleaned.slice(1);
-  }
-
-  if (cleaned && !cleaned.startsWith('7')) {
-    cleaned = '7' + cleaned;
-  }
-
-  cleaned = cleaned.slice(0, 11);
-
-  let formatted = '';
-  if (cleaned.length > 0) {
-    formatted = '+7';
-    if (cleaned.length > 1) {
-      formatted += ' ' + cleaned.slice(1, 4);
-    }
-    if (cleaned.length > 4) {
-      formatted += ' ' + cleaned.slice(4, 7);
-    }
-    if (cleaned.length > 7) {
-      formatted += ' ' + cleaned.slice(7, 9);
-    }
-    if (cleaned.length > 9) {
-      formatted += ' ' + cleaned.slice(9, 11);
-    }
-  }
-
-  return formatted;
-};
-
-const validatePhone = (phone) => /^\+7 \d{3} \d{3} \d{2} \d{2}$/.test(phone);
 
 const buildLeadPayload = (formData) => {
   const basePayload = {
@@ -98,10 +67,7 @@ const CallbackRequestModal = ({
   }, [open]);
 
   const handleInputChange = useCallback((field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: field === 'phone' ? formatPhoneNumber(value) : value,
-    }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   const handleSubmit = async (event) => {
@@ -112,8 +78,9 @@ const CallbackRequestModal = ({
       return;
     }
 
-    if (!validatePhone(formData.phone)) {
-      showErrorToast('Введите номер в формате +7 777 777 77 77');
+    const phoneError = validateKzPhone(formData.phone, { required: true });
+    if (phoneError) {
+      showErrorToast(phoneError || KZ_PHONE_INVALID_MESSAGE);
       return;
     }
 
@@ -170,20 +137,14 @@ const CallbackRequestModal = ({
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#273655]" htmlFor="callback-phone">
-                Телефон
-              </label>
-              <Input
-                id="callback-phone"
-                type="tel"
-                placeholder="+7 777 777 77 77"
-                value={formData.phone}
-                onChange={(event) => handleInputChange('phone', event.target.value)}
-                className="h-12 rounded-xl border border-[#d5d8e1] bg-white text-base text-[#273655] placeholder:text-[#B0B7C3]"
-                autoComplete="tel"
-              />
-            </div>
+            <PhoneInput
+              id="callback-phone"
+              label="Телефон"
+              labelClassName="text-sm font-medium text-[#273655]"
+              value={formData.phone}
+              onChange={(value) => handleInputChange('phone', value)}
+              inputClassName="h-12 rounded-xl border-[#d5d8e1] bg-white text-base text-[#273655] placeholder:text-[#B0B7C3]"
+            />
 
             <Button
               type="submit"

@@ -13,11 +13,19 @@ import {
   Plus,
 } from 'lucide-react';
 import { lpLeadsApi } from '@/shared/api/lpLeadsApi.js';
-import { getServiceDisplayLabel } from '@/shared/constants/manualLpLead.js';
+import {
+  getClientTypeLabel,
+  getLeadSourceDisplayLabel,
+  getServiceDisplayLabel,
+} from '@/shared/constants/manualLpLead.js';
 import { formatCalendarDateTime } from '@/shared/lib/utils/date.js';
 import { showErrorToast, showSuccessToast } from '@/shared/lib/toast.js';
 import LpLeadModal from './LpLeadModal.jsx';
 import CreateManualLeadModal from './CreateManualLeadModal.jsx';
+import { FormSelect, getFormInputClass } from '@/shared/ui/FormSelect.jsx';
+import { DateField } from '@/shared/ui/DateField.jsx';
+
+const LP_INPUT_CLASS = getFormInputClass('account');
 import {
   ACTUAL_INTEREST_FILTER_OPTIONS,
   LEAD_OUTCOME_FILTER_OPTIONS,
@@ -47,9 +55,9 @@ const SERVICE_FILTER_OPTIONS = [
 ];
 
 const CLIENT_FILTER_OPTIONS = [
-  { value: '', label: 'Все клиенты' },
-  { value: 'b2c', label: 'B2C (дом)' },
-  { value: 'b2b', label: 'B2B (бизнес)' },
+  { value: '', label: 'Все типы' },
+  { value: 'b2c', label: 'B2C' },
+  { value: 'b2b', label: 'B2B' },
 ];
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -304,29 +312,24 @@ function LpLeadsSection() {
     filterLeadOutcome ||
     filterRejectionReason;
 
-  const selectClass =
-    'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#273655] focus:border-[#31876D] focus:outline-none focus:ring-2 focus:ring-[#31876D]/20 min-w-0';
-
   const filterSelect = (label, value, onChange, options) => (
-    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-      {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
-        {options.map((o) => (
-          <option key={o.value || 'all'} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <FormSelect
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder="Все"
+      variant="account"
+    />
   );
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full min-w-0 max-w-full">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#202422] flex items-center gap-2">
             <ClipboardList className="w-8 h-8 text-[#31876D]" aria-hidden />
-            Заявки с лендингов
+            CRM
           </h1>
           <p className="text-sm text-gray-600 mt-1 max-w-xl">
             Контакты с форм LP-1, LP-2 и LP-3. Обработка лидов, фильтры и экспорт для анализа рекламы.
@@ -382,40 +385,32 @@ function LpLeadsSection() {
             setFilterRejectionReason,
             REJECTION_REASON_FILTER_OPTIONS,
           )}
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-            На странице
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className={selectClass}
-            >
-              {PAGE_SIZE_OPTIONS.map((n) => (
-                <option key={n} value={n}>
-                  {n} записей
-                </option>
-              ))}
-            </select>
-          </label>
+          <FormSelect
+            label="На странице"
+            value={String(pageSize)}
+            onChange={(v) => setPageSize(Number(v))}
+            options={PAGE_SIZE_OPTIONS.map((n) => ({
+              value: String(n),
+              label: `${n} записей`,
+            }))}
+            variant="account"
+          />
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-            Дата с
-            <input
-              type="date"
-              value={filterDateFrom}
-              onChange={(e) => setFilterDateFrom(e.target.value)}
-              className={selectClass}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-            Дата по
-            <input
-              type="date"
-              value={filterDateTo}
-              onChange={(e) => setFilterDateTo(e.target.value)}
-              className={selectClass}
-            />
-          </label>
+          <DateField
+            label="Дата с"
+            value={filterDateFrom}
+            onChange={setFilterDateFrom}
+            variant="account"
+            allowFutureDates
+          />
+          <DateField
+            label="Дата по"
+            value={filterDateTo}
+            onChange={setFilterDateTo}
+            variant="account"
+            allowFutureDates
+          />
           <label className="flex flex-col gap-1 sm:col-span-2 lg:col-span-1">
             <span className="text-xs font-medium text-gray-600">Поиск</span>
             <div className="relative">
@@ -428,7 +423,7 @@ function LpLeadsSection() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Имя, телефон, секция…"
-                className={`${selectClass} w-full pl-10`}
+                className={`${LP_INPUT_CLASS} w-full pl-10`}
               />
             </div>
           </label>
@@ -473,14 +468,17 @@ function LpLeadsSection() {
         </div>
       ) : (
         <>
-          <div className="hidden md:block overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <table className="min-w-full text-left text-sm">
+          <div className="hidden md:block w-full max-w-full min-w-0 overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full min-w-[1100px] text-left text-sm">
               <thead className="bg-gray-50 text-gray-600">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Имя</th>
                   <th className="px-4 py-3 font-semibold">Телефон</th>
+                  <th className="px-4 py-3 font-semibold">Источник лида</th>
                   <th className="px-4 py-3 font-semibold">Обработка</th>
                   <th className="px-4 py-3 font-semibold">Статус лида</th>
+                  <th className="px-4 py-3 font-semibold">Ответственный менеджер</th>
+                  <th className="px-4 py-3 font-semibold">Тип клиента</th>
                   <th className="px-4 py-3 font-semibold">Секция</th>
                   <th className="px-4 py-3 font-semibold">Услуга</th>
                   <th className="px-4 py-3 font-semibold">GCLID</th>
@@ -506,21 +504,23 @@ function LpLeadsSection() {
                         {row.phone || '—'}
                       </a>
                     </td>
+                    <td className="px-4 py-3 text-gray-700 font-medium">
+                      {getLeadSourceDisplayLabel(row)}
+                    </td>
                     <td className="px-4 py-3">
                       <ProcessingBadge state={row.processing_state} />
                     </td>
                     <td className="px-4 py-3 text-gray-700">
                       {getFieldLabel('lead_status', row.lead_status)}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{row.page_section || '—'}</td>
                     <td className="px-4 py-3 text-gray-700">
-                      {getServiceDisplayLabel(row)}
-                      {row.client_type ? (
-                        <span className="block text-xs text-gray-500 mt-0.5">
-                          {row.client_type === 'b2b' ? 'B2B' : 'B2C'}
-                        </span>
-                      ) : null}
+                      {row.responsible_manager_name || '—'}
                     </td>
+                    <td className="px-4 py-3 text-gray-700">
+                      {getClientTypeLabel(row.client_type)}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{row.page_section || '—'}</td>
+                    <td className="px-4 py-3 text-gray-700">{getServiceDisplayLabel(row)}</td>
                     <td className="px-4 py-3">
                       <GclidCell value={row.gclid} />
                     </td>
@@ -552,14 +552,19 @@ function LpLeadsSection() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-semibold text-gray-900">{row.name || '—'}</p>
+                    <p className="text-xs font-medium text-[#273655] mt-0.5">
+                      {getLeadSourceDisplayLabel(row)}
+                    </p>
                     <div className="mt-1 flex flex-wrap gap-2">
                       <ProcessingBadge state={row.processing_state} />
                       <span className="text-xs text-gray-600">
                         {getFieldLabel('lead_status', row.lead_status)}
                       </span>
                     </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{getServiceDisplayLabel(row)}</p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {getServiceDisplayLabel(row)}
+                      Тип: {getClientTypeLabel(row.client_type)} · Менеджер:{' '}
+                      {row.responsible_manager_name || '—'}
                     </p>
                   </div>
                   <a

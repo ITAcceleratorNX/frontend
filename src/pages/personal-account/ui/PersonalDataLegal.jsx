@@ -4,13 +4,20 @@ import { showInfoToast, showSuccessToast, showErrorToast } from '../../../shared
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
 import Input from '../../../shared/ui/Input';
+import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import api from '../../../shared/api/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { USER_QUERY_KEY } from '../../../shared/lib/hooks/use-user-query';
 import ChangePasswordModal from './ChangePasswordModal';
-import { Lock, Building2, CheckCircle2, MapPin, ChevronDown, LogOut } from 'lucide-react';
+import { Lock, Building2, CheckCircle2, LogOut } from 'lucide-react';
 import { usersApi } from '../../../shared/api/usersApi';
 import { getApiErrorMessage } from '../../../shared/lib/utils/apiErrorMessage';
+import {
+  formatPhoneNumber,
+  formatPhoneForDisplay,
+  normalizePhoneForSubmit,
+  RHF_PHONE_RULES,
+} from '../../../shared/lib/phone';
 import {
   Dialog,
   DialogContent,
@@ -79,54 +86,6 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Функция форматирования номера телефона
-  const formatPhoneNumber = (value) => {
-    if (!value) return '';
-    const numbers = value.replace(/\D/g, '');
-    
-    if (numbers.length === 0) return '';
-    
-    let cleaned = numbers;
-    if (cleaned.startsWith('8')) {
-      cleaned = '7' + cleaned.slice(1);
-    }
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    cleaned = cleaned.slice(0, 11);
-    
-    // Форматируем в формат +7 (XXX) XXX-XX-XX
-    let formatted = '+7';
-    if (cleaned.length > 1) {
-      formatted += ' (' + cleaned.slice(1, 4);
-    }
-    if (cleaned.length >= 4) {
-      formatted += ')';
-    }
-    if (cleaned.length > 4) {
-      formatted += ' ' + cleaned.slice(4, 7);
-    }
-    if (cleaned.length > 7) {
-      formatted += '-' + cleaned.slice(7, 9);
-    }
-    if (cleaned.length > 9) {
-      formatted += '-' + cleaned.slice(9, 11);
-    }
-    
-    return formatted;
-  };
-
-  // Функция для преобразования телефона в формат для отображения
-  const formatPhoneForDisplay = (phone) => {
-    if (!phone) return '';
-    const numbers = phone.replace(/\D/g, '');
-    let cleaned = numbers.startsWith('8') ? '7' + numbers.slice(1) : numbers;
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    return formatPhoneNumber(cleaned);
-  };
-
   // Используем мемоизацию для defaultValues с форматированным телефоном
   const defaultValues = useMemo(() => ({
     name: user?.name || '',
@@ -189,17 +148,6 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, navigate, location.pathname]);
-
-  // Функция для преобразования отформатированного телефона в формат для отправки на сервер
-  const normalizePhoneForSubmit = (phone) => {
-    if (!phone) return '';
-    const numbers = phone.replace(/\D/g, '');
-    let cleaned = numbers.startsWith('8') ? '7' + numbers.slice(1) : numbers;
-    if (cleaned && !cleaned.startsWith('7')) {
-      cleaned = '7' + cleaned;
-    }
-    return cleaned.startsWith('7') ? '+7' + cleaned.slice(1) : cleaned;
-  };
 
   // Мемоизируем функцию обработки обновления данных пользователя
   const onSubmit = async (formData) => {
@@ -437,6 +385,11 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
   const desc2 = 'Пожалуйста, убедитесь, что эти данные актуальны, так как они будут использоваться для вашего бронирования боксов.';
   const description = `${desc1} ${desc2}`;
 
+  const getAddressSelectTriggerClass = (hasError) =>
+    embeddedMobile
+      ? `h-auto rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 ${hasError ? 'ring-2 ring-red-500' : ''} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
+      : `h-auto rounded-md border px-4 py-2.5 shadow-sm ${hasError ? 'border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`;
+
   const profileBlock = (
     <>
       <div className={embeddedMobile ? 'mb-3 min-[360px]:mb-4' : 'mb-6'}>
@@ -586,12 +539,8 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
                       type="tel"
                       disabled={!isEditing}
                       {...register('phone', {
-                        required: 'Телефон обязателен для заполнения',
-                        pattern: {
-                          value: /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/,
-                          message: 'Номер телефона должен быть в формате +7 (XXX) XXX-XX-XX'
-                        },
-                        onChange: handlePhoneChange
+                        ...RHF_PHONE_RULES,
+                        onChange: handlePhoneChange,
                       })}
                       error={errors.phone?.message}
                       className={embeddedMobile ? 'bg-white border-0 rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 focus:border-0 focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 flex-1' : 'bg-white rounded-lg flex-1'}
@@ -644,61 +593,59 @@ const PersonalDataLegal = memo(({ embeddedMobile = false }) => {
             <div className={embeddedMobile ? 'mb-4' : 'mb-6'}>
               <h3 className={`font-bold mb-4 ${embeddedMobile ? 'text-base min-[360px]:text-lg text-[#363636]' : 'text-lg text-gray-900'}`}>Юридический адрес</h3>
               <div className={`grid gap-3 min-[360px]:gap-4 ${embeddedMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                <div className="relative">
-                  <label className={`block text-sm font-medium font-sf-pro-text mb-2 ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}>
-                    Регион <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    className={`w-full text-sm transition-colors duration-200 font-sf-pro-text text-[#737373] appearance-none cursor-pointer ${!isEditing ? 'cursor-not-allowed opacity-70' : ''} ${
-                      embeddedMobile
-                        ? `rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 ${errors.region ? 'ring-2 ring-red-500' : ''} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
-                        : `rounded-md border px-4 py-2.5 shadow-sm ${errors.region ? 'border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
-                    }`}
-                    disabled={!isEditing}
-                    {...register('region', {
-                      required: 'Регион обязателен для заполнения'
-                    })}
-                  >
-                    <option value="">Выберите регион</option>
-                    {regions.map((region) => (
-                      <option key={region} value={region}>
-                        {region}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className={`absolute right-4 w-4 h-4 text-gray-500 pointer-events-none ${embeddedMobile ? 'top-[2.6rem] min-[360px]:top-[2.75rem]' : 'top-9 transform -translate-y-1/2'}`} />
-                  {errors.region && (
-                    <p className="mt-1.5 text-sm font-medium text-red-500">{errors.region.message}</p>
+                <Controller
+                  name="region"
+                  control={control}
+                  rules={{ required: 'Регион обязателен для заполнения' }}
+                  render={({ field }) => (
+                    <FormSelect
+                      label={
+                        <>
+                          Регион <span className="text-red-500">*</span>
+                        </>
+                      }
+                      labelVariant="default"
+                      labelClassName={`block text-sm font-medium font-sf-pro-text mb-2 ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={regions.map((region) => ({ value: region, label: region }))}
+                      placeholder="Выберите регион"
+                      disabled={!isEditing}
+                      variant="account"
+                      triggerClassName={getAddressSelectTriggerClass(!!errors.region)}
+                    />
                   )}
-                </div>
+                />
+                {errors.region && (
+                  <p className="mt-1.5 text-sm font-medium text-red-500">{errors.region.message}</p>
+                )}
 
-                <div className="relative">
-                  <label className={`block text-sm font-medium font-sf-pro-text mb-2 ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}>
-                    Город <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    className={`w-full text-sm transition-colors duration-200 font-sf-pro-text text-[#737373] appearance-none cursor-pointer ${!isEditing ? 'cursor-not-allowed opacity-70' : ''} ${
-                      embeddedMobile
-                        ? `rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] px-4 py-3 min-[360px]:py-3.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#00A991] focus:ring-offset-0 ${errors.city ? 'ring-2 ring-red-500' : ''} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
-                        : `rounded-md border px-4 py-2.5 shadow-sm ${errors.city ? 'border-red-500' : 'border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'} ${!isEditing ? 'bg-gray-100' : 'bg-white'}`
-                    }`}
-                    disabled={!isEditing}
-                    {...register('city', {
-                      required: 'Город обязателен для заполнения'
-                    })}
-                  >
-                    <option value="">Выберите город</option>
-                    {cities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className={`absolute right-4 w-4 h-4 text-gray-500 pointer-events-none ${embeddedMobile ? 'top-[2.6rem] min-[360px]:top-[2.75rem]' : 'top-9 transform -translate-y-1/2'}`} />
-                  {errors.city && (
-                    <p className="mt-1.5 text-sm font-medium text-red-500">{errors.city.message}</p>
+                <Controller
+                  name="city"
+                  control={control}
+                  rules={{ required: 'Город обязателен для заполнения' }}
+                  render={({ field }) => (
+                    <FormSelect
+                      label={
+                        <>
+                          Город <span className="text-red-500">*</span>
+                        </>
+                      }
+                      labelVariant="default"
+                      labelClassName={`block text-sm font-medium font-sf-pro-text mb-2 ${embeddedMobile ? 'text-[#363636] font-semibold' : 'text-[#000000]'}`}
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={cities.map((city) => ({ value: city, label: city }))}
+                      placeholder="Выберите город"
+                      disabled={!isEditing}
+                      variant="account"
+                      triggerClassName={getAddressSelectTriggerClass(!!errors.city)}
+                    />
                   )}
-                </div>
+                />
+                {errors.city && (
+                  <p className="mt-1.5 text-sm font-medium text-red-500">{errors.city.message}</p>
+                )}
 
                 <Input
                   label="Улица"
