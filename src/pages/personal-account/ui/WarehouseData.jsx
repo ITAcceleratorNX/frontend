@@ -28,6 +28,7 @@ import {
   formatAreaM2,
   formatAreaWithPercent,
 } from '../../../shared/lib/warehouse/calculateWarehouseAreaStats';
+import { filterVisibleWarehouses } from '../../../shared/lib/warehouseLayoutUtils';
 import CloudTariffs from '@/pages/home/components/order/CloudTariffs.jsx';
 import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
 import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
@@ -274,7 +275,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
       try {
         setWarehousesLoading(true);
         const data = await warehouseApi.getAllWarehouses();
-        setAllWarehouses(Array.isArray(data) ? data : []);
+        setAllWarehouses(filterVisibleWarehouses(data));
       } catch (error) {
         console.error('Ошибка при загрузке списка складов:', error);
       } finally {
@@ -2090,7 +2091,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
               
               // Обновляем список складов
               const data = await warehouseApi.getAllWarehouses();
-              setAllWarehouses(Array.isArray(data) ? data : []);
+              setAllWarehouses(filterVisibleWarehouses(data));
             } catch (error) {
               console.error('Ошибка при обновлении данных:', error);
             } finally {

@@ -25,6 +25,7 @@ import { RentalPeriodSelect } from "../../shared/ui/RentalPeriodSelect";
 import { getTodayLocalDateString } from "../../shared/lib/utils/date";
 
 import { warehouseApi } from "../../shared/api/warehouseApi";
+import { filterVisibleWarehouses } from "../../shared/lib/warehouseLayoutUtils";
 import { ordersApi } from "../../shared/api/ordersApi";
 import { paymentsApi } from "../../shared/api/paymentsApi";
 import { promoApi } from "../../shared/api/promoApi";
@@ -1691,11 +1692,7 @@ const HomePage = memo(({
     const fetchWarehouses = async () => {
       try {
         const data = await warehouseApi.getAllWarehouses();
-        // ЖК Есентай убран с бронирования
-        const filtered = Array.isArray(data) ? data.filter(w => {
-          const name = (w.name || '').toLowerCase();
-          return !name.includes('есентай') && !name.includes('esentai');
-        }) : [];
+        const filtered = filterVisibleWarehouses(data);
         setApiWarehouses(filtered);
 
         // Устанавливаем первый склад INDIVIDUAL как выбранный по умолчанию
@@ -1986,11 +1983,7 @@ const HomePage = memo(({
       await approveCancelOrder.mutateAsync(orderId);
       setPreviewStorage(null);
       const data = await warehouseApi.getAllWarehouses();
-      // ЖК Есентай убран с бронирования
-      const updated = Array.isArray(data) ? data.filter(w => {
-        const name = (w.name || '').toLowerCase();
-        return !name.includes('есентай') && !name.includes('esentai');
-      }) : [];
+      const updated = filterVisibleWarehouses(data);
       setApiWarehouses(updated);
       if (selectedWarehouse?.id) {
         const fresh = updated.find((w) => w.id === selectedWarehouse.id);
@@ -2008,11 +2001,7 @@ const HomePage = memo(({
       await unlockStorage.mutateAsync(orderId);
       setPreviewStorage(null);
       const data = await warehouseApi.getAllWarehouses();
-      // ЖК Есентай убран с бронирования
-      const updated = Array.isArray(data) ? data.filter(w => {
-        const name = (w.name || '').toLowerCase();
-        return !name.includes('есентай') && !name.includes('esentai');
-      }) : [];
+      const updated = filterVisibleWarehouses(data);
       setApiWarehouses(updated);
       if (selectedWarehouse?.id) {
         const fresh = updated.find((w) => w.id === selectedWarehouse.id);
@@ -3133,11 +3122,7 @@ const HomePage = memo(({
             try {
               setPreviewStorage(null);
               const data = await warehouseApi.getAllWarehouses();
-              // ЖК Есентай убран с бронирования
-              const updated = Array.isArray(data) ? data.filter(w => {
-                const name = (w.name || '').toLowerCase();
-                return !name.includes('есентай') && !name.includes('esentai');
-              }) : [];
+              const updated = filterVisibleWarehouses(data);
               setApiWarehouses(updated);
               if (selectedWarehouse?.id) {
                 const fresh = updated.find((w) => w.id === selectedWarehouse.id);

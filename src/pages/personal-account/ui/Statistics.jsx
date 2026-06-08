@@ -10,6 +10,13 @@ import {
   Tooltip,
 } from 'recharts';
 import { statisticsApi } from '../../../shared/api/statisticsApi';
+import { warehouseApi } from '../../../shared/api/warehouseApi';
+import {
+  calculateAllWarehousesAreaStats,
+  calculateWarehouseAreaStats,
+  formatAreaM2,
+  formatAreaWithPercent,
+} from '../../../shared/lib/warehouse/calculateWarehouseAreaStats';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
 const INITIAL_FILTERS = {
@@ -38,6 +45,20 @@ const WAREHOUSE_OPTIONS = [
   { value: 'Комфорт', label: 'Жилой комплекс «Комфорт Сити»' },
   { value: 'Есентай', label: 'Есентай, жилой комплекс' },
 ];
+
+const WAREHOUSE_FILTER_MATCHERS = {
+  Mega: (warehouse) => /mega/i.test(warehouse.name ?? ''),
+  Комфорт: (warehouse) => /комфорт|komfort/i.test(warehouse.name ?? ''),
+  Есентай: (warehouse) => /есентай|esentai/i.test(warehouse.name ?? ''),
+};
+
+const filterWarehousesBySelection = (warehouses, warehouseFilter) => {
+  if (!warehouseFilter || warehouseFilter === 'all') {
+    return warehouses;
+  }
+  const matcher = WAREHOUSE_FILTER_MATCHERS[warehouseFilter];
+  return matcher ? warehouses.filter(matcher) : warehouses;
+};
 
 const STORAGE_TYPE_OPTIONS = [
   { value: 'all', label: 'Все типы' },
@@ -544,6 +565,29 @@ const useStatisticsData = (filters) => {
   ]);
 };
 
+const AreaStatCard = ({ title, value, colorClass = 'text-slate-900' }) => (
+  <div className="rounded-2xl bg-slate-50 px-5 py-4">
+    <p className="text-sm font-medium text-slate-500">{title}</p>
+    <p className={clsx('mt-2 text-2xl font-semibold', colorClass)}>{value}</p>
+  </div>
+);
+
+const AreaStatsGrid = ({ stats }) => (
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <AreaStatCard title="Всего" value={formatAreaM2(stats.total)} />
+    <AreaStatCard
+      title="Свободно"
+      value={formatAreaWithPercent(stats.free, stats.freePercent)}
+      colorClass="text-emerald-600"
+    />
+    <AreaStatCard
+      title="Занято"
+      value={formatAreaWithPercent(stats.occupied, stats.occupiedPercent)}
+      colorClass="text-rose-600"
+    />
+  </div>
+);
+
 const SummaryCard = ({ title, value, styleKey }) => (
   <div
     className={clsx(
@@ -971,8 +1015,14 @@ const FilterSelect = ({ label, value, onChange, options }) => (
   />
 );
 
+const AREA_WAREHOUSE_OPTIONS = [
+  { value: 'all', label: 'Площадь всех складов' },
+  ...WAREHOUSE_OPTIONS.filter((option) => option.value !== 'all'),
+];
+
 const Statistics = () => {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [areaWarehouse, setAreaWarehouse] = useState('all');
   const [activeTab, setActiveTab] = useState('requests');
   const [requestsSearch, setRequestsSearch] = useState('');
   const [logsSearch, setLogsSearch] = useState('');
@@ -1001,6 +1051,51 @@ const Statistics = () => {
     tableRows,
     isLoading: isStatisticsLoading,
   } = useStatisticsData(filters);
+
+  const { data: warehousesData, isLoading: isWarehousesLoading } = useQuery({
+    queryKey: ['statistics', 'warehouses'],
+    queryFn: () => warehouseApi.getAllWarehouses(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  const warehouses = useMemo(
+    () => (Array.isArray(warehousesData) ? warehousesData : []),
+    [warehousesData],
+  );
+
+  const filteredWarehousesForArea = useMemo(
+    () => filterWarehousesBySelection(warehouses, areaWarehouse),
+    [warehouses, areaWarehouse],
+  );
+
+  const allWarehousesAreaStats = useMemo(
+    () => calculateAllWarehousesAreaStats(warehouses),
+    [warehouses],
+  );
+
+  const selectedWarehouseAreaStats = useMemo(() => {
+    if (areaWarehouse === 'all') {
+      return null;
+    }
+    return calculateAllWarehousesAreaStats(filteredWarehousesForArea);
+  }, [areaWarehouse, filteredWarehousesForArea]);
+
+  const selectedWarehouseLabel = AREA_WAREHOUSE_OPTIONS.find(
+    (option) => option.value === areaWarehouse,
+  )?.label;
+
+  const perWarehouseAreaStats = useMemo(
+    () =>
+      warehouses
+        .map((warehouse) => ({
+          id: warehouse.id,
+          name: warehouse.name,
+          stats: calculateWarehouseAreaStats(warehouse.storage, { warehouseType: warehouse.type }),
+        }))
+        .filter((item) => item.stats.total > 0),
+    [warehouses],
+  );
 
   // Запрос заявок
   const { data: requestsData, isLoading: isRequestsLoading } = useQuery({
@@ -1069,10 +1164,42 @@ const Statistics = () => {
 
   const handleResetFilters = () => {
     setFilters(INITIAL_FILTERS);
+    setAreaWarehouse('all');
   };
 
   const exportToExcel = () => {
-    const csvRows = tableRows.map((row) => row.map((cell) => `"${cell ?? ''}"`).join(';'));
+    const areaRows = [
+      [],
+      ['Площадь всех складов', 'Значение'],
+      ['Всего', formatAreaM2(allWarehousesAreaStats.total)],
+      ['Свободно', formatAreaWithPercent(allWarehousesAreaStats.free, allWarehousesAreaStats.freePercent)],
+      ['Занято', formatAreaWithPercent(allWarehousesAreaStats.occupied, allWarehousesAreaStats.occupiedPercent)],
+      ...(selectedWarehouseAreaStats
+        ? [
+            [],
+            [selectedWarehouseLabel, 'Значение'],
+            ['Всего', formatAreaM2(selectedWarehouseAreaStats.total)],
+            ['Свободно', formatAreaWithPercent(selectedWarehouseAreaStats.free, selectedWarehouseAreaStats.freePercent)],
+            ['Занято', formatAreaWithPercent(selectedWarehouseAreaStats.occupied, selectedWarehouseAreaStats.occupiedPercent)],
+          ]
+        : []),
+      ...(areaWarehouse === 'all' && perWarehouseAreaStats.length > 1
+        ? [
+            [],
+            ['По складам', 'Всего', 'Свободно', 'Занято'],
+            ...perWarehouseAreaStats.map((item) => [
+              item.name,
+              formatAreaM2(item.stats.total),
+              formatAreaWithPercent(item.stats.free, item.stats.freePercent),
+              formatAreaWithPercent(item.stats.occupied, item.stats.occupiedPercent),
+            ]),
+          ]
+        : []),
+    ];
+
+    const csvRows = [...tableRows, ...areaRows].map((row) =>
+      row.map((cell) => `"${cell ?? ''}"`).join(';'),
+    );
     const blob = new Blob([`\uFEFF${csvRows.join('\n')}`], {
       type: 'text/csv;charset=utf-8;',
     });
@@ -1115,6 +1242,45 @@ const Statistics = () => {
     const leadSourcesHeader = `<tr><th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Источник</th><th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Количество</th><th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Доля</th></tr>`;
     const leadSourcesTotal = leadSources.totalCount || leadSources.reduce((acc, item) => acc + (item.count || 0), 0);
 
+    const areaSummaryRows = [
+      `<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;">Всего</td><td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${formatAreaM2(allWarehousesAreaStats.total)}</td></tr>`,
+      `<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;">Свободно</td><td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${formatAreaWithPercent(allWarehousesAreaStats.free, allWarehousesAreaStats.freePercent)}</td></tr>`,
+      `<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;">Занято</td><td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${formatAreaWithPercent(allWarehousesAreaStats.occupied, allWarehousesAreaStats.occupiedPercent)}</td></tr>`,
+    ].join('');
+
+    const selectedWarehouseRows = selectedWarehouseAreaStats
+      ? `
+          <h2 style="font-size:16px;margin-top:24px;margin-bottom:12px;">${selectedWarehouseLabel}</h2>
+          <table>
+            <tr><td style="padding:8px 12px;border:1px solid #e2e8f0;">Всего</td><td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${formatAreaM2(selectedWarehouseAreaStats.total)}</td></tr>
+            <tr><td style="padding:8px 12px;border:1px solid #e2e8f0;">Свободно</td><td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${formatAreaWithPercent(selectedWarehouseAreaStats.free, selectedWarehouseAreaStats.freePercent)}</td></tr>
+            <tr><td style="padding:8px 12px;border:1px solid #e2e8f0;">Занято</td><td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">${formatAreaWithPercent(selectedWarehouseAreaStats.occupied, selectedWarehouseAreaStats.occupiedPercent)}</td></tr>
+          </table>
+        `
+      : '';
+
+    const perWarehouseRows = areaWarehouse === 'all' && perWarehouseAreaStats.length > 1
+      ? `
+          <h2 style="font-size:16px;margin-top:24px;margin-bottom:12px;">По складам</h2>
+          <table>
+            <tr>
+              <th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Склад</th>
+              <th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Всего</th>
+              <th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Свободно</th>
+              <th style="padding:8px 12px;border:1px solid #e2e8f0;background:#f1f5f9;">Занято</th>
+            </tr>
+            ${perWarehouseAreaStats.map((item) => `
+              <tr>
+                <td style="padding:6px 10px;border:1px solid #e2e8f0;">${item.name}</td>
+                <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${formatAreaM2(item.stats.total)}</td>
+                <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${formatAreaWithPercent(item.stats.free, item.stats.freePercent)}</td>
+                <td style="padding:6px 10px;border:1px solid #e2e8f0;text-align:right;">${formatAreaWithPercent(item.stats.occupied, item.stats.occupiedPercent)}</td>
+              </tr>
+            `).join('')}
+          </table>
+        `
+      : '';
+
     printable.document.write(`
       <html>
         <head>
@@ -1134,6 +1300,10 @@ const Statistics = () => {
           <div class="badge">Период: ${PERIOD_OPTIONS.find((option) => option.value === filters.period)?.label ?? filters.period}</div>
           <h2>Ключевые показатели</h2>
           <table>${summaryRows}</table>
+          <h2>Площадь всех складов</h2>
+          <table>${areaSummaryRows}</table>
+          ${selectedWarehouseRows}
+          ${perWarehouseRows}
           <h2>Динамика заявок и продаж</h2>
           <table>${dynamicsHeader}${dynamicsRows}</table>
           <h2>Источники трафика (первые визиты)</h2>
@@ -1178,6 +1348,12 @@ const Statistics = () => {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+            <FilterSelect
+              label="Площадь всех складов"
+              value={areaWarehouse}
+              onChange={setAreaWarehouse}
+              options={AREA_WAREHOUSE_OPTIONS}
+            />
             <FilterSelect
               label="Период"
               value={filters.period}
@@ -1241,6 +1417,18 @@ const Statistics = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {areaWarehouse !== 'all' && (
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#eef2ff] px-3 py-1 text-xs font-medium text-[#4338ca]">
+                {AREA_WAREHOUSE_OPTIONS.find((item) => item.value === areaWarehouse)?.label}
+                <button
+                  type="button"
+                  className="text-[#4338ca]/70 hover:text-[#4338ca]"
+                  onClick={() => setAreaWarehouse('all')}
+                >
+                  ×
+                </button>
+              </span>
+            )}
             {Object.entries(filters)
               .filter(([key, value]) => key !== 'period' && value !== 'all')
               .map(([key, value]) => {
@@ -1303,6 +1491,78 @@ const Statistics = () => {
           <SummaryCard key={card.key} title={card.title} value={card.value} styleKey={card.key} />
         ))}
       </div>
+      )}
+
+      {!isStatisticsLoading && (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-2 pb-4">
+            <h2 className="text-lg font-semibold text-slate-900">{warehouseAreaTitle}</h2>
+            <p className="text-sm text-slate-500">
+              Общая, свободная и занятая площадь боксов по данным склада.
+            </p>
+          </div>
+
+          {isWarehousesLoading ? (
+            <div className="py-8 text-center text-slate-500">Загрузка данных о площади...</div>
+          ) : allWarehousesAreaStats.total > 0 ? (
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <AreaStatCard title="Всего" value={formatAreaM2(allWarehousesAreaStats.total)} />
+                <AreaStatCard
+                  title="Свободно"
+                  value={formatAreaWithPercent(
+                    allWarehousesAreaStats.free,
+                    allWarehousesAreaStats.freePercent,
+                  )}
+                  colorClass="text-emerald-600"
+                />
+                <AreaStatCard
+                  title="Занято"
+                  value={formatAreaWithPercent(
+                    allWarehousesAreaStats.occupied,
+                    allWarehousesAreaStats.occupiedPercent,
+                  )}
+                  colorClass="text-rose-600"
+                />
+              </div>
+
+              {perWarehouseAreaStats.length > 1 && filters.warehouse === 'all' && (
+                <div className="mt-6 border-t border-slate-100 pt-6">
+                  <h3 className="mb-4 text-sm font-semibold text-slate-900">По складам</h3>
+                  <div className="space-y-4">
+                    {perWarehouseAreaStats.map((item) => (
+                      <div key={item.id} className="rounded-2xl bg-slate-50 p-4">
+                        <p className="mb-3 text-sm font-semibold text-slate-900">{item.name}</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          <div>
+                            <p className="text-xs text-slate-500">Всего</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                              {formatAreaM2(item.stats.total)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Свободно</p>
+                            <p className="mt-1 text-sm font-semibold text-emerald-600">
+                              {formatAreaWithPercent(item.stats.free, item.stats.freePercent)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Занято</p>
+                            <p className="mt-1 text-sm font-semibold text-rose-600">
+                              {formatAreaWithPercent(item.stats.occupied, item.stats.occupiedPercent)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="py-8 text-center text-slate-500">Нет данных о площади</div>
+          )}
+        </div>
       )}
 
       {isStatisticsLoading ? (

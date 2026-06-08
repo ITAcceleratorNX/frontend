@@ -9,6 +9,7 @@ import {
   formatAreaM2,
   formatAreaWithPercent,
 } from '../../../shared/lib/warehouse/calculateWarehouseAreaStats';
+import { filterVisibleWarehouses } from '../../../shared/lib/warehouseLayoutUtils';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
 const STATUS_FILTER_OPTIONS = [
@@ -34,7 +35,7 @@ const InfoWarehouses = () => {
         setIsLoading(true);
         setError(null);
         const data = await warehouseApi.getAllWarehouses();
-        const warehousesArray = Array.isArray(data) ? data : [];
+        const warehousesArray = filterVisibleWarehouses(data);
         setWarehouses(warehousesArray);
         setFilteredWarehouses(warehousesArray);
 

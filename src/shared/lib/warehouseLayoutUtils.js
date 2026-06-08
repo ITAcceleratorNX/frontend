@@ -4,6 +4,21 @@ import mainWarehouseLayoutData from '../../assets/Main_Individual_storage.json';
 import komfortLayoutData1 from '../../assets/ZHK_Komfort_storage.json';
 import komfortLayoutData2 from '../../assets/second_ZHK_Komfort_storage.json';
 
+const getWarehouseName = (warehouseOrName) =>
+  (typeof warehouseOrName === 'string' ? warehouseOrName : warehouseOrName?.name ?? '').toLowerCase();
+
+export const isEsentaiWarehouse = (warehouseOrName) => {
+  const name = getWarehouseName(warehouseOrName);
+  return name.includes('есентай') || name.includes('esentai');
+};
+
+export const filterVisibleWarehouses = (warehouses) => {
+  if (!Array.isArray(warehouses)) {
+    return [];
+  }
+  return warehouses.filter((warehouse) => !isEsentaiWarehouse(warehouse));
+};
+
 /**
  * Возвращает имена боксов для текущего яруса склада.
  * @param {string} warehouseName
@@ -17,7 +32,7 @@ export function getLayoutBoxNames(warehouseName, selectedMap = 1) {
   let layoutData;
   if (name.includes('mega')) {
     layoutData = mapNum === 1 ? megaTowersLayoutData1 : megaTowersLayoutData2;
-  } else if (name.includes('есентай') || name.includes('esentai')) {
+  } else if (isEsentaiWarehouse(name)) {
     layoutData = mainWarehouseLayoutData;
   } else if (name.includes('комфорт') || name.includes('komfort')) {
     layoutData = mapNum === 1 ? komfortLayoutData1 : komfortLayoutData2;
