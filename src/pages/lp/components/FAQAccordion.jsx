@@ -28,14 +28,18 @@ function FAQAccordion({
         </header>
 
         <div className="mx-auto max-w-3xl">
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion
+            type="single"
+            collapsible
+            className="w-full [&_button]:bg-transparent [&_button]:shadow-none [&_button:hover]:bg-transparent [&_button:hover]:shadow-none [&_button:focus]:bg-transparent [&_button:focus-visible]:bg-transparent [&_button:focus-visible]:outline-none [&_button:focus-visible]:ring-0 [&_button:active]:bg-transparent"
+          >
             {items.map((item, idx) => (
               <AccordionItem
                 key={item.q}
                 value={`faq-${idx}`}
-                className="overflow-hidden rounded-2xl border border-[#e5e9ed] bg-white px-5 my-3 shadow-sm border-b"
+                className="my-3 overflow-hidden rounded-2xl border border-[#e5e9ed] bg-white px-5 shadow-sm"
               >
-                <AccordionTrigger className="py-4 text-left text-[15px] font-semibold text-[#273655] hover:no-underline sm:text-base">
+                <AccordionTrigger className="-mx-5 px-5 py-4 text-left text-[15px] font-semibold text-[#273655] no-underline hover:no-underline sm:text-base">
                   {item.q}
                 </AccordionTrigger>
                 <AccordionContent className="pb-4 text-sm leading-relaxed text-[#4b5563] sm:text-[15px]">

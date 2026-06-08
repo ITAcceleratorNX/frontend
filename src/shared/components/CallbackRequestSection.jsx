@@ -126,7 +126,7 @@ const CallbackRequestSection = ({ showRegisterPrompt = false }) => {
                       placeholder="Телефон"
                       inputClassName="h-12 w-full rounded-xl border-gray-300 bg-white pl-3 pr-10 text-[#373737] placeholder:text-gray-400"
                     />
-                    <Phone className="absolute right-3 top-9 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
                   <div className="hidden sm:block h-12 px-8 shrink-0 opacity-0 pointer-events-none select-none" aria-hidden="true">
                     Отправить заявку
