@@ -1,4 +1,5 @@
 import React from 'react';
+import { Camera } from 'lucide-react';
 
 import sumkaImg from '../../../assets/cloud-tariffs/sumka.png';
 import motorcycleImg from '../../../assets/cloud-tariffs/motorcycle.png';
@@ -63,6 +64,27 @@ const StorageBadge = ({ order, embeddedMobile = false }) => {
             {tariffInfo.name}
           </span>
                 )}
+            </div>
+        );
+    }
+
+    // 📷 CAMERA
+    if (order.storage.storage_type === 'CAMERA') {
+        return (
+            <div className={`${baseClasses} ${sizeClasses} flex-col gap-1`}>
+                <Camera
+                    className={`text-[#31876D] ${embeddedMobile ? 'w-7 h-7 min-[360px]:w-9 min-[360px]:h-9' : 'w-11 h-11'}`}
+                    strokeWidth={1.75}
+                    aria-hidden
+                />
+                <span
+                    className={`font-semibold text-gray-800 text-center leading-tight ${
+                        embeddedMobile ? 'text-[10px] min-[360px]:text-xs' : 'text-sm'
+                    }`}
+                >
+                    Камера
+                    <span className="block font-medium text-gray-600">хранения</span>
+                </span>
             </div>
         );
     }

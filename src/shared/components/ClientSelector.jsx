@@ -140,6 +140,7 @@ const defaultOrderPaymentRow = () => ({
  * @param {(user: object) => void} props.onUserSelect
  * @param {() => object|null} [props.legacyImportBuildOrderPayload] — данные брони со страницы (склад, срок, позиции)
  * @param {() => object|null} [props.legacyImportBookingSummary] — склад, бокс, адрес, месяцы, дата начала для подсказки в модалке
+ * @param {'INDIVIDUAL'|'CLOUD'|'CAMERA'} [props.legacyImportStorageType] — тип хранения для офлайн-импорта
  * @param {(order: object) => void} [props.onLegacyImportSuccess]
  */
 const ClientSelector = ({
@@ -149,6 +150,7 @@ const ClientSelector = ({
   onUserSelect,
   legacyImportBuildOrderPayload,
   legacyImportBookingSummary,
+  legacyImportStorageType = 'INDIVIDUAL',
   onLegacyImportSuccess,
 }) => {
   const [mode, setMode] = useState(MODE.SEARCH);
@@ -197,6 +199,43 @@ const ClientSelector = ({
     return () => clearTimeout(timer);
   }, [searchQuery, handleSearch]);
 
+  const initLegacyPaymentState = useCallback((summary) => {
+    const isCamera = legacyImportStorageType === 'CAMERA' || summary?.storageType === 'CAMERA';
+    const rawStart = summary?.startDate;
+    const startYmd = rawStart
+      ? (() => {
+          const s = String(rawStart).trim();
+          return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : '';
+        })()
+      : '';
+    setLegacyBookingStartDate(startYmd);
+
+    if (isCamera) {
+      setLegacyPaymentType('FULL');
+      const d = startYmd ? parseScheduleAnchorDate(startYmd) : null;
+      const previewAmount =
+        summary?.previewTotalPrice != null && Number.isFinite(Number(summary.previewTotalPrice))
+          ? String(summary.previewTotalPrice)
+          : '';
+      setLegacyOrderPayments([
+        {
+          amount: previewAmount,
+          month: d ? String(d.getMonth() + 1) : '',
+          year: d ? String(d.getFullYear()) : '',
+          status: 'PAID',
+          paid_at: startYmd || getTodayLocalDateString(),
+          note: '',
+        },
+      ]);
+      setLegacyGeneratorTotal('');
+      return;
+    }
+
+    setLegacyPaymentType('MONTHLY');
+    setLegacyOrderPayments([defaultOrderPaymentRow()]);
+    setLegacyGeneratorTotal('');
+  }, [legacyImportStorageType]);
+
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
@@ -204,22 +243,17 @@ const ClientSelector = ({
       setMode(MODE.SEARCH);
       setFormData(emptyClientForm());
       setFormErrors({});
-      setLegacyPaymentType('MONTHLY');
-      setLegacyOrderPayments([defaultOrderPaymentRow()]);
-      setLegacyGeneratorTotal('');
-      const summaryOnOpen = legacyImportBookingSummary?.();
-      const rawStart = summaryOnOpen?.startDate;
-      if (rawStart) {
-        const s = String(rawStart).trim();
-        setLegacyBookingStartDate(/^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : '');
-      } else {
-        setLegacyBookingStartDate('');
-      }
+      initLegacyPaymentState(legacyImportBookingSummary?.());
     }
-  }, [isOpen]);
+  }, [isOpen, initLegacyPaymentState, legacyImportBookingSummary]);
 
   const bookingSummary = legacyImportBookingSummary?.() ?? null;
-  const isMonthlyLegacy = legacyPaymentType === 'MONTHLY';
+  const isCameraLegacy =
+    legacyImportStorageType === 'CAMERA' || bookingSummary?.storageType === 'CAMERA';
+  const isCloudLegacy =
+    legacyImportStorageType === 'CLOUD' || bookingSummary?.storageType === 'CLOUD';
+  const isMonthlyLegacy = !isCameraLegacy && legacyPaymentType === 'MONTHLY';
+  const legacyImportReady = Boolean(legacyImportBuildOrderPayload?.());
 
   /** Якорь для генерации графика: дата из модалки или из сводки брони на странице */
   const getLegacyScheduleAnchorYmd = () => {
@@ -232,6 +266,7 @@ const ClientSelector = ({
   };
 
   const handleLegacyPaymentTypeChange = (value) => {
+    if (isCameraLegacy) return;
     setLegacyPaymentType(value);
     const summary = legacyImportBookingSummary?.();
     if (value === 'FULL') {
@@ -476,7 +511,7 @@ const ClientSelector = ({
           address: formData.address.trim() || undefined,
           bday: formData.bday.trim() || undefined,
         },
-        payment_type: legacyPaymentType,
+        payment_type: isCameraLegacy ? 'FULL' : legacyPaymentType,
         order_payments: parsed.rows,
       };
 
@@ -549,18 +584,23 @@ const ClientSelector = ({
               <UserPlus className="inline h-4 w-4 mr-1 align-text-bottom" />
               Новый
             </button>
-            <button
-              type="button"
-              onClick={() => setMode(MODE.LEGACY)}
-              className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
-                mode === MODE.LEGACY
-                  ? 'bg-[#31876D] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <History className="inline h-4 w-4 mr-1 align-text-bottom" />
-              Офлайн-импорт
-            </button>
+            {legacyImportReady && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(MODE.LEGACY);
+                  initLegacyPaymentState(legacyImportBookingSummary?.());
+                }}
+                className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
+                  mode === MODE.LEGACY
+                    ? 'bg-[#31876D] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <History className="inline h-4 w-4 mr-1 align-text-bottom" />
+                Офлайн-импорт
+              </button>
+            )}
           </div>
         </DialogHeader>
 
@@ -815,11 +855,11 @@ const ClientSelector = ({
               {mode === MODE.LEGACY && (
                 <div className="space-y-4 border-t border-gray-100 pt-4">
                   <p className="text-sm text-gray-600">
-                    Сначала на странице бронирования выберите склад, бокс и срок. Задайте график платежей: при
-                    помесячной оплате можно сгенерировать строки по сумме и дате начала брони (поле ниже) или
-                    добавить вручную; при полной оплате — один платёж за весь период. Если клиент уже есть в базе по
-                    телефону, email или ИИН, все поля анкеты должны совпадать с карточкой — иначе выберите клиента в
-                    поиске сверху.
+                    {isCameraLegacy
+                      ? 'Сначала на странице бронирования выберите склад камеры, объём, дату начала и срок в днях. Укажите один платёж за весь период. Если клиент уже есть в базе по телефону, email или ИИН, все поля анкеты должны совпадать с карточкой — иначе выберите клиента в поиске сверху.'
+                      : isCloudLegacy
+                        ? 'Сначала на странице бронирования выберите тариф или «Свои габариты», срок и дату. Задайте график платежей: при помесячной оплате можно сгенерировать строки по сумме и дате начала брони (поле ниже) или добавить вручную; при полной оплате — один платёж за весь период. Если клиент уже есть в базе по телефону, email или ИИН, все поля анкеты должны совпадать с карточкой — иначе выберите клиента в поиске сверху.'
+                        : 'Сначала на странице бронирования выберите склад, бокс и срок. Задайте график платежей: при помесячной оплате можно сгенерировать строки по сумме и дате начала брони (поле ниже) или добавить вручную; при полной оплате — один платёж за весь период. Если клиент уже есть в базе по телефону, email или ИИН, все поля анкеты должны совпадать с карточкой — иначе выберите клиента в поиске сверху.'}
                   </p>
 
                   {bookingSummary ? (
@@ -830,10 +870,44 @@ const ClientSelector = ({
                           <span className="text-gray-500">Склад: </span>
                           {bookingSummary.warehouseName}
                         </div>
-                        <div>
-                          <span className="text-gray-500">Срок: </span>
-                          {bookingSummary.months} мес.
-                        </div>
+                        {isCameraLegacy ? (
+                          <>
+                            <div>
+                              <span className="text-gray-500">Объём: </span>
+                              {bookingSummary.volume} м³
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Срок: </span>
+                              {bookingSummary.days} сут.
+                            </div>
+                          </>
+                        ) : isCloudLegacy ? (
+                          <>
+                            <div>
+                              <span className="text-gray-500">Тариф: </span>
+                              {bookingSummary.storageLabel}
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Объём: </span>
+                              {bookingSummary.volume} м³
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Срок: </span>
+                              {bookingSummary.months} мес.
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <span className="text-gray-500">Срок: </span>
+                              {bookingSummary.months} мес.
+                            </div>
+                            <div className="sm:col-span-2">
+                              <span className="text-gray-500">Бокс: </span>
+                              {bookingSummary.storageLabel}
+                            </div>
+                          </>
+                        )}
                         {bookingSummary.warehouseAddress ? (
                           <div className="sm:col-span-2 flex gap-2 items-start">
                             <MapPin className="h-4 w-4 shrink-0 text-gray-400 mt-0.5" />
@@ -841,18 +915,24 @@ const ClientSelector = ({
                           </div>
                         ) : null}
                         <div className="sm:col-span-2">
-                          <span className="text-gray-500">Бокс: </span>
-                          {bookingSummary.storageLabel}
-                        </div>
-                        <div className="sm:col-span-2">
                           <span className="text-gray-500">Дата начала аренды: </span>
                           {formatCalendarDate(bookingSummary.startDate)}
                         </div>
+                        {isCameraLegacy && bookingSummary.endDate ? (
+                          <div className="sm:col-span-2">
+                            <span className="text-gray-500">Дата окончания: </span>
+                            {formatCalendarDate(bookingSummary.endDate)}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                      Выберите на странице склад, бокс и срок аренды — без этого импорт недоступен.
+                      {isCameraLegacy
+                        ? 'Выберите на странице склад, объём, дату и срок хранения — без этого импорт недоступен.'
+                        : isCloudLegacy
+                          ? 'Выберите на странице тариф, объём и срок аренды — без этого импорт недоступен.'
+                          : 'Выберите на странице склад, бокс и срок аренды — без этого импорт недоступен.'}
                     </div>
                   )}
 
@@ -873,20 +953,22 @@ const ClientSelector = ({
                     </div>
                   )}
 
-                  <div className="max-w-md">
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">Тип оплаты</Label>
-                    <FormSelect
-                      value={legacyPaymentType}
-                      onChange={handleLegacyPaymentTypeChange}
-                      options={[
-                        { value: 'MONTHLY', label: 'Помесячно' },
-                        { value: 'FULL', label: 'Полностью' },
-                      ]}
-                      triggerClassName="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-[#202422] text-base shadow-sm focus:ring-2 focus:ring-[#31876D]/30 focus:ring-offset-0 focus:border-[#31876D]/50"
-                      contentClassName="rounded-2xl border border-gray-200"
-                      itemClassName="rounded-xl"
-                    />
-                  </div>
+                  {!isCameraLegacy && (
+                    <div className="max-w-md">
+                      <Label className="text-sm font-medium text-gray-700 mb-2 block">Тип оплаты</Label>
+                      <FormSelect
+                        value={legacyPaymentType}
+                        onChange={handleLegacyPaymentTypeChange}
+                        options={[
+                          { value: 'MONTHLY', label: 'Помесячно' },
+                          { value: 'FULL', label: 'Полностью' },
+                        ]}
+                        triggerClassName="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-[#202422] text-base shadow-sm focus:ring-2 focus:ring-[#31876D]/30 focus:ring-offset-0 focus:border-[#31876D]/50"
+                        contentClassName="rounded-2xl border border-gray-200"
+                        itemClassName="rounded-xl"
+                      />
+                    </div>
+                  )}
 
                   {isMonthlyLegacy && bookingSummary && (
                     <div className="rounded-2xl border border-gray-200 bg-gray-50/80 p-4 space-y-3">
@@ -1120,7 +1202,7 @@ const ClientSelector = ({
               <Button
                 type="button"
                 onClick={handleLegacyImport}
-                disabled={isImporting || !legacyImportBuildOrderPayload}
+                disabled={isImporting || !legacyImportReady}
                 className="flex-1 h-12 rounded-3xl bg-[#31876D] hover:bg-[#276b57] text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isImporting ? (

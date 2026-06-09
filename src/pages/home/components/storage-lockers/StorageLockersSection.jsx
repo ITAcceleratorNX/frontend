@@ -29,6 +29,13 @@ import {
  *   isAdminOrManager?: boolean;
  *   isUserRole?: boolean;
  *   onOpenClientSelector?: () => void;
+ *   onBookingStateChange?: (state: {
+ *     warehouseId: number | null;
+ *     volumeM3: number;
+ *     startDate: string;
+ *     days: number;
+ *     serverTotalPrice: number | null;
+ *   }) => void;
  * }} props
  */
 export default function StorageLockersSection({
@@ -39,6 +46,7 @@ export default function StorageLockersSection({
   isAdminOrManager = false,
   isUserRole = true,
   onOpenClientSelector,
+  onBookingStateChange,
   initialVolumeM3,
   initialDays,
 }) {
@@ -132,6 +140,25 @@ export default function StorageLockersSection({
       localStorage.setItem("calculated_price", String(serverTotalPrice));
     }
   }, [isActive, days, volumeM3, isPriceLoading, serverTotalPrice]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    onBookingStateChange?.({
+      warehouseId,
+      volumeM3,
+      startDate,
+      days,
+      serverTotalPrice,
+    });
+  }, [
+    isActive,
+    warehouseId,
+    volumeM3,
+    startDate,
+    days,
+    serverTotalPrice,
+    onBookingStateChange,
+  ]);
 
   useEffect(() => {
     if (!isActive || !warehouseId) {
@@ -315,6 +342,14 @@ export default function StorageLockersSection({
       if (isAdminOrManager && selectedClientUser) {
         payload.user_id = selectedClientUser.id;
       }
+      if (
+        isAdminOrManager &&
+        serverTotalPrice != null &&
+        Number.isFinite(Number(serverTotalPrice)) &&
+        Number(serverTotalPrice) >= 0
+      ) {
+        payload.total_price = Math.round(Number(serverTotalPrice));
+      }
 
       await createCameraStorageOrder(payload);
 
@@ -358,6 +393,7 @@ export default function StorageLockersSection({
     navigate,
     queryClient,
     translateCameraError,
+    serverTotalPrice,
   ]);
 
   const handleCallback = useCallback(() => {

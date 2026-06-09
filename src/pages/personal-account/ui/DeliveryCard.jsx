@@ -9,6 +9,8 @@ const getStorageTypeText = (type) => {
     return 'Индивидуальное';
   } else if (type === 'CLOUD') {
     return 'Облачное';
+  } else if (type === 'CAMERA') {
+    return 'Камера хранения';
   }
   return type;
 };

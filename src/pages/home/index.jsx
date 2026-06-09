@@ -72,6 +72,18 @@ import CloudTariffs from "../../../src/pages/home/components/order/CloudTariffs.
 import CloudDimensions from "../../../src/pages/home/components/order/CloudDimensions.jsx";
 import CloudStorageSummary from "../../../src/pages/home/components/order/CloudStorageSummary.jsx";
 import StorageLockersSection from "../../../src/pages/home/components/storage-lockers/StorageLockersSection.jsx";
+import { computeLockerEndDateISO } from "../../../src/pages/home/components/storage-lockers/useLockerPricing.js";
+
+const CLOUD_TARIFF_TYPE_MAP = {
+  sumka: 'CLOUD_TARIFF_SUMKA',
+  shina: 'CLOUD_TARIFF_SHINA',
+  motorcycle: 'CLOUD_TARIFF_MOTORCYCLE',
+  bicycle: 'CLOUD_TARIFF_BICYCLE',
+  sunuk: 'CLOUD_TARIFF_SUNUK',
+  furniture: 'CLOUD_TARIFF_FURNITURE',
+  sklad: 'CLOUD_TARIFF_SKLAD',
+  garazh: 'CLOUD_TARIFF_GARAZH',
+};
 
 
 import extraspaceLogo from "../../assets/photo_5440760864748731559_y.jpg";
@@ -201,6 +213,16 @@ const HomePage = memo(({
 
   const [selectedClientUser, setSelectedClientUser] = useState(null);
   const [isClientSelectorOpen, setIsClientSelectorOpen] = useState(false);
+  const [lockerBookingState, setLockerBookingState] = useState({
+    warehouseId: null,
+    volumeM3: 1,
+    startDate: getTodayLocalDateString(),
+    days: 1,
+    serverTotalPrice: null,
+  });
+  const handleLockerBookingStateChange = useCallback((state) => {
+    setLockerBookingState(state);
+  }, []);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [isPendingOrderModalOpen, setIsPendingOrderModalOpen] = useState(false);
   const [orderForReturnApproval, setOrderForReturnApproval] = useState(null);
@@ -352,64 +374,6 @@ const HomePage = memo(({
     const parsed = parseInt(individualMonths, 10);
     return Number.isNaN(parsed) ? 0 : parsed;
   }, [individualMonths]);
-
-  /** Данные брони для импорта офлайн-заказа (вкладка «Офлайн-импорт» в ClientSelector) */
-  const buildLegacyImportOrderPayload = useCallback(() => {
-    if (activeStorageTab !== "INDIVIDUAL") return null;
-    if (!selectedWarehouse || !previewStorage) return null;
-    if (!monthsNumber || monthsNumber <= 0) return null;
-    const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
-    if (!Number.isFinite(storageId) || storageId <= 0) return null;
-    // start_date/total_price для офлайн-импорта задаются в ClientSelector (дата якоря графика и сумма платежей)
-    const startDate = individualBookingStartDate
-      ? new Date(individualBookingStartDate).toISOString()
-      : new Date().toISOString();
-    return {
-      storage_id: storageId,
-      months: monthsNumber,
-      start_date: startDate,
-      order_items: [{ name: "Вещь", volume: 1, cargo_mark: "NO" }],
-      is_selected_moving: false,
-      is_selected_package: false,
-    };
-  }, [
-    activeStorageTab,
-    selectedWarehouse,
-    previewStorage,
-    monthsNumber,
-    individualBookingStartDate,
-  ]);
-
-  /** Подпись к брони для модалки офлайн-импорта: склад, бокс, адрес, срок */
-  const buildLegacyImportBookingSummary = useCallback(() => {
-    if (activeStorageTab !== "INDIVIDUAL") return null;
-    if (!selectedWarehouse || !previewStorage) return null;
-    if (!monthsNumber || monthsNumber <= 0) return null;
-    const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
-    if (!Number.isFinite(storageId) || storageId <= 0) return null;
-    const startRaw = individualBookingStartDate || getTodayLocalDateString();
-    return {
-      warehouseName: selectedWarehouse.name || "—",
-      warehouseAddress:
-        selectedWarehouse.address ||
-        selectedWarehouse.warehouse_address ||
-        selectedWarehouse.full_address ||
-        "",
-      storageLabel:
-        previewStorage.name ||
-        previewStorage.display_name ||
-        `Бокс №${storageId}`,
-      storageId,
-      months: monthsNumber,
-      startDate: startRaw,
-    };
-  }, [
-    activeStorageTab,
-    selectedWarehouse,
-    previewStorage,
-    monthsNumber,
-    individualBookingStartDate,
-  ]);
 
   const cloudMonthsNumber = useMemo(() => {
     const parsed = parseInt(cloudMonths, 10);
@@ -580,6 +544,192 @@ const HomePage = memo(({
     if (!selectedTariff) return false;
     return true;
   }, [cloudStorage, cloudMonthsNumber, cloudVolume, selectedTariff]);
+
+  const legacyImportStorageType = useMemo(() => {
+    if (activeStorageTab === "CLOUD") return "CLOUD";
+    if (activeStorageTab === "LOCKERS") return "CAMERA";
+    return "INDIVIDUAL";
+  }, [activeStorageTab]);
+
+  /** Данные брони для импорта офлайн-заказа (вкладка «Офлайн-импорт» в ClientSelector) */
+  const buildLegacyImportOrderPayload = useCallback(() => {
+    if (activeStorageTab === "INDIVIDUAL") {
+      if (!selectedWarehouse || !previewStorage) return null;
+      if (!monthsNumber || monthsNumber <= 0) return null;
+      const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
+      if (!Number.isFinite(storageId) || storageId <= 0) return null;
+      const startDate = individualBookingStartDate
+        ? new Date(individualBookingStartDate).toISOString()
+        : new Date().toISOString();
+      return {
+        storage_id: storageId,
+        months: monthsNumber,
+        start_date: startDate,
+        order_items: [{ name: "Вещь", volume: 1, cargo_mark: "NO" }],
+        is_selected_moving: false,
+        is_selected_package: false,
+      };
+    }
+
+    if (activeStorageTab === "CLOUD") {
+      if (!cloudStorage?.id) return null;
+      if (!cloudMonthsNumber || cloudMonthsNumber <= 0) return null;
+      if (!cloudVolume || cloudVolume <= 0) return null;
+      if (!selectedTariff) return null;
+      const startDate = cloudBookingStartDate
+        ? new Date(cloudBookingStartDate).toISOString()
+        : new Date().toISOString();
+      const orderItemName = selectedTariff.isCustom
+        ? "Свои габариты"
+        : selectedTariff.name;
+      const tariff_type = selectedTariff.isCustom
+        ? null
+        : CLOUD_TARIFF_TYPE_MAP[selectedTariff.id] || null;
+      return {
+        storage_id: Number(cloudStorage.id),
+        months: cloudMonthsNumber,
+        start_date: startDate,
+        tariff_type,
+        order_items: [
+          {
+            name: orderItemName,
+            volume: Number(cloudVolume.toFixed(2)),
+            cargo_mark: "NO",
+          },
+        ],
+        is_selected_moving: false,
+        is_selected_package: false,
+      };
+    }
+
+    if (activeStorageTab === "LOCKERS") {
+      const { warehouseId, volumeM3, startDate, days } = lockerBookingState;
+      if (!warehouseId || !days || days < 1 || days > 14) return null;
+      if (!volumeM3 || volumeM3 < 1 || volumeM3 > 4) return null;
+      const startIso = startDate
+        ? new Date(`${startDate}T12:00:00`).toISOString()
+        : new Date().toISOString();
+      return {
+        warehouse_id: warehouseId,
+        storage_days: days,
+        start_date: startIso,
+        payment_type: "FULL",
+        order_items: [
+          {
+            name: "Камера хранения",
+            volume: volumeM3,
+            cargo_mark: "NO",
+          },
+        ],
+        is_selected_moving: false,
+        is_selected_package: false,
+      };
+    }
+
+    return null;
+  }, [
+    activeStorageTab,
+    selectedWarehouse,
+    previewStorage,
+    monthsNumber,
+    individualBookingStartDate,
+    cloudStorage,
+    cloudMonthsNumber,
+    cloudVolume,
+    selectedTariff,
+    cloudBookingStartDate,
+    lockerBookingState,
+  ]);
+
+  /** Подпись к брони для модалки офлайн-импорта */
+  const buildLegacyImportBookingSummary = useCallback(() => {
+    if (activeStorageTab === "INDIVIDUAL") {
+      if (!selectedWarehouse || !previewStorage) return null;
+      if (!monthsNumber || monthsNumber <= 0) return null;
+      const storageId = Number(previewStorage.id ?? previewStorage.storage_id);
+      if (!Number.isFinite(storageId) || storageId <= 0) return null;
+      const startRaw = individualBookingStartDate || getTodayLocalDateString();
+      return {
+        storageType: "INDIVIDUAL",
+        warehouseName: selectedWarehouse.name || "—",
+        warehouseAddress:
+          selectedWarehouse.address ||
+          selectedWarehouse.warehouse_address ||
+          selectedWarehouse.full_address ||
+          "",
+        storageLabel:
+          previewStorage.name ||
+          previewStorage.display_name ||
+          `Бокс №${storageId}`,
+        storageId,
+        months: monthsNumber,
+        startDate: startRaw,
+      };
+    }
+
+    if (activeStorageTab === "CLOUD") {
+      if (!cloudStorage?.id) return null;
+      if (!cloudMonthsNumber || cloudMonthsNumber <= 0) return null;
+      if (!cloudVolume || cloudVolume <= 0) return null;
+      if (!selectedTariff) return null;
+      const startRaw = cloudBookingStartDate || getTodayLocalDateString();
+      return {
+        storageType: "CLOUD",
+        warehouseName: cloudWarehouse?.name || "Облачное хранение",
+        warehouseAddress:
+          cloudWarehouse?.address ||
+          cloudWarehouse?.warehouse_address ||
+          cloudWarehouse?.full_address ||
+          "",
+        storageLabel: selectedTariff.isCustom
+          ? "Свои габариты"
+          : selectedTariff.name,
+        volume: cloudVolume,
+        months: cloudMonthsNumber,
+        startDate: startRaw,
+      };
+    }
+
+    if (activeStorageTab === "LOCKERS") {
+      const { warehouseId, volumeM3, startDate, days } = lockerBookingState;
+      if (!warehouseId || !days || days < 1 || days > 14) return null;
+      if (!volumeM3 || volumeM3 < 1 || volumeM3 > 4) return null;
+      const warehouseList = apiWarehouses.length > 0 ? apiWarehouses : warehouses;
+      const lockerWarehouse = warehouseList.find((w) => w.id === warehouseId);
+      const startRaw = startDate || getTodayLocalDateString();
+      return {
+        storageType: "CAMERA",
+        warehouseName: lockerWarehouse?.name || "—",
+        warehouseAddress:
+          lockerWarehouse?.address ||
+          lockerWarehouse?.warehouse_address ||
+          lockerWarehouse?.full_address ||
+          "",
+        volume: volumeM3,
+        days,
+        startDate: startRaw,
+        endDate: computeLockerEndDateISO(startRaw, days),
+        previewTotalPrice: lockerBookingState.serverTotalPrice,
+      };
+    }
+
+    return null;
+  }, [
+    activeStorageTab,
+    selectedWarehouse,
+    previewStorage,
+    monthsNumber,
+    individualBookingStartDate,
+    cloudStorage,
+    cloudWarehouse,
+    cloudMonthsNumber,
+    cloudVolume,
+    selectedTariff,
+    cloudBookingStartDate,
+    lockerBookingState,
+    apiWarehouses,
+    warehouses,
+  ]);
 
   const calculatePercentDiscountAmount = useCallback((amount, percent) => {
     const totalAmount = Number(amount) || 0;
@@ -1352,22 +1502,9 @@ const HomePage = memo(({
         ? "Свои габариты" 
         : selectedTariff.name;
 
-      // Маппинг id тарифа на тип тарифа для бэкенда
-      const tariffTypeMap = {
-        'sumka': 'CLOUD_TARIFF_SUMKA',
-        'shina': 'CLOUD_TARIFF_SHINA',
-        'motorcycle': 'CLOUD_TARIFF_MOTORCYCLE',
-        'bicycle': 'CLOUD_TARIFF_BICYCLE',
-        'sunuk': 'CLOUD_TARIFF_SUNUK',
-        'furniture': 'CLOUD_TARIFF_FURNITURE',
-        'sklad': 'CLOUD_TARIFF_SKLAD',
-        'garazh': 'CLOUD_TARIFF_GARAZH'
-      };
-
-      // Определяем тип тарифа для отправки на бэкенд
-      const tariff_type = selectedTariff.isCustom 
-        ? null 
-        : tariffTypeMap[selectedTariff.id] || null;
+      const tariff_type = selectedTariff.isCustom
+        ? null
+        : CLOUD_TARIFF_TYPE_MAP[selectedTariff.id] || null;
 
       const orderItems = [
         {
@@ -2951,6 +3088,7 @@ const HomePage = memo(({
                 isAdminOrManager={isAdminOrManager}
                 isUserRole={isUserRole}
                 onOpenClientSelector={() => setIsClientSelectorOpen(true)}
+                onBookingStateChange={handleLockerBookingStateChange}
                 initialVolumeM3={
                   isEmbed && bookingEmbedFormat === "LOCKERS"
                     ? embedInitialVolume
@@ -3004,6 +3142,7 @@ const HomePage = memo(({
           }}
           legacyImportBuildOrderPayload={buildLegacyImportOrderPayload}
           legacyImportBookingSummary={buildLegacyImportBookingSummary}
+          legacyImportStorageType={legacyImportStorageType}
           onLegacyImportSuccess={() => {
             queryClient.refetchQueries({ queryKey: ["orders", "user"] });
             const redirectSection = "request";
