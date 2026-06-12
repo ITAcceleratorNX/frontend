@@ -12,6 +12,7 @@ import { formatCalendarDateLong } from '../../../shared/lib/utils/date';
 import { formatPhoneNumber, RHF_PHONE_RULES } from '../../../shared/lib/phone';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { DateField } from '@/shared/ui/DateField.jsx';
+import UserActiveOrders from './UserActiveOrders';
 
 const ROLE_OPTIONS = [
   { value: 'ADMIN', label: 'Администратор' },
@@ -937,6 +938,8 @@ const UserProfile = () => {
                     )}
                   </div>
                 </div>
+
+                {isAdminOrManager && <UserActiveOrders userId={selectedUser.id} />}
               </div>
             </div>
           </div>

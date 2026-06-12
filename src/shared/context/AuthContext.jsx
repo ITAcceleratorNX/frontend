@@ -55,10 +55,16 @@ export const AuthProvider = ({ children }) => {
         queryClient.invalidateQueries({queryKey: [USER_QUERY_KEY]});
         
         // Перезапускаем запрос для получения данных пользователя
-        await refetch();
-        
+        const refetchResult = await refetch();
+        if (!refetchResult?.data) {
+          return {
+            success: false,
+            error: 'Вход выполнен, но сессия не сохранилась. Попробуйте обновить страницу или войти снова.',
+          };
+        }
+
         if (import.meta.env.DEV) console.log('AuthContext: Пользователь успешно авторизован');
-        
+
         return { success: true };
       } else {
         throw new Error(response.message || 'Ошибка авторизации');

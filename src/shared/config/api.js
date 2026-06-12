@@ -21,8 +21,8 @@ const DEVELOPMENT_API_URL = 'https://api.extraspace.kz';
 
 // ============================================
 
-// Используем прокси в development, прямой URL в production
-export const API_BASE_URL = "https://api.extraspace.kz";
+// В dev запросы идут через Vite-прокси /api → бэкенд (cookies на localhost работают)
+export const API_BASE_URL = isDevelopment ? '/api' : PRODUCTION_API_URL;
 
 // Прямой URL для случаев, когда прокси не используется (SSE, WebSocket и т.д.)
 export const API_DIRECT_URL = isDevelopment ? DEVELOPMENT_API_URL : PRODUCTION_API_URL;

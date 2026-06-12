@@ -34,6 +34,17 @@ export const paymentsApi = {
     }
   },
 
+  // Заказы и оплаты пользователя (ADMIN/MANAGER)
+  getPaymentsByUserId: async (userId) => {
+    try {
+      const response = await api.get(`/payments/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('PaymentsAPI: Ошибка при получении заказов пользователя:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Создание оплаты для дополнительной услуги (для активных заказов)
   createAdditionalServicePayment: async (orderId, serviceType) => {
     try {

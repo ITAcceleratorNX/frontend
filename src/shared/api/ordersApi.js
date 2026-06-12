@@ -43,6 +43,17 @@ export const ordersApi = {
     }
   },
 
+  // Получение заказа по ID
+  getOrderById: async (orderId) => {
+    try {
+      const response = await api.get(`/orders/${orderId}`);
+      return response.data;
+    } catch (error) {
+      console.error('OrdersAPI: Ошибка при получении заказа:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   // Получение заказов текущего пользователя
   getUserOrders: async () => {
     try {
