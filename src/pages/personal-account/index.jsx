@@ -23,6 +23,7 @@ import StaffCctvSection from './ui/StaffCctvSection';
 import { useDeviceType } from '../../shared/lib/hooks/useWindowWidth';
 import MobileSidebar from './ui/MobileSidebar';
 import MobileOrdersLayout from './ui/MobileOrdersLayout';
+import StaffThemeWrapper from './ui/StaffThemeWrapper';
 import '@szhsin/react-menu/dist/index.css';
 
 import { 
@@ -209,11 +210,11 @@ const PersonalAccountPage = memo(() => {
   // Пока идет проверка аутентификации, показываем загрузку
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
         <div className="flex-1 flex items-center justify-center">
           <p className="text-xl text-gray-600">Загрузка...</p>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
@@ -236,7 +237,7 @@ const PersonalAccountPage = memo(() => {
 
     // Если не загрузка и пользователь аутентифицирован, показываем контент
   return (
-    <div className="min-h-screen flex flex-col">
+    <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
       <div className="flex flex-1 min-w-0">
         {!isMobile && (
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
@@ -277,7 +278,7 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'promocodes' && user?.role === 'ADMIN' && <PromoCodeManagement />}
         </main>
       </div>
-    </div>
+    </StaffThemeWrapper>
   );
   }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter, ordersManagementInitialMode, paymentsHighlightOrderId]);
 

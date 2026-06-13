@@ -2,6 +2,7 @@ import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './app/index'
 import './app/styles/global.css'
+import './app/styles/staff-dark.css'
 import { initAttribution } from './shared/lib/attribution.js'
 
 // LP attribution: capture gclid/utm_* synchronously at script load, BEFORE

@@ -13,6 +13,7 @@ import { formatPhoneNumber, RHF_PHONE_RULES } from '../../../shared/lib/phone';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { DateField } from '@/shared/ui/DateField.jsx';
 import UserActiveOrders from './UserActiveOrders';
+import StaffThemeWrapper from './StaffThemeWrapper';
 
 const ROLE_OPTIONS = [
   { value: 'ADMIN', label: 'Администратор' },
@@ -590,7 +591,7 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1 min-w-0">
           {!isMobile && <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
@@ -604,13 +605,13 @@ const UserProfile = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   if (!selectedUser) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1 min-w-0">
           {!isMobile && <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
@@ -633,12 +634,12 @@ const UserProfile = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
       <Header />
       
       {/* Модальное окно подтверждения удаления */}
@@ -945,7 +946,7 @@ const UserProfile = () => {
           </div>
         </main>
       </div>
-    </div>
+    </StaffThemeWrapper>
   );
 };
 

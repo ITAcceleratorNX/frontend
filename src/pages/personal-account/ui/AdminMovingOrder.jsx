@@ -27,6 +27,8 @@ import {
 import { showErrorToast } from '../../../shared/lib/toast';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 import EditLocationModal from './EditLocationModal';
+import { useAuth } from '../../../shared/context/AuthContext';
+import StaffThemeWrapper from './StaffThemeWrapper';
 
 const AdminMovingOrder = () => {
   const { orderId } = useParams();
@@ -37,6 +39,7 @@ const AdminMovingOrder = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const downloadItemFile = useDownloadItemFile();
+  const { user } = useAuth();
 
   // Функция для обработки навигации в сайдбаре
   const handleNavClick = (navKey) => {
@@ -134,7 +137,7 @@ const AdminMovingOrder = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
@@ -148,13 +151,13 @@ const AdminMovingOrder = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
@@ -177,12 +180,12 @@ const AdminMovingOrder = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
       <Header />
       <div className="flex flex-1">
         <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
@@ -407,7 +410,7 @@ const AdminMovingOrder = () => {
           </div>
         </main>
       </div>
-    </div>
+    </StaffThemeWrapper>
   );
 };
 

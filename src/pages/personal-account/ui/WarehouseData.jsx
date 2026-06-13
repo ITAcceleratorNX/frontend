@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {showInfoToast, showSuccessToast, showErrorToast} from '../../../shared/lib/toast';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../../shared/context/AuthContext';
+import StaffThemeWrapper from './StaffThemeWrapper';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { paymentsApi } from '../../../shared/api/paymentsApi';
 import Sidebar from './Sidebar';
@@ -1413,12 +1414,12 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     if (embedded) return loadingContent;
 
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col bg-gray-50">
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           <main className="flex-1 p-6">{loadingContent}</main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
@@ -1466,17 +1467,17 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
     if (embedded) return errorContent;
 
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col bg-gray-50">
         <div className="flex flex-1">
           <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />
           <main className="flex-1 p-6">{errorContent}</main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   return (
-    <div className={embedded ? "" : "min-h-screen flex flex-col bg-gray-50"}>
+    <StaffThemeWrapper user={user} className={embedded ? '' : 'min-h-screen flex flex-col bg-gray-50'}>
       <div className={embedded ? "" : "flex flex-1"}>
         {!embedded && <Sidebar activeNav={activeNav} setActiveNav={setActiveNav} />}
         <main className={embedded ? "" : "flex-1 p-6"}>
@@ -2113,7 +2114,7 @@ const WarehouseData = ({ embedded = false, onBookingComplete }) => {
           </div>
         </div>
       )}
-    </div>
+    </StaffThemeWrapper>
   );
 };
 

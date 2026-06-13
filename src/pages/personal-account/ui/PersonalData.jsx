@@ -380,9 +380,9 @@ const PersonalData = memo(({ embeddedMobile = false }) => {
       </div>
 
       {/* Блок с информацией пользователя */}
-      <div className={`bg-white rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] ${embeddedMobile ? 'p-3 min-[360px]:p-4 mb-3 min-[360px]:mb-4' : 'bg-gray-100 rounded-2xl p-6 mb-6'}`}>
+      <div className={`staff-profile-info-card bg-white rounded-[25px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08)] ${embeddedMobile ? 'p-3 min-[360px]:p-4 mb-3 min-[360px]:mb-4' : 'bg-gray-100 rounded-2xl p-6 mb-6'}`}>
         <div className="flex items-start gap-3 min-[360px]:gap-4">
-          <div className={`rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 ${embeddedMobile ? 'w-10 h-10 min-[360px]:w-12 min-[360px]:h-12' : 'w-12 h-12'}`}>
+          <div className={`staff-profile-info-icon rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 ${embeddedMobile ? 'w-10 h-10 min-[360px]:w-12 min-[360px]:h-12' : 'w-12 h-12'}`}>
             <User className={`text-gray-600 ${embeddedMobile ? 'w-5 h-5 min-[360px]:w-6 min-[360px]:h-6' : 'w-6 h-6'}`} />
           </div>
           <div className="flex-1 min-w-0">

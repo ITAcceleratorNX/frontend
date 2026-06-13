@@ -1,0 +1,405 @@
+/* Тёмная тема личного кабинета Admin / Manager — серый фон + зелёные акценты бренда */
+
+[data-theme="staff-dark"] {
+  color-scheme: dark;
+
+  /* Фоны */
+  --staff-bg: #2e3333;
+  --staff-surface: #3a4040;
+  --staff-surface-raised: #454b4b;
+  --staff-surface-hover: #4f5656;
+
+  /* Границы */
+  --staff-border: #525858;
+  --staff-border-light: #484e4e;
+
+  /* Текст */
+  --staff-text: #f0f2f2;
+  --staff-text-secondary: #c4caca;
+  --staff-text-muted: #999999;
+
+  /* Зелёные акценты бренда */
+  --staff-accent: #00a991;
+  --staff-accent-hover: #009882;
+  --staff-brand: #26b3ab;
+  --staff-brand-light: #b0e4dd;
+  --staff-brand-dark: #004743;
+  --staff-nav-active-bg: rgba(0, 169, 145, 0.18);
+
+  /* shadcn-токены внутри кабинета */
+  --background: var(--staff-bg);
+  --foreground: var(--staff-text);
+  --card: var(--staff-surface);
+  --card-foreground: var(--staff-text);
+  --popover: var(--staff-surface-raised);
+  --popover-foreground: var(--staff-text);
+  --primary: var(--staff-accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--staff-surface-raised);
+  --secondary-foreground: var(--staff-text);
+  --muted: var(--staff-surface-raised);
+  --muted-foreground: var(--staff-text-muted);
+  --accent: var(--staff-surface-hover);
+  --accent-foreground: var(--staff-text);
+  --border: var(--staff-border);
+  --input: var(--staff-border);
+  --ring: var(--staff-accent);
+
+  background-color: var(--staff-bg);
+  color: var(--staff-text);
+}
+
+/* ── Фоны ── */
+[data-theme="staff-dark"] .bg-white {
+  background-color: var(--staff-surface) !important;
+}
+
+[data-theme="staff-dark"] .bg-gray-50,
+[data-theme="staff-dark"] .bg-gray-50\/40,
+[data-theme="staff-dark"] .bg-gray-50\/50,
+[data-theme="staff-dark"] .bg-gray-50\/80 {
+  background-color: var(--staff-bg) !important;
+}
+
+[data-theme="staff-dark"] .bg-gray-100 {
+  background-color: var(--staff-surface-raised) !important;
+}
+
+[data-theme="staff-dark"] .bg-gray-200 {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-gray-50:hover,
+[data-theme="staff-dark"] .hover\:bg-gray-50\/50:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-gray-100:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .active\:bg-gray-100:active {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+/* ── Текст ── */
+[data-theme="staff-dark"] .text-gray-900,
+[data-theme="staff-dark"] .text-gray-800 {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .text-gray-700,
+[data-theme="staff-dark"] .text-gray-600 {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .text-gray-500,
+[data-theme="staff-dark"] .text-gray-400 {
+  color: var(--staff-text-muted) !important;
+}
+
+[data-theme="staff-dark"] .hover\:text-gray-900:hover {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#273655\],
+[data-theme="staff-dark"] .text-\[\#1e2c4f\] {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#004743\] {
+  color: var(--staff-brand) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#363636\],
+[data-theme="staff-dark"] .text-\[\#000000\] {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#737373\],
+[data-theme="staff-dark"] .text-\[\#999\],
+[data-theme="staff-dark"] .text-\[\#999999\],
+[data-theme="staff-dark"] .text-\[\#A2A2A2\],
+[data-theme="staff-dark"] .text-\[\#A6A6A6\] {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .text-slate-600,
+[data-theme="staff-dark"] .text-slate-800 {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .text-slate-800.font-semibold {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .hover\:text-\[\#273655\]:hover {
+  color: var(--staff-brand-light) !important;
+}
+
+/* ── Границы ── */
+[data-theme="staff-dark"] .border-gray-100,
+[data-theme="staff-dark"] .border-gray-200,
+[data-theme="staff-dark"] .border-gray-300,
+[data-theme="staff-dark"] .border-\[\#f5f5f5\],
+[data-theme="staff-dark"] .border-\[\#DFDFDF\],
+[data-theme="staff-dark"] .border-\[\#d7dbe6\] {
+  border-color: var(--staff-border) !important;
+}
+
+[data-theme="staff-dark"] .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+[data-theme="staff-dark"] .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--staff-border) !important;
+}
+
+/* ── Поля ввода ── */
+[data-theme="staff-dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+[data-theme="staff-dark"] textarea,
+[data-theme="staff-dark"] select {
+  background-color: var(--staff-surface-raised);
+  border-color: var(--staff-border);
+  color: var(--staff-text);
+}
+
+[data-theme="staff-dark"] input::placeholder,
+[data-theme="staff-dark"] textarea::placeholder {
+  color: var(--staff-text-muted);
+  opacity: 1;
+}
+
+[data-theme="staff-dark"] .placeholder-gray-400::placeholder,
+[data-theme="staff-dark"] .placeholder\:text-gray-400::placeholder,
+[data-theme="staff-dark"] .placeholder\:text-\[\#A6A6A6\]::placeholder,
+[data-theme="staff-dark"] .placeholder\:text-white\/60::placeholder {
+  color: var(--staff-text-muted) !important;
+  opacity: 1;
+}
+
+[data-theme="staff-dark"] input.text-\[\#737373\],
+[data-theme="staff-dark"] input.text-\[\#273655\] {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] input:focus:not([type="checkbox"]):not([type="radio"]),
+[data-theme="staff-dark"] textarea:focus,
+[data-theme="staff-dark"] select:focus {
+  border-color: var(--staff-accent);
+  outline-color: var(--staff-accent);
+}
+
+/* ── Таблицы ── */
+[data-theme="staff-dark"] thead.bg-gray-50,
+[data-theme="staff-dark"] tr.bg-gray-50 {
+  background-color: var(--staff-surface-raised) !important;
+}
+
+[data-theme="staff-dark"] tbody tr:hover,
+[data-theme="staff-dark"] tr.hover\:bg-gray-50:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+/* ── Тени ── */
+[data-theme="staff-dark"] .shadow-sm,
+[data-theme="staff-dark"] .shadow,
+[data-theme="staff-dark"] .shadow-lg,
+[data-theme="staff-dark"] .shadow-xl,
+[data-theme="staff-dark"] .shadow-2xl {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* ── Сайдбар ── */
+[data-theme="staff-dark"] .staff-sidebar {
+  background-color: var(--staff-surface);
+  border-color: var(--staff-border-light);
+}
+
+[data-theme="staff-dark"] .staff-sidebar .staff-nav-item:hover {
+  background-color: var(--staff-surface-hover);
+}
+
+[data-theme="staff-dark"] .staff-sidebar .staff-nav-item--active {
+  background-color: var(--staff-nav-active-bg);
+  color: var(--staff-accent);
+}
+
+[data-theme="staff-dark"] .staff-sidebar .staff-divider {
+  border-color: var(--staff-border-light);
+}
+
+[data-theme="staff-dark"] .staff-notifications-panel {
+  background-color: var(--staff-surface-raised);
+  border-color: var(--staff-accent);
+}
+
+/* ── Мобильное меню ── */
+[data-theme="staff-dark"] .staff-mobile-menu-btn {
+  background-color: var(--staff-surface);
+  border-color: var(--staff-border);
+  color: var(--staff-brand-light);
+}
+
+[data-theme="staff-dark"] .staff-mobile-menu {
+  background-color: var(--staff-surface-raised) !important;
+  border-color: var(--staff-border) !important;
+}
+
+[data-theme="staff-dark"] .staff-mobile-menu-item--active {
+  background-color: var(--staff-accent) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="staff-dark"] .staff-mobile-menu-item:hover:not(.staff-mobile-menu-item--active) {
+  background-color: var(--staff-surface-hover) !important;
+  color: var(--staff-brand-light) !important;
+}
+
+/* ── Recharts (статистика) ── */
+[data-theme="staff-dark"] .recharts-cartesian-grid line {
+  stroke: var(--staff-border);
+}
+
+[data-theme="staff-dark"] .recharts-text {
+  fill: var(--staff-text-secondary);
+}
+
+[data-theme="staff-dark"] .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: var(--staff-surface-raised) !important;
+  border-color: var(--staff-border) !important;
+  color: var(--staff-text) !important;
+}
+
+/* ── Скелетоны загрузки ── */
+[data-theme="staff-dark"] .animate-pulse.bg-gray-200 {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+/* ── Светлые акцентные фоны → тёмные варианты ── */
+[data-theme="staff-dark"] .bg-blue-50,
+[data-theme="staff-dark"] .bg-amber-100,
+[data-theme="staff-dark"] .bg-red-50,
+[data-theme="staff-dark"] .bg-red-100,
+[data-theme="staff-dark"] .bg-orange-100,
+[data-theme="staff-dark"] .bg-green-50 {
+  background-color: var(--staff-surface-raised) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-red-50:hover {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+/* ── Основная область контента ── */
+[data-theme="staff-dark"] main {
+  background-color: var(--staff-bg);
+}
+
+/* ── Иконки и кнопки-иконки ── */
+[data-theme="staff-dark"] .bg-gray-200 svg,
+[data-theme="staff-dark"] .bg-gray-200 .lucide,
+[data-theme="staff-dark"] .rounded-full.bg-gray-200 .text-gray-600 {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] button.text-gray-600,
+[data-theme="staff-dark"] button .text-gray-600 {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] button.hover\:bg-gray-200:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] button.hover\:text-gray-900:hover,
+[data-theme="staff-dark"] button.hover\:text-gray-900:hover svg {
+  color: var(--staff-text) !important;
+}
+
+/* Иконки навигации в сайдбаре (неактивные SVG — как Lucide CRM / Видеонаблюдение) */
+[data-theme="staff-dark"] .staff-sidebar .staff-nav-icon-inactive {
+  filter: brightness(0) invert(1);
+  opacity: 0.55;
+}
+
+[data-theme="staff-dark"] .staff-sidebar .staff-nav-item--active .staff-nav-icon-inactive {
+  filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1200%) hue-rotate(140deg) brightness(0.9) contrast(1.1);
+  opacity: 1;
+}
+
+/* Ссылки и акценты в сайдбаре */
+[data-theme="staff-dark"] .staff-sidebar .staff-profile-link,
+[data-theme="staff-dark"] .staff-sidebar .staff-bell-btn {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .staff-sidebar .staff-profile-link:hover,
+[data-theme="staff-dark"] .staff-sidebar .staff-bell-btn:hover {
+  color: var(--staff-accent) !important;
+}
+
+/* Тултип ИИН */
+[data-theme="staff-dark"] [class*="border-[#273655]"] {
+  border-color: rgba(176, 228, 221, 0.45) !important;
+}
+
+[data-theme="staff-dark"] [class*="bg-[#273655]"] {
+  background-color: rgba(0, 169, 145, 0.18) !important;
+}
+
+[data-theme="staff-dark"] button.text-\[\#273655\],
+[data-theme="staff-dark"] button.text-\[\#273655\] svg {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] button.hover\:bg-\[\#273655\]\/10:hover {
+  background-color: rgba(0, 169, 145, 0.25) !important;
+}
+
+/* Информационная карточка профиля */
+[data-theme="staff-dark"] .staff-profile-info-card {
+  background-color: var(--staff-surface-raised) !important;
+  border: 1px solid var(--staff-border);
+}
+
+[data-theme="staff-dark"] .staff-profile-info-card .staff-profile-info-icon {
+  background-color: var(--staff-surface-hover);
+  color: var(--staff-brand-light);
+}
+
+/* Кнопки outline на тёмном фоне */
+[data-theme="staff-dark"] .border-\[\#00A991\].bg-white,
+[data-theme="staff-dark"] .border-2.border-\[\#00A991\].bg-white {
+  background-color: transparent !important;
+  color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] .border-\[\#00A991\].bg-white:hover,
+[data-theme="staff-dark"] .hover\:bg-\[\#00A991\]\/5:hover {
+  background-color: rgba(0, 169, 145, 0.12) !important;
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .bg-gray-200.text-gray-700,
+[data-theme="staff-dark"] .hover\:bg-gray-300:hover {
+  background-color: var(--staff-surface-hover) !important;
+  color: var(--staff-text) !important;
+}
+
+/* DatePicker / account-вариант */
+[data-theme="staff-dark"] .rounded-xl.border-gray-200.bg-white,
+[data-theme="staff-dark"] .rounded-2xl.border-gray-200.bg-white {
+  background-color: var(--staff-surface-raised) !important;
+  border-color: var(--staff-border) !important;
+}
+
+[data-theme="staff-dark"] .focus-within\:border-\[\#31876D\]:focus-within,
+[data-theme="staff-dark"] .focus-within\:ring-\[\#31876D\]\/20:focus-within {
+  border-color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] label.text-\[\#273655\] {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .focus\:ring-offset-2:focus,
+[data-theme="staff-dark"] .focus\:ring-offset-white:focus {
+  --tw-ring-offset-color: var(--staff-bg);
+}

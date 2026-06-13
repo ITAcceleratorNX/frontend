@@ -27,6 +27,8 @@ import {
 import { showErrorToast, showSuccessToast } from '../../../shared/lib/toast';
 import { useDownloadItemFile } from '../../../shared/lib/hooks/use-orders';
 import EditLocationModal from './EditLocationModal';
+import { useAuth } from '../../../shared/context/AuthContext';
+import StaffThemeWrapper from './StaffThemeWrapper';
 
 const ManagerMovingOrder = () => {
   const { orderId } = useParams();
@@ -38,6 +40,7 @@ const ManagerMovingOrder = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const downloadItemFile = useDownloadItemFile();
+  const { user } = useAuth();
 
   // Функция для обработки навигации в сайдбаре
   const handleNavClick = (navKey) => {
@@ -209,7 +212,7 @@ const ManagerMovingOrder = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="managermoving" setActiveNav={handleNavClick} />
@@ -223,13 +226,13 @@ const ManagerMovingOrder = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="managermoving" setActiveNav={handleNavClick} />
@@ -252,12 +255,12 @@ const ManagerMovingOrder = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
       <Header />
       <div className="flex flex-1">
         <Sidebar activeNav="managermoving" setActiveNav={handleNavClick} />
@@ -482,7 +485,7 @@ const ManagerMovingOrder = () => {
           </div>
         </main>
       </div>
-    </div>
+    </StaffThemeWrapper>
   );
 };
 

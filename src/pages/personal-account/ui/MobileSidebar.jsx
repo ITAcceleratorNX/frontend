@@ -11,6 +11,7 @@ import { useUnreadNotificationsCount, useAwaitableDeliveriesCount, usePendingExt
 import { useChatStore } from '../../../entities/chat/model';
 import { useEffect } from 'react';
 import clsx from 'clsx';
+import { isStaffRole } from '../../../shared/lib/utils/isStaffRole';
 import './mobile-menu.css';
 
 // Import icons
@@ -112,6 +113,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
   };
 
   const navItems = getNavItemsByRole(user?.role);
+  const isStaff = isStaffRole(user?.role);
 
   const handleNavClick = async (key) => {
     if (key === 'delivery') {
@@ -193,8 +195,13 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
   return (
     <ReactMenu
       menuButton={
-        <MenuButton className="mobile-menu-button fixed top-20 left-4 z-50 p-3 bg-white rounded-full shadow-lg hover:shadow-xl border border-gray-200">
-          <Menu className="w-6 h-6 text-[#273655]" />
+        <MenuButton className={clsx(
+          'mobile-menu-button fixed top-20 left-4 z-50 p-3 rounded-full shadow-lg hover:shadow-xl border',
+          isStaff
+            ? 'staff-mobile-menu-btn bg-[#3a4040] border-[#484e4e] text-[#b0e4dd]'
+            : 'bg-white border-gray-200'
+        )}>
+          <Menu className={clsx('w-6 h-6', !isStaff && 'text-[#273655]')} />
         </MenuButton>
       }
       direction="top"
@@ -204,8 +211,13 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
       arrow={true}
       gap={10}
       shift={2}
-      menuClassName="!bg-white !border !border-gray-200 !shadow-2xl !rounded-2xl !p-2 !min-w-[280px] !max-w-[320px]"
-      arrowClassName="!fill-white !stroke-gray-200"
+      menuClassName={clsx(
+        '!border !shadow-2xl !rounded-2xl !p-2 !min-w-[280px] !max-w-[320px]',
+        isStaff
+          ? 'staff-mobile-menu !bg-[#454b4b] !border-[#525858]'
+          : '!bg-white !border-gray-200'
+      )}
+      arrowClassName={isStaff ? '!fill-[#454b4b] !stroke-[#525858]' : '!fill-white !stroke-gray-200'}
       transition={{
         open: true,
         close: true,
@@ -213,9 +225,18 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
       }}
     >
       <div className="py-2">
-        <div className="px-4 py-3 border-b border-gray-100 mb-2">
-          <h3 className="text-lg font-semibold text-[#273655]">Меню</h3>
-          <p className="text-sm text-gray-500">
+        <div className={clsx(
+          'px-4 py-3 border-b mb-2',
+          isStaff ? 'border-[#484e4e]' : 'border-gray-100'
+        )}>
+          <h3 className={clsx(
+            'text-lg font-semibold',
+            isStaff ? 'text-[#b0e4dd]' : 'text-[#273655]'
+          )}>Меню</h3>
+          <p className={clsx(
+            'text-sm',
+            isStaff ? 'text-[#999999]' : 'text-gray-500'
+          )}>
             {user?.role === 'USER' ? 'Пользователь' : 
              user?.role === 'ADMIN' ? 'Администратор' :
              user?.role === 'MANAGER' ? 'Менеджер' :
@@ -225,7 +246,10 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
         
         {navItems.map((item, idx) => {
           if (item.divider) {
-            return <div key={idx} className="my-2 border-t border-gray-100" />;
+            return <div key={idx} className={clsx(
+              'my-2 border-t',
+              isStaff ? 'border-[#484e4e]' : 'border-gray-100'
+            )} />;
           }
           
           return (
@@ -233,10 +257,14 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
               key={item.key}
               onClick={() => handleNavClick(item.key)}
               className={clsx(
-                '!flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all !duration-200 !mx-1 !my-1',
+                'staff-mobile-menu-item !flex !items-center !gap-3 !px-4 !py-3 !rounded-xl !text-base !font-medium !transition-all !duration-200 !mx-1 !my-1',
                 activeNav === item.key
-                  ? '!bg-[#273655] !text-white !shadow-md'
-                  : '!text-gray-700 hover:!bg-gray-50 hover:!text-[#273655]',
+                  ? isStaff
+                    ? 'staff-mobile-menu-item--active !bg-[#00A991] !text-white !shadow-md'
+                    : '!bg-[#273655] !text-white !shadow-md'
+                  : isStaff
+                    ? '!text-[#c4caca] hover:!bg-[#4f5656] hover:!text-[#b0e4dd]'
+                    : '!text-gray-700 hover:!bg-gray-50 hover:!text-[#273655]',
                 item.key === 'logout' && '!text-red-600 hover:!bg-red-50 hover:!text-red-700'
               )}
             >
