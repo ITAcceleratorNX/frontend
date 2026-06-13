@@ -20,8 +20,7 @@ const STORAGE_FORMATS = [
     description: "Мы забираем, храним и возвращаем ваши вещи по запросу.",
     points: ["Забор вещей", "Хранение на складе", "Возврат по запросу"],
     to: "/cloud-storage",
-    imageWebp: "/images/formats/02.webp",
-    imagePng: "/images/formats/02.png",
+    imagePng: "/images/formats/02.jpg",
     imageAlt: "Облачное хранение — забор и возврат вещей",
     loading: "lazy",
     badge: "Сервис",
@@ -31,8 +30,7 @@ const STORAGE_FORMATS = [
     description: "Краткосрочное хранение сумок, чемоданов и небольших вещей.",
     points: ["От 1 дня", "До 2 недель", "Чемоданы и сумки"],
     to: "/storage-room",
-    imageWebp: "/images/formats/03.webp",
-    imagePng: "/images/formats/03.png",
+    imagePng: "/images/formats/03.jpg",
     imageAlt: "Камера хранения — краткосрочное хранение",
     loading: "lazy",
     badge: "Быстро",
@@ -83,7 +81,7 @@ export default function StorageFormatsSection() {
               >
                 <div className="relative overflow-hidden rounded-2xl">
                   <picture>
-                    <source srcSet={item.imageWebp} type="image/webp" />
+                    {item.imageWebp && <source srcSet={item.imageWebp} type="image/webp" />}
                     <img
                       src={item.imagePng}
                       alt={item.imageAlt}
