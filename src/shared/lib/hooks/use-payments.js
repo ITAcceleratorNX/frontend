@@ -22,11 +22,12 @@ export const PAYMENTS_QUERY_KEYS = {
  * Хук для админ/менеджера: список order_payments с пагинацией и фильтрами
  */
 export const useAdminPayments = (page, filters = {}, options = {}) => {
+  const { limit = 20, ...queryOptions } = options;
   return useQuery({
-    queryKey: [PAYMENTS_QUERY_KEYS.ADMIN_PAYMENTS, page, filters],
-    queryFn: () => paymentsApi.getAdminPayments({ page, limit: 20, ...filters }).then((r) => r.data),
+    queryKey: [PAYMENTS_QUERY_KEYS.ADMIN_PAYMENTS, page, filters, limit],
+    queryFn: () => paymentsApi.getAdminPayments({ page, limit, ...filters }).then((r) => r.data),
     staleTime: 2 * 60 * 1000,
-    ...options,
+    ...queryOptions,
   });
 };
 
@@ -70,6 +71,8 @@ export const useConfirmManualPayment = () => {
       paymentsApi.confirmManualPayment(orderPaymentId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PAYMENTS_QUERY_KEYS.ADMIN_PAYMENTS] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['user-orders'] });
       showGenericSuccess('Оплата подтверждена');
     },
     onError: (error) => {

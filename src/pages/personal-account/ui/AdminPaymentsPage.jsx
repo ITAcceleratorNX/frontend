@@ -3,108 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { Switch } from '@/components/ui/switch';
 import { useAdminPayments, useConfirmManualPayment, usePaymentSettings, useUpdatePaymentSettings } from '@/shared/lib/hooks/use-payments';
 import { useDeviceType } from '@/shared/lib/hooks/useWindowWidth';
 import { showOrderLoadError } from '@/shared/lib/utils/notifications';
-
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'Все' },
-  { value: ['UNPAID', 'MANUAL'], label: 'Не оплачено' },
-  { value: 'PAID', label: 'Оплачено' },
-];
-
-const MONTHS = [
-  { value: '', label: 'Любой месяц' },
-  ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1).padStart(2, '0') })),
-];
-
-const STATUS_LABEL = {
-  UNPAID: 'Не оплачено',
-  MANUAL: 'Не оплачено',
-  PAID: 'Оплачено',
-  CANCELED: 'Отменён',
-};
-
-const formatAmount = (v) => (v != null ? Number(v).toLocaleString('ru-RU') + ' ₸' : '—');
-const formatPeriod = (month, year) => (month && year ? `${String(month).padStart(2, '0')}/${year}` : '—');
-const formatDate = (d) => (d ? new Date(d).toLocaleDateString('ru-RU') : '—');
-const formatClient = (user) => {
-  if (!user) return '—';
-  const parts = [user.phone, user.name].filter(Boolean);
-  return parts.length ? parts.join(', ') : '—';
-};
-
-const currentYear = new Date().getFullYear();
-const YEARS = [
-  { value: '', label: 'Любой год' },
-  ...Array.from({ length: 6 }, (_, i) => ({ value: String(currentYear - i), label: String(currentYear - i) })),
-];
-
-/** Модалка подтверждения ручной оплаты с предупреждением */
-const ConfirmManualModal = ({ open, onOpenChange, row, onConfirm, isSubmitting }) => {
-  if (!row) return null;
-  const handleConfirm = () => {
-    onConfirm(row.id);
-    onOpenChange(false);
-  };
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px] p-0 rounded-2xl">
-        <DialogHeader className="px-5 pt-5 pb-3">
-          <DialogTitle className="text-lg font-bold text-[#273655]">Подтвердить ручную оплату</DialogTitle>
-          <DialogDescription className="text-xs text-[#8A8A8A]">
-            Убедитесь, что деньги от клиента действительно поступили на счёт (банк, касса, перевод). После подтверждения статус изменится на «Оплачено».
-          </DialogDescription>
-        </DialogHeader>
-        <div className="px-5 pb-3 text-sm text-[#273655] space-y-2 border-t border-gray-100 pt-3">
-          <p><span className="text-gray-500">Платёж ID:</span> {row.id}</p>
-          <p><span className="text-gray-500">Заказ:</span> №{row.order_id}</p>
-          <p><span className="text-gray-500">Клиент:</span> {formatClient(row.order?.user)}</p>
-          <p><span className="text-gray-500">Сумма:</span> {formatAmount(row.amount)}</p>
-          <p><span className="text-gray-500">Период:</span> {formatPeriod(row.month, row.year)}</p>
-        </div>
-        <DialogFooter className="px-5 py-4 border-t border-gray-100 rounded-b-2xl gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1 h-10 rounded-xl border-gray-200 text-[#273655]"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Отмена
-          </Button>
-          <Button
-            type="button"
-            className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#26B3AB] to-[#104D4A] text-white hover:opacity-90"
-            onClick={handleConfirm}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Подтверждение…' : 'Подтвердить оплату'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+import {
+  STATUS_OPTIONS,
+  MONTHS,
+  YEARS,
+  ConfirmManualModal,
+  OrderPaymentsList,
+  OrderPaymentsPagination,
+} from '@/features/order-payments';
 
 const AdminPaymentsPage = () => {
   const [page, setPage] = useState(1);
@@ -113,7 +24,6 @@ const AdminPaymentsPage = () => {
   const [filterYear, setFilterYear] = useState('');
   const [filterPhone, setFilterPhone] = useState('');
   const [filterOrderId, setFilterOrderId] = useState('');
-  // Применённые значения — уходят в API только после "Применить" или Enter (не при каждом вводе)
   const [appliedMonth, setAppliedMonth] = useState('');
   const [appliedYear, setAppliedYear] = useState('');
   const [appliedPhone, setAppliedPhone] = useState('');
@@ -258,7 +168,7 @@ const AdminPaymentsPage = () => {
             <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }} className="w-full">
               <TabsList className="grid grid-cols-2 sm:grid-cols-3 w-full">
                 {STATUS_OPTIONS.map((opt) => (
-                  <TabsTrigger key={opt.value} value={opt.value}>
+                  <TabsTrigger key={String(opt.value)} value={opt.value}>
                     {opt.label}
                   </TabsTrigger>
                 ))}
@@ -334,121 +244,21 @@ const AdminPaymentsPage = () => {
             Платежи не найдены. Измените фильтр или попробуйте позже.
           </CardContent>
         </Card>
-      ) : isMobile ? (
-        <div className="space-y-4">
-          {rows.map((row) => (
-            <Card key={row.id} className="bg-white rounded-2xl border border-[#E0F2FE]">
-              <CardContent className="p-4 space-y-2">
-                <div><span className="text-gray-500">ID:</span> {row.id}</div>
-                <div><span className="text-gray-500">Заказ:</span> №{row.order_id}</div>
-                <div><span className="text-gray-500">Клиент:</span> {formatClient(row.order?.user)}</div>
-                <div><span className="text-gray-500">Сумма:</span> {formatAmount(row.amount)}</div>
-                <div><span className="text-gray-500">Период:</span> {formatPeriod(row.month, row.year)}</div>
-                <div><span className="text-gray-500">Статус:</span> {STATUS_LABEL[row.status] ?? row.status}</div>
-                <div><span className="text-gray-500">Дата оплаты:</span> {formatDate(row.paid_at)}</div>
-                {(row.status === 'UNPAID' || row.status === 'MANUAL') && (
-                  <Button
-                    size="sm"
-                    className="bg-[#00A991] hover:bg-[#009882] mt-2"
-                    disabled={confirmManual.isPending}
-                    onClick={() => handleConfirmClick(row)}
-                  >
-                    Подтвердить вручную
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       ) : (
-        <Card className="bg-white rounded-2xl border border-[#E0F2FE]">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[#273655]">ID</TableHead>
-                  <TableHead className="text-[#273655]">№ заказа</TableHead>
-                  <TableHead className="text-[#273655]">Клиент</TableHead>
-                  <TableHead className="text-[#273655]">Сумма</TableHead>
-                  <TableHead className="text-[#273655]">Период</TableHead>
-                  <TableHead className="text-[#273655]">Статус</TableHead>
-                  <TableHead className="text-[#273655]">Дата оплаты</TableHead>
-                  <TableHead className="text-[#273655]">Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>{row.id}</TableCell>
-                    <TableCell>№{row.order_id}</TableCell>
-                    <TableCell>{formatClient(row.order?.user)}</TableCell>
-                    <TableCell>{formatAmount(row.amount)}</TableCell>
-                    <TableCell>{formatPeriod(row.month, row.year)}</TableCell>
-                    <TableCell>{STATUS_LABEL[row.status] ?? row.status}</TableCell>
-                    <TableCell>{formatDate(row.paid_at)}</TableCell>
-                    <TableCell>
-                      {(row.status === 'UNPAID' || row.status === 'MANUAL') && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-[#00A991] text-[#00A991] hover:bg-[#00A991]/10"
-                          disabled={confirmManual.isPending}
-                          onClick={() => handleConfirmClick(row)}
-                        >
-                          Подтвердить вручную
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {meta.totalPages > 1 && (
-        <Card className="border border-[#E0F2FE]">
-          <CardContent className="p-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
-                {Array.from({ length: Math.min(5, meta.totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (meta.totalPages <= 5) pageNum = i + 1;
-                  else if (page <= 3) pageNum = i + 1;
-                  else if (page >= meta.totalPages - 2) pageNum = meta.totalPages - 4 + i;
-                  else pageNum = page - 2 + i;
-                  return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        onClick={() => setPage(pageNum)}
-                        isActive={page === pageNum}
-                        className="cursor-pointer"
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
-                    className={page >= meta.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-            <div className="text-center text-sm text-gray-500 mt-2">
-              Страница {page} из {meta.totalPages} • Всего {meta.total} платежей
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <Card className="bg-white rounded-2xl border border-[#E0F2FE]">
+            <CardContent className="p-0">
+              <OrderPaymentsList
+                rows={rows}
+                variant="full"
+                isMobile={isMobile}
+                onConfirmClick={handleConfirmClick}
+                isConfirmPending={confirmManual.isPending}
+              />
+            </CardContent>
+          </Card>
+          <OrderPaymentsPagination page={page} meta={meta} onPageChange={setPage} />
+        </>
       )}
 
       <ConfirmManualModal

@@ -13,6 +13,7 @@ import ReturnApprovalPanel from './ReturnApprovalPanel';
 import SendPaymentSmsButton from './SendPaymentSmsButton';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
 import { OrderDocumentsSection } from '../../../features/order-documents';
+import { OrderPaymentsSection } from '../../../features/order-payments';
 import { AlertTriangle, Unlock, Tag, User, Package, CreditCard, FileText, Truck } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
 import { CONTRACT_EXPIRY_STATUS, getOrderContractExpiry } from '../../../shared/lib/orderContractExpiry';
@@ -323,6 +324,8 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
           </div>
         </CardContent>
       </Card>
+
+      <OrderPaymentsSection orderId={order.id} />
 
       {/* Статусы */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
