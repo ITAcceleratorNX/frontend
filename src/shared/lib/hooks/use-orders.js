@@ -33,6 +33,39 @@ export const useAllOrders = (page = 1, archiveStatus = 'active', options = {}) =
     ...options
   });
 };
+/**
+ * Загружает все страницы заказов (для клиентской фильтрации и пагинации)
+ */
+export const useAllOrdersFlat = (archiveStatus = 'active', options = {}) => {
+  return useQuery({
+    queryKey: [...ORDERS_QUERY_KEYS.ALL_ORDERS, 'flat', archiveStatus],
+    queryFn: async () => {
+      const first = await ordersApi.getAllOrders(1, archiveStatus);
+      const allData = [...(first.data || [])];
+      const totalPages = first.meta?.totalPages ?? 1;
+
+      if (totalPages > 1) {
+        const pageRequests = [];
+        for (let page = 2; page <= totalPages; page += 1) {
+          pageRequests.push(ordersApi.getAllOrders(page, archiveStatus));
+        }
+        const rest = await Promise.all(pageRequests);
+        rest.forEach((res) => {
+          if (Array.isArray(res?.data)) allData.push(...res.data);
+        });
+      }
+
+      return allData;
+    },
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    retry: shouldRetryOrders,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
 export const useSearchOrders = (query, archiveStatus = 'active') => {
   return useQuery({
     queryKey: ['orders', 'search', query, archiveStatus],

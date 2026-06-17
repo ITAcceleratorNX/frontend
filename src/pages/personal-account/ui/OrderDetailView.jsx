@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -17,6 +18,8 @@ import { OrderPaymentsSection } from '../../../features/order-payments';
 import { AlertTriangle, Unlock, Tag, User, Package, CreditCard, FileText, Truck } from 'lucide-react';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
 import { CONTRACT_EXPIRY_STATUS, getOrderContractExpiry } from '../../../shared/lib/orderContractExpiry';
+import { useAuth } from '../../../shared/context/AuthContext';
+import { getUserProfilePath } from '../../../shared/lib/utils/staffRoutes';
 
 const getStorageTypeText = (type) => {
   if (type === 'INDIVIDUAL') {
@@ -28,6 +31,8 @@ const getStorageTypeText = (type) => {
 };
 
 const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = false, onApproveReturn, onUnlockStorage}) => {
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
@@ -222,6 +227,18 @@ const OrderDetailView = ({ order, onUpdate, onDelete, onApprove, isLoading = fal
             <InfoRow label="Email" value={order.user?.email || 'Не указан'} />
             <div className="border-t border-gray-100" />
             <InfoRow label="Телефон" value={order.user?.phone || 'Не указан'} />
+            {order.user?.id && (currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER') && (
+              <>
+                <div className="border-t border-gray-100" />
+                <button
+                  type="button"
+                  onClick={() => navigate(getUserProfilePath(order.user.id, currentUser.role))}
+                  className="mt-2 text-sm font-medium text-[#00A991] hover:text-[#008f7a] transition-colors"
+                >
+                  Открыть карточку клиента
+                </button>
+              </>
+            )}
           </CardContent>
         </Card>
 

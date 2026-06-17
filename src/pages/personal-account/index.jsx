@@ -7,12 +7,11 @@ import PersonalData from './ui/PersonalData';
 import PersonalDataLegal from './ui/PersonalDataLegal';
 import Contracts from './ui/Contracts';
 import ChatSection from './ui/ChatSection';
-import AllUsers from './ui/AllUsers';
 import InfoWarehouses from './ui/InfoWarehouses';
 import CourierRequest from './ui/CourierRequest';
 import CourierRequestOrder from './ui/CourierRequestOrder';
 import UserPayments from './ui/UserPayments';
-import StaffOrdersSection from './ui/StaffOrdersSection';
+import StaffClientsAndOrdersSection from './ui/StaffClientsAndOrdersSection';
 import UserDelivery from './ui/UserDelivery';
 import UserOrdersPage from './ui/UserOrdersPage';
 import ItemSearch from './ui/ItemSearch';
@@ -33,10 +32,11 @@ import {
   CourierNotifications,
 } from './ui/notifications';
 import { useAuth } from '../../shared/context/AuthContext';
+import { resolveClientsAndOrdersLegacySection } from '../../shared/lib/utils/staffRoutes';
 // ToastContainer уже подключен в главном приложении
 
 // Мемоизированный компонент страницы личного кабинета
-const VALID_SECTION_PARAMS = ['orders', 'payments', 'delivery', 'personal', 'notifications', 'ordersManagement', 'lpleads'];
+const VALID_SECTION_PARAMS = ['orders', 'payments', 'delivery', 'personal', 'notifications', 'clientsAndOrders', 'lpleads'];
 
 const PersonalAccountPage = memo(() => {
   const location = useLocation();
@@ -71,8 +71,8 @@ const PersonalAccountPage = memo(() => {
     }
   }, []);
 
-  // Начальный режим в разделе «Заказы» для MANAGER/ADMIN (requests | payments | moving)
-  const [ordersManagementInitialMode, setOrdersManagementInitialMode] = useState('requests');
+  // Начальная вкладка в разделе «Клиенты и заказы» (clients | orders | payments | moving)
+  const [clientsAndOrdersInitialMode, setClientsAndOrdersInitialMode] = useState('clients');
 
   // Сбрасываем раздел чата для ролей USER и MANAGER
   useEffect(() => {
@@ -86,12 +86,15 @@ const PersonalAccountPage = memo(() => {
   useEffect(() => {
     if (location.state?.activeSection) {
       const section = location.state.activeSection;
-      // Обратная совместимость: старые ключи request/adminpayments/managermoving/adminmoving → ordersManagement
-      if (['request', 'adminpayments', 'managermoving', 'adminmoving'].includes(section)) {
-        setActiveNav('ordersManagement');
-        setOrdersManagementInitialMode(
-          section === 'request' ? 'requests' : section === 'adminpayments' ? 'payments' : 'moving'
-        );
+      const legacy = resolveClientsAndOrdersLegacySection(section);
+      if (legacy) {
+        setActiveNav(legacy.section);
+        setClientsAndOrdersInitialMode(legacy.mode);
+      } else if (section === 'clientsAndOrders') {
+        setActiveNav('clientsAndOrders');
+        if (location.state.clientsAndOrdersTab) {
+          setClientsAndOrdersInitialMode(location.state.clientsAndOrdersTab);
+        }
       } else {
         setActiveNav(section);
       }
@@ -115,8 +118,20 @@ const PersonalAccountPage = memo(() => {
 
     // Ссылка из письма/SMS: ?section=payments или ?section=payments&orderId=123
     const sectionParam = searchParams.get('section');
-    if (sectionParam && VALID_SECTION_PARAMS.includes(sectionParam)) {
-      setActiveNav(sectionParam);
+    if (sectionParam) {
+      const legacy = resolveClientsAndOrdersLegacySection(sectionParam);
+      if (legacy) {
+        setActiveNav(legacy.section);
+        setClientsAndOrdersInitialMode(legacy.mode);
+      } else if (VALID_SECTION_PARAMS.includes(sectionParam)) {
+        setActiveNav(sectionParam);
+        if (sectionParam === 'clientsAndOrders') {
+          const tab = searchParams.get('tab');
+          if (tab) setClientsAndOrdersInitialMode(tab);
+        }
+      } else {
+        return undefined;
+      }
       if (sectionParam === 'orders' && searchParams.get('ordersFilter')) {
         setOrdersInitialFilter(searchParams.get('ordersFilter'));
       }
@@ -131,6 +146,7 @@ const PersonalAccountPage = memo(() => {
       }
       const nextSearch = new URLSearchParams(searchParams);
       nextSearch.delete('section');
+      nextSearch.delete('tab');
       nextSearch.delete('orderId');
       nextSearch.delete('ordersFilter');
       const replaceTo = nextSearch.toString() ? `${location.pathname}?${nextSearch}` : location.pathname;
@@ -254,14 +270,12 @@ const PersonalAccountPage = memo(() => {
           {activeNav === 'chat' && <ChatSection />}
           {activeNav === 'notifications' && getNotificationsComponent()}
           {activeNav === 'couriernotifications' && <CourierNotifications />}
-          {activeNav === 'adminusers' && <AllUsers />}
-          {activeNav === 'managerusers' && <AllUsers />}
           {activeNav === 'warehouses' && <InfoWarehouses />}
           {activeNav === 'cctv' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
             <StaffCctvSection />
           )}
-          {activeNav === 'ordersManagement' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
-            <StaffOrdersSection initialMode={ordersManagementInitialMode} />
+          {activeNav === 'clientsAndOrders' && (user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
+            <StaffClientsAndOrdersSection initialMode={clientsAndOrdersInitialMode} />
           )}
           {activeNav === 'courierrequests' && <CourierRequest />}
           {activeNav === 'courierrequestorder' && <CourierRequestOrder />}
@@ -280,7 +294,7 @@ const PersonalAccountPage = memo(() => {
       </div>
     </StaffThemeWrapper>
   );
-  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter, ordersManagementInitialMode, paymentsHighlightOrderId]);
+  }, [activeNav, isLoading, isAuthenticated, user, isMobile, lastOrdersTab, ordersInitialFilter, clientsAndOrdersInitialMode, paymentsHighlightOrderId]);
 
   return pageContent;
 });

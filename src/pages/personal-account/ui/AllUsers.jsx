@@ -4,6 +4,7 @@ import { usersApi } from '../../../shared/api/usersApi';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { showSuccessToast, showErrorToast } from '../../../shared/lib/toast';
 import { formatCalendarDate } from '../../../shared/lib/utils/date';
+import { getUserProfilePath } from '../../../shared/lib/utils/staffRoutes';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
 const ARCHIVE_FILTER_OPTIONS = [
@@ -37,10 +38,6 @@ const ROLE_OPTIONS_SHORT = [
   { value: 'USER', label: 'Клиент' },
   { value: 'COURIER', label: 'Курьер' },
 ];
-const getUserProfilePath = (userId, staffRole) =>
-  staffRole === 'ADMIN'
-    ? `/admin/users/${userId}/profile`
-    : `/personal-account/manager/users/${userId}`;
 
 const ArchiveConfirmModal = ({ isOpen, onClose, onConfirm, userName, isProcessing }) => {
   if (!isOpen) return null;
@@ -506,7 +503,7 @@ const AllUsers = () => {
       <div className="flex items-center justify-center py-12 sm:py-20 px-4">
         <div className="flex flex-col items-center space-y-3 sm:space-y-4">
           <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-gray-200 border-t-[#00A991]"></div>
-          <p className="text-sm sm:text-lg font-medium text-gray-600 text-center">Загрузка пользователей...</p>
+          <p className="text-sm sm:text-lg font-medium text-gray-600 text-center">Загрузка клиентов...</p>
         </div>
       </div>
     );
@@ -536,16 +533,16 @@ const AllUsers = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="min-w-0">
             <h2 className="text-lg sm:text-xl font-bold mb-1 truncate">
-              Управление пользователями
+              Управление клиентами
             </h2>
             <p className="text-xs sm:text-sm text-white/80">
-              Просматривайте и управляйте всеми пользователями системы
+              Просматривайте и управляйте всеми клиентами системы
             </p>
           </div>
           <div className="flex-shrink-0">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 sm:py-3">
               <div className="text-xl sm:text-2xl font-bold">{users.length}</div>
-              <div className="text-xs sm:text-sm text-white/80">Всего пользователей</div>
+              <div className="text-xs sm:text-sm text-white/80">Всего клиентов</div>
             </div>
           </div>
         </div>
@@ -807,12 +804,12 @@ const AllUsers = () => {
             </svg>
           </div>
           <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-            {searchTerm || selectedRole ? 'Пользователи не найдены' : 'Нет пользователей'}
+            {searchTerm || selectedRole ? 'Клиенты не найдены' : 'Нет клиентов'}
           </h3>
           <p className="text-sm sm:text-base text-gray-500 mb-4">
             {searchTerm || selectedRole 
               ? 'Попробуйте изменить фильтры поиска' 
-              : 'В системе пока нет зарегистрированных пользователей'
+              : 'В системе пока нет зарегистрированных клиентов'
             }
           </p>
           {(searchTerm || selectedRole) && (

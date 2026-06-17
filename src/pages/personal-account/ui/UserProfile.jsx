@@ -511,7 +511,7 @@ const UserProfile = () => {
   // Возврат к списку пользователей
   const handleBackToUsers = () => {
     const isAdminUser = currentUser?.role === 'ADMIN';
-    navigate('/personal-account', { state: { activeSection: isAdminUser ? 'adminusers' : 'managerusers' } });
+    navigate('/personal-account', { state: { activeSection: 'clientsAndOrders', clientsAndOrdersTab: 'clients' } });
   };
 
   // Получение отображаемого имени роли
@@ -594,9 +594,9 @@ const UserProfile = () => {
       <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1 min-w-0">
-          {!isMobile && <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
+          {!isMobile && <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
           <main className={`flex-1 min-w-0 ${isMobile ? 'mr-0 px-4' : 'mr-[110px]'}`}>
-            {isMobile && <MobileSidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
+            {isMobile && <MobileSidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
             <div className="flex items-center justify-center py-12 sm:py-20">
               <div className="flex flex-col items-center space-y-3 sm:space-y-4">
                 <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-2 border-gray-200 border-t-[#00A991]"></div>
@@ -614,9 +614,9 @@ const UserProfile = () => {
       <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1 min-w-0">
-          {!isMobile && <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
+          {!isMobile && <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
           <main className={`flex-1 min-w-0 ${isMobile ? 'mr-0 px-4' : 'mr-[110px]'}`}>
-            {isMobile && <MobileSidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
+            {isMobile && <MobileSidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
             <div className="text-center py-8 sm:py-20 px-4">
               <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -652,9 +652,9 @@ const UserProfile = () => {
       />
       
       <div className="flex flex-1 min-w-0">
-        {!isMobile && <Sidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
+        {!isMobile && <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
         <main className={`flex-1 min-w-0 overflow-x-hidden ${isMobile ? 'mr-0 px-3 sm:px-4' : 'mr-[110px]'}`}>
-          {isMobile && <MobileSidebar activeNav={isAdmin ? 'adminusers' : 'managerusers'} setActiveNav={handleNavClick} />}
+          {isMobile && <MobileSidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
           <div className="max-w-4xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6">
             {/* Навигация назад */}
             <div className="flex items-center mb-4 sm:mb-6 lg:mb-8">

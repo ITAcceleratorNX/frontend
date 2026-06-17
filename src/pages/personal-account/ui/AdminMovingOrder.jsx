@@ -140,7 +140,7 @@ const AdminMovingOrder = () => {
       <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
-          <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
+          <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
             <div className="max-w-5xl mx-auto py-12 px-10">
               <div className="text-center py-12">
@@ -160,7 +160,7 @@ const AdminMovingOrder = () => {
       <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1">
-          <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
+          <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
             <div className="max-w-5xl mx-auto py-12 px-10">
               <Card className="border-red-200">
@@ -169,7 +169,7 @@ const AdminMovingOrder = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Ошибка загрузки</h3>
                   <p className="text-gray-600 mb-6">{error || 'Заказ не найден'}</p>
                   <Button 
-                    onClick={() => navigate('/personal-account', { state: { activeSection: 'adminmoving' } })}
+                    onClick={() => navigate('/personal-account', { state: { activeSection: 'clientsAndOrders', clientsAndOrdersTab: 'moving' } })}
                     className="bg-[#1e2c4f] hover:bg-[#1e2c4f]/90"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -188,13 +188,13 @@ const AdminMovingOrder = () => {
     <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
       <Header />
       <div className="flex flex-1">
-        <Sidebar activeNav="adminmoving" setActiveNav={handleNavClick} />
+        <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />
         <main className="flex-1 mr-[110px]">
           <div className="max-w-5xl mx-auto py-12 px-10 space-y-6">
             {/* Навигация назад */}
             <div className="flex items-center gap-4">
               <Button
-                onClick={() => navigate('/personal-account', { state: { activeSection: 'adminmoving' } })}
+                onClick={() => navigate('/personal-account', { state: { activeSection: 'clientsAndOrders', clientsAndOrdersTab: 'moving' } })}
                 variant="outline"
                 size="sm"
                 className="flex items-center gap-2"

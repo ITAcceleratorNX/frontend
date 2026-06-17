@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import {
   useAllOrders,
+  useAllOrdersFlat,
   useUpdateOrderStatus,
   useDeleteOrder,
   useSearchOrders,
@@ -22,7 +23,7 @@ import {OrderConfirmModal} from "@/pages/personal-account/ui/index.js";
 import { useAuth } from '../../../shared/context/AuthContext';
 import WarehouseData from './WarehouseData';
 import { warehouseApi } from '../../../shared/api/warehouseApi';
-import { Search, Filter, ChevronRight, Plus, RotateCcw, ClipboardList, Users, CheckCircle2, Clock, Zap, Undo2, X, CreditCard, FileText, Package, ArrowLeft, ArrowRight, Archive } from 'lucide-react';
+import { Search, Filter, ChevronRight, Plus, RotateCcw, ClipboardList, Users, CheckCircle2, Clock, Zap, Undo2, X, CreditCard, FileText, Package, ArrowLeft, ArrowRight } from 'lucide-react';
 import { CONTRACT_EXPIRY_STATUS, getOrderContractExpiry } from '../../../shared/lib/orderContractExpiry';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
@@ -92,11 +93,12 @@ const statusConfig = {
   RETURN: { label: 'Возврат', icon: Undo2, color: 'bg-rose-500', textColor: 'text-white' },
 };
 
+const ORDERS_PAGE_SIZE = 50;
+
 const OrderManagement = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [archiveStatusFilter, setArchiveStatusFilter] = useState('active');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [warehouseFilter, setWarehouseFilter] = useState('ALL');
   const [storageTypeFilter, setStorageTypeFilter] = useState('ALL');
@@ -106,6 +108,7 @@ const OrderManagement = () => {
   const [modalData, setModalData] = useState(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [clientPage, setClientPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderDetailOpen, setIsOrderDetailOpen] = useState(false);
 
@@ -130,7 +133,7 @@ const OrderManagement = () => {
     isLoading: isAllLoading,
     error: allError,
     refetch
-  } = useAllOrders(currentPage, archiveStatusFilter, {
+  } = useAllOrders(currentPage, 'active', {
     enabled: canFetchOrders,
     onError: (error) => {
       showOrderLoadError();
@@ -140,13 +143,36 @@ const OrderManagement = () => {
 
   // Извлекаем данные и метаинформацию
   const allOrders = ordersData?.data || [];
-  const meta = ordersData?.meta || { total: 0, page: 1, pageSize: 50, totalPages: 1 };
+  const meta = ordersData?.meta || { total: 0, page: 1, pageSize: ORDERS_PAGE_SIZE, totalPages: 1 };
+
+  const hasClientFilters = useMemo(
+    () =>
+      statusFilter !== 'ALL' ||
+      warehouseFilter !== 'ALL' ||
+      storageTypeFilter !== 'ALL' ||
+      tierFilter !== 'ALL' ||
+      boxOrLocationFilter.trim() !== '',
+    [statusFilter, warehouseFilter, storageTypeFilter, tierFilter, boxOrLocationFilter],
+  );
+
+  const useClientPagination = isSearchActive || hasClientFilters;
+
+  const {
+    data: allOrdersFlat = [],
+    isLoading: isFlatLoading,
+  } = useAllOrdersFlat('active', {
+    enabled: canFetchOrders && hasClientFilters && !isSearchActive,
+    onError: (error) => {
+      showOrderLoadError();
+      console.error('Ошибка загрузки заказов для фильтрации:', error);
+    },
+  });
 
   const {
     data: searchedOrders = [],
     isLoading: isSearchLoading,
     refetch: refetchSearch
-  } = useSearchOrders(searchQuery, archiveStatusFilter);
+  } = useSearchOrders(searchQuery, 'active');
 
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
@@ -206,7 +232,11 @@ const OrderManagement = () => {
   const isMutating = updateOrderStatus.isLoading || deleteOrder.isLoading || approveCancelOrder.isPending || unlockStorage.isPending;
 
   // Определяем какие данные показывать
-  const ordersToShow = isSearchActive ? searchedOrders : allOrders;
+  const ordersToShow = isSearchActive
+    ? searchedOrders
+    : hasClientFilters
+      ? allOrdersFlat
+      : allOrders;
 
   const filteredByStatusOrders = useMemo(() => {
     if (statusFilter === 'RETURN') {
@@ -318,7 +348,26 @@ const OrderManagement = () => {
     return list;
   }, [filteredOrders, sortBy]);
 
-  // Статистика заказов
+  const paginationMeta = useMemo(() => {
+    if (!useClientPagination) return meta;
+    const total = sortedOrders.length;
+    return {
+      total,
+      page: clientPage,
+      pageSize: ORDERS_PAGE_SIZE,
+      totalPages: Math.max(1, Math.ceil(total / ORDERS_PAGE_SIZE)),
+    };
+  }, [useClientPagination, meta, sortedOrders.length, clientPage]);
+
+  const paginatedOrders = useMemo(() => {
+    if (!useClientPagination) return sortedOrders;
+    const start = (clientPage - 1) * ORDERS_PAGE_SIZE;
+    return sortedOrders.slice(start, start + ORDERS_PAGE_SIZE);
+  }, [sortedOrders, useClientPagination, clientPage]);
+
+  const activePage = useClientPagination ? clientPage : currentPage;
+
+  // Статистика заказов (по отфильтрованному набору)
   const statistics = useMemo(() => {
     return sortedOrders.reduce((acc, order) => {
       acc.total += 1;
@@ -331,13 +380,6 @@ const OrderManagement = () => {
   }, [sortedOrders]);
 
   useEffect(() => {
-    setCurrentPage(1);
-    setIsSearchActive(false);
-    setSearchQuery('');
-  }, [archiveStatusFilter]);
-
-  // Обновляем selectedOrder при изменении данных заказов
-  useEffect(() => {
     if (selectedOrder && isOrderDetailOpen) {
       const ordersToCheck = isSearchActive ? searchedOrders : allOrders;
       const updatedOrder = ordersToCheck.find(o => o.id === selectedOrder.id);
@@ -345,12 +387,21 @@ const OrderManagement = () => {
         setSelectedOrder(updatedOrder);
       }
     }
-  }, [allOrders, searchedOrders, isSearchActive, isOrderDetailOpen]);
+  }, [allOrders, searchedOrders, isSearchActive, isOrderDetailOpen, selectedOrder]);
 
-  // Функции для пагинации
+  useEffect(() => {
+    setClientPage(1);
+    if (!hasClientFilters) {
+      setCurrentPage(1);
+    }
+  }, [statusFilter, warehouseFilter, storageTypeFilter, tierFilter, boxOrLocationFilter, hasClientFilters]);
+
   const handlePageChange = (page) => {
-    setCurrentPage(page);
-    setStatusFilter('ALL');
+    if (useClientPagination) {
+      setClientPage(page);
+    } else {
+      setCurrentPage(page);
+    }
   };
 
   const resetToFirstPage = () => {
@@ -360,6 +411,7 @@ const OrderManagement = () => {
   const handleSearch = () => {
     if (searchQuery.trim()) {
       setIsSearchActive(true);
+      setClientPage(1);
       resetToFirstPage();
       refetchSearch();
     } else {
@@ -370,6 +422,7 @@ const OrderManagement = () => {
   const resetSearch = () => {
     setSearchQuery('');
     setIsSearchActive(false);
+    setClientPage(1);
     resetToFirstPage();
   };
 
@@ -382,6 +435,8 @@ const OrderManagement = () => {
     setBoxOrLocationFilter('');
     setTierFilter('ALL');
     setSortBy('createdAtDesc');
+    setClientPage(1);
+    setCurrentPage(1);
   };
 
   const handleDeleteOrder = async (orderId) => {
@@ -478,7 +533,7 @@ const OrderManagement = () => {
     }
   };
 
-  const isLoading = isAllLoading || isSearchLoading;
+  const isLoading = isAllLoading || isSearchLoading || (hasClientFilters && isFlatLoading);
   const error = allError;
 
   // Получение бейджа статуса оплаты
@@ -675,35 +730,6 @@ const OrderManagement = () => {
           </div>
         </div>
 
-        <div className="p-3 sm:p-5 border-b border-gray-100">
-          <div className="flex items-center gap-2 mb-3">
-            <Archive className="w-4 h-4 text-gray-400" />
-            <span className="text-sm font-medium text-gray-600">Статус</span>
-          </div>
-          <div className="flex gap-2">
-            {[
-              { key: 'active', label: 'Активные' },
-              { key: 'archived', label: 'Архивные' },
-            ].map(({ key, label }) => {
-              const isActive = archiveStatusFilter === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setArchiveStatusFilter(key)}
-                  className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-[#273655] text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Фильтр по статусу */}
         <div className="p-3 sm:p-5">
           <div className="flex items-center gap-2 mb-3">
@@ -777,7 +803,9 @@ const OrderManagement = () => {
           {/* Информация о фильтрации */}
           {(searchQuery || statusFilter !== 'ALL' || warehouseFilter !== 'ALL' || storageTypeFilter !== 'ALL' || tierFilter !== 'ALL' || boxOrLocationFilter.trim()) && (
             <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500 mt-3 pt-3 border-t border-gray-100">
-              <span>Показано {sortedOrders.length} из {meta.total}</span>
+              <span>
+                Показано {paginatedOrders.length} из {useClientPagination ? paginationMeta.total : meta.total}
+              </span>
               {searchQuery && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#00A991]/10 text-[#00A991] text-xs font-medium">
                   <Search className="w-3 h-3" />
@@ -853,7 +881,7 @@ const OrderManagement = () => {
           <>
             {/* Мобильные карточки (видны только на маленьких экранах) */}
             <div className="block lg:hidden divide-y divide-gray-50">
-              {sortedOrders.map((order) => {
+              {paginatedOrders.map((order) => {
                 const priceInfo = getOrderPriceDisplay(order);
                 return (
                   <div
@@ -948,7 +976,7 @@ const OrderManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedOrders.map((order) => {
+                  {paginatedOrders.map((order) => {
                     const priceInfo = getOrderPriceDisplay(order);
                     return (
                       <TableRow
@@ -1032,27 +1060,27 @@ const OrderManagement = () => {
       </div>
 
       {/* Пагинация */}
-      {!isSearchActive && meta.totalPages > 1 && (
+      {paginationMeta.totalPages > 1 && (
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-3 sm:p-4">
           <div className="flex items-center justify-center gap-1 sm:gap-2">
             <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
+              onClick={() => handlePageChange(activePage - 1)}
+              disabled={activePage <= 1}
               className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             
-            {Array.from({ length: Math.min(5, meta.totalPages) }, (_, i) => {
+            {Array.from({ length: Math.min(5, paginationMeta.totalPages) }, (_, i) => {
               let pageNum;
-              if (meta.totalPages <= 5) {
+              if (paginationMeta.totalPages <= 5) {
                 pageNum = i + 1;
-              } else if (currentPage <= 3) {
+              } else if (activePage <= 3) {
                 pageNum = i + 1;
-              } else if (currentPage >= meta.totalPages - 2) {
-                pageNum = meta.totalPages - 4 + i;
+              } else if (activePage >= paginationMeta.totalPages - 2) {
+                pageNum = paginationMeta.totalPages - 4 + i;
               } else {
-                pageNum = currentPage - 2 + i;
+                pageNum = activePage - 2 + i;
               }
               
               return (
@@ -1060,7 +1088,7 @@ const OrderManagement = () => {
                   key={pageNum}
                   onClick={() => handlePageChange(pageNum)}
                   className={`inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-sm font-medium transition-all ${
-                    currentPage === pageNum
+                    activePage === pageNum
                       ? 'bg-[#00A991] text-white shadow-md shadow-[#00A991]/20'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
@@ -1071,8 +1099,8 @@ const OrderManagement = () => {
             })}
             
             <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= meta.totalPages}
+              onClick={() => handlePageChange(activePage + 1)}
+              disabled={activePage >= paginationMeta.totalPages}
               className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ArrowRight className="w-4 h-4" />
@@ -1080,7 +1108,7 @@ const OrderManagement = () => {
           </div>
           
           <div className="text-center text-xs text-gray-400 mt-2">
-            Страница {currentPage} из {meta.totalPages} &middot; Всего {meta.total} заказов
+            Страница {activePage} из {paginationMeta.totalPages} &middot; Всего {paginationMeta.total} заказов
           </div>
         </div>
       )}
@@ -1127,21 +1155,21 @@ const OrderManagement = () => {
             <div className="mt-4 sm:mt-6">
               <OrderDetailView
                 order={selectedOrder}
-                onUpdate={archiveStatusFilter === 'active' ? () => {
+                onUpdate={() => {
                   handleCloseOrderDetail();
                   openConfirmModal('update', selectedOrder);
-                } : undefined}
-                onDelete={archiveStatusFilter === 'active' ? () => {
+                }}
+                onDelete={() => {
                   handleCloseOrderDetail();
                   openConfirmModal('delete', selectedOrder);
-                } : undefined}
-                onApprove={archiveStatusFilter === 'active' ? () => {
+                }}
+                onApprove={() => {
                   handleCloseOrderDetail();
                   openConfirmModal('approve', selectedOrder);
-                } : undefined}
+                }}
                 isLoading={isMutating}
-                onApproveReturn={archiveStatusFilter === 'active' && statusFilter === 'RETURN' ? handleApproveReturn : undefined}
-                onUnlockStorage={archiveStatusFilter === 'active' && statusFilter === 'RETURN' ? handleUnlockStorage : undefined}
+                onApproveReturn={statusFilter === 'RETURN' ? handleApproveReturn : undefined}
+                onUnlockStorage={statusFilter === 'RETURN' ? handleUnlockStorage : undefined}
               />
             </div>
           )}

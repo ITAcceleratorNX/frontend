@@ -42,11 +42,10 @@ const userNavItems = [
 
 const managerNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
-  { label: 'Пользователи', icon: icon8, key: 'managerusers' },
+  { label: 'Клиенты и заказы', icon: icon11, key: 'clientsAndOrders' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Видеонаблюдение', icon: Video, key: 'cctv' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
-  { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
   { label: 'CRM', icon: ClipboardList, key: 'lpleads' },
   // { label: 'Чат', icon: icon3, key: 'chat' },
@@ -57,11 +56,10 @@ const managerNavItems = [
 
 const adminNavItems = [
   { label: 'Личные данные', icon: icon1, key: 'personal' },
-  { label: 'Пользователи', icon: icon8, key: 'adminusers' },
+  { label: 'Клиенты и заказы', icon: icon11, key: 'clientsAndOrders' },
   { label: 'Склады', icon: icon9, key: 'warehouses' },
   { label: 'Видеонаблюдение', icon: Video, key: 'cctv' },
   { label: 'Статистика', icon: icon5, key: 'statistics' },
-  { label: 'Заказы', icon: icon11, key: 'ordersManagement' },
   { label: 'Поиск вещи', icon: icon13, key: 'itemsearch' },
   { label: 'CRM', icon: ClipboardList, key: 'lpleads' },
   { label: 'Уведомления', icon: icon10, key: 'notifications' },
@@ -301,7 +299,7 @@ const MobileSidebar = ({ activeNav, setActiveNav }) => {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
                 {/* Красная точка для платежей с pending статусом */}
-                {(item.key === 'payments' || item.key === 'ordersManagement') && pendingExtensionCount > 0 && (
+                {(item.key === 'payments' || item.key === 'clientsAndOrders') && pendingExtensionCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
               </div>
