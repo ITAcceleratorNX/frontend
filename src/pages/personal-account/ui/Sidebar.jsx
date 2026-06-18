@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import clsx from 'clsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import icon1 from '../../../assets/1.svg';
@@ -90,9 +90,10 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   const { notifications = [], markAsRead } = useNotifications();
   
   // Фильтрация уведомлений
-  const filteredNotifications = showUnreadOnly 
-    ? notifications.filter(n => !n.is_read)
-    : notifications;
+  const filteredNotifications = useMemo(
+    () => (showUnreadOnly ? notifications.filter((n) => !n.is_read) : notifications),
+    [notifications, showUnreadOnly],
+  );
 
   const handleNotificationClick = useCallback(
     (notification) => {
@@ -347,7 +348,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
               {/* Notifications Panel */}
               {isNotificationsOpen && (
                 <div className={clsx(
-                  'fixed top-20 left-[280px] w-[420px] border rounded-lg shadow-lg z-50 max-h-[600px] overflow-y-auto',
+                  'fixed top-20 left-[280px] w-[420px] border rounded-lg shadow-lg z-50 max-h-[600px] overflow-y-auto overscroll-contain',
                   isDark
                     ? 'staff-notifications-panel bg-[var(--staff-surface-raised)] border-[var(--staff-accent)]'
                     : 'bg-white border-[#00A991]'
@@ -379,15 +380,18 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                   </div>
                   <div className="p-4">
                     {filteredNotifications.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 text-sm">
+                      <div className={clsx(
+                        'text-center py-8 text-sm',
+                        isDark ? 'text-[var(--staff-text-muted)]' : 'text-gray-500',
+                      )}>
                         Нет уведомлений
                       </div>
                     ) : (
-                      <UserNotifications 
-                        notifications={filteredNotifications} 
+                      <UserNotifications
+                        notifications={filteredNotifications}
                         onMarkAsRead={markAsRead}
                         onNotificationClick={handleNotificationClick}
-                        scale={1}
+                        variant="panel"
                       />
                     )}
                   </div>

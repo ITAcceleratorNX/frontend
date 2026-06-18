@@ -1,43 +1,67 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
+import clsx from 'clsx';
 import { Calendar, Bell, Inbox } from 'lucide-react';
+import { useTheme } from '@/shared/context/ThemeContext.jsx';
 import NotificationCard from './NotificationCard';
 
-const UserNotifications = ({ notifications, onMarkAsRead, onNotificationClick, scale = 1 }) => {
-  // Group notifications by date
-  const groupedNotifications = notifications.reduce((groups, notification) => {
-    const date = new Date(notification.created_at).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-    
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(notification);
-    return groups;
-  }, {});
-
-  // Сортируем группы по дате (новые сверху)
-  const sortedGroups = Object.entries(groupedNotifications).sort(([dateA], [dateB]) => {
-    return new Date(dateB) - new Date(dateA);
+const formatGroupDate = (timestamp) =>
+  new Date(timestamp).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
   });
+
+const UserNotifications = memo(({
+  notifications,
+  onMarkAsRead,
+  onNotificationClick,
+  variant = 'default',
+}) => {
+  const { isDark } = useTheme();
+  const isPanel = variant === 'panel';
+
+  const sortedGroups = useMemo(() => {
+    const groups = notifications.reduce((acc, notification) => {
+      const date = formatGroupDate(notification.created_at);
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(notification);
+      return acc;
+    }, {});
+
+    return Object.entries(groups)
+      .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA))
+      .map(([date, items]) => [
+        date,
+        [...items].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+      ]);
+  }, [notifications]);
+
+  const todayLabel = useMemo(() => formatGroupDate(new Date()), []);
 
   if (notifications.length === 0) {
     return (
-      <div 
-        className="flex items-center justify-center py-16" 
-        style={{ transform: `scale(${scale})`, transformOrigin: 'center' }}
-      >
-        <div className="text-center space-y-4 max-w-sm">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-            <Inbox className="w-8 h-8 text-gray-400" />
+      <div className={clsx('flex items-center justify-center', isPanel ? 'py-8' : 'py-16')}>
+        <div className="text-center space-y-3 max-w-sm">
+          <div
+            className={clsx(
+              'w-14 h-14 rounded-full flex items-center justify-center mx-auto',
+              isDark ? 'bg-[var(--staff-surface-hover)]' : 'bg-gray-100',
+            )}
+          >
+            <Inbox className={clsx('w-7 h-7', isDark ? 'text-[var(--staff-text-muted)]' : 'text-gray-400')} />
           </div>
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-900">Пока нет уведомлений</h3>
-            <p className="text-gray-500">
+          <div className="space-y-1">
+            <h3
+              className={clsx(
+                'text-base font-semibold',
+                isDark ? 'text-[var(--staff-text)]' : 'text-gray-900',
+              )}
+            >
+              Пока нет уведомлений
+            </h3>
+            <p className={clsx('text-sm', isDark ? 'text-[var(--staff-text-muted)]' : 'text-gray-500')}>
               Когда у вас появятся новые уведомления, они будут отображаться здесь
-        </p>
+            </p>
           </div>
         </div>
       </div>
@@ -45,104 +69,110 @@ const UserNotifications = ({ notifications, onMarkAsRead, onNotificationClick, s
   }
 
   return (
-    <div 
-      className="space-y-6" 
-      style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}
-    >
-      {sortedGroups.map(([date, notifications]) => {
-        const unreadCount = notifications.filter(n => !n.is_read).length;
-        const isToday = date === new Date().toLocaleDateString('ru-RU', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric'
-        });
-        
+    <div className={isPanel ? 'space-y-3' : 'space-y-6'}>
+      {sortedGroups.map(([date, dateNotifications], groupIndex) => {
+        const unreadCount = dateNotifications.filter((n) => !n.is_read).length;
+        const isToday = date === todayLabel;
+
         return (
-            <div key={date} className="space-y-4">
-            {/* Date Header */}
-            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200 pb-3 mb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#B0C6C5] rounded-full flex items-center justify-center">
-                    <Calendar className="w-4 h-4 text-white" />
+          <div key={date} className={isPanel ? 'space-y-2' : 'space-y-4'}>
+            <div
+              className={clsx(
+                'sticky top-0 z-10 border-b pb-2 mb-2',
+                isPanel ? 'pt-0' : 'pb-3 mb-4',
+                isDark
+                  ? 'bg-[var(--staff-surface-raised)] border-[var(--staff-border)]'
+                  : isPanel
+                    ? 'bg-white border-gray-200'
+                    : 'bg-white border-gray-200',
+              )}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className={clsx(
+                      'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0',
+                      isDark ? 'bg-[var(--staff-accent)]/25' : 'bg-[#B0C6C5]',
+                    )}
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-white" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                  <div className="min-w-0">
+                    <h3
+                      className={clsx(
+                        'font-semibold truncate',
+                        isPanel ? 'text-sm' : 'text-lg',
+                        isDark ? 'text-[var(--staff-text)]' : 'text-gray-900',
+                      )}
+                    >
                       {isToday ? 'Сегодня' : date}
                     </h3>
-                    <p className="text-sm text-gray-600">
-                      {notifications.length} уведомлений
+                    <p
+                      className={clsx(
+                        'text-xs',
+                        isDark ? 'text-[var(--staff-text-muted)]' : 'text-gray-600',
+                      )}
+                    >
+                      {dateNotifications.length} уведомлений
                       {unreadCount > 0 && (
-                        <span className="ml-2 inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                        <span
+                          className={clsx(
+                            'ml-2 inline-flex items-center px-1.5 py-0.5 text-xs rounded-full',
+                            isDark
+                              ? 'bg-blue-500/20 text-blue-300'
+                              : 'bg-blue-100 text-blue-800',
+                          )}
+                        >
                           {unreadCount} новых
                         </span>
                       )}
                     </p>
                   </div>
                 </div>
-                
-                {/* Индикатор активности */}
-                {unreadCount > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+
+                {!isPanel && unreadCount > 0 && (
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     <Bell className="w-4 h-4 text-blue-500" />
                   </div>
                 )}
-                </div>
               </div>
-              
-              {/* Notifications for this date */}
-            <div className="space-y-4">
-              {notifications
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                .map((notification, index) => (
-                  <div 
-                    key={notification.notification_id}
-                    className="relative"
-                    style={{ 
-                      animationDelay: `${index * 100}ms`,
-                      animation: 'slideIn 0.5s ease-out forwards'
-                    }}
-                  >
-                    <NotificationCard
-                      notification={notification}
-                      onMarkAsRead={onMarkAsRead}
-                      onNotificationClick={onNotificationClick}
-                      scale={1}
-                    />
-                  </div>
-                ))}
             </div>
 
-            {/* Разделитель между днями */}
-            {sortedGroups.indexOf([date, notifications]) < sortedGroups.length - 1 && (
-              <div className="flex items-center my-8">
-                <div className="flex-1 border-t border-gray-200"></div>
-                <div className="mx-4 text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">
+            <div className={isPanel ? 'space-y-2' : 'space-y-3'}>
+              {dateNotifications.map((notification) => (
+                <NotificationCard
+                  key={notification.notification_id}
+                  notification={notification}
+                  onMarkAsRead={onMarkAsRead}
+                  onNotificationClick={onNotificationClick}
+                />
+              ))}
+            </div>
+
+            {!isPanel && groupIndex < sortedGroups.length - 1 && (
+              <div className="flex items-center my-6">
+                <div className={clsx('flex-1 border-t', isDark ? 'border-[var(--staff-border)]' : 'border-gray-200')} />
+                <div
+                  className={clsx(
+                    'mx-3 text-xs px-3 py-1 rounded-full border',
+                    isDark
+                      ? 'text-[var(--staff-text-muted)] bg-[var(--staff-surface)] border-[var(--staff-border)]'
+                      : 'text-gray-500 bg-white border-gray-200',
+                  )}
+                >
                   Более ранние уведомления
                 </div>
-                <div className="flex-1 border-t border-gray-200"></div>
-        </div>
+                <div className={clsx('flex-1 border-t', isDark ? 'border-[var(--staff-border)]' : 'border-gray-200')} />
+              </div>
             )}
-      </div>
+          </div>
         );
       })}
-
-      {/* Анимация для новых элементов */}
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   );
-};
+});
 
-export default UserNotifications; 
+UserNotifications.displayName = 'UserNotifications';
+
+export default UserNotifications;

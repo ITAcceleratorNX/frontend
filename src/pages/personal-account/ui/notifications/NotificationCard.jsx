@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
+import clsx from 'clsx';
 import { Bell, CheckCircle, MessageSquare } from 'lucide-react';
+import { useTheme } from '@/shared/context/ThemeContext.jsx';
 
 /**
  * Определяет раздел ЛК для перехода по типу уведомления
@@ -8,7 +10,6 @@ export const getNotificationTarget = (notification) => {
   const type = (notification?.notification_type || notification?.type || '').toLowerCase();
   const orderId = notification?.order_id ?? notification?.related_order_id;
 
-  // Явный target с бэкенда (JSON в metadata / data)
   let meta = notification?.metadata || notification?.meta || notification?.data;
   if (typeof meta === 'string') {
     try {
@@ -24,7 +25,6 @@ export const getNotificationTarget = (notification) => {
     }
   }
 
-  // Заявки с лендингов LP (типы могут отличаться на бэкенде)
   const landingTypes = new Set([
     'landing_lead',
     'lp_lead',
@@ -63,7 +63,9 @@ export const getNotificationTarget = (notification) => {
   }
 };
 
-const NotificationCard = ({ notification, onMarkAsRead, onNotificationClick, scale = 1 }) => {
+const NotificationCard = memo(({ notification, onMarkAsRead, onNotificationClick }) => {
+  const { isDark } = useTheme();
+
   const handleClick = () => {
     if (!notification.is_read && onMarkAsRead) {
       onMarkAsRead(notification.notification_id);
@@ -77,16 +79,16 @@ const NotificationCard = ({ notification, onMarkAsRead, onNotificationClick, sca
     const now = new Date();
     const notificationTime = new Date(timestamp);
     const diffInMinutes = Math.floor((now - notificationTime) / 1000 / 60);
-    
+
     if (diffInMinutes < 1) return 'Только что';
     if (diffInMinutes < 60) return `${diffInMinutes} мин назад`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} ч назад`;
-    
+
     return new Date(timestamp).toLocaleDateString('ru-RU', {
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -101,78 +103,74 @@ const NotificationCard = ({ notification, onMarkAsRead, onNotificationClick, sca
     }
   };
 
-  const getNotificationStyle = (isRead) => {
-    if (isRead) {
-      return {
-        cardClass: 'bg-white border border-[#DFDFDF]',
-        indicatorClass: 'opacity-0',
-        titleClass: 'text-gray-900',
-        contentClass: 'text-gray-600',
-        timeClass: 'text-gray-500'
-      };
-    }
-    
-    return {
-      cardClass: 'bg-white border border-[#DFDFDF]',
-      indicatorClass: 'opacity-0',
-      titleClass: 'text-gray-900',
-      contentClass: 'text-gray-700',
-      timeClass: 'text-gray-500'
-    };
-  };
-
-  const styles = getNotificationStyle(notification.is_read);
-
-  // Стили для масштабирования
-  const scaleStyle = {
-    transform: `scale(${scale})`,
-    transformOrigin: 'top left',
-    marginBottom: `${12 * scale}px`,
-  };
-
   return (
-    <div 
-      className={`
-        relative cursor-pointer border rounded-md p-3
-        ${styles.cardClass}
-      `}
+    <div
+      className={clsx(
+        'relative cursor-pointer border rounded-md p-3 transition-colors',
+        isDark
+          ? 'bg-[var(--staff-surface)] border-[var(--staff-border)] hover:bg-[var(--staff-surface-hover)]'
+          : 'bg-white border-[#DFDFDF] hover:bg-gray-50',
+        !notification.is_read && isDark && 'border-[var(--staff-accent)]/40',
+        !notification.is_read && !isDark && 'border-[#00A991]/30',
+      )}
       onClick={handleClick}
-      style={scaleStyle}
     >
       <div className="flex items-start space-x-3">
-        {/* Иконка уведомления */}
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 bg-[#B0C6C5] rounded-full flex items-center justify-center">
+          <div
+            className={clsx(
+              'w-10 h-10 rounded-full flex items-center justify-center',
+              isDark ? 'bg-[var(--staff-accent)]/30' : 'bg-[#B0C6C5]',
+            )}
+          >
             {getNotificationIcon(notification.notification_type)}
           </div>
         </div>
-      
-        {/* Контент */}
+
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h4 className={`font-semibold text-sm leading-tight mb-1 break-words ${styles.titleClass}`}>
+              <h4
+                className={clsx(
+                  'font-semibold text-sm leading-tight mb-1 break-words',
+                  isDark ? 'text-[var(--staff-text)]' : 'text-gray-900',
+                )}
+              >
                 {notification.title}
               </h4>
-              <p className={`text-sm leading-relaxed break-words break-all ${styles.contentClass}`}>
+              <p
+                className={clsx(
+                  'text-sm leading-relaxed break-words break-all',
+                  isDark ? 'text-[var(--staff-text-secondary)]' : 'text-gray-600',
+                )}
+              >
                 {notification.message}
               </p>
               {notification.sender_id && notification.recipients?.length > 0 && (
-                <p className="text-xs text-gray-500 mt-1.5">
+                <p
+                  className={clsx(
+                    'text-xs mt-1.5',
+                    isDark ? 'text-[var(--staff-text-muted)]' : 'text-gray-500',
+                  )}
+                >
                   Кому: {notification.recipients.map((r) => r.name || r.email || `#${r.id}`).join(', ')}
                 </p>
               )}
             </div>
-            
-            {/* Время и статус */}
+
             <div className="flex-shrink-0 flex flex-col items-end space-y-1">
-              <span className={`text-xs whitespace-nowrap ${styles.timeClass}`}>
+              <span
+                className={clsx(
+                  'text-xs whitespace-nowrap',
+                  isDark ? 'text-[var(--staff-text-muted)]' : 'text-gray-500',
+                )}
+              >
                 {formatTime(notification.created_at)}
               </span>
-              
+
               {notification.is_read && (
                 <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-[#00A991] rounded-full"></div>
+                  <div className="w-2 h-2 bg-[#00A991] rounded-full" />
                   <span className="text-xs text-[#00A991] whitespace-nowrap">Прочитано</span>
                 </div>
               )}
@@ -182,6 +180,8 @@ const NotificationCard = ({ notification, onMarkAsRead, onNotificationClick, sca
       </div>
     </div>
   );
-};
+});
 
-export default NotificationCard; 
+NotificationCard.displayName = 'NotificationCard';
+
+export default NotificationCard;
