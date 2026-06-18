@@ -239,15 +239,17 @@ const PersonalAccountPage = memo(() => {
 
   if (useMobileOrdersLayout) {
     return (
-      <MobileOrdersLayout
-        activeNav={activeNav}
-        setActiveNav={handleMobileNav}
-        lastOrdersTab={lastOrdersTab}
-        ordersInitialFilter={ordersInitialFilter}
-        paymentsHighlightOrderId={paymentsHighlightOrderId}
-        onPaymentsHighlightConsumed={clearPaymentsHighlight}
-        onBeforeNavigateToPayments={onBeforeNavigateToPayments}
-      />
+      <StaffThemeWrapper className="min-h-screen flex flex-col">
+        <MobileOrdersLayout
+          activeNav={activeNav}
+          setActiveNav={handleMobileNav}
+          lastOrdersTab={lastOrdersTab}
+          ordersInitialFilter={ordersInitialFilter}
+          paymentsHighlightOrderId={paymentsHighlightOrderId}
+          onPaymentsHighlightConsumed={clearPaymentsHighlight}
+          onBeforeNavigateToPayments={onBeforeNavigateToPayments}
+        />
+      </StaffThemeWrapper>
     );
   }
 

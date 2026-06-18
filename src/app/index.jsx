@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../shared/styles/toast.css';
 import { AuthProvider } from '../shared/context/AuthContext';
+import { ThemeProvider, useTheme } from '../shared/context/ThemeContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
 import FloatingWhatsAppButton from "../shared/components/FloatingWhatsAppButton.jsx";
@@ -47,21 +48,24 @@ const queryClient = new QueryClient({
 });
 
 // Компонент уведомлений для предотвращения ререндеров
-const NotificationContainer = memo(() => (
-  <ToastContainer
-    position="top-right"
-    autoClose={5000}
-    hideProgressBar
-    closeOnClick
-    newestOnTop
-    closeButton={false}
-    icon={false}
-    draggable
-    pauseOnHover={false}
-    pauseOnFocusLoss={false}
-    theme="light"
-  />
-));
+const NotificationContainer = memo(() => {
+  const { isDark } = useTheme();
+  return (
+    <ToastContainer
+      position="top-right"
+      autoClose={5000}
+      hideProgressBar
+      closeOnClick
+      newestOnTop
+      closeButton={false}
+      icon={false}
+      draggable
+      pauseOnHover={false}
+      pauseOnFocusLoss={false}
+      theme={isDark ? 'dark' : 'light'}
+    />
+  );
+});
 
 NotificationContainer.displayName = 'NotificationContainer';
 
@@ -139,6 +143,7 @@ const App = memo(() => {
   
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
           <ScrollToTop />
@@ -151,6 +156,7 @@ const App = memo(() => {
           </div>
         </BrowserRouter>
       </AuthProvider>
+      </ThemeProvider>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />}
     </QueryClientProvider>
   );

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
 import MobileSidebar from './MobileSidebar';
 import { useDeviceType } from '../../../shared/lib/hooks/useWindowWidth';
@@ -592,10 +591,9 @@ const UserProfile = () => {
   if (loading) {
     return (
       <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
-        <Header />
         <div className="flex flex-1 min-w-0">
           {!isMobile && <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
-          <main className={`flex-1 min-w-0 ${isMobile ? 'mr-0 px-4' : 'mr-[110px]'}`}>
+          <main className="flex-1 min-w-0 overflow-x-hidden bg-gray-50 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
             {isMobile && <MobileSidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
             <div className="flex items-center justify-center py-12 sm:py-20">
               <div className="flex flex-col items-center space-y-3 sm:space-y-4">
@@ -612,10 +610,9 @@ const UserProfile = () => {
   if (!selectedUser) {
     return (
       <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
-        <Header />
         <div className="flex flex-1 min-w-0">
           {!isMobile && <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
-          <main className={`flex-1 min-w-0 ${isMobile ? 'mr-0 px-4' : 'mr-[110px]'}`}>
+          <main className="flex-1 min-w-0 overflow-x-hidden bg-gray-50 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
             {isMobile && <MobileSidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
             <div className="text-center py-8 sm:py-20 px-4">
               <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -640,7 +637,6 @@ const UserProfile = () => {
 
   return (
     <StaffThemeWrapper user={currentUser} className="min-h-screen flex flex-col">
-      <Header />
       
       {/* Модальное окно подтверждения удаления */}
       <DeleteConfirmModal
@@ -653,7 +649,7 @@ const UserProfile = () => {
       
       <div className="flex flex-1 min-w-0">
         {!isMobile && <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
-        <main className={`flex-1 min-w-0 overflow-x-hidden ${isMobile ? 'mr-0 px-3 sm:px-4' : 'mr-[110px]'}`}>
+        <main className="flex-1 min-w-0 overflow-x-hidden bg-gray-50 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
           {isMobile && <MobileSidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />}
           <div className="max-w-4xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6">
             {/* Навигация назад */}

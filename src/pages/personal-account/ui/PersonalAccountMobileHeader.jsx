@@ -1,6 +1,9 @@
 import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import clsx from 'clsx';
+import { Moon, Sun } from 'lucide-react';
 import { useUnreadNotificationsCount } from '../../../shared/lib/hooks/use-notifications';
+import { useTheme } from '../../../shared/context/ThemeContext';
 import extraspaceLogo from '../../../assets/photo_2025-10-08_12-29-41-removebg-preview.png';
 import NotificationIcon from './icons/NotificationIcon';
 import PersonAccountIcon from './icons/PersonAccountIcon';
@@ -9,13 +12,17 @@ import { HelpCircle } from 'lucide-react';
 const PersonalAccountMobileHeader = memo(({ setActiveNav, onInstructionClick }) => {
   const navigate = useNavigate();
   const unreadCount = useUnreadNotificationsCount();
+  const { isDark, toggleTheme } = useTheme();
 
   const handleLogoClick = () => navigate('/');
   const handleBellClick = () => setActiveNav('notifications');
   const handlePersonClick = () => setActiveNav('personal');
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-[#f5f5f5] overflow-hidden">
+    <header className={clsx(
+      'fixed top-0 left-0 right-0 z-50 w-full overflow-hidden',
+      isDark ? 'bg-[var(--staff-surface)]' : 'bg-[#f5f5f5]'
+    )}>
       <div className="w-full max-w-[100%] mx-auto px-3 min-[400px]:px-4 flex items-center h-14 min-[360px]:h-16 justify-between gap-2">
         <button
           type="button"
@@ -26,14 +33,38 @@ const PersonalAccountMobileHeader = memo(({ setActiveNav, onInstructionClick }) 
           <img
             src={extraspaceLogo}
             alt=""
-            className="h-8 min-[360px]:h-9 w-auto max-w-[90px] min-[360px]:max-w-[100px] object-contain object-left brightness-0 opacity-80"
+            className={clsx(
+              'h-8 min-[360px]:h-9 w-auto max-w-[90px] min-[360px]:max-w-[100px] object-contain object-left',
+              isDark ? 'brightness-0 invert opacity-90' : 'brightness-0 opacity-80'
+            )}
           />
-          <span className="text-sm min-[360px]:text-base font-semibold text-[#374151] uppercase tracking-tight truncate">
+          <span className={clsx(
+            'text-sm min-[360px]:text-base font-semibold uppercase tracking-tight truncate',
+            isDark ? 'text-[var(--staff-text)]' : 'text-[#374151]'
+          )}>
             EXTRA SPACE
           </span>
         </button>
 
         <div className="flex items-center gap-2 min-[360px]:gap-3 flex-shrink-0">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className={clsx(
+              'p-1.5 min-[360px]:p-2 rounded-full transition-colors',
+              isDark
+                ? 'text-[var(--staff-brand-light)] hover:bg-[var(--staff-surface-hover)]'
+                : 'text-amber-500 hover:bg-amber-50'
+            )}
+            aria-label={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+            title={isDark ? 'Светлая тема' : 'Тёмная тема'}
+          >
+            {isDark ? (
+              <Sun className="w-5 h-5 min-[360px]:w-6 min-[360px]:h-6 flex-shrink-0" />
+            ) : (
+              <Moon className="w-5 h-5 min-[360px]:w-6 min-[360px]:h-6 flex-shrink-0" />
+            )}
+          </button>
           {onInstructionClick && (
             <button
               type="button"
@@ -48,7 +79,12 @@ const PersonalAccountMobileHeader = memo(({ setActiveNav, onInstructionClick }) 
           <button
             type="button"
             onClick={handleBellClick}
-            className="relative p-1.5 min-[360px]:p-2 rounded-full text-[#374151] hover:bg-black/5 transition-colors"
+            className={clsx(
+              'relative p-1.5 min-[360px]:p-2 rounded-full transition-colors',
+              isDark
+                ? 'text-[var(--staff-text-secondary)] hover:bg-[var(--staff-surface-hover)]'
+                : 'text-[#374151] hover:bg-black/5'
+            )}
             aria-label="Уведомления"
           >
             <NotificationIcon className="w-5 h-5 min-[360px]:w-6 min-[360px]:h-6 flex-shrink-0" />
@@ -59,7 +95,12 @@ const PersonalAccountMobileHeader = memo(({ setActiveNav, onInstructionClick }) 
           <button
             type="button"
             onClick={handlePersonClick}
-            className="p-1.5 min-[360px]:p-2 rounded-full text-[#374151] hover:bg-black/5 transition-colors"
+            className={clsx(
+              'p-1.5 min-[360px]:p-2 rounded-full transition-colors',
+              isDark
+                ? 'text-[var(--staff-text-secondary)] hover:bg-[var(--staff-surface-hover)]'
+                : 'text-[#374151] hover:bg-black/5'
+            )}
             aria-label="Личные данные"
           >
             <PersonAccountIcon className="w-5 h-5 min-[360px]:w-6 min-[360px]:h-6 flex-shrink-0" />

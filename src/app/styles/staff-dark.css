@@ -403,3 +403,376 @@
 [data-theme="staff-dark"] .focus\:ring-offset-white:focus {
   --tw-ring-offset-color: var(--staff-bg);
 }
+
+/* ── Дополнительные hex-цвета (заголовки, подписи, акценты) ── */
+[data-theme="staff-dark"] .text-\[\#202422\] {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#6B6B6B\] {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#31876D\] {
+  color: var(--staff-brand) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#004743\] {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#B0E4DD\] {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#00A991\] {
+  color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#009882\] {
+  color: var(--staff-accent-hover) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#162540\] {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#3D3D3D\],
+[data-theme="staff-dark"] .text-\[\#3d3d3d\] {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#8E8E8E\],
+[data-theme="staff-dark"] .text-\[\#8e8e8e\] {
+  color: var(--staff-text-muted) !important;
+}
+
+/* ── Фоны с hex и opacity ── */
+[data-theme="staff-dark"] .bg-\[\#f5f7ff\] {
+  background-color: var(--staff-nav-active-bg) !important;
+}
+
+[data-theme="staff-dark"] .bg-\[\#31876D\]\/5 {
+  background-color: rgba(0, 169, 145, 0.08) !important;
+}
+
+[data-theme="staff-dark"] .bg-\[\#31876D\]\/10 {
+  background-color: rgba(0, 169, 145, 0.15) !important;
+}
+
+[data-theme="staff-dark"] .bg-\[\#00A991\]\/20 {
+  background-color: var(--staff-nav-active-bg) !important;
+}
+
+[data-theme="staff-dark"] .bg-\[\#00A991\]\/10,
+[data-theme="staff-dark"] .bg-\[\#00A991\]\/5 {
+  background-color: rgba(0, 169, 145, 0.12) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-\[\#31876D\]\/10:hover {
+  background-color: rgba(0, 169, 145, 0.2) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-\[\#162540\]:hover {
+  background-color: var(--staff-accent-hover) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-\[\#009882\]:hover {
+  background-color: var(--staff-accent-hover) !important;
+}
+
+/* ── Границы с hex и opacity ── */
+[data-theme="staff-dark"] .border-\[\#31876D\]\/20,
+[data-theme="staff-dark"] .border-\[\#31876D\]\/10 {
+  border-color: rgba(0, 169, 145, 0.28) !important;
+}
+
+[data-theme="staff-dark"] .border-\[\#31876D\] {
+  border-color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] .hover\:border-\[\#31876D\]\/20:hover {
+  border-color: rgba(0, 169, 145, 0.35) !important;
+}
+
+[data-theme="staff-dark"] .divide-\[\#31876D\]\/20 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(0, 169, 145, 0.28) !important;
+}
+
+/* ── Бейджи и статусы ── */
+[data-theme="staff-dark"] .bg-\[\#31876D\]\/10.text-\[\#31876D\],
+[data-theme="staff-dark"] [class*="bg-[#31876D]/10"][class*="text-[#31876D]"] {
+  background-color: rgba(0, 169, 145, 0.15) !important;
+  color: var(--staff-brand) !important;
+}
+
+[data-theme="staff-dark"] .bg-\[\#31876D\] {
+  background-color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-\[\#31876D\]\/90:hover {
+  background-color: var(--staff-accent-hover) !important;
+}
+
+/* ── Карточки и модальные окна ── */
+[data-theme="staff-dark"] .rounded-2xl.border-gray-100,
+[data-theme="staff-dark"] .rounded-xl.border-gray-100 {
+  border-color: var(--staff-border) !important;
+}
+
+[data-theme="staff-dark"] .bg-gray-50.rounded-xl,
+[data-theme="staff-dark"] .bg-gray-50.rounded-2xl {
+  background-color: var(--staff-surface-raised) !important;
+}
+
+/* ── Ссылки и интерактивные элементы ── */
+[data-theme="staff-dark"] a.text-\[\#273655\],
+[data-theme="staff-dark"] button.text-\[\#273655\] {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .text-red-600,
+[data-theme="staff-dark"] .text-red-700 {
+  color: #f87171 !important;
+}
+
+[data-theme="staff-dark"] .hover\:text-red-700:hover {
+  color: #fca5a5 !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-red-50:hover {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+/* ── Таблицы и списки ── */
+[data-theme="staff-dark"] th.text-\[\#6B6B6B\],
+[data-theme="staff-dark"] td.text-\[\#6B6B6B\] {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] tr.bg-\[\#f5f7ff\],
+[data-theme="staff-dark"] .bg-\[\#f5f7ff\].rounded-lg {
+  background-color: var(--staff-nav-active-bg) !important;
+}
+
+/* ── Мобильный хедер и layout ── */
+[data-theme="staff-dark"] .bg-\[\#f5f5f5\] {
+  background-color: var(--staff-bg) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#374151\] {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-black\/5:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-amber-50:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#8B8B8B\] {
+  color: var(--staff-text-muted) !important;
+}
+
+[data-theme="staff-dark"] .hover\:text-\[\#1f2937\]:hover {
+  color: var(--staff-text) !important;
+}
+
+/* ── Статистика: палитра slate ── */
+[data-theme="staff-dark"] .text-slate-900 {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .text-slate-800,
+[data-theme="staff-dark"] .text-slate-700 {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .text-slate-600,
+[data-theme="staff-dark"] .text-slate-500 {
+  color: var(--staff-text-muted) !important;
+}
+
+[data-theme="staff-dark"] .text-slate-400 {
+  color: var(--staff-text-muted) !important;
+  opacity: 0.85;
+}
+
+[data-theme="staff-dark"] .border-slate-200 {
+  border-color: var(--staff-border) !important;
+}
+
+[data-theme="staff-dark"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+[data-theme="staff-dark"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--staff-border) !important;
+}
+
+[data-theme="staff-dark"] .bg-slate-50 {
+  background-color: var(--staff-surface-raised) !important;
+}
+
+[data-theme="staff-dark"] .bg-slate-100,
+[data-theme="staff-dark"] .bg-slate-100\/70 {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-slate-50:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .hover\:border-\[\#273655\]:hover {
+  border-color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] .hover\:text-\[\#273655\]:hover {
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-\[\#1b2740\]:hover {
+  background-color: var(--staff-accent-hover) !important;
+}
+
+[data-theme="staff-dark"] .bg-\[\#273655\] {
+  background-color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] .bg-\[\#eef2ff\] {
+  background-color: rgba(99, 102, 241, 0.18) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#4338ca\] {
+  color: #a5b4fc !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#4338ca\]\/70 {
+  color: rgba(165, 180, 252, 0.7) !important;
+}
+
+[data-theme="staff-dark"] .bg-indigo-100 {
+  background-color: rgba(99, 102, 241, 0.18) !important;
+}
+
+[data-theme="staff-dark"] .text-indigo-700 {
+  color: #a5b4fc !important;
+}
+
+/* Бейджи статусов в таблице статистики */
+[data-theme="staff-dark"] .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.18) !important;
+}
+
+[data-theme="staff-dark"] .text-emerald-600 {
+  color: #6ee7b7 !important;
+}
+
+[data-theme="staff-dark"] .bg-sky-100 {
+  background-color: rgba(14, 165, 233, 0.18) !important;
+}
+
+[data-theme="staff-dark"] .text-sky-600 {
+  color: #7dd3fc !important;
+}
+
+[data-theme="staff-dark"] .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.18) !important;
+}
+
+[data-theme="staff-dark"] .text-blue-600 {
+  color: #93c5fd !important;
+}
+
+[data-theme="staff-dark"] .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+}
+
+[data-theme="staff-dark"] .text-amber-600 {
+  color: #fcd34d !important;
+}
+
+[data-theme="staff-dark"] .bg-rose-100 {
+  background-color: rgba(244, 63, 94, 0.18) !important;
+}
+
+[data-theme="staff-dark"] .text-rose-600 {
+  color: #fda4af !important;
+}
+
+[data-theme="staff-dark"] .bg-slate-100.text-slate-700,
+[data-theme="staff-dark"] .bg-slate-100.text-slate-600 {
+  background-color: var(--staff-surface-hover) !important;
+  color: var(--staff-text-secondary) !important;
+}
+
+/* Вкладки «Заявки / Логи» — активная вкладка */
+[data-theme="staff-dark"] .rounded-xl.bg-slate-100\/70 .bg-white.text-\[\#273655\],
+[data-theme="staff-dark"] .rounded-xl.bg-slate-100\/70 button.bg-white {
+  background-color: var(--staff-surface) !important;
+  color: var(--staff-brand-light) !important;
+}
+
+[data-theme="staff-dark"] .focus\:border-\[\#273655\]:focus {
+  border-color: var(--staff-accent) !important;
+}
+
+[data-theme="staff-dark"] .focus\:ring-\[\#273655\]\/20:focus {
+  --tw-ring-color: rgba(0, 169, 145, 0.25) !important;
+}
+
+/* Recharts — расширенные стили для статистики */
+[data-theme="staff-dark"] .recharts-pie-label-text {
+  fill: var(--staff-text) !important;
+}
+
+/* ── CRM: бейджи обработки лидов («Есть данные», «Не обработан» и т.д.) ── */
+[data-theme="staff-dark"] .text-blue-800 {
+  color: #93c5fd !important;
+}
+
+[data-theme="staff-dark"] .text-amber-800 {
+  color: #fcd34d !important;
+}
+
+[data-theme="staff-dark"] .text-amber-900 {
+  color: #fde68a !important;
+}
+
+[data-theme="staff-dark"] .text-gray-800 {
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+[data-theme="staff-dark"] .border-amber-200 {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme="staff-dark"] .bg-blue-50.text-blue-800,
+[data-theme="staff-dark"] .border-blue-200.bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.18) !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="staff-dark"] .bg-amber-50.text-amber-800,
+[data-theme="staff-dark"] .border-amber-200.bg-amber-50.text-amber-800 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fcd34d !important;
+}
+
+[data-theme="staff-dark"] .bg-amber-50.text-amber-900,
+[data-theme="staff-dark"] .border-amber-200.bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+[data-theme="staff-dark"] .bg-gray-100.text-gray-700,
+[data-theme="staff-dark"] .border-gray-200.bg-gray-100 {
+  background-color: var(--staff-surface-hover) !important;
+  color: var(--staff-text-secondary) !important;
+}
+
+[data-theme="staff-dark"] .border-dashed.border-gray-200 {
+  border-color: var(--staff-border) !important;
+}

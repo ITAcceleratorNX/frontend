@@ -11,6 +11,28 @@ import {
 } from 'recharts';
 import { statisticsApi } from '../../../shared/api/statisticsApi';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
+import { useTheme } from '../../../shared/context/ThemeContext';
+
+const CHART_THEME = {
+  light: {
+    axis: '#CBD5F5',
+    grid: '#E2E8F0',
+    tick: '#475569',
+    pointFill: '#ffffff',
+    activeMuted: '#64748B',
+    activeText: '#0F172A',
+    activeSub: '#94A3B8',
+  },
+  dark: {
+    axis: '#525858',
+    grid: '#484e4e',
+    tick: '#c4caca',
+    pointFill: '#3a4040',
+    activeMuted: '#999999',
+    activeText: '#f0f2f2',
+    activeSub: '#999999',
+  },
+};
 
 const INITIAL_FILTERS = {
   period: 'year',
@@ -557,7 +579,8 @@ const SummaryCard = ({ title, value, styleKey }) => (
   </div>
 );
 
-const LineChart = ({ data }) => {
+const LineChart = ({ data, isDark = false }) => {
+  const colors = isDark ? CHART_THEME.dark : CHART_THEME.light;
   const width = 640;
   const height = 260;
   const margin = { top: 20, right: 24, bottom: 40, left: 48 };
@@ -599,7 +622,7 @@ const LineChart = ({ data }) => {
         y1={margin.top + chartHeight}
         x2={margin.left + chartWidth}
         y2={margin.top + chartHeight}
-        stroke="#CBD5F5"
+        stroke={colors.axis}
         strokeWidth="1"
       />
       <line
@@ -607,7 +630,7 @@ const LineChart = ({ data }) => {
         y1={margin.top}
         x2={margin.left}
         y2={margin.top + chartHeight}
-        stroke="#CBD5F5"
+        stroke={colors.axis}
         strokeWidth="1"
       />
 
@@ -626,7 +649,7 @@ const LineChart = ({ data }) => {
               y1={y}
               x2={margin.left + chartWidth}
               y2={y}
-              stroke="#E2E8F0"
+              stroke={colors.grid}
               strokeWidth={idx === yTicks ? 1.2 : 0.8}
               strokeDasharray={idx === yTicks ? '0' : '6 6'}
             />
@@ -635,7 +658,7 @@ const LineChart = ({ data }) => {
               y={y + 4}
               textAnchor="end"
               fontSize="12"
-              fill="#475569"
+              fill={colors.tick}
             >
               {displayValue}
             </text>
@@ -661,7 +684,7 @@ const LineChart = ({ data }) => {
             const displayValue = datasetIdx === 1 && value > 0 ? formatCompactNumber(value) : value;
             return (
               <g key={`${dataset.name}-${idx}`}>
-                <circle cx={point.x} cy={point.y} r="4.5" fill="#fff" stroke={dataset.color} strokeWidth="2.5" />
+                <circle cx={point.x} cy={point.y} r="4.5" fill={colors.pointFill} stroke={dataset.color} strokeWidth="2.5" />
                 <text
                   x={point.x}
                   y={point.y - 12}
@@ -687,7 +710,7 @@ const LineChart = ({ data }) => {
             y={margin.top + chartHeight + 24}
             textAnchor="middle"
             fontSize="12"
-            fill="#475569"
+            fill={colors.tick}
           >
             {label}
           </text>
@@ -700,7 +723,8 @@ const LineChart = ({ data }) => {
 const PIE_DEFAULT_COLORS = ['#3B82F6', '#22C55E', '#0EA5E9', '#F97316', '#6366F1', '#F59E0B'];
 const RADIAN = Math.PI / 180;
 
-function renderActiveShape(props) {
+function createRenderActiveShape(themeColors) {
+  return function renderActiveShape(props) {
   const {
     cx,
     cy,
@@ -749,7 +773,7 @@ function renderActiveShape(props) {
         x={cx}
         y={cy + (isSmall ? 10 : 16)}
         textAnchor="middle"
-        fill="#64748B"
+        fill={themeColors.activeMuted}
         style={{ fontSize: fontSizeValue, fontWeight: 500 }}
       >
         {value}%
@@ -785,7 +809,7 @@ function renderActiveShape(props) {
         x={ex + (cos >= 0 ? 1 : -1) * (isSmall ? 8 : 12)}
         y={ey}
         textAnchor={textAnchor}
-        fill="#0F172A"
+        fill={themeColors.activeText}
         style={{ fontSize: fontSizeCallout, fontWeight: 700 }}
       >
         {value}%
@@ -794,13 +818,14 @@ function renderActiveShape(props) {
         x={ex + (cos >= 0 ? 1 : -1) * (isSmall ? 8 : 12)}
         y={ey + (isSmall ? 12 : 18)}
         textAnchor={textAnchor}
-        fill="#94A3B8"
+        fill={themeColors.activeSub}
         style={{ fontSize: fontSizeSub, fontWeight: 500 }}
       >
         {`(${(percent * 100).toFixed(1)}%)`}
       </text>
     </g>
   );
+  };
 }
 
 function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent, value }) {
@@ -831,29 +856,42 @@ function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent
   );
 }
 
-function PieChartTooltip({ active, payload }) {
+function PieChartTooltip({ active, payload, isDark = false }) {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-lg sm:px-4 sm:py-3">
+      <div className={clsx(
+        'rounded-xl border px-3 py-2 shadow-lg sm:px-4 sm:py-3',
+        isDark
+          ? 'border-[var(--staff-border)] bg-[var(--staff-surface-raised)]'
+          : 'border-slate-200 bg-white',
+      )}>
         <div className="flex items-center gap-2">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full sm:h-3 sm:w-3"
             style={{ backgroundColor: data.payload.color ?? PIE_DEFAULT_COLORS[0] }}
           />
-          <span className="text-xs font-semibold text-slate-900 sm:text-sm">{data.payload.label}</span>
+          <span className={clsx(
+            'text-xs font-semibold sm:text-sm',
+            isDark ? 'text-[var(--staff-text)]' : 'text-slate-900',
+          )}>{data.payload.label}</span>
         </div>
-        <p className="mt-0.5 text-lg font-bold text-slate-900 sm:mt-1 sm:text-2xl">{data.value}%</p>
+        <p className={clsx(
+          'mt-0.5 text-lg font-bold sm:mt-1 sm:text-2xl',
+          isDark ? 'text-[var(--staff-brand)]' : 'text-slate-900',
+        )}>{data.value}%</p>
       </div>
     );
   }
   return null;
 }
 
-const PieChart = ({ data, highlightedKey = 'all', totalCount }) => {
+const PieChart = ({ data, highlightedKey = 'all', totalCount, isDark = false }) => {
   const [activeIndex, setActiveIndex] = useState(undefined);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const chartColors = isDark ? CHART_THEME.dark : CHART_THEME.light;
+  const activeShapeRenderer = useMemo(() => createRenderActiveShape(chartColors), [isDark]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -894,7 +932,7 @@ const PieChart = ({ data, highlightedKey = 'all', totalCount }) => {
           <RechartsPieChart>
             <Pie
               activeIndex={activeIndex}
-              activeShape={renderActiveShape}
+              activeShape={activeShapeRenderer}
               data={chartData}
               cx="50%"
               cy="50%"
@@ -930,15 +968,21 @@ const PieChart = ({ data, highlightedKey = 'all', totalCount }) => {
                 />
               ))}
             </Pie>
-            <Tooltip content={<PieChartTooltip />} />
+            <Tooltip content={<PieChartTooltip isDark={isDark} />} />
           </RechartsPieChart>
         </ResponsiveContainer>
 
         {activeIndex === undefined && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-xl font-bold text-slate-900 sm:text-3xl">{formatNumber(displayTotal)}</p>
-              <p className="text-xs font-medium text-slate-500 sm:text-sm">Всего визитов</p>
+              <p className={clsx(
+                'text-xl font-bold sm:text-3xl',
+                isDark ? 'text-[var(--staff-text)]' : 'text-slate-900',
+              )}>{formatNumber(displayTotal)}</p>
+              <p className={clsx(
+                'text-xs font-medium sm:text-sm',
+                isDark ? 'text-[var(--staff-text-muted)]' : 'text-slate-500',
+              )}>Всего визитов</p>
             </div>
           </div>
         )}
@@ -951,8 +995,14 @@ const PieChart = ({ data, highlightedKey = 'all', totalCount }) => {
               className="inline-block h-2.5 w-2.5 rounded-full shadow-sm sm:h-3 sm:w-3"
               style={{ backgroundColor: item.color ?? PIE_DEFAULT_COLORS[idx % PIE_DEFAULT_COLORS.length] }}
             />
-            <span className="text-xs font-medium text-slate-900 sm:text-sm">{item.label}</span>
-            <span className="text-xs font-bold text-slate-500 sm:text-sm">{item.value}%</span>
+            <span className={clsx(
+              'text-xs font-medium sm:text-sm',
+              isDark ? 'text-[var(--staff-text)]' : 'text-slate-900',
+            )}>{item.label}</span>
+            <span className={clsx(
+              'text-xs font-bold sm:text-sm',
+              isDark ? 'text-[var(--staff-text-muted)]' : 'text-slate-500',
+            )}>{item.value}%</span>
           </div>
         ))}
       </div>
@@ -972,6 +1022,7 @@ const FilterSelect = ({ label, value, onChange, options }) => (
 );
 
 const Statistics = () => {
+  const { isDark } = useTheme();
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [activeTab, setActiveTab] = useState('requests');
   const [requestsSearch, setRequestsSearch] = useState('');
@@ -1321,7 +1372,7 @@ const Statistics = () => {
             {lineChartData.labels && lineChartData.labels.length > 0 ? (
               <>
           <div className="rounded-2xl bg-slate-50 p-4">
-            <LineChart data={lineChartData} />
+            <LineChart data={lineChartData} isDark={isDark} />
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-6">
                   {lineChartData.datasets?.map((dataset) => (
@@ -1356,7 +1407,7 @@ const Statistics = () => {
           </div>
             {leadSources && leadSources.length > 0 ? (
               <>
-          <PieChart data={leadSources} highlightedKey={filters.leadSource} totalCount={leadSources.totalCount} />
+          <PieChart data={leadSources} highlightedKey={filters.leadSource} totalCount={leadSources.totalCount} isDark={isDark} />
               </>
             ) : (
               <div className="py-12 text-center text-slate-500">Нет данных для отображения</div>

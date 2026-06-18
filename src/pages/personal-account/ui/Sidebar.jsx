@@ -26,7 +26,8 @@ import { useNotifications } from '../../../shared/lib/hooks/use-notifications';
 import UserNotifications from './notifications/UserNotifications';
 import { getNotificationTarget } from './notifications/NotificationCard';
 import { Switch } from '../../../components/ui/switch';
-import { isStaffRole } from '../../../shared/lib/utils/isStaffRole';
+import { useTheme } from '../../../shared/context/ThemeContext';
+import ThemeToggle from './ThemeToggle';
 
 // Разделы для обычных пользователей
 const userNavItems = [
@@ -154,7 +155,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   };
 
   const navItems = getNavItemsByRole(user?.role);
-  const isStaff = isStaffRole(user?.role);
+  const { isDark } = useTheme();
 
   const handleNavClick = async (key) => {
     if (key === 'delivery') {
@@ -259,7 +260,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
   return (
     <aside className={clsx(
       'w-[280px] min-h-screen flex flex-col py-6 px-6 flex-shrink-0 border-r',
-      isStaff ? 'staff-sidebar border-[var(--staff-border-light)] bg-[var(--staff-surface)]' : 'bg-white border-[#f5f5f5]'
+      isDark ? 'staff-sidebar border-[var(--staff-border-light)] bg-[var(--staff-surface)]' : 'bg-white border-[#f5f5f5]'
     )}>
       {/* Logo */}
       <div className="mb-8">
@@ -271,7 +272,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
           />
           <span className={clsx(
             'text-xl font-bold',
-            isStaff ? 'text-[var(--staff-brand)]' : 'text-[#004743]'
+            isDark ? 'text-[var(--staff-brand)]' : 'text-[#004743]'
           )}>EXTRA SPACE</span>
         </div>
         
@@ -287,7 +288,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         <div className="mb-6">
           <h3 className={clsx(
             'text-xs font-medium mb-3',
-            isStaff ? 'text-[var(--staff-text-muted)]' : 'text-[#737373]'
+            isDark ? 'text-[var(--staff-text-muted)]' : 'text-[#737373]'
           )}>Профиль:</h3>
           <div className="flex items-start gap-3">
             {/* Avatar with gradient */}
@@ -301,7 +302,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 {user?.name ? (
                   <div className={clsx(
                     'text-sm font-semibold leading-tight',
-                    isStaff ? 'text-[var(--staff-text)]' : 'text-gray-900'
+                    isDark ? 'text-[var(--staff-text)]' : 'text-gray-900'
                   )}>
                     {user.name.split(' ').map((part, idx) => (
                       <div key={idx}>{part}</div>
@@ -310,7 +311,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 ) : (
                   <div className={clsx(
                     'text-sm font-semibold',
-                    isStaff ? 'text-[var(--staff-text)]' : 'text-gray-900'
+                    isDark ? 'text-[var(--staff-text)]' : 'text-gray-900'
                   )}>Пользователь</div>
                 )}
               </div>
@@ -318,7 +319,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 onClick={() => setActiveNav('personal')}
                 className={clsx(
                   'staff-profile-link flex items-center gap-1 text-xs transition-colors focus:outline-none focus:ring-0 hover:shadow-none active:shadow-none',
-                  isStaff ? 'text-[#B0E4DD] hover:text-[#00A991]' : 'text-[#00A991] hover:text-[#009882]'
+                  isDark ? 'text-[#B0E4DD] hover:text-[#00A991]' : 'text-[#00A991] hover:text-[#009882]'
                 )}
                 style={{ backgroundColor: 'transparent', boxShadow: 'none' }}
               >
@@ -333,7 +334,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className={clsx(
                   'staff-bell-btn flex items-center gap-1 focus:outline-none focus:ring-0 hover:shadow-none active:shadow-none hover:bg-transparent hover:scale-100 active:scale-100 hover:transform-none active:transform-none',
-                  isStaff ? 'text-[#B0E4DD] hover:text-[#00A991]' : 'text-[#00A991]'
+                  isDark ? 'text-[#B0E4DD] hover:text-[#00A991]' : 'text-[#00A991]'
                 )}
                 style={{ backgroundColor: 'transparent', boxShadow: 'none' }}
               >
@@ -347,23 +348,23 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
               {isNotificationsOpen && (
                 <div className={clsx(
                   'fixed top-20 left-[280px] w-[420px] border rounded-lg shadow-lg z-50 max-h-[600px] overflow-y-auto',
-                  isStaff
+                  isDark
                     ? 'staff-notifications-panel bg-[var(--staff-surface-raised)] border-[var(--staff-accent)]'
                     : 'bg-white border-[#00A991]'
                 )}>
                   <div className={clsx(
                     'p-4 border-b',
-                    isStaff ? 'border-[var(--staff-border)]' : 'border-[#DFDFDF]'
+                    isDark ? 'border-[var(--staff-border)]' : 'border-[#DFDFDF]'
                   )}>
                     <div className="flex items-center justify-between gap-4">
                       <h3 className={clsx(
                         'text-base font-semibold whitespace-nowrap',
-                        isStaff ? 'text-[var(--staff-text)]' : 'text-[#363636]'
+                        isDark ? 'text-[var(--staff-text)]' : 'text-[#363636]'
                       )}>Уведомления</h3>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <label htmlFor="unread-only" className={clsx(
                           'text-xs cursor-pointer whitespace-nowrap',
-                          isStaff ? 'text-[var(--staff-text-secondary)]' : 'text-gray-600'
+                          isDark ? 'text-[var(--staff-text-secondary)]' : 'text-gray-600'
                         )}>
                           Показать только непрочитанные
                         </label>
@@ -397,13 +398,21 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
         </div>
       </div>
 
+      {/* Theme toggle */}
+      <div className={clsx(
+        'mb-4 pb-4 border-b',
+        isDark ? 'border-[var(--staff-border-light)]' : 'border-[#f5f5f5]'
+      )}>
+        <ThemeToggle />
+      </div>
+
       {/* Navigation */}
       <nav className="flex flex-col gap-1 flex-1">
         {navItems.map((item, idx) => {
           if (item.divider) {
             return <hr key={idx} className={clsx(
               'my-3 border-t',
-              isStaff ? 'staff-divider border-[var(--staff-border-light)]' : 'border-[#f5f5f5]'
+              isDark ? 'staff-divider border-[var(--staff-border-light)]' : 'border-[#f5f5f5]'
             )} />;
           }
           return (
@@ -414,7 +423,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                 'staff-nav-item flex items-center gap-3 px-4 py-2.5 text-[16px] font-normal leading-normal relative whitespace-nowrap',
                 activeNav === item.key
                   ? 'staff-nav-item--active bg-[#00A991]/20 rounded-full text-[#00A991]'
-                  : isStaff
+                  : isDark
                     ? 'text-[var(--staff-text-secondary)] hover:bg-[var(--staff-surface-hover)] rounded-md'
                     : 'text-gray-700 hover:bg-[#f5f5f5] rounded-md',
                 'group'
@@ -428,8 +437,8 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                     alt="icon" 
                     className={clsx(
                       'w-5 h-5 flex-shrink-0',
-                      activeNav !== item.key && !isStaff && 'filter brightness-0 opacity-60',
-                      activeNav !== item.key && isStaff && 'staff-nav-icon-inactive',
+                      activeNav !== item.key && !isDark && 'filter brightness-0 opacity-60',
+                      activeNav !== item.key && isDark && 'staff-nav-icon-inactive',
                     )}
                     style={activeNav === item.key ? { 
                       filter: 'brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1200%) hue-rotate(140deg) brightness(0.9) contrast(1.1)',
@@ -441,7 +450,7 @@ const Sidebar = ({ activeNav, setActiveNav }) => {
                     'w-5 h-5 flex-shrink-0',
                     activeNav === item.key
                       ? 'text-[#00A991]'
-                      : isStaff ? 'text-[var(--staff-text-muted)]' : 'text-gray-600'
+                      : isDark ? 'text-[var(--staff-text-muted)]' : 'text-gray-600'
                   )} />
                 ) : null}
                 {/* Badge для непрочитанных уведомлений */}

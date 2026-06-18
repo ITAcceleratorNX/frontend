@@ -1,14 +1,14 @@
 import React from 'react';
 import clsx from 'clsx';
-import { isStaffRole } from '../../../shared/lib/utils/isStaffRole';
+import { useTheme } from '../../../shared/context/ThemeContext';
 
-const StaffThemeWrapper = ({ user, children, className }) => {
-  const isStaff = isStaffRole(user?.role);
+const StaffThemeWrapper = ({ children, className }) => {
+  const { isDark } = useTheme();
 
   return (
     <div
-      className={clsx(className, isStaff && 'staff-cabinet')}
-      {...(isStaff ? { 'data-theme': 'staff-dark' } : {})}
+      className={clsx(className, isDark && 'staff-cabinet')}
+      {...(isDark ? { 'data-theme': 'staff-dark' } : {})}
     >
       {children}
     </div>
