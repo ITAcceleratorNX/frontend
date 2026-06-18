@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
@@ -138,7 +137,6 @@ const AdminMovingOrder = () => {
   if (isLoading) {
     return (
       <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
-        <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
@@ -158,7 +156,6 @@ const AdminMovingOrder = () => {
   if (error || !order) {
     return (
       <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
-        <Header />
         <div className="flex flex-1">
           <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />
           <main className="flex-1 mr-[110px]">
@@ -185,9 +182,8 @@ const AdminMovingOrder = () => {
   }
 
   return (
-    <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
-      <Header />
-      <div className="flex flex-1">
+      <StaffThemeWrapper user={user} className="min-h-screen flex flex-col">
+        <div className="flex flex-1">
         <Sidebar activeNav="clientsAndOrders" setActiveNav={handleNavClick} />
         <main className="flex-1 mr-[110px]">
           <div className="max-w-5xl mx-auto py-12 px-10 space-y-6">

@@ -1,8 +1,8 @@
 // CourierRequestOrder.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header } from '../../../widgets';
 import Sidebar from './Sidebar';
+import StaffThemeWrapper from './StaffThemeWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -270,11 +270,10 @@ const CourierRequestOrder = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
-        <div className="flex flex-1">
+      <StaffThemeWrapper className="min-h-screen flex flex-col">
+        <div className="flex flex-1 min-w-0">
           <Sidebar activeNav="courierrequests" setActiveNav={handleNavClick} />
-          <main className="flex-1 min-w-0 md:mr-[110px] bg-gray-50">
+          <main className="flex-1 min-w-0 overflow-x-hidden bg-gray-50 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
             <div className="max-w-5xl mx-auto w-full py-8 px-4 sm:py-12 sm:px-10">
               <div className="text-center py-8 sm:py-12">
                 <Loader2 className="w-8 h-8 text-[#00A991] animate-spin mx-auto mb-4" />
@@ -284,17 +283,16 @@ const CourierRequestOrder = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Header />
-        <div className="flex flex-1">
+      <StaffThemeWrapper className="min-h-screen flex flex-col">
+        <div className="flex flex-1 min-w-0">
           <Sidebar activeNav="courierrequests" setActiveNav={handleNavClick} />
-          <main className="flex-1 min-w-0 md:mr-[110px] bg-gray-50">
+          <main className="flex-1 min-w-0 overflow-x-hidden bg-gray-50 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
             <div className="max-w-5xl mx-auto w-full py-8 px-4 sm:py-12 sm:px-10">
               <Card className="border-red-200 rounded-xl shadow-sm bg-white">
                 <CardContent className="text-center py-8 sm:py-12 px-4">
@@ -313,16 +311,15 @@ const CourierRequestOrder = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
-      <div className="flex flex-1">
+    <StaffThemeWrapper className="min-h-screen flex flex-col">
+      <div className="flex flex-1 min-w-0">
         <Sidebar activeNav="courierrequests" setActiveNav={handleNavClick} />
-        <main className="flex-1 min-w-0 md:mr-[110px] bg-gray-50">
+        <main className="flex-1 min-w-0 overflow-x-hidden bg-gray-50 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
           <div className="max-w-5xl mx-auto w-full py-4 px-3 sm:py-6 sm:px-6 md:py-8 md:px-10 space-y-4 sm:space-y-6">
             {/* Навигация назад */}
             <Button
@@ -595,7 +592,7 @@ const CourierRequestOrder = () => {
             </div>
           </main>
         </div>
-      </div>
+      </StaffThemeWrapper>
   );
 };
 

@@ -776,3 +776,110 @@
 [data-theme="staff-dark"] .border-dashed.border-gray-200 {
   border-color: var(--staff-border) !important;
 }
+
+/* ── Недостающие утилиты ── */
+[data-theme="staff-dark"] .bg-gray-300 {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .text-gray-300 {
+  color: var(--staff-text-muted) !important;
+  opacity: 0.7;
+}
+
+[data-theme="staff-dark"] .hover\:bg-gray-300:hover {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .text-amber-700 {
+  color: #fcd34d !important;
+}
+
+[data-theme="staff-dark"] .border-amber-300 {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme="staff-dark"] .hover\:border-amber-300:hover {
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+
+[data-theme="staff-dark"] .border-\[\#E5E7EB\] {
+  border-color: var(--staff-border) !important;
+}
+
+[data-theme="staff-dark"] .hover\:bg-\[\#F9FAFB\]:hover,
+[data-theme="staff-dark"] .active\:bg-\[\#F3F4F6\]:active {
+  background-color: var(--staff-surface-hover) !important;
+}
+
+[data-theme="staff-dark"] .text-\[\#363636\] {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .bg-blue-50.text-\[\#1e2c4f\] {
+  background-color: rgba(59, 130, 246, 0.18) !important;
+  color: #93c5fd !important;
+}
+
+/* ── Radix-порталы: Select, Popover, Dialog ── */
+[data-theme="staff-dark"] [data-radix-popper-content-wrapper] [role="listbox"],
+[data-theme="staff-dark"] [data-radix-select-content],
+[data-theme="staff-dark"] [data-radix-popover-content] {
+  background-color: var(--staff-surface-raised) !important;
+  border-color: var(--staff-border) !important;
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] [data-radix-select-viewport] [role="option"],
+[data-theme="staff-dark"] [data-radix-collection-item] {
+  color: var(--staff-text-secondary);
+}
+
+[data-theme="staff-dark"] [data-radix-select-viewport] [role="option"][data-highlighted],
+[data-theme="staff-dark"] [data-radix-select-viewport] [role="option"]:focus {
+  background-color: var(--staff-surface-hover) !important;
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .bg-popover {
+  background-color: var(--staff-surface-raised) !important;
+}
+
+[data-theme="staff-dark"] .text-popover-foreground {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .bg-background {
+  background-color: var(--staff-surface) !important;
+}
+
+[data-theme="staff-dark"] .text-foreground {
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .text-muted-foreground {
+  color: var(--staff-text-muted) !important;
+}
+
+[data-theme="staff-dark"] .border-input {
+  border-color: var(--staff-border) !important;
+}
+
+/* react-toastify в тёмной теме кабинета */
+[data-theme="staff-dark"] .Toastify__toast-theme--dark {
+  background: var(--staff-surface-raised);
+  color: var(--staff-text);
+}
+
+/* szhsin react-menu */
+[data-theme="staff-dark"] .szh-menu {
+  background-color: var(--staff-surface-raised) !important;
+  border-color: var(--staff-border) !important;
+  color: var(--staff-text) !important;
+}
+
+[data-theme="staff-dark"] .szh-menu__item:hover,
+[data-theme="staff-dark"] .szh-menu__item:focus {
+  background-color: var(--staff-surface-hover) !important;
+  color: var(--staff-brand-light) !important;
+}

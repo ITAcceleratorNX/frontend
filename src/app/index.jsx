@@ -11,6 +11,7 @@ import { AuthProvider } from '../shared/context/AuthContext';
 import { ThemeProvider, useTheme } from '../shared/context/ThemeContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
+import CabinetThemeSync from '../shared/components/CabinetThemeSync.jsx';
 import FloatingWhatsAppButton from "../shared/components/FloatingWhatsAppButton.jsx";
 import { useSSENotifications } from '../shared/lib/hooks/useSSENotifications';
 import { usePushNotifications } from '../shared/lib/hooks/usePushNotifications';
@@ -146,6 +147,7 @@ const App = memo(() => {
       <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <CabinetThemeSync />
           <ScrollToTop />
           <div className="font-sans">
             <ResponseInterceptor />
