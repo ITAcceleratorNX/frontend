@@ -68,6 +68,31 @@ function formatSubmittedAt(value) {
   return s || String(value);
 }
 
+function getTableActionButtonLabel(processingState) {
+  switch (processingState) {
+    case 'unprocessed':
+      return 'Обработать';
+    case 'has_data':
+      return 'Изменить';
+    case 'closed':
+      return 'Открыть';
+    default:
+      return 'Открыть';
+  }
+}
+
+/* eslint-disable react/prop-types */
+function TruncatedText({ children, className = '', title }) {
+  const text = children ?? '—';
+  const tooltip = title ?? (typeof text === 'string' && text !== '—' ? text : undefined);
+  return (
+    <span className={`block truncate ${className}`} title={tooltip}>
+      {text}
+    </span>
+  );
+}
+/* eslint-enable react/prop-types */
+
 function phoneToTelHref(phone) {
   if (!phone) return '#';
   const d = String(phone).replace(/\D/g, '');
@@ -110,9 +135,9 @@ function GclidCell({ value }) {
       type="button"
       onClick={handleCopy}
       title={value}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-[#273655] transition hover:border-[#31876D]/40 hover:bg-[#31876D]/5"
+      className="inline-flex max-w-full items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] text-[#273655] transition hover:border-[#31876D]/40 hover:bg-[#31876D]/5"
     >
-      <span className="truncate max-w-[120px]">
+      <span className="truncate max-w-[4.5rem]">
         {head}
         {tail}
       </span>
@@ -125,13 +150,16 @@ function GclidCell({ value }) {
   );
 }
 
-function ProcessingBadge({ state }) {
+function ProcessingBadge({ state, compact = false }) {
   const label = PROCESSING_STATE_LABELS[state] || state || '—';
   return (
     <span
-      className={`inline-flex rounded-lg border px-2 py-0.5 text-xs font-medium ${processingStateBadgeClass(state)}`}
+      className={`inline-flex max-w-full rounded-lg border font-medium ${
+        compact ? 'px-1.5 py-0.5 text-[10px] leading-tight' : 'px-2 py-0.5 text-xs'
+      } ${processingStateBadgeClass(state)}`}
+      title={label}
     >
-      {label}
+      <span className="truncate">{label}</span>
     </span>
   );
 }
@@ -468,76 +496,118 @@ function LpLeadsSection() {
         </div>
       ) : (
         <>
-          <div className="hidden md:block w-full max-w-full min-w-0 overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <table className="w-full min-w-[1100px] text-left text-sm">
+          <div className="hidden md:block w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full table-fixed text-left text-xs">
+              <colgroup>
+                <col className="w-[9%]" />
+                <col className="w-[11%]" />
+                <col className="w-[8%]" />
+                <col className="w-[9%]" />
+                <col className="w-[10%]" />
+                <col className="w-[11%]" />
+                <col className="w-[15%]" />
+                <col className="w-[8%]" />
+                <col className="w-[10%]" />
+                <col className="w-[9%]" />
+              </colgroup>
               <thead className="bg-gray-50 text-gray-600">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Имя</th>
-                  <th className="px-4 py-3 font-semibold">Телефон</th>
-                  <th className="px-4 py-3 font-semibold">Источник лида</th>
-                  <th className="px-4 py-3 font-semibold">Обработка</th>
-                  <th className="px-4 py-3 font-semibold">Статус лида</th>
-                  <th className="px-4 py-3 font-semibold">Ответственный менеджер</th>
-                  <th className="px-4 py-3 font-semibold">Тип клиента</th>
-                  <th className="px-4 py-3 font-semibold">Секция</th>
-                  <th className="px-4 py-3 font-semibold">Услуга</th>
-                  <th className="px-4 py-3 font-semibold">GCLID</th>
-                  <th className="px-4 py-3 font-semibold">Дата</th>
-                  <th className="px-4 py-3 font-semibold w-36" />
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight">Имя</th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight">Телефон</th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight" title="Источник лида">
+                    Источник
+                  </th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight">Обработка</th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight" title="Статус лида">
+                    Статус
+                  </th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight" title="Ответственный менеджер">
+                    Менеджер
+                  </th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight" title="Услуга, тип клиента и секция">
+                    Услуга
+                  </th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight">GCLID</th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight">Дата</th>
+                  <th className="px-2 lg:px-3 py-2.5 font-semibold leading-tight">
+                    <span className="sr-only">Действие</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {pageRows.map((row) => (
-                  <tr
-                    key={rowKey(row)}
-                    className="hover:bg-gray-50/80 cursor-pointer"
-                    onClick={(e) => openLead(row, e)}
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-900">{row.name || '—'}</td>
-                    <td className="px-4 py-3">
-                      <a
-                        href={phoneToTelHref(row.phone)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1.5 font-mono text-[#31876D] font-semibold hover:underline"
-                      >
-                        <Phone className="w-3.5 h-3.5 shrink-0" aria-hidden />
-                        {row.phone || '—'}
-                      </a>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 font-medium">
-                      {getLeadSourceDisplayLabel(row)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <ProcessingBadge state={row.processing_state} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {getFieldLabel('lead_status', row.lead_status)}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {row.responsible_manager_name || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {getClientTypeLabel(row.client_type)}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{row.page_section || '—'}</td>
-                    <td className="px-4 py-3 text-gray-700">{getServiceDisplayLabel(row)}</td>
-                    <td className="px-4 py-3">
-                      <GclidCell value={row.gclid} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                      {formatSubmittedAt(row.submitted_at)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={(e) => openLeadByButton(row, e)}
-                        className="rounded-lg border border-[#31876D]/30 bg-[#31876D]/5 px-2.5 py-1.5 text-xs font-semibold text-[#31876D] hover:bg-[#31876D]/10"
-                      >
-                        {getActionButtonLabel(row.processing_state)}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {pageRows.map((row) => {
+                  const serviceLabel = getServiceDisplayLabel(row);
+                  const leadStatusLabel = getFieldLabel('lead_status', row.lead_status);
+                  const clientTypePart = row.client_type ? getClientTypeLabel(row.client_type) : null;
+                  const serviceMeta = [clientTypePart, row.page_section].filter(Boolean).join(' · ');
+
+                  return (
+                    <tr
+                      key={rowKey(row)}
+                      className="hover:bg-gray-50/80 cursor-pointer"
+                      onClick={(e) => openLead(row, e)}
+                    >
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <TruncatedText className="font-medium text-gray-900">{row.name || '—'}</TruncatedText>
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <a
+                          href={phoneToTelHref(row.phone)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="block truncate font-mono text-[#31876D] font-semibold hover:underline"
+                          title={row.phone || undefined}
+                        >
+                          {row.phone || '—'}
+                        </a>
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <TruncatedText className="text-gray-700 font-medium">
+                          {getLeadSourceDisplayLabel(row)}
+                        </TruncatedText>
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <ProcessingBadge state={row.processing_state} compact />
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <TruncatedText className="text-gray-700" title={leadStatusLabel}>
+                          {leadStatusLabel}
+                        </TruncatedText>
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <TruncatedText className="text-gray-700" title={row.responsible_manager_name || undefined}>
+                          {row.responsible_manager_name || '—'}
+                        </TruncatedText>
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <TruncatedText className="text-gray-700 font-medium" title={serviceLabel}>
+                          {serviceLabel}
+                        </TruncatedText>
+                        {serviceMeta ? (
+                          <TruncatedText className="text-[10px] text-gray-500 mt-0.5" title={serviceMeta}>
+                            {serviceMeta}
+                          </TruncatedText>
+                        ) : null}
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <GclidCell value={row.gclid} />
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <TruncatedText className="text-gray-600" title={formatSubmittedAt(row.submitted_at)}>
+                          {formatSubmittedAt(row.submitted_at)}
+                        </TruncatedText>
+                      </td>
+                      <td className="px-2 lg:px-3 py-2.5">
+                        <button
+                          type="button"
+                          onClick={(e) => openLeadByButton(row, e)}
+                          className="w-full rounded-lg border border-[#31876D]/30 bg-[#31876D]/5 px-2 py-1.5 text-[11px] font-semibold leading-tight text-[#31876D] hover:bg-[#31876D]/10"
+                        >
+                          {getTableActionButtonLabel(row.processing_state)}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
