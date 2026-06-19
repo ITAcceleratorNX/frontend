@@ -13,6 +13,7 @@ import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { DateField } from '@/shared/ui/DateField.jsx';
 import UserActiveOrders from './UserActiveOrders';
 import StaffThemeWrapper from './StaffThemeWrapper';
+import ResponsibleManagerSelect from './ResponsibleManagerSelect';
 
 const ROLE_OPTIONS = [
   { value: 'ADMIN', label: 'Администратор' },
@@ -410,6 +411,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const [isUpdatingOrderLimit, setIsUpdatingOrderLimit] = useState(false);
+  const [isUpdatingManager, setIsUpdatingManager] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Функция для обработки навигации в сайдбаре
@@ -436,7 +438,10 @@ const UserProfile = () => {
         setSelectedUser(user);
       } catch (error) {
         console.error('Ошибка при загрузке пользователя:', error);
-        if (error.response?.status === 404) {
+        if (error.response?.status === 403) {
+          showErrorToast('Нет доступа к этому клиенту');
+          navigate('/personal-account', { state: { activeSection: 'clientsAndOrders' } });
+        } else if (error.response?.status === 404) {
           showErrorToast('Пользователь не найден');
         } else {
           showErrorToast('Не удалось загрузить данные пользователя');
@@ -473,6 +478,68 @@ const UserProfile = () => {
     } finally {
       setIsUpdatingRole(false);
     }
+  };
+
+  const handleManagerAssignment = async (managerId, { onTransferred } = {}) => {
+    if (!selectedUser || selectedUser.role !== 'USER') return;
+
+    const parsedId = managerId ? Number(managerId) : null;
+
+    if (isManager) {
+      const isFreeClient = !selectedUser.responsible_manager_id;
+      const isOwnClient = selectedUser.responsible_manager_id === currentUser.id;
+
+      if (isFreeClient) {
+        if (!parsedId || parsedId !== currentUser.id) {
+          showErrorToast('Свободного клиента можно закрепить только за собой');
+          return;
+        }
+      } else if (isOwnClient) {
+        if (!parsedId) {
+          showErrorToast('Выберите менеджера для передачи клиента');
+          return;
+        }
+        if (parsedId === currentUser.id) {
+          return;
+        }
+      } else {
+        showErrorToast('Нет доступа к этому клиенту');
+        return;
+      }
+    }
+
+    try {
+      setIsUpdatingManager(true);
+      const updated = await usersApi.assignResponsibleManager(selectedUser.id, parsedId);
+      const transferredAway = isManager && parsedId && parsedId !== currentUser.id;
+
+      if (transferredAway) {
+        showSuccessToast('Клиент передан другому менеджеру');
+        onTransferred?.(updated);
+        return;
+      }
+
+      setSelectedUser(updated);
+      showSuccessToast(parsedId ? 'Ответственный менеджер назначен' : 'Назначение менеджера снято');
+    } catch (error) {
+      showErrorToast(error.response?.data?.message || 'Не удалось обновить ответственного менеджера');
+    } finally {
+      setIsUpdatingManager(false);
+    }
+  };
+
+  const handleClaimClient = async () => {
+    if (!isManager || !currentUser?.id || !selectedUser) return;
+    await handleManagerAssignment(String(currentUser.id));
+  };
+
+  const handleTransferClient = async (managerId) => {
+    if (!managerId) return;
+    await handleManagerAssignment(managerId, {
+      onTransferred: () => {
+        navigate('/personal-account', { state: { activeSection: 'clientsAndOrders', clientsAndOrdersTab: 'clients' } });
+      },
+    });
   };
 
   // Обновление разрешения на превышение лимита заказов (для MANAGER и ADMIN)
@@ -878,6 +945,49 @@ const UserProfile = () => {
                               </p>
                             </div>
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {isAdminOrManager && selectedUser?.role === 'USER' && (
+                      <div>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
+                          Ответственный менеджер
+                        </h3>
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-lg space-y-3">
+                          {isAdmin ? (
+                            <ResponsibleManagerSelect
+                              value={selectedUser.responsible_manager_id ? String(selectedUser.responsible_manager_id) : ''}
+                              onChange={(value) => handleManagerAssignment(value)}
+                            />
+                          ) : (
+                            <>
+                              <p className="text-sm text-gray-700">
+                                {selectedUser.responsible_manager_name
+                                  || (selectedUser.responsible_manager_id ? `Менеджер #${selectedUser.responsible_manager_id}` : 'Свободен')}
+                              </p>
+                              {isManager && selectedUser.responsible_manager_id === currentUser?.id && (
+                                <ResponsibleManagerSelect
+                                  value=""
+                                  onChange={handleTransferClient}
+                                  excludeUserId={currentUser.id}
+                                  allowEmpty={false}
+                                  label="Передать другому менеджеру"
+                                  placeholder="Выберите менеджера"
+                                />
+                              )}
+                            </>
+                          )}
+                          {isManager && !selectedUser.responsible_manager_id && (
+                            <button
+                              type="button"
+                              onClick={handleClaimClient}
+                              disabled={isUpdatingManager}
+                              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#00A991] rounded-lg hover:bg-[#008f7a] disabled:opacity-50"
+                            >
+                              {isUpdatingManager ? 'Закрепление...' : 'Закрепить за собой'}
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}

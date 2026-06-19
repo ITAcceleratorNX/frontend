@@ -10,6 +10,8 @@ import {
   Tooltip,
 } from 'recharts';
 import { statisticsApi } from '../../../shared/api/statisticsApi';
+import { usersApi } from '../../../shared/api/usersApi';
+import { useAuth } from '../../../shared/context/AuthContext';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { useTheme } from '../../../shared/context/ThemeContext';
 
@@ -44,6 +46,7 @@ const INITIAL_FILTERS = {
   leadSource: 'all',
   utmMedium: 'all',
   utmCampaign: 'all',
+  managerId: 'all',
 };
 
 const PERIOD_OPTIONS = [
@@ -1023,6 +1026,9 @@ const FilterSelect = ({ label, value, onChange, options }) => (
 
 const Statistics = () => {
   const { isDark } = useTheme();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+  const isManager = user?.role === 'MANAGER';
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [activeTab, setActiveTab] = useState('requests');
   const [requestsSearch, setRequestsSearch] = useState('');
@@ -1031,6 +1037,21 @@ const Statistics = () => {
   const [logTypeFilter, setLogTypeFilter] = useState('all');
   const [requestsPage, setRequestsPage] = useState(1);
   const [logsPage, setLogsPage] = useState(1);
+
+  const { data: managers = [] } = useQuery({
+    queryKey: ['managers'],
+    queryFn: () => usersApi.getManagers(),
+    enabled: isAdmin,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const apiFilters = useMemo(() => {
+    const { managerId, ...rest } = filters;
+    return {
+      ...rest,
+      ...(managerId && managerId !== 'all' ? { managerId } : {}),
+    };
+  }, [filters]);
 
   // Сброс пагинации при изменении фильтров
   useEffect(() => {
@@ -1051,12 +1072,12 @@ const Statistics = () => {
     cancelReasonComments,
     tableRows,
     isLoading: isStatisticsLoading,
-  } = useStatisticsData(filters);
+  } = useStatisticsData(apiFilters);
 
   // Запрос заявок
   const { data: requestsData, isLoading: isRequestsLoading } = useQuery({
-    queryKey: ['statistics', 'requests', filters, requestsPage],
-    queryFn: () => statisticsApi.getRequests(filters, requestsPage, 50),
+    queryKey: ['statistics', 'requests', apiFilters, requestsPage],
+    queryFn: () => statisticsApi.getRequests(apiFilters, requestsPage, 50),
     staleTime: 2 * 60 * 1000,
     retry: 2,
   });
@@ -1289,7 +1310,27 @@ const Statistics = () => {
                 ...(utmFilterOptions?.utmCampaign || []).map((c) => ({ value: c, label: c })),
               ]}
             />
+            {isAdmin && (
+              <FilterSelect
+                label="Менеджер"
+                value={filters.managerId}
+                onChange={handleFilterChange('managerId')}
+                options={[
+                  { value: 'all', label: 'Все менеджеры' },
+                  ...managers.map((m) => ({
+                    value: String(m.id),
+                    label: m.name || `Менеджер #${m.id}`,
+                  })),
+                ]}
+              />
+            )}
           </div>
+
+          {isManager && (
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Показана статистика только по вашим закреплённым клиентам.
+            </p>
+          )}
 
           <div className="flex flex-wrap gap-2">
             {Object.entries(filters)

@@ -3,11 +3,16 @@ import { normalizePhoneForSubmit } from '../lib/phone';
 
 export const usersApi = {
   // Получение всех пользователей (для ADMIN и MANAGER)
-  getAllUsers: async (archiveStatus = 'active') => {
+  getAllUsers: async (params = {}) => {
     try {
-      console.log('Отправка запроса на получение всех пользователей');
-      const response = await api.get('/users', { params: { archiveStatus } });
-      console.log('Пользователи загружены:', response.data);
+      const { archiveStatus = 'active', assignment = 'all', managerId } = params;
+      const response = await api.get('/users', {
+        params: {
+          archiveStatus,
+          assignment,
+          ...(managerId ? { managerId } : {}),
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Ошибка при загрузке пользователей:', error.response?.data || error.message);
@@ -83,11 +88,17 @@ export const usersApi = {
     }
   },
 
-  searchUsers: async (query, archiveStatus = 'active') => {
+  searchUsers: async (query, params = {}) => {
     try {
-      console.log('Отправка запроса на поиск пользователей:', query);
-      const response = await api.get('/users/search', { params: { query, archiveStatus } });
-      console.log('Пользователи найдены:', response.data);
+      const { archiveStatus = 'active', assignment = 'all', managerId } = params;
+      const response = await api.get('/users/search', {
+        params: {
+          query,
+          archiveStatus,
+          assignment,
+          ...(managerId ? { managerId } : {}),
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
@@ -184,6 +195,18 @@ export const usersApi = {
       return response.data;
     } catch (error) {
       console.error('Ошибка при обновлении настроек пользователя:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  assignResponsibleManager: async (userId, responsibleManagerId) => {
+    try {
+      const response = await api.patch(`/users/${userId}/responsible-manager`, {
+        responsible_manager_id: responsibleManagerId,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при назначении менеджера:', error.response?.data || error.message);
       throw error;
     }
   },

@@ -39,6 +39,12 @@ const ROLE_OPTIONS_SHORT = [
   { value: 'COURIER', label: 'Курьер' },
 ];
 
+const ASSIGNMENT_FILTER_OPTIONS = [
+  { value: 'all', label: 'Все клиенты' },
+  { value: 'mine', label: 'Мои' },
+  { value: 'free', label: 'Свободные' },
+];
+
 const ArchiveConfirmModal = ({ isOpen, onClose, onConfirm, userName, isProcessing }) => {
   if (!isOpen) return null;
 
@@ -152,6 +158,9 @@ const UserRowActions = ({
   onArchiveClick,
   onUnarchiveClick,
   onDeleteClick,
+  onClaimClick,
+  isManager,
+  isClaiming,
 }) => {
   const isMobile = variant === 'mobile';
   const btn =
@@ -176,6 +185,16 @@ const UserRowActions = ({
         </svg>
         Профиль
       </button>
+      {isManager && user.role === 'USER' && !user.responsible_manager_id && (
+        <button
+          type="button"
+          onClick={() => onClaimClick(user)}
+          disabled={isClaiming === user.id}
+          className={`${btn} text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50`}
+        >
+          {isClaiming === user.id ? 'Закрепление...' : 'Закрепить'}
+        </button>
+      )}
       {canManageArchive && user.role === 'USER' && archiveStatusFilter === 'active' && (
         <button
           type="button"
@@ -226,6 +245,10 @@ const AllUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [archiveStatusFilter, setArchiveStatusFilter] = useState('active');
+  const [assignmentFilter, setAssignmentFilter] = useState('all');
+  const [managerFilter, setManagerFilter] = useState('');
+  const [managers, setManagers] = useState([]);
+  const [isClaiming, setIsClaiming] = useState(null);
   const [isUpdatingRole, setIsUpdatingRole] = useState(null);
   
   const [archiveModal, setArchiveModal] = useState({
@@ -247,13 +270,25 @@ const AllUsers = () => {
 
   // Проверяем роль текущего пользователя
   const isAdmin = currentUser?.role === 'ADMIN';
+  const isManager = currentUser?.role === 'MANAGER';
   const canManageArchive = currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER';
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    usersApi.getManagers().then(setManagers).catch(() => setManagers([]));
+  }, [isAdmin]);
+
+  const listParams = () => ({
+    archiveStatus: archiveStatusFilter,
+    assignment: assignmentFilter,
+    ...(isAdmin && managerFilter ? { managerId: Number(managerFilter) } : {}),
+  });
+
   // Загрузка пользователей
-  const fetchUsers = async (status = archiveStatusFilter) => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      const data = await usersApi.getAllUsers(status);
+      const data = await usersApi.getAllUsers(listParams());
       setUsers(Array.isArray(data) ? data : []);
       setFilteredUsers(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -265,8 +300,28 @@ const AllUsers = () => {
   };
 
   useEffect(() => {
-    fetchUsers(archiveStatusFilter);
-  }, [archiveStatusFilter]);
+    fetchUsers();
+  }, [archiveStatusFilter, assignmentFilter, managerFilter]);
+
+  const handleClaimClient = async (user) => {
+    if (!isManager || !currentUser?.id) return;
+    try {
+      setIsClaiming(user.id);
+      await usersApi.assignResponsibleManager(user.id, currentUser.id);
+      showSuccessToast('Клиент закреплён за вами');
+      await fetchUsers();
+    } catch (error) {
+      showErrorToast(error.response?.data?.message || 'Не удалось закрепить клиента');
+    } finally {
+      setIsClaiming(null);
+    }
+  };
+
+  const getManagerLabel = (user) => {
+    if (user.role !== 'USER') return '—';
+    if (!user.responsible_manager_id) return 'Свободен';
+    return user.responsible_manager_name || `Менеджер #${user.responsible_manager_id}`;
+  };
 
   // Обновление роли пользователя (только для ADMIN)
   const handleRoleUpdate = async (userId, newRole) => {
@@ -333,7 +388,7 @@ const AllUsers = () => {
       await usersApi.archiveUser(archiveModal.user.id);
       showSuccessToast('Клиент и его заказы перенесены в архив');
       closeArchiveModal();
-      await fetchUsers('active');
+      await fetchUsers();
       if (archiveStatusFilter === 'archived') {
         setArchiveStatusFilter('active');
       }
@@ -350,7 +405,7 @@ const AllUsers = () => {
     try {
       await usersApi.unarchiveUser(user.id);
       showSuccessToast('Клиент восстановлен из архива');
-      await fetchUsers(archiveStatusFilter);
+      await fetchUsers();
     } catch (error) {
       console.error('Ошибка при восстановлении пользователя:', error);
       showErrorToast(error.response?.data?.message || 'Не удалось восстановить клиента');
@@ -577,6 +632,31 @@ const AllUsers = () => {
           </div>
           <div className="w-full sm:w-44 md:w-48 flex-shrink-0">
             <FormSelect
+              value={assignmentFilter}
+              onChange={setAssignmentFilter}
+              options={ASSIGNMENT_FILTER_OPTIONS}
+              triggerClassName="h-auto px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg"
+            />
+          </div>
+          {isAdmin && (
+            <div className="w-full sm:w-44 md:w-48 flex-shrink-0">
+              <FormSelect
+                value={managerFilter}
+                onChange={setManagerFilter}
+                options={[
+                  { value: '', label: 'Все менеджеры' },
+                  ...managers.map((m) => ({
+                    value: String(m.id),
+                    label: m.name || `Менеджер #${m.id}`,
+                  })),
+                ]}
+                placeholder="Все менеджеры"
+                triggerClassName="h-auto px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg"
+              />
+            </div>
+          )}
+          <div className="w-full sm:w-44 md:w-48 flex-shrink-0">
+            <FormSelect
               value={selectedRole}
               onChange={setSelectedRole}
               options={ROLE_FILTER_OPTIONS}
@@ -642,6 +722,7 @@ const AllUsers = () => {
               <div className="space-y-1 text-xs sm:text-sm text-gray-600 mb-3">
                 <div className="truncate">{user.email}</div>
                 <div>{user.phone || 'Телефон не указан'}</div>
+                <div className="text-gray-500">{getManagerLabel(user)}</div>
                 <div className="text-gray-500">{formatDate(user.registration_date)}</div>
               </div>
               <div className="w-full min-w-0">
@@ -655,6 +736,9 @@ const AllUsers = () => {
                   onArchiveClick={openArchiveModal}
                   onUnarchiveClick={handleUnarchiveUser}
                   onDeleteClick={openDeleteModal}
+                  onClaimClick={handleClaimClient}
+                  isManager={isManager}
+                  isClaiming={isClaiming}
                 />
               </div>
             </div>
@@ -674,6 +758,9 @@ const AllUsers = () => {
                 </th>
                 <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Роль
+                </th>
+                <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Ответственный
                 </th>
                 <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Дата регистрации
@@ -723,6 +810,9 @@ const AllUsers = () => {
                         {getRoleDisplayName(user.role, user.user_type)}
                       </span>
                     )}
+                  </td>
+                  <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-gray-600">
+                    {getManagerLabel(user)}
                   </td>
                   <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-gray-600 font-medium">
                     {formatDate(user.registration_date)}

@@ -5,7 +5,15 @@ import { usersApi } from '@/shared/api/usersApi.js';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 
 /* eslint-disable react/prop-types */
-export default function ResponsibleManagerSelect({ value, onChange }) {
+export default function ResponsibleManagerSelect({
+  value,
+  onChange,
+  excludeUserId = null,
+  allowEmpty = true,
+  label = 'Ответственный менеджер',
+  placeholder = 'Не выбран',
+  emptyLabel = 'Не выбран',
+}) {
   const { user } = useAuth();
 
   const { data: managers = [], isLoading } = useQuery({
@@ -19,22 +27,30 @@ export default function ResponsibleManagerSelect({ value, onChange }) {
     if (user && !list.some((m) => m.id === user.id)) {
       list.push(user);
     }
-    const managerOptions = list
+    const filtered = excludeUserId == null
+      ? list
+      : list.filter((m) => m.id !== excludeUserId);
+
+    const managerOptions = filtered
       .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru'))
       .map((m) => ({
         value: String(m.id),
         label: m.name || `Менеджер #${m.id}`,
       }));
-    return [{ value: '', label: 'Не выбран' }, ...managerOptions];
-  }, [managers, user]);
+
+    if (!allowEmpty) {
+      return managerOptions;
+    }
+    return [{ value: '', label: emptyLabel }, ...managerOptions];
+  }, [managers, user, excludeUserId, allowEmpty, emptyLabel]);
 
   return (
     <FormSelect
-      label="Ответственный менеджер"
+      label={label}
       value={value}
       onChange={onChange}
       options={options}
-      placeholder="Не выбран"
+      placeholder={placeholder}
       disabled={isLoading}
       variant="account"
     />
