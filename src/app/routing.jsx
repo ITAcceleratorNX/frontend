@@ -15,6 +15,7 @@ import PrivacyPolicy2Page from '../pages/privacy-policy2';
 import PublicOfferPage from '../pages/public-offer';
 import MovingPage from '../pages/moving';
 import ThankYouPage from '../pages/thank-you';
+import NotFoundPage from '../pages/not-found';
 
 // LP-* pages are isolated and lazy-loaded to keep the main bundle small.
 // They are also intentionally NOT in the main menu and NOT in sitemap.xml.
@@ -26,14 +27,33 @@ const LpOblachnoeHraneniePage = lazy(() => import('../pages/lp/OblachnoeHranenie
 const IndividualStoragePage = lazy(() => import('../pages/services/IndividualStoragePage'));
 const CloudStoragePage = lazy(() => import('../pages/services/CloudStoragePage'));
 const StorageRoomPage = lazy(() => import('../pages/services/StorageRoomPage'));
+const TopicPage = lazy(() => import('../pages/topics/TopicPage'));
+const BlogListPage = lazy(() => import('../pages/blog/BlogListPage'));
+const BlogArticlePage = lazy(() => import('../pages/blog/BlogArticlePage'));
+const CatalogsPage = lazy(() => import('../pages/katalogi/index'));
+const KkHomePage = lazy(() =>
+  import('../pages/kk/KkPages.jsx').then((m) => ({ default: m.KkHomePage })),
+);
+const KkIndividualPage = lazy(() =>
+  import('../pages/kk/KkPages.jsx').then((m) => ({ default: m.KkIndividualPage })),
+);
+const KkCloudPage = lazy(() =>
+  import('../pages/kk/KkPages.jsx').then((m) => ({ default: m.KkCloudPage })),
+);
+const KkStorageRoomPage = lazy(() =>
+  import('../pages/kk/KkPages.jsx').then((m) => ({ default: m.KkStorageRoomPage })),
+);
+const KkMovingPage = lazy(() =>
+  import('../pages/kk/KkPages.jsx').then((m) => ({ default: m.KkMovingPage })),
+);
 
-import PersonalAccountPage from '../pages/personal-account';
-import UserProfile from '../pages/personal-account/ui/UserProfile';
-import WarehouseData from '../pages/personal-account/ui/WarehouseData';
-import AdminMovingOrder from '../pages/personal-account/ui/AdminMovingOrder';
-import ManagerMovingOrder from '../pages/personal-account/ui/ManagerMovingOrder';
-import CourierRequest from '../pages/personal-account/ui/CourierRequest';
-import CourierRequestOrder from '../pages/personal-account/ui/CourierRequestOrder';
+// Heavy account UI — lazy to keep marketing pages lighter
+const LazyPersonalAccount = lazy(() => import('../pages/personal-account'));
+const LazyUserProfile = lazy(() => import('../pages/personal-account/ui/UserProfile'));
+const LazyWarehouseData = lazy(() => import('../pages/personal-account/ui/WarehouseData'));
+const LazyAdminMovingOrder = lazy(() => import('../pages/personal-account/ui/AdminMovingOrder'));
+const LazyManagerMovingOrder = lazy(() => import('../pages/personal-account/ui/ManagerMovingOrder'));
+const LazyCourierRequestOrder = lazy(() => import('../pages/personal-account/ui/CourierRequestOrder'));
 
 const RouteLogger = memo(({ children }) => children);
 
@@ -47,6 +67,8 @@ const LoadingSpinner = memo(() => (
 ));
 
 LoadingSpinner.displayName = 'LoadingSpinner';
+
+const withSuspense = (el) => <Suspense fallback={<LoadingSpinner />}>{el}</Suspense>;
 
 // Мемоизированный компонент для защищенных маршрутов с оптимизацией проверок
 const ProtectedRoute = memo(({ children }) => {
@@ -98,6 +120,7 @@ const Routing = memo(() => {
     { path: "/public-offer", element: <PublicOfferPage /> },
     { path: "/moving", element: <MovingPage /> },
     { path: "/thank-you", element: <ThankYouPage /> },
+    { path: "/moving.html", element: <Navigate to="/moving" replace /> },
     {
       path: "/lp/arenda-boksa-almaty",
       element: (
@@ -146,19 +169,47 @@ const Routing = memo(() => {
         </Suspense>
       ),
     },
+    {
+      path: "/arenda-kladovki",
+      element: withSuspense(<TopicPage slug="arenda-kladovki" />),
+    },
+    {
+      path: "/hranenie-shin",
+      element: withSuspense(<TopicPage slug="hranenie-shin" />),
+    },
+    {
+      path: "/hranenie-mebeli",
+      element: withSuspense(<TopicPage slug="hranenie-mebeli" />),
+    },
+    {
+      path: "/hranenie-pri-pereezde",
+      element: withSuspense(<TopicPage slug="hranenie-pri-pereezde" />),
+    },
+    {
+      path: "/hranenie-dlya-biznesa",
+      element: withSuspense(<TopicPage slug="hranenie-dlya-biznesa" />),
+    },
+    { path: "/blog", element: withSuspense(<BlogListPage />) },
+    { path: "/blog/:slug", element: withSuspense(<BlogArticlePage />) },
+    { path: "/katalogi", element: withSuspense(<CatalogsPage />) },
+    { path: "/kk", element: withSuspense(<KkHomePage />) },
+    { path: "/kk/individual-storage", element: withSuspense(<KkIndividualPage />) },
+    { path: "/kk/cloud-storage", element: withSuspense(<KkCloudPage />) },
+    { path: "/kk/storage-room", element: withSuspense(<KkStorageRoomPage />) },
+    { path: "/kk/moving", element: withSuspense(<KkMovingPage />) },
   ], []);
 
   const protectedRoutes = useMemo(() => [
-    { path: "/personal-account", element: <PersonalAccountPage /> },
-    { path: "/admin/users/:userId/profile", element: <UserProfile /> },
-    { path: "/personal-account/manager/users/:userId", element: <UserProfile /> },
-    { path: "/personal-account/admin/warehouses/:warehouseId", element: <WarehouseData /> },
-    { path: "/personal-account/manager/warehouses/:warehouseId", element: <WarehouseData /> },
-    { path: "/personal-account/admin/warehouses", element: <WarehouseData /> },
-    { path: "/personal-account/manager/warehouses", element: <WarehouseData /> },
-    { path: "/admin/moving/order/:orderId", element: <AdminMovingOrder /> },
-    { path: "/manager/moving/order/:orderId", element: <ManagerMovingOrder /> },
-    { path: "/personal-account/courier/order/:orderId", element: <CourierRequestOrder /> },
+    { path: "/personal-account", element: withSuspense(<LazyPersonalAccount />) },
+    { path: "/admin/users/:userId/profile", element: withSuspense(<LazyUserProfile />) },
+    { path: "/personal-account/manager/users/:userId", element: withSuspense(<LazyUserProfile />) },
+    { path: "/personal-account/admin/warehouses/:warehouseId", element: withSuspense(<LazyWarehouseData />) },
+    { path: "/personal-account/manager/warehouses/:warehouseId", element: withSuspense(<LazyWarehouseData />) },
+    { path: "/personal-account/admin/warehouses", element: withSuspense(<LazyWarehouseData />) },
+    { path: "/personal-account/manager/warehouses", element: withSuspense(<LazyWarehouseData />) },
+    { path: "/admin/moving/order/:orderId", element: withSuspense(<LazyAdminMovingOrder />) },
+    { path: "/manager/moving/order/:orderId", element: withSuspense(<LazyManagerMovingOrder />) },
+    { path: "/personal-account/courier/order/:orderId", element: withSuspense(<LazyCourierRequestOrder />) },
   ], []);
 
   const userOnlyRoutes = useMemo(() => [
@@ -207,8 +258,8 @@ const Routing = memo(() => {
         {/* Маршруты только для USER роли */}
         {userOnlyRouteElements}
         
-        {/* Редирект для несуществующих маршрутов */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* 404 для несуществующих маршрутов (noindex) */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </RouteLogger>
   );

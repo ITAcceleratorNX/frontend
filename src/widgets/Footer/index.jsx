@@ -63,6 +63,42 @@ const Footer = () => {
                   >
                     Публичная оферта
                   </Link>
+                  <Link
+                    to="/arenda-kladovki"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
+                  >
+                    Аренда кладовки
+                  </Link>
+                  <Link
+                    to="/hranenie-shin"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
+                  >
+                    Хранение шин
+                  </Link>
+                  <Link
+                    to="/hranenie-mebeli"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
+                  >
+                    Хранение мебели
+                  </Link>
+                  <Link
+                    to="/blog"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
+                  >
+                    Блог
+                  </Link>
+                  <Link
+                    to="/katalogi"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
+                  >
+                    Где нас найти
+                  </Link>
+                  <Link
+                    to="/kk"
+                    className="text-[#393939] text-sm hover:opacity-80 transition-opacity"
+                  >
+                    Қазақша
+                  </Link>
                   <Link 
                     to="/privacy-policy" 
                     className="text-[#393939] text-sm hover:opacity-80 transition-opacity"

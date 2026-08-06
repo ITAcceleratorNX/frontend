@@ -2,10 +2,24 @@
   command = "npm ci && npm run build"
   publish = "dist"
 
+# SEO redirects (must be before SPA fallback)
+[[redirects]]
+  from = "/moving.html"
+  to = "/moving"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/*/"
+  to = "/:splat"
+  status = 301
+  force = true
+
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200 
+  status = 200
 
 [build.environment]
-  NODE_VERSION = "22" 
+  NODE_VERSION = "22"

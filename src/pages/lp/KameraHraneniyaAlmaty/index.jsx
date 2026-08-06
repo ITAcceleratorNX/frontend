@@ -29,7 +29,8 @@ import LpVideo from '../components/LpVideo.jsx';
 import heroBg from '@/assets/komfort-city/20260226-IMG_5216.webp';
 
 const SERVICE_TYPE = 'camera';
-const CANONICAL = 'https://extraspace.kz/lp/kamera-hraneniya-almaty';
+// Organic signal → main site (LP is ads-only, noindex).
+const CANONICAL = 'https://extraspace.kz/';
 
 const USE_CASES = [
   {

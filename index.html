@@ -17,23 +17,53 @@
   <link rel="shortcut icon" type="image/png" href="/favicon.png?v=5" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=5" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>ExtraSpace - Хранение вещей</title>
-  <meta name="description" content="Аренда индивидуальных боксов для хранения вещей. Теплые склады с охраной от 3 м²." />
-  
+  <title>Аренда боксов для хранения вещей в Алматы — Extra Space</title>
+  <meta name="description" content="Личные боксы от 2 м², облачное хранение с забором вещей и камера хранения от 1 дня. Тёплый склад, охрана, доступ 24/7. Бронирование онлайн." />
+  <link rel="canonical" href="https://extraspace.kz/" />
+
+  <!-- Верификация GSC / Яндекс — вставить коды, когда появятся доступы:
+  <meta name="google-site-verification" content="PASTE_GOOGLE_CODE" />
+  <meta name="yandex-verification" content="PASTE_YANDEX_CODE" />
+  -->
+
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://extraspace.kz/" />
-  <meta property="og:title" content="ExtraSpace - Хранение вещей" />
-  <meta property="og:description" content="Аренда индивидуальных боксов для хранения вещей. Теплые склады с охраной от 3 м²." />
+  <meta property="og:title" content="Аренда боксов для хранения вещей в Алматы — Extra Space" />
+  <meta property="og:description" content="Личные боксы от 2 м², облачное хранение с забором вещей и камера хранения от 1 дня. Тёплый склад, охрана, доступ 24/7. Бронирование онлайн." />
   <meta property="og:image" content="https://extraspace.kz/Frame51.png" />
   <meta property="og:site_name" content="ExtraSpace" />
-  
+  <meta property="og:locale" content="ru_KZ" />
+
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://extraspace.kz/" />
-  <meta name="twitter:title" content="ExtraSpace - Хранение вещей" />
-  <meta name="twitter:description" content="Аренда индивидуальных боксов для хранения вещей. Теплые склады с охраной от 3 м²." />
+  <meta name="twitter:title" content="Аренда боксов для хранения вещей в Алматы — Extra Space" />
+  <meta name="twitter:description" content="Личные боксы от 2 м², облачное хранение с забором вещей и камера хранения от 1 дня. Тёплый склад, охрана, доступ 24/7. Бронирование онлайн." />
   <meta name="twitter:image" content="https://extraspace.kz/Frame51.png" />
+
+  <!-- Schema.org SelfStorage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SelfStorage",
+    "name": "Extra Space",
+    "url": "https://extraspace.kz/",
+    "telephone": "+7 778 391-14-25",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Алматы",
+      "addressCountry": "KZ"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+      "opens": "00:00",
+      "closes": "23:59"
+    },
+    "priceRange": "от 9 500 ₸/мес"
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,8 +118,24 @@
     })(window, document, "clarity", "script", "vpuh2a2ouz");
   </script>
 
-  <!-- TipTop Pay: платёжный виджет (оплата только через виджет, URL не возвращается) -->
-  <script src="https://widget.tiptoppay.kz/bundles/widget.js"></script>
+  <!-- TipTop Pay: грузим отложенно, чтобы не блокировать LCP (нужен на страницах оплаты) -->
+  <script>
+    (function () {
+      function loadTipTop() {
+        if (window.cp || document.getElementById('tiptop-widget-js')) return;
+        var s = document.createElement('script');
+        s.id = 'tiptop-widget-js';
+        s.src = 'https://widget.tiptoppay.kz/bundles/widget.js';
+        s.async = true;
+        document.head.appendChild(s);
+      }
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(loadTipTop, { timeout: 4000 });
+      } else {
+        window.addEventListener('load', function () { setTimeout(loadTipTop, 2000); });
+      }
+    })();
+  </script>
 </head>
 
 <body>

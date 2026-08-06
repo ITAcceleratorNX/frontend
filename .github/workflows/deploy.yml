@@ -26,7 +26,13 @@ jobs:
       - name: Ensure _redirects file exists
         run: |
           mkdir -p dist
-          echo "/* /index.html 200" > dist/_redirects
+          printf '%s\n' \
+            '# SEO redirects' \
+            '/moving.html  /moving  301!' \
+            '/*/  /:splat  301!' \
+            '# SPA fallback' \
+            '/*  /index.html  200' \
+            > dist/_redirects
 
       - name: Deploy to Render
         run: |

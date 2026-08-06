@@ -182,7 +182,7 @@ function WarehouseGallery({ onBookInWarehouse }) {
                         alt={`Склад Комфорт Сити ${globalIndex + 1}`}
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]"
                         decoding="async"
-                        loading="eager"
+                        loading={idx === 0 && startIndex === 0 ? 'eager' : 'lazy'}
                       />
                     </button>
                   );

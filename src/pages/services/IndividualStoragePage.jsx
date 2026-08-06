@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 
 import ServiceShell from './components/ServiceShell.jsx';
-import ServiceMeta from './components/ServiceMeta.jsx';
+import PageSeo from '../../shared/seo/PageSeo.jsx';
+import { PAGE_SEO, buildBreadcrumbJsonLd, buildFaqPageJsonLd, RU_KK_HREFLANG } from '../../shared/seo/pageMeta.js';
 import ServiceHero from './components/ServiceHero.jsx';
 import UsefulGrid from './components/UsefulGrid.jsx';
 import OtherFormatsBlock from './components/OtherFormatsBlock.jsx';
@@ -88,16 +89,26 @@ export default function IndividualStoragePage() {
 
   return (
     <ServiceShell>
-      <ServiceMeta
-        title="Индивидуальное хранение в Алматы · Extra Space"
-        description="Личный бокс с климат-контролем и охраной 24/7. От 1 месяца, доступ только у вас. Выбор бокса на карте и бронь онлайн."
-        canonical="https://extraspace.kz/individual-storage"
+      <PageSeo
+        title={PAGE_SEO.individualStorage.title}
+        description={PAGE_SEO.individualStorage.description}
+        path={PAGE_SEO.individualStorage.path}
+        hreflang={RU_KK_HREFLANG.individualStorage}
+        ogLocale="ru_KZ"
+        jsonLd={[
+          buildBreadcrumbJsonLd([
+            { name: 'Главная', path: '/' },
+            { name: 'Индивидуальное хранение', path: PAGE_SEO.individualStorage.path },
+          ]),
+          buildFaqPageJsonLd(FAQ_ITEMS),
+        ]}
+        jsonLdId="individual"
       />
 
       <ServiceHero
         badge="Индивидуальное хранение"
-        title="Личный бокс с самостоятельным доступом"
-        description="Свой ключ, доступ 24/7, климат-контроль и охрана. Подойдёт для дома и бизнеса — храните мебель, сезонные вещи, документы и товары."
+        title="Аренда бокса в Алматы — индивидуальное хранение"
+        description="Личный бокс 2–100 м² с климат-контролем и охраной. Доступ 24/7 только у вас. Для дома и бизнеса, от 1 месяца."
         ctaLabel="Подобрать бокс"
         onCtaClick={scrollToBooking}
         videoSrc="/videos/individualnoe-hranenie.mp4"

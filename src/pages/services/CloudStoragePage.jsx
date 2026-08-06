@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 
 import ServiceShell from './components/ServiceShell.jsx';
-import ServiceMeta from './components/ServiceMeta.jsx';
+import PageSeo from '../../shared/seo/PageSeo.jsx';
+import { PAGE_SEO, buildBreadcrumbJsonLd, buildFaqPageJsonLd, RU_KK_HREFLANG } from '../../shared/seo/pageMeta.js';
 import ServiceHero from './components/ServiceHero.jsx';
 import UsefulGrid from './components/UsefulGrid.jsx';
 import OtherFormatsBlock from './components/OtherFormatsBlock.jsx';
@@ -92,16 +93,26 @@ export default function CloudStoragePage() {
 
   return (
     <ServiceShell>
-      <ServiceMeta
-        title="Облачное хранение в Алматы · Extra Space"
-        description="Заберём вещи у вас, упакуем, привезём обратно по запросу. Платите за объём, а не за бокс. Тарифы и заявка онлайн."
-        canonical="https://extraspace.kz/cloud-storage"
+      <PageSeo
+        title={PAGE_SEO.cloudStorage.title}
+        description={PAGE_SEO.cloudStorage.description}
+        path={PAGE_SEO.cloudStorage.path}
+        hreflang={RU_KK_HREFLANG.cloudStorage}
+        ogLocale="ru_KZ"
+        jsonLd={[
+          buildBreadcrumbJsonLd([
+            { name: 'Главная', path: '/' },
+            { name: 'Облачное хранение', path: PAGE_SEO.cloudStorage.path },
+          ]),
+          buildFaqPageJsonLd(FAQ_ITEMS),
+        ]}
+        jsonLdId="cloud"
       />
 
       <ServiceHero
         badge="Облачное хранение"
-        title="Мы заберём и привезём обратно"
-        description="Платите за объём, не за бокс. Курьер забирает вещи у вас, мы храним и возвращаем по запросу — от 1 месяца."
+        title="Хранение вещей с доставкой — заберём и привезём"
+        description="Курьер заберёт вещи, храним от 9 500 ₸/м³ в месяц, вернём по запросу за 1 день. Мебель, сезонные вещи, товары, архивы."
         ctaLabel="Выбрать тариф"
         onCtaClick={scrollToBooking}
         videoSrc="/videos/oblachnoe-hranenie.mp4"
