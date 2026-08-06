@@ -67,13 +67,16 @@ function setLink({ rel, href }) {
   el.setAttribute('href', href);
 }
 
-function buildLocalBusinessSchema({ canonical, ogImage }) {
+const SITE_ORIGIN = 'https://extraspace.kz';
+
+function buildLocalBusinessSchema({ ogImage }) {
   return {
     '@context': 'https://schema.org',
     '@type': 'SelfStorage',
     name: 'ExtraSpace',
-    url: canonical || 'https://extraspace.kz',
-    image: ogImage || 'https://extraspace.kz/Frame51.png',
+    // Always the main site — never the /lp/* URL (ads-only pages).
+    url: SITE_ORIGIN,
+    image: ogImage || `${SITE_ORIGIN}/Frame51.png`,
     telephone: PHONE_E164,
     priceRange: '₸',
     areaServed: { '@type': 'City', name: 'Алматы' },
@@ -193,9 +196,7 @@ export default function LpHelmet({
     setMeta({ name: 'twitter:image', content: resolvedOg });
 
     if (includeJsonLd) {
-      injectJsonLd(
-        buildLocalBusinessSchema({ canonical, ogImage: resolvedOg }),
-      );
+      injectJsonLd(buildLocalBusinessSchema({ ogImage: resolvedOg }));
     }
 
     return () => {

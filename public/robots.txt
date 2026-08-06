@@ -4,13 +4,11 @@
 User-agent: *
 Allow: /
 
-# Landing pages used exclusively for paid traffic must NOT be indexed
-# (см. ТЗ §2 — изоляция от основного сайта).
-# Каждая LP дополнительно имеет <meta name="robots" content="noindex,nofollow">,
-# но Disallow здесь — двойной барьер на уровне краулинга.
-Disallow: /lp/
+# Рекламные /lp/* НЕ закрываем Disallow: иначе Google не увидит noindex
+# и страница может «залипнуть» в индексе. Индексацию режем meta + X-Robots-Tag.
+# Каноникал LP ведёт на https://extraspace.kz/ (главная).
 
-# Auth / personal area — also off-limits.
+# Auth / personal area — off-limits.
 Disallow: /login
 Disallow: /register
 Disallow: /restore-password
@@ -19,5 +17,4 @@ Disallow: /admin/
 Disallow: /manager/
 Disallow: /chat
 
-# Sitemap (если есть/появится — оставляем здесь).
 Sitemap: https://extraspace.kz/sitemap.xml

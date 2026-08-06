@@ -1,38 +1,202 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Рекламные лендинги /lp/* не включены: noindex + Disallow в robots.txt. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Рекламные лендинги /lp/* не включены: noindex + canonical на главную. -->
   <url>
     <loc>https://extraspace.kz/</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/" />
+    <lastmod>2026-08-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://extraspace.kz/individual-storage</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/individual-storage" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/individual-storage" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/individual-storage" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/cloud-storage</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/cloud-storage" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/cloud-storage" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/cloud-storage" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/storage-room</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/storage-room" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/storage-room" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/storage-room" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/arenda-kladovki</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/hranenie-shin</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/hranenie-mebeli</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/hranenie-pri-pereezde</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/hranenie-dlya-biznesa</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/blog</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/blog/kak-vybrat-boks-dlya-hraneniya</loc>
+    <lastmod>2026-08-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/blog/hranenie-shin-na-sezon</loc>
+    <lastmod>2026-07-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/blog/hranenie-mebeli-pri-remonte</loc>
+    <lastmod>2026-07-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/blog/pereezd-i-vremennoe-hranenie</loc>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/blog/sklad-dlya-biznesa-i-marketplace</loc>
+    <lastmod>2026-07-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/blog/kamera-hraneniya-na-korotkiy-srok</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/katalogi</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/kk</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/kk/individual-storage</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/individual-storage" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/individual-storage" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/individual-storage" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/kk/cloud-storage</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/cloud-storage" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/cloud-storage" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/cloud-storage" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/kk/storage-room</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/storage-room" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/storage-room" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/storage-room" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://extraspace.kz/kk/moving</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/moving" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/moving" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/moving" />
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
     <loc>https://extraspace.kz/about-warehouse-rental</loc>
+    <lastmod>2026-08-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://extraspace.kz/moving</loc>
+    <xhtml:link rel="alternate" hreflang="ru-KZ" href="https://extraspace.kz/moving" />
+    <xhtml:link rel="alternate" hreflang="kk-KZ" href="https://extraspace.kz/kk/moving" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://extraspace.kz/moving" />
+    <lastmod>2026-08-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://extraspace.kz/online-payment</loc>
+    <lastmod>2026-08-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://extraspace.kz/privacy-policy</loc>
+    <lastmod>2026-08-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://extraspace.kz/privacy-policy2</loc>
+    <lastmod>2026-08-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://extraspace.kz/public-offer</loc>
+    <lastmod>2026-08-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

@@ -69,12 +69,15 @@ export default function HeroSection({ onOpenPromoBooking, onBookClick }) {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-8 sm:pb-12 lg:pb-16 relative z-10 flex-1 flex flex-col min-h-0">
                 <section className="grid grid-cols-1 grid-rows-[1fr_auto] flex-1 min-h-0 items-center text-center">
                     <div className="flex flex-col items-center justify-start -mt-16 sm:-mt-24 lg:-mt-28">
-                        <h1 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                            храните там, где удобно
+                        <h1 className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0" style={{ clip: 'rect(0, 0, 0, 0)' }}>
+                            Аренда боксов и хранение вещей в Алматы
                         </h1>
-                        <h2 className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 sm:mb-8">
+                        <p className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight" aria-hidden="true">
+                            храните там, где удобно
+                        </p>
+                        <p className="font-soyuz-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 sm:mb-8" aria-hidden="true">
                             и безопасно
-                        </h2>
+                        </p>
                         {/* Боксы от 2 до 50 м² по специальной цене при аренде от 2 месяцев.
                         Хранение за м² от 5 990 ₸
                         <div className="text-sm sm:text-base text-white leading-relaxed max-w-2xl">

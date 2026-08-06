@@ -24,10 +24,18 @@ export default defineConfig({
     {
       name: 'generate-redirects',
       closeBundle() {
-        // Создаем директорию dist если она не существует
         mkdirSync('dist', { recursive: true });
-        // Создаем _redirects файл в dist директории после сборки
-        writeFileSync('dist/_redirects', '/* /index.html 200\n');
+        writeFileSync(
+          'dist/_redirects',
+          [
+            '# SEO redirects',
+            '/moving.html  /moving  301!',
+            '/*/  /:splat  301!',
+            '# SPA fallback',
+            '/*  /index.html  200',
+            '',
+          ].join('\n'),
+        );
         console.log('✓ _redirects file has been created');
       }
     }

@@ -31,7 +31,8 @@ import LpVideo from '../components/LpVideo.jsx';
 import heroBg from '@/assets/komfort-city/20260226-IMG_5215.webp';
 
 const SERVICE_TYPE = 'cloud';
-const CANONICAL = 'https://extraspace.kz/lp/oblachnoe-hranenie-almaty';
+// Organic signal → main site (LP is ads-only, noindex).
+const CANONICAL = 'https://extraspace.kz/';
 
 const TARIFFS = [
   {

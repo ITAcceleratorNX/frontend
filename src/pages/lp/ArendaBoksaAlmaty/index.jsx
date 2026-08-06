@@ -32,7 +32,8 @@ import LpVideo from '../components/LpVideo.jsx';
 import heroBg from '@/assets/komfort-city/20260226-IMG_5207.webp';
 
 const SERVICE_TYPE = 'individual';
-const CANONICAL = 'https://extraspace.kz/lp/arenda-boksa-almaty';
+// Organic signal → main site (LP is ads-only, noindex). Prefer homepage in Google.
+const CANONICAL = 'https://extraspace.kz/';
 
 const TRUST = [
   { Icon: Thermometer, label: 'Климат-контроль', sub: 'Отопление зимой, без сырости' },

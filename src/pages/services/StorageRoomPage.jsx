@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 
 import ServiceShell from './components/ServiceShell.jsx';
-import ServiceMeta from './components/ServiceMeta.jsx';
+import PageSeo from '../../shared/seo/PageSeo.jsx';
+import { PAGE_SEO, buildBreadcrumbJsonLd, buildFaqPageJsonLd, RU_KK_HREFLANG } from '../../shared/seo/pageMeta.js';
 import ServiceHero from './components/ServiceHero.jsx';
 import UsefulGrid from './components/UsefulGrid.jsx';
 import OtherFormatsBlock from './components/OtherFormatsBlock.jsx';
@@ -95,16 +96,26 @@ export default function StorageRoomPage() {
 
   return (
     <ServiceShell>
-      <ServiceMeta
-        title="Камера хранения в Алматы · от 1 дня · Extra Space"
-        description="Краткосрочное хранение чемоданов, сумок и коробок — от 1 дня до 2 недель. Бронь онлайн."
-        canonical="https://extraspace.kz/storage-room"
+      <PageSeo
+        title={PAGE_SEO.storageRoom.title}
+        description={PAGE_SEO.storageRoom.description}
+        path={PAGE_SEO.storageRoom.path}
+        hreflang={RU_KK_HREFLANG.storageRoom}
+        ogLocale="ru_KZ"
+        jsonLd={[
+          buildBreadcrumbJsonLd([
+            { name: 'Главная', path: '/' },
+            { name: 'Камера хранения', path: PAGE_SEO.storageRoom.path },
+          ]),
+          buildFaqPageJsonLd(FAQ_ITEMS),
+        ]}
+        jsonLdId="storage-room"
       />
 
       <ServiceHero
         badge="Камера хранения"
-        title="Краткосрочное хранение вещей"
-        description="Чемоданы, сумки, коробки — храним посуточно. От 1 дня до 2 недель, без долгого договора."
+        title="Камера хранения в Алматы — от 1 дня"
+        description="Краткосрочное хранение чемоданов, сумок и коробок: от 1 дня до 2 недель. Рядом с центром, бронь онлайн."
         ctaLabel="Забронировать"
         onCtaClick={scrollToBooking}
         videoSrc="/videos/kamera-hraneniya.mp4"

@@ -10,6 +10,7 @@ import '../shared/styles/toast.css';
 import { AuthProvider } from '../shared/context/AuthContext';
 import ResponseInterceptor from '../shared/components/ResponseInterceptor';
 import ScrollToTop from "../components/ScrollToTop.jsx";
+import TrailingSlashRedirect from "../shared/seo/TrailingSlashRedirect.jsx";
 import FloatingWhatsAppButton from "../shared/components/FloatingWhatsAppButton.jsx";
 import { useSSENotifications } from '../shared/lib/hooks/useSSENotifications';
 import { usePushNotifications } from '../shared/lib/hooks/usePushNotifications';
@@ -141,14 +142,16 @@ const App = memo(() => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <ScrollToTop />
-          <div className="font-sans">
-            <ResponseInterceptor />
-            <SSEProvider />
-            <Routing />
-            <FloatingWhatsAppButton />
-            <NotificationContainer />
-          </div>
+          <TrailingSlashRedirect>
+            <ScrollToTop />
+            <div className="font-sans">
+              <ResponseInterceptor />
+              <SSEProvider />
+              <Routing />
+              <FloatingWhatsAppButton />
+              <NotificationContainer />
+            </div>
+          </TrailingSlashRedirect>
         </BrowserRouter>
       </AuthProvider>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />}

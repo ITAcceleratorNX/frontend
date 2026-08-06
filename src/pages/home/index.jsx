@@ -63,6 +63,9 @@ import BranchesSection from "../../../src/pages/home/components/BranchesSection.
 import WarehouseGallery from "../../../src/pages/home/components/WarehouseGallery.jsx";
 import StorageFormatsSection from "@/components/home/StorageFormatsSection.jsx";
 import StorageFormatsExplainerSection from "@/components/home/StorageFormatsExplainerSection.jsx";
+import TopicLinksSection from "@/components/home/TopicLinksSection.jsx";
+import PageSeo from "../../shared/seo/PageSeo";
+import { PAGE_SEO, buildSelfStorageJsonLd, RU_KK_HREFLANG } from "../../shared/seo/pageMeta";
 import WarehouseSchemePanel from "../../../src/pages/home/components/order/WarehouseSchemePanel.jsx";
 import StorageWarnings from "../../../src/pages/home/components/order/StorageWarnings.jsx";
 import MovingSection from "../../../src/pages/home/components/order/MovingSection.jsx";
@@ -2411,6 +2414,17 @@ const HomePage = memo(({
           : "font-['Montserrat'] min-h-screen bg-white flex flex-col"
       }
     >
+      {!isEmbed && (
+        <PageSeo
+          title={PAGE_SEO.home.title}
+          description={PAGE_SEO.home.description}
+          path={PAGE_SEO.home.path}
+          hreflang={RU_KK_HREFLANG.home}
+          ogLocale="ru_KZ"
+          jsonLd={buildSelfStorageJsonLd()}
+          jsonLdId="home"
+        />
+      )}
       {!isEmbed && <Header />}
 
       {!isEmbed && (
@@ -3112,6 +3126,8 @@ const HomePage = memo(({
       {!isEmbed && <StorageFormatsSection />}
 
       {!isEmbed && <StorageFormatsExplainerSection />}
+
+      {!isEmbed && <TopicLinksSection />}
 
       {!isEmbed && <CallbackRequestSection showRegisterPrompt={!isAuthenticated} />}
 

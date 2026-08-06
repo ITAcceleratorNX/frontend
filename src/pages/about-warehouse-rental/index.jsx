@@ -1,17 +1,26 @@
 import React, { useMemo, useState } from 'react';
 import { Header } from '../../widgets';
 import Vector038 from '../../assets/Vector_038.svg';
-import Image23 from '../../assets/image_23.png';
+import Image23 from '../../assets/image_23.webp';
 import topVector from '../../assets/Vector_9.png';
 import Vector4 from '../../assets/Vector_4.png';
 import WarehouseMap from '../../components/WarehouseMap';
 import extraspaceLogo from '../../assets/extraspace_logo.png';
-import image3 from '../../assets/image3.png';
-import image4 from '../../assets/image4.png';
-import image5 from '../../assets/image5.png';
+import image3 from '../../assets/image3.webp';
+import image4 from '../../assets/image4.webp';
+import image5 from '../../assets/image5.webp';
 import Footer from '../../widgets/Footer';
+import PageSeo from '../../shared/seo/PageSeo';
+import {
+  PAGE_SEO,
+  ABOUT_FAQ_ITEMS,
+  buildBreadcrumbJsonLd,
+  buildFaqPageJsonLd,
+  buildSelfStorageJsonLd,
+} from '../../shared/seo/pageMeta';
 
 export default function AboutWarehouseRentPage() {
+  const seo = PAGE_SEO.about;
   const warehouses = useMemo(() => [
     // ЖК Есентай убран с бронирования
     // {
@@ -52,6 +61,20 @@ export default function AboutWarehouseRentPage() {
 
   return (
     <>
+      <PageSeo
+        title={seo.title}
+        description={seo.description}
+        path={seo.path}
+        jsonLd={[
+          buildSelfStorageJsonLd(),
+          buildBreadcrumbJsonLd([
+            { name: 'Главная', path: '/' },
+            { name: 'Об аренде склада', path: seo.path },
+          ]),
+          buildFaqPageJsonLd(ABOUT_FAQ_ITEMS),
+        ]}
+        jsonLdId="about"
+      />
       <div className="bg-white font-sans">
         <Header />
 
@@ -74,9 +97,7 @@ export default function AboutWarehouseRentPage() {
                 <div className="flex flex-col items-center">
                   <h1 className="text-[38px] md:text-[50px] font-bold text-[#273655] font-['Montserrat'] tracking-[0.05em] leading-tight uppercase">
                     об аренде
-                  </h1>
-                  <h1 className="text-[38px] md:text-[50px] font-bold text-[#273655] font-['Montserrat'] tracking-[0.05em] leading-tight uppercase">
-                    склада
+                    <span className="block">склада</span>
                   </h1>
                 </div>
                 <img src={Vector038} alt="icon-right" className="w-8 h-8" />

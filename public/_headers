@@ -1,0 +1,3 @@
+# Netlify headers — advertising LPs must not appear in organic Google.
+/lp/*
+  X-Robots-Tag: noindex, nofollow

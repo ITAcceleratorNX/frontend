@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { Header } from '../../widgets';
 import vectorLeaves from '../../assets/Vector_038 (Illustrator Vectors) svg-01 2.png';
-import mainImg from '../../assets/image 17.png';
+import mainImg from '../../assets/image 17.webp';
 import topOverlay from '../../assets/Vector 3.png';
 import bottomOverlay from '../../assets/Vector 2.png';
-import autoLayout from '../../assets/Auto Layout Horizontal.png';
+import autoLayout from '../../assets/Auto Layout Horizontal.webp';
 import housePlanIcon from '../../assets/house-plan_5203481 1.svg';
 import Footer from '../../widgets/Footer';
 
 import MovingPricingTable from '../../shared/components/MovingPricingTable';
 import { FormSelect } from '@/shared/ui/FormSelect.jsx';
 import { DateField } from '@/shared/ui/DateField.jsx';
+import PageSeo from '../../shared/seo/PageSeo';
+import { PAGE_SEO, buildBreadcrumbJsonLd, RU_KK_HREFLANG } from '../../shared/seo/pageMeta';
 
 const ProgressCircle = ({ step }) => {
     const total = 5;
@@ -263,8 +265,21 @@ const StepperForm = () => {
 };
 
 const MovingPage = () => {
+    const seo = PAGE_SEO.moving;
     return (
         <div className="min-h-screen bg-white flex flex-col">
+            <PageSeo
+                title={seo.title}
+                description={seo.description}
+                path={seo.path}
+                hreflang={RU_KK_HREFLANG.moving}
+                ogLocale="ru_KZ"
+                jsonLd={buildBreadcrumbJsonLd([
+                    { name: 'Главная', path: '/' },
+                    { name: 'Перевозка вещей', path: seo.path },
+                ])}
+                jsonLdId="moving"
+            />
             <Header />
             {/* Первый фрейм: Заказать доставку */}
             <section className="relative w-full h-[500px] mt-5 flex items-center justify-center">
@@ -282,8 +297,8 @@ const MovingPage = () => {
                 <div className="absolute z-30 top-[50px] flex flex-col items-center space-y-4">
                     <div className="flex items-center">
                         <img src={vectorLeaves} alt="deco" className="w-10 h-10 mr-1" />
-                        <h1 className="text-[40px] md:text-[55px] font-bold text-[#F86812] font-['Montserrat']">
-                            ЗАКАЗАТЬ ДОСТАВКУ
+                        <h1 className="text-[28px] sm:text-[40px] md:text-[48px] font-bold text-[#F86812] font-['Montserrat'] text-center leading-tight max-w-[16ch] sm:max-w-none">
+                            Перевозка вещей с хранением
                         </h1>
                         <img src={vectorLeaves} alt="deco" className="w-10 h-10 ml-1" />
                     </div>

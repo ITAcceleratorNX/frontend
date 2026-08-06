@@ -13,7 +13,13 @@ services:
       - path: /*
         name: Cache-Control
         value: no-store
+      - path: /lp/*
+        name: X-Robots-Tag
+        value: noindex, nofollow
     routes:
+      - type: redirect
+        source: /moving.html
+        destination: /moving
       - type: rewrite
         source: /*
         destination: /index.html
