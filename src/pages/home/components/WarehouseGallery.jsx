@@ -6,10 +6,6 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  HOME_LIVE_CAMERA_IDS,
-  LiveCameraGrid,
-} from '@/pages/home/components/WarehouseCctvDashboard.jsx';
 
 function basenameFromGlobKey(key) {
   const seg = key.split('/').pop() ?? key;
@@ -144,15 +140,6 @@ function WarehouseGallery({ onBookInWarehouse }) {
           <h2 className="text-center font-soyuz-grotesk text-2xl font-bold text-[#202422] sm:mb-5 sm:text-3xl md:mb-6 md:text-4xl lg:text-5xl xl:text-6xl">
             <span className="font-['Montserrat']">Г</span>алерея наших складов
           </h2>
-
-          {HOME_LIVE_CAMERA_IDS.length > 0 && (
-            <div className="mb-8 sm:mb-10 md:mb-14">
-              <p className="mb-3 text-center font-['Montserrat'] text-sm text-[#5a625f] sm:mb-4 sm:text-base">
-                Прямая трансляция
-              </p>
-              <LiveCameraGrid cameraIds={HOME_LIVE_CAMERA_IDS} />
-            </div>
-          )}
 
           <div className="flex items-center gap-3 sm:gap-6 md:gap-8 lg:gap-12">
             <button
