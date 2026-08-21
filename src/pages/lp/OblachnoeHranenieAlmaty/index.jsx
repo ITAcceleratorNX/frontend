@@ -60,9 +60,16 @@ const TARIFFS = [
     Icon: Ruler,
     title: 'Свой объём',
     volume: 'от 1 м³',
-    price: 'от 9 500 ₸/м³ в мес',
+    price: 'от 5 000 ₸/м³ в мес',
     description: 'Платите ровно за объём вещей. Менеджер рассчитает стоимость после уточнения объёма вещей.',
   },
+];
+
+// Цена за 1 м³ в месяц — зависит от объёма хранения.
+const VOLUME_TIERS = [
+  { volume: '1 м³', price: '8 000 ₸', note: 'за 1 м³ в месяц' },
+  { volume: '2 м³', price: '6 000 ₸', note: 'за 1 м³ в месяц' },
+  { volume: 'от 3 м³', price: '5 000 ₸', note: 'за 1 м³ в месяц' },
 ];
 
 const COMPARISON = [
@@ -251,6 +258,28 @@ export default function OblachnoeHranenieAlmatyPage() {
               Выбирайте подходящий формат — или закажите расчёт под свой объём.
             </p>
           </header>
+
+          {/* Цена за м³ — тем ниже, чем больше объём */}
+          <div className="mx-auto mb-10 max-w-4xl rounded-3xl border border-[#e5e9ed] bg-[#F7FAF9] p-5 sm:p-7">
+            <h3 className="text-center text-base font-bold text-[#273655] sm:text-lg">
+              Цена за 1 м³ в месяц
+            </h3>
+            <p className="mt-2 text-center text-sm text-[#6b7280]">
+              Чем больше объём — тем ниже стоимость куба.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {VOLUME_TIERS.map((tier) => (
+                <div
+                  key={tier.volume}
+                  className="flex flex-col items-center gap-1 rounded-2xl bg-white px-4 py-5 text-center shadow-sm"
+                >
+                  <p className="text-xs uppercase tracking-wide text-[#6b7280]">{tier.volume}</p>
+                  <p className="text-2xl font-bold text-[#31876D]">{tier.price}</p>
+                  <p className="text-xs text-[#6b7280]">{tier.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {TARIFFS.map((t) => (
